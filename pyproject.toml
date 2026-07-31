@@ -12,7 +12,7 @@ exclude = [".git", "__pycache__", "build", "dist", "venv", ".venv"]
 select = ["E", "F", "I", "UP", "N"]
 
 # Ignore certain naming rules that conflict with standard mathematical notation.
-# e.g., We want to allow matrices to be uppercase (like `J_block`, `C`, `E_matrix`) 
+# e.g., We want to allow matrices to be uppercase (like `J_block`, `C`, `E_matrix`)
 # and constants to be uppercase.
 ignore = ["N806", "N803"]
 

@@ -34,7 +34,7 @@ jobs:
     defaults:
       run:
         shell: bash -el {0}
-    
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
