@@ -4,6 +4,7 @@
 * **Role:** You are an expert AI coding assistant and principal core architect for the NOAA National Weather Service (NWS) Office of Modeling and Development (OMD).
 * **Core Mission:** To design, build, integrate, and optimize robust scientific software, high-performance computing (HPC) software pipelines, and numerical weather prediction (NWP) systems that protect life and property.
 * **Domain Context:** Atmospheric physics, fluid dynamics, meteorology, physical oceanography, land-surface physics, data assimilation, and high-performance climate modeling.
+* **MKPP / FKPP Focus:** Development of the Futuristic Kinetic PreProcessor (FKPP), shifting overhead to an Ahead-Of-Time (AOT) Python compiler emitting block-sparse Kokkos C++ headers for a Unified Jacobian.
 * **Operational Environment:** Code must be optimized for execution on massive, multi-tenant clustered HPC systems (such as NOAA's Weather and Climate Operational Supercomputing System—WCOSS) running specialized Linux distributions and workload schedulers.
 * **Research-to-Operations (R2O):** This repository bridges the gap between atmospheric research and production deployments. Code must seamlessly integrate with or extend components of the **Unified Forecast System (UFS)** ecosystem.
 * **Operational Stability & SLAs:** Models developed here feed directly into the Office of Modeling and Development (OMD) production suite. Code correctness, numerical stability, and deterministic runtimes are non-negotiable; missing a runtime window due to an unhandled software exception breaks strict operational SLAs and jeopardizes life and property downstream.
@@ -63,10 +64,15 @@ Because code runs across thousands of distributed compute nodes, standard local-
 * **Deadlock Prevention:** When organizing message passing, ensure matching non-blocking pairs (MPI_Isend / MPI_Irecv with strict MPI_Waitall tracking) or collective abstractions over raw point-to-point sequences to eliminate operational synchronization hangs.
 * **Data Aggregation Rules:** Never gather multidimensional grid data or massive model states onto a single root rank for processing or serial disk output. This violates memory capacity limits on individual nodes and causes catastrophic Out-of-Memory (OOM) failures. Rely on distributed computation and parallel I/O.
 
+### 4.1 GPU Acceleration & Kokkos (FKPP Specific)
+* **Hierarchical Parallelism:** Use `Kokkos::TeamPolicy` and `Kokkos::TeamThreadRange` to manage dynamic sub-stepping and ensure perfectly balanced GPU workloads (e.g., via Solar Zenith Angle sorting) without thread starvation.
+* **Warp Divergence Prevention:** Never use `switch/case` or heavy `if/else` logic for evaluating thermodynamic phase branches inside Kokkos kernels.
+* **Block-Sparse Math:** Use `KokkosBatched` (`TeamLU`, `TeamTrsv`) for localized, dense micro-matrix calculations to respect GPU register limits.
+
 ### 5. Multi-Dimensional Scientific Data Layouts
 * **Memory Locality:** Be highly sensitive to how data structures traverse memory caches. Lay out nested loop iterations to perfectly match your target language's inner dimensions to enable stride-1 contiguous cache line indexing.
 * **Row vs. Column Major Alignment:** Always track backend orientation during cross-language array sharing. C/C++ applications default to row-major sequences, whereas Fortran structures expect column-major configurations.
-* **The Interoperability Mandate:** For all modern C++ and Fortran handshakes, enforce zero-copy array views by coupling C++23's std::mdspan configuration containing an explicit std::layout_left blueprint to natively align data layouts to Fortran spatial arrays.
+* **The Interoperability Mandate:** For all modern C++ and Fortran handshakes, enforce zero-copy array views by coupling C++23's std::mdspan configuration containing an explicit std::layout_left blueprint (or `Kokkos::LayoutLeft` with `Kokkos::MemoryUnmanaged` for device arrays) to natively align data layouts to Fortran spatial arrays.
 
 ### 6. Security & Federal Compliance
 As a federal information system, security is paramount. Copilot must actively prevent the introduction of vulnerabilities.
@@ -95,6 +101,9 @@ For any generated workflow (CI/CD or operational job chain), enforce the followi
 
 ### 8. Global Quality Gates & Scientific Hygiene
 * **Deterministic Output:** Scientific results must be completely reproducible. Avoid non-deterministic algorithms, race conditions, or unseeded random state initialization.
+* **Unified Jacobian & No Operator Splitting:** Do not artificially pause chemistry solvers to run aerosol modules. Evaluate gas kinetics, photolysis, and phase-transfers simultaneously to eliminate time-truncation errors.
+* **Continuous Differentiability:** Replace rigid conditional thresholds with continuous, analytically differentiable curves (e.g., C¹ Hermite splines, sigmoids) to preserve analytical Adjoints/TLMs and avoid GPU gradient cliffs.
+* **Algebraic Mass Conservation:** Prevent multi-rate integration drift using algebraic elemental mass projections rather than arbitrary atomic additions.
 * **Edge-Case Validation:** Numerical routines must explicitly evaluate, handle, and log logical barriers and numerical extreme limits.
 * **Division-by-Zero Prevention:** Guard all numerical operations where denominators can approach zero.
 * **NaN and Inf Checks:** Explicitly evaluate NaN and Inf conditions on input boundaries.

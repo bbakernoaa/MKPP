@@ -1,0 +1,18 @@
+name: mkpp-env
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python>=3.11
+  - sympy           # For analytical Jacobian and Adjoint generation
+  - networkx        # For Tarjan SCC algorithm and mechanism block/graph analysis
+  - pyyaml          # For parsing OpenAtmos/MICM chemistry specs
+  - cmake>=3.24     # C++ Build system
+  - ninja           # Fast C++ builder
+  - compilers       # Meta-package providing C/C++/Fortran compilers (gcc/g++/gfortran)
+  - pre-commit      # Git hooks
+  - ruff            # Python ultra-fast linting/formatting
+  - pytest          # Python AOT compiler test framework
+  - pip
+  - pip:
+    - -e .          # Install the local python package in editable mode (once we scaffold it)

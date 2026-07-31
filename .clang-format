@@ -1,0 +1,33 @@
+# C++ Kokkos & FKPP Format Style
+BasedOnStyle: Google
+Language: Cpp
+Standard: c++20 # Target modern C++ (C++23 is the goal, 20 is the closest standard config)
+
+# Indentation and spacing
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 100
+
+# Pointer Alignment (int* a rather than int *a)
+PointerAlignment: Left
+
+# Kokkos/GPU specific macros
+MacroBlockBegin: "^KOKKOS_INLINE_FUNCTION$"
+StatementMacros:
+  - KOKKOS_INLINE_FUNCTION
+  - KOKKOS_LAMBDA
+
+# Sort Includes
+SortIncludes: CaseSensitive
+IncludeCategories:
+  - Regex:           '^<Kokkos_.*'
+    Priority:        1
+  - Regex:           '^<.*'
+    Priority:        2
+  - Regex:           '^".*'
+    Priority:        3
+
+# Allow short blocks on a single line
+AllowShortBlocksOnASingleLine: Always
+AllowShortFunctionsOnASingleLine: Inline

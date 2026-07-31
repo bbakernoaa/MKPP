@@ -1,0 +1,15 @@
+installed:
+- diagram
+- red-team
+settings:
+  auto_execute_hooks: true
+hooks:
+  after_tasks:
+  - extension: diagram
+    command: speckit.diagram.dependencies
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Generate task dependency diagram after task breakdown?
+    description: Auto-generate dependency DAG after tasks are created
+    condition: null

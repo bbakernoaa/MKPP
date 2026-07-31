@@ -1,3 +1,47 @@
-*~
-.sw[a-p]
+# C/C++ & CMake Build Artifacts
+build/
+build-*/
+out/
+bin/
+lib/
+*.o
+*.a
+*.so
+*.dylib
+*.mod
+*.smod
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+compile_commands.json
+
+# Python & AOT Compiler
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.tox/
+.coverage
+htmlcov/
+*.egg-info/
+venv/
+env/
+.env/
+.venv/
+.ipynb_checkpoints/
+
+# Profiling & HPC Tools
+*.ncu-rep      # NVIDIA Nsight Compute
+tau_profile-*  # TAU Profiler
+hpctoolkit-*   # HPCToolkit
+core           # Core dumps
+
+# Editor & OS Files
+.vscode/
+.idea/
 .DS_Store
+*~
+*.swp
+*.swo
