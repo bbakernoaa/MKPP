@@ -22,6 +22,15 @@ def generate_headers(mech: MechanismDefinition, out_dir: str = "build/mkpp-gener
         f.write(f"// Generated solver for {mech.name}\n")
         f.write("namespace mkpp {\n")
         f.write("  // Pure Kokkos abstractions (no raw pragmas allowed)\n")
+        
+        # T021: Zero-copy unmanaged views for host interaction (e.g. Fortran LayoutLeft)
+        if getattr(mech, "host_interface", None) and mech.host_interface.arrays:
+            f.write("  // Bidirectional Host Interface (Zero-Copy)\n")
+            for arr in mech.host_interface.arrays:
+                f.write(f"  using {arr.name}_view_t = Kokkos::View<double")
+                f.write("*" * arr.rank)
+                f.write(f", Kokkos::{arr.layout}, Kokkos::MemoryUnmanaged>;\n")
+                
         f.write("  template<typename DeviceType>\n")
         f.write("  struct SolverKernels {\n")
         f.write("      KOKKOS_INLINE_FUNCTION void integrate_forward() const {}\n")
@@ -40,6 +49,16 @@ def generate_headers(mech: MechanismDefinition, out_dir: str = "build/mkpp-gener
             {"kind": "adjoint_tlm_record", "differentiable": True}
         ]
     }
+    
+    if getattr(mech, "host_interface", None) and mech.host_interface.arrays:
+        manifest["host_interface"] = {
+            arr.name: {
+                "rank": arr.rank, 
+                "layout": arr.layout,
+                "lifetime": "unmanaged_borrowed_from_host" if arr.ownership == "host" else "device_owned"
+            }
+            for arr in mech.host_interface.arrays
+        }
     
     manifest_path = out_path / "manifest.json"
     with open(manifest_path, 'w') as f:

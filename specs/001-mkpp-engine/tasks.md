@@ -78,15 +78,15 @@
 
 ### Tests for User Story 2 (MANDATORY - blocks implementation) ⚠️
 
-- [ ] T018 [P] [TDD] [US2] Add interface schema tests in `tests/python/test_validation.py` for rank, extent, unit, and ownership validation of host-facing arrays
-- [ ] T019 [P] [TDD] [US2] Add zero-copy contract tests in `tests/python/test_codegen.py` for generated manifest metadata describing unmanaged layout and host-buffer lifetimes
+- [x] T018 [P] [TDD] [US2] Add interface schema tests in `tests/python/test_validation.py` for rank, extent, unit, and ownership validation of host-facing arrays
+- [x] T019 [P] [TDD] [US2] Add zero-copy contract tests in `tests/python/test_codegen.py` for generated manifest metadata describing unmanaged layout and host-buffer lifetimes
 
 ### Implementation for User Story 2
 
-- [ ] T020 [US2] [SUBAGENT] Extend `src/mkpp/model.py` with explicit host-interface metadata for concentration arrays, meteorology arrays, cloud liquid water, and optical diagnostics
-- [ ] T021 [US2] [REVIEW] Implement zero-copy interface generation in `src/mkpp/codegen.py` so emitted headers document unmanaged views, LayoutLeft expectations, and lifetime rules
-- [ ] T022 [US2] [REVIEW] Add preflight host-compatibility checks in `src/mkpp/validation.py` for C-compatible entrypoints, shape compatibility, and canonical units before code generation
-- [ ] T023 [US2] Update `contracts/test-environment-schema.md` and `docs/Project Plan_ Next-Gen Multiphase Atmospheric Chemistry Solver (Futuristic KPP) V8.md` to document the interface schema and host preflight contract
+- [x] T020 [US2] [SUBAGENT] Extend `src/mkpp/model.py` with explicit host-interface metadata for concentration arrays, meteorology arrays, cloud liquid water, and optical diagnostics
+- [x] T021 [US2] [REVIEW] Implement zero-copy interface generation in `src/mkpp/codegen.py` so emitted headers document unmanaged views, LayoutLeft expectations, and lifetime rules
+- [x] T022 [US2] [REVIEW] Add preflight host-compatibility checks in `src/mkpp/validation.py` for C-compatible entrypoints, shape compatibility, and canonical units before code generation
+- [x] T023 [US2] Update `contracts/test-environment-schema.md` and `docs/Project Plan_ Next-Gen Multiphase Atmospheric Chemistry Solver (Futuristic KPP) V8.md` to document the interface schema and host preflight contract
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 

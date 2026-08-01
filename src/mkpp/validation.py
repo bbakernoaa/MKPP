@@ -42,3 +42,19 @@ def validate_mpi_safety(environment_config: Dict[str, Any]) -> bool:
     if mpi_config.get("gather_to_root", False):
         raise ValueError("Root-rank aggregation is strictly forbidden by EE2 standards.")
     return True
+
+def validate_host_interface(mech: MechanismDefinition):
+    """T022: Validate the zero-copy host interface schema."""
+    if not getattr(mech, "host_interface", None) or not mech.host_interface.arrays:
+        raise ValueError("Host interface schema is missing required arrays")
+        
+    for arr in mech.host_interface.arrays:
+        if not arr.extent:
+            raise ValueError(f"Host interface array '{arr.name}' must define extent vector matching rank {arr.rank}")
+        if len(arr.extent) != arr.rank:
+            raise ValueError(f"Extent length {len(arr.extent)} does not match rank {arr.rank} for array '{arr.name}'")
+        if arr.ownership not in ("host", "device"):
+            raise ValueError(f"Ownership must be 'host' or 'device', got {arr.ownership}")
+        if not arr.unit or arr.unit == "unknown":
+            raise ValueError(f"Host interface array '{arr.name}' must define a known physical unit for C-compatible translation")
+    return True

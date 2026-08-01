@@ -50,6 +50,7 @@ class MechanismDefinition:
     species: List[SpeciesDefinition]
     phases: List[PhaseDefinition]
     reactions: List[ReactionDefinition]
+    host_interface: Optional['HostInterfaceSchema'] = None
     units: str = "canonical"
     metadata: Dict[str, str] = field(default_factory=dict)
 
@@ -69,3 +70,17 @@ class GeneratedArtifact:
     path: str
     dependencies: List[str]
     checksum: Optional[str] = None
+
+@dataclass
+class ArrayDefinition:
+    name: str
+    rank: int
+    layout: str = "LayoutLeft" # Default to Fortran-compatible column-major
+    extent: Optional[List[int]] = None
+    unit: str = "unknown"
+    ownership: str = "host" # 'host' or 'device'
+
+    
+@dataclass
+class HostInterfaceSchema:
+    arrays: List[ArrayDefinition] = field(default_factory=list)
