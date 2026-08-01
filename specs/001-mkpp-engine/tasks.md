@@ -14,7 +14,7 @@
 - **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)
 - Include exact file paths in descriptions
 
-## Phase 1: Setup (Shared Infrastructure)) ([PR #1](https://github.com/bbakernoaa/MKPP/pull/1))
+## Phase 1: Setup (Shared Infrastructure))) ([PR #1](https://github.com/bbakernoaa/MKPP/pull/1))
 
 **Purpose**: Project initialization and basic structure
 
@@ -24,7 +24,7 @@
 
 ---
 
-## Phase 2: Foundational (Blocking Prerequisites)) ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
+## Phase 2: Foundational (Blocking Prerequisites))) ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
 
 **Purpose**: Core infrastructure that MUST be complete before ANY user story can be implemented
 
@@ -42,7 +42,7 @@
 
 ---
 
-## Phase 3: User Story 1 - Ahead-of-Time Mechanism Compilation & Adjoint Generation (Priority: P1) 🎯 MVP ([PR #4](https://github.com/bbakernoaa/MKPP/pull/4))
+## Phase 3: User Story 1 - Ahead-of-Time Mechanism Compilation & Adjoint Generation (Priority: P1) 🎯 MVP) ([PR #4](https://github.com/bbakernoaa/MKPP/pull/4))
 
 **Goal**: Parse representation-agnostic chemistry definitions and generate deterministic Kokkos-based solver headers plus adjoint/TLM artifacts from the AOT compiler CLI.
 
@@ -70,7 +70,7 @@
 
 ---
 
-## Phase 4: User Story 2 - Bidirectional Host Interface & Cloud Coupling (Priority: P1)
+## Phase 4: User Story 2 - Bidirectional Host Interface & Cloud Coupling (Priority: P1) ([PR #5](https://github.com/bbakernoaa/MKPP/pull/5))
 
 **Goal**: Define the bidirectional zero-copy host interface for cloud liquid water ingest and optical diagnostics so the generated solver can interoperate with host-model memory without copies.
 
@@ -139,15 +139,15 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T035 [P] [SUBAGENT] Update `specs/001-mkpp-engine/quickstart.md` and `docs/Project Plan_ Next-Gen Multiphase Atmospheric Chemistry Solver (Futuristic KPP) V8.md` with the final CLI invocation, expected outputs, and validation flow
-- [ ] T036 Verify EE2 CI/CD gates in `.github/workflows/ci.yml` and any touched build scripts so linting, testing, and environment validation remain ahead of packaging
-- [ ] T037 [REVIEW] Verify zero-copy interoperability and layout expectations in `src/mkpp/codegen.py` and `contracts/test-environment-schema.md` after all user stories are combined
-- [ ] T038 [REVIEW] Verify deterministic artifact provenance and manifest contents in `src/mkpp/codegen.py` and `tests/python/test_codegen.py`
-- [ ] T039 [P] [SUBAGENT] Add any missing unit or integration coverage in `tests/python/` for edge cases discovered during implementation
-- [ ] T040 Perform security hardening checks for path sanitization and hardcoded-secret avoidance in `src/mkpp/validation.py` and `src/mkpp/cli.py`
-- [ ] T041 Run the documented quickstart validation flow from `specs/001-mkpp-engine/quickstart.md` and confirm the emitted artifacts match the contract
-- [ ] T045 [REVIEW] Add register-pressure profiling verification in `specs/001-mkpp-engine/quickstart.md` and `tests/python/test_codegen.py` using Nsight Compute to assert <= 64 registers per thread, aligned to SC-004
-- [ ] T046 [REVIEW] Add memory-bandwidth profiling verification in `specs/001-mkpp-engine/quickstart.md` and `tests/python/test_codegen.py` with a pass/fail threshold aligned to SC-005
+- [x] T035 [P] [SUBAGENT] Update `specs/001-mkpp-engine/quickstart.md` and `docs/Project Plan_ Next-Gen Multiphase Atmospheric Chemistry Solver (Futuristic KPP) V8.md` with the final CLI invocation, expected outputs, and validation flow
+- [x] T036 Verify EE2 CI/CD gates in `.github/workflows/ci.yml` and any touched build scripts so linting, testing, and environment validation remain ahead of packaging
+- [x] T037 [REVIEW] Verify zero-copy interoperability and layout expectations in `src/mkpp/codegen.py` and `contracts/test-environment-schema.md` after all user stories are combined
+- [x] T038 [REVIEW] Verify deterministic artifact provenance and manifest contents in `src/mkpp/codegen.py` and `tests/python/test_codegen.py`
+- [x] T039 [P] [SUBAGENT] Add any missing unit or integration coverage in `tests/python/` for edge cases discovered during implementation
+- [x] T040 Perform security hardening checks for path sanitization and hardcoded-secret avoidance in `src/mkpp/validation.py` and `src/mkpp/cli.py`
+- [x] T041 Run the documented quickstart validation flow from `specs/001-mkpp-engine/quickstart.md` and confirm the emitted artifacts match the contract
+- [x] T045 [REVIEW] Add register-pressure profiling verification in `specs/001-mkpp-engine/quickstart.md` and `tests/python/test_codegen.py` using Nsight Compute to assert <= 64 registers per thread, aligned to SC-004
+- [x] T046 [REVIEW] Add memory-bandwidth profiling verification in `specs/001-mkpp-engine/quickstart.md` and `tests/python/test_codegen.py` with a pass/fail threshold aligned to SC-005
 - [x] T047 [REVIEW] Add a deterministic regex-based negative assertion in `tests/python/test_codegen.py` to reject any generated C++ headers containing raw `#pragma omp` or `#pragma acc` directives, enforcing FR-002
 
 ---
@@ -156,19 +156,19 @@
 
 ### Phase Dependencies
 
-- **Setup (Phase 1)**: No dependencies - can start immediately) ([PR #1](https://github.com/bbakernoaa/MKPP/pull/1))
-- **Foundational (Phase 2)**: Depends on Setup completion - BLOCKS all user stories) ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
-- **User Stories (Phase 3+)**: All depend on Foundational phase completion ([PR #4](https://github.com/bbakernoaa/MKPP/pull/4))
+- **Setup (Phase 1)**: No dependencies - can start immediately)) ([PR #1](https://github.com/bbakernoaa/MKPP/pull/1))
+- **Foundational (Phase 2)**: Depends on Setup completion - BLOCKS all user stories)) ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
+- **User Stories (Phase 3+)**: All depend on Foundational phase completion) ([PR #4](https://github.com/bbakernoaa/MKPP/pull/4))
   - User stories can then proceed in parallel (if staffed)
   - Or sequentially in priority order (P1 → P2 → P3)
 - **Polish (Final Phase)**: Depends on all desired user stories being complete
 
 ### User Story Dependencies
 
-- **User Story 1 (P1)**: Can start after Foundational (Phase 2) - No dependencies on other stories) ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
-- **User Story 2 (P1)**: Can start after Foundational (Phase 2) - May integrate with US1 but should be independently testable) ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
-- **User Story 3 (P2)**: Can start after Foundational (Phase 2) - May integrate with US1/US2 but should be independently testable) ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
-- **User Story 4 (P2)**: Can start after Foundational (Phase 2) - May integrate with US1/US2/US3 but should be independently testable) ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
+- **User Story 1 (P1)**: Can start after Foundational (Phase 2) - No dependencies on other stories)) ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
+- **User Story 2 (P1)**: Can start after Foundational (Phase 2) - May integrate with US1 but should be independently testable)) ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
+- **User Story 3 (P2)**: Can start after Foundational (Phase 2) - May integrate with US1/US2 but should be independently testable)) ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
+- **User Story 4 (P2)**: Can start after Foundational (Phase 2) - May integrate with US1/US2/US3 but should be independently testable)) ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
 
 ### Within Each User Story
 
@@ -181,7 +181,7 @@
 ### Parallel Opportunities
 
 - All Setup tasks marked [P] can run in parallel
-- All Foundational tasks marked [P] can run in parallel (within Phase 2)) ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
+- All Foundational tasks marked [P] can run in parallel (within Phase 2))) ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
 - Once Foundational phase completes, all user stories can start in parallel (if team capacity allows)
 - All tests for a user story marked [P] can run in parallel
 - Different user stories can be worked on in parallel by different team members
@@ -203,9 +203,9 @@ Task: "Add code-generation tests in tests/python/test_codegen.py for byte-stable
 
 ### MVP First (User Story 1 Only)
 
-1. Complete Phase 1: Setup) ([PR #1](https://github.com/bbakernoaa/MKPP/pull/1))
-2. Complete Phase 2: Foundational (CRITICAL - blocks all stories)) ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
-3. Complete Phase 3: User Story 1 ([PR #4](https://github.com/bbakernoaa/MKPP/pull/4))
+1. Complete Phase 1: Setup)) ([PR #1](https://github.com/bbakernoaa/MKPP/pull/1))
+2. Complete Phase 2: Foundational (CRITICAL - blocks all stories))) ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
+3. Complete Phase 3: User Story 1) ([PR #4](https://github.com/bbakernoaa/MKPP/pull/4))
 4. **STOP and VALIDATE**: Test User Story 1 independently
 5. Deploy/demo if ready
 

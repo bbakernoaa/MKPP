@@ -38,7 +38,9 @@ def parse_mechanism_micm(name: str, data: Dict[str, Any]) -> MechanismDefinition
             reaction_type=rtype,
             reactants=reactants,
             products=products,
-            rate_expression=str(r.get("A", "")) # Simplify base expression for MVP
+            rate_expression=str(r.get("A", "")), # Simplify base expression for MVP
+            stiff=r.get("stiff", False),
+            continuous_transition=r.get("continuous_transition", False)
         ))
         
     from .model import HostInterfaceSchema, ArrayDefinition

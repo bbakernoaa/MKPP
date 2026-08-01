@@ -1,0 +1,19 @@
+{
+  "mpi": {
+    "gather_to_root": false
+  },
+  "initial_conditions": {
+    "O2": 0.21,
+    "N2": 0.78
+  },
+  "meteorology": {
+    "temperature": 288.15,
+    "pressure": 101325.0
+  },
+  "photolysis": {
+    "J1": 1e-12,
+    "J3": 1e-4
+  },
+  "cloud_liquid_water": 0.0,
+  "bounds": {}
+}

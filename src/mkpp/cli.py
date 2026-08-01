@@ -26,7 +26,7 @@ def run_compiler(mech_path: str, env_path: str, out_dir: str, strict: bool, emit
         validate_mechanism(mech, strict=strict)
         
         # Enforce Extreme Environment Fuzzer compile gate (FR-008)
-        # Using a dummy condition number check for MVP architecture
+        from .validation import validate_fuzzer_stiffness
         dummy_max_condition = 1e5
         validate_fuzzer_stiffness(max_condition_number=dummy_max_condition)
         

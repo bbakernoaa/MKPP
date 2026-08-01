@@ -1,7 +1,7 @@
 stack:
   anchor_pr_number: 1
   anchor_pr_url: "https://github.com/bbakernoaa/MKPP/pull/1"
-  total_layers: 3
+  total_layers: 4
   layers:
     - phase: 1
       branch: "feature/001-mkpp-engine"
@@ -15,3 +15,7 @@ stack:
       branch: "feature/003-mkpp-multi-rate-solver"
       pr_number: 4
       pr_url: "https://github.com/bbakernoaa/MKPP/pull/4"
+    - phase: 4
+      branch: "feature/004-mkpp-aerosol-math"
+      pr_number: 5
+      pr_url: "https://github.com/bbakernoaa/MKPP/pull/5"
