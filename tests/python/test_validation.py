@@ -179,3 +179,23 @@ def test_host_interface_schema_units_and_c_compat():
         
     mech.host_interface.arrays[0].unit = "kg/kg"
     assert validate_host_interface(mech) is True
+
+def test_sunrise_terminator_validation():
+    # T028: Assert abrupt photolysis changes do not invalidate the partitioning contract
+    from mkpp.model import MechanismDefinition, ReactionDefinition, AerosolRepresentation
+    from mkpp.validation import validate_terminator_safety
+    
+    mech = MechanismDefinition(
+        name="test_mech", description="Test", aerosol_representation=AerosolRepresentation.BULK,
+        species=[], phases=[],
+        reactions=[
+            # Photolysis without continuous transition across the terminator will crash the explicitly sorted chunks
+            ReactionDefinition(reaction_type="PHOTOLYSIS", reactants=[], products=[], rate_expression="J", continuous_transition=False)
+        ]
+    )
+    
+    with pytest.raises(ValueError, match="PHOTOLYSIS reactions must be marked with continuous_transition"):
+        validate_terminator_safety(mech)
+        
+    mech.reactions[0].continuous_transition = True
+    assert validate_terminator_safety(mech) is True

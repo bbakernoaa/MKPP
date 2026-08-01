@@ -89,3 +89,29 @@ def test_zero_copy_manifest_metadata(tmp_path):
     assert manifest["host_interface"]["cloud_liquid_water"]["layout"] == "LayoutLeft"
     assert "lifetime" in manifest["host_interface"]["cloud_liquid_water"]
     assert manifest["host_interface"]["cloud_liquid_water"]["lifetime"] == "unmanaged_borrowed_from_host"
+
+def test_sorted_artifact_metadata(tmp_path):
+    # T025: Ensure manifest preserves workload-sorting metadata
+    from mkpp.lowering import partition_reactions
+    mech = MechanismDefinition(
+        name="test_mech", description="Test", aerosol_representation=AerosolRepresentation.BULK,
+        species=[], phases=[], reactions=[]
+    )
+    from mkpp.model import SpeciesDefinition, PhaseMode
+    mech.species.append(SpeciesDefinition(name="O3", phase=PhaseMode.GAS))
+    
+    # Mock the lowering step to inject metadata
+    mech.partition_metadata = {"sza_sorted": True, "micro_blocks": 2}
+    
+    out_dir = tmp_path / "build"
+    results = generate_headers(mech, out_dir=str(out_dir))
+    
+    with open(results["manifest"], 'r') as f:
+        manifest = json.load(f)
+        
+    assert "solver_partition" in manifest
+    assert manifest["solver_partition"]["sza_sorted"] is True
+    
+    with open(results["header"], 'r') as f:
+        content = f.read()
+    assert "// SZA Workload Sorted: true" in content

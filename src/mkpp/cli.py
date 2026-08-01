@@ -31,7 +31,12 @@ def run_compiler(mech_path: str, env_path: str, out_dir: str, strict: bool, emit
         validate_fuzzer_stiffness(max_condition_number=dummy_max_condition)
         
         # Partition reactions and prepare adjoint logic
+        from .validation import validate_terminator_safety
+        validate_terminator_safety(mech)
+        
         blocks = partition_reactions(mech)
+        mech.partition_metadata = blocks.get("metadata")
+        
         from .lowering import prepare_adjoint_and_tlm
         adjoint_metadata = prepare_adjoint_and_tlm(mech)
         

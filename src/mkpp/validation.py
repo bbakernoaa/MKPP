@@ -58,3 +58,10 @@ def validate_host_interface(mech: MechanismDefinition):
         if not arr.unit or arr.unit == "unknown":
             raise ValueError(f"Host interface array '{arr.name}' must define a known physical unit for C-compatible translation")
     return True
+
+def validate_terminator_safety(mech: MechanismDefinition) -> bool:
+    """T028: Prevent abrupt photolysis changes from crashing explicit blocks."""
+    for r in mech.reactions:
+        if r.reaction_type.upper() == "PHOTOLYSIS" and not r.continuous_transition:
+            raise ValueError("PHOTOLYSIS reactions must be marked with continuous_transition to safely navigate the terminator")
+    return True

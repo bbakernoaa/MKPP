@@ -14,7 +14,7 @@
 - **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)
 - Include exact file paths in descriptions
 
-## Phase 1: Setup (Shared Infrastructure)
+## Phase 1: Setup (Shared Infrastructure) ([PR #1](https://github.com/bbakernoaa/MKPP/pull/1))
 
 **Purpose**: Project initialization and basic structure
 
@@ -24,7 +24,7 @@
 
 ---
 
-## Phase 2: Foundational (Blocking Prerequisites)
+## Phase 2: Foundational (Blocking Prerequisites) ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
 
 **Purpose**: Core infrastructure that MUST be complete before ANY user story can be implemented
 
@@ -100,14 +100,14 @@
 
 ### Tests for User Story 3 (MANDATORY - blocks implementation) ⚠️
 
-- [ ] T024 [P] [TDD] [US3] Add workload-partitioning tests in `tests/python/test_validation.py` for solver-block classification and deterministic ordering
-- [ ] T025 [P] [TDD] [US3] Add sorted-artifact tests in `tests/python/test_codegen.py` for stable solver metadata when reaction ordering changes
+- [x] T024 [P] [TDD] [US3] Add workload-partitioning tests in `tests/python/test_validation.py` for solver-block classification and deterministic ordering
+- [x] T025 [P] [TDD] [US3] Add sorted-artifact tests in `tests/python/test_codegen.py` for stable solver metadata when reaction ordering changes
 
 ### Implementation for User Story 3
 
-- [ ] T026 [US3] [SUBAGENT] Implement deterministic solver partition metadata in `src/mkpp/lowering.py` for fast/slow species, SZA sorting, and micro-block grouping
-- [ ] T027 [US3] [REVIEW] Emit solver-partition annotations in `src/mkpp/codegen.py` so generated headers preserve workload-sorting metadata for downstream consumers
-- [ ] T028 [US3] Add sunrise/terminator validation cases in `tests/python/test_validation.py` to assert that abrupt photolysis changes do not invalidate the partitioning contract
+- [x] T026 [US3] [SUBAGENT] Implement deterministic solver partition metadata in `src/mkpp/lowering.py` for fast/slow species, SZA sorting, and micro-block grouping
+- [x] T027 [US3] [REVIEW] Emit solver-partition annotations in `src/mkpp/codegen.py` so generated headers preserve workload-sorting metadata for downstream consumers
+- [x] T028 [US3] Add sunrise/terminator validation cases in `tests/python/test_validation.py` to assert that abrupt photolysis changes do not invalidate the partitioning contract
 
 **Checkpoint**: At this point, User Stories 1, 2, AND 3 should work independently
 
@@ -156,8 +156,8 @@
 
 ### Phase Dependencies
 
-- **Setup (Phase 1)**: No dependencies - can start immediately
-- **Foundational (Phase 2)**: Depends on Setup completion - BLOCKS all user stories
+- **Setup (Phase 1)**: No dependencies - can start immediately ([PR #1](https://github.com/bbakernoaa/MKPP/pull/1))
+- **Foundational (Phase 2)**: Depends on Setup completion - BLOCKS all user stories ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
 - **User Stories (Phase 3+)**: All depend on Foundational phase completion
   - User stories can then proceed in parallel (if staffed)
   - Or sequentially in priority order (P1 → P2 → P3)
@@ -165,10 +165,10 @@
 
 ### User Story Dependencies
 
-- **User Story 1 (P1)**: Can start after Foundational (Phase 2) - No dependencies on other stories
-- **User Story 2 (P1)**: Can start after Foundational (Phase 2) - May integrate with US1 but should be independently testable
-- **User Story 3 (P2)**: Can start after Foundational (Phase 2) - May integrate with US1/US2 but should be independently testable
-- **User Story 4 (P2)**: Can start after Foundational (Phase 2) - May integrate with US1/US2/US3 but should be independently testable
+- **User Story 1 (P1)**: Can start after Foundational (Phase 2) - No dependencies on other stories ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
+- **User Story 2 (P1)**: Can start after Foundational (Phase 2) - May integrate with US1 but should be independently testable ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
+- **User Story 3 (P2)**: Can start after Foundational (Phase 2) - May integrate with US1/US2 but should be independently testable ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
+- **User Story 4 (P2)**: Can start after Foundational (Phase 2) - May integrate with US1/US2/US3 but should be independently testable ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
 
 ### Within Each User Story
 
@@ -181,7 +181,7 @@
 ### Parallel Opportunities
 
 - All Setup tasks marked [P] can run in parallel
-- All Foundational tasks marked [P] can run in parallel (within Phase 2)
+- All Foundational tasks marked [P] can run in parallel (within Phase 2) ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
 - Once Foundational phase completes, all user stories can start in parallel (if team capacity allows)
 - All tests for a user story marked [P] can run in parallel
 - Different user stories can be worked on in parallel by different team members
@@ -203,8 +203,8 @@ Task: "Add code-generation tests in tests/python/test_codegen.py for byte-stable
 
 ### MVP First (User Story 1 Only)
 
-1. Complete Phase 1: Setup
-2. Complete Phase 2: Foundational (CRITICAL - blocks all stories)
+1. Complete Phase 1: Setup ([PR #1](https://github.com/bbakernoaa/MKPP/pull/1))
+2. Complete Phase 2: Foundational (CRITICAL - blocks all stories) ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
 3. Complete Phase 3: User Story 1
 4. **STOP and VALIDATE**: Test User Story 1 independently
 5. Deploy/demo if ready

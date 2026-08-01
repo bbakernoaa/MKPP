@@ -20,6 +20,12 @@ def generate_headers(mech: MechanismDefinition, out_dir: str = "build/mkpp-gener
         f.write("#include <KokkosBatched_LU_Decl.hpp>\n")
         f.write("#include <KokkosBatched_Trsv_Decl.hpp>\n\n")
         f.write(f"// Generated solver for {mech.name}\n")
+        
+        # T027: Emit workload-sorting annotations for downstream runtime
+        partition_meta = getattr(mech, "partition_metadata", None)
+        if partition_meta and partition_meta.get("sza_sorted"):
+            f.write("// SZA Workload Sorted: true\n")
+            
         f.write("namespace mkpp {\n")
         f.write("  // Pure Kokkos abstractions (no raw pragmas allowed)\n")
         
@@ -59,6 +65,10 @@ def generate_headers(mech: MechanismDefinition, out_dir: str = "build/mkpp-gener
             }
             for arr in mech.host_interface.arrays
         }
+        
+    partition_meta = getattr(mech, "partition_metadata", None)
+    if partition_meta:
+        manifest["solver_partition"] = partition_meta
     
     manifest_path = out_path / "manifest.json"
     with open(manifest_path, 'w') as f:

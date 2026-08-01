@@ -47,3 +47,25 @@ def test_prepare_adjoint_and_tlm_failure():
     )
     with pytest.raises(ValueError, match="lacks continuous transition"):
         prepare_adjoint_and_tlm(mech)
+
+def test_workload_partitioning_sorting():
+    # T024: Ensure solver blocks are deterministically partitioned and micro-block metadata is created
+    from mkpp.model import MechanismDefinition, ReactionDefinition, AerosolRepresentation
+    
+    mech = MechanismDefinition(
+        name="test_mech", description="Test", aerosol_representation=AerosolRepresentation.BULK,
+        species=[], phases=[],
+        reactions=[
+            ReactionDefinition(reaction_type="KINETIC", reactants=[], products=[], rate_expression="B", stiff=True),
+            ReactionDefinition(reaction_type="PHOTOLYSIS", reactants=[], products=[], rate_expression="A", stiff=True),
+        ]
+    )
+    blocks = partition_reactions(mech)
+    
+    # Must contain metadata for SZA sorting and micro-blocks
+    assert "metadata" in blocks
+    assert blocks["metadata"]["sza_sorted"] is True
+    
+    # Deterministic sorting (PHOTOLYSIS should sort before KINETIC alphabetically)
+    assert blocks["implicit"][0].reaction_type == "KINETIC" # Wait, K comes before P!
+    assert blocks["implicit"][1].reaction_type == "PHOTOLYSIS"

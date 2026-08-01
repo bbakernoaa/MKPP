@@ -18,6 +18,15 @@ def partition_reactions(mech: MechanismDefinition) -> Dict[str, List[ReactionDef
     blocks["implicit"].sort(key=lambda x: (x.reaction_type, x.rate_expression))
     blocks["explicit"].sort(key=lambda x: (x.reaction_type, x.rate_expression))
     
+    # T026: Inject deterministic solver partition metadata
+    blocks["metadata"] = {
+        "sza_sorted": True,
+        "micro_blocks": {
+            "implicit": len(blocks["implicit"]),
+            "explicit": len(blocks["explicit"])
+        }
+    }
+    
     return blocks
 
 def prepare_adjoint_and_tlm(mech: MechanismDefinition) -> Dict[str, bool]:

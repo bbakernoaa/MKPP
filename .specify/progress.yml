@@ -1,5 +1,13 @@
 stack:
-  anchor_pr_number: null
-  anchor_pr_url: null
-  total_layers: 0
-  layers: []
+  anchor_pr_number: 1
+  anchor_pr_url: "https://github.com/bbakernoaa/MKPP/pull/1"
+  total_layers: 2
+  layers:
+    - phase: 1
+      branch: "feature/001-mkpp-engine"
+      pr_number: 1
+      pr_url: "https://github.com/bbakernoaa/MKPP/pull/1"
+    - phase: 2
+      branch: "feature/002-mkpp-host-interface"
+      pr_number: 2
+      pr_url: "https://github.com/bbakernoaa/MKPP/pull/2"
