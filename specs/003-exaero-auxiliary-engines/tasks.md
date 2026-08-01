@@ -21,7 +21,7 @@ description: "Task list for Exaero Auxiliary Engines implementation"
 
 **Story labels**: `[US1]`, `[US2]`, `[US3]` map tasks to user stories for traceability.
 
-## Phase 1: Setup (Shared Infrastructure) ([PR #1](https://github.com/bbakernoaa/MKPP/pull/1))
+## Phase 1: Setup (Shared Infrastructure)) ([PR #1](https://github.com/bbakernoaa/MKPP/pull/1))
 
 **Purpose**: Project initialization and basic structure
 
@@ -31,7 +31,7 @@ description: "Task list for Exaero Auxiliary Engines implementation"
 
 ---
 
-## Phase 2: Foundational (Blocking Prerequisites) ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
+## Phase 2: Foundational (Blocking Prerequisites)) ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
 
 **Purpose**: Core infrastructure that MUST be complete before ANY user story
 
@@ -41,7 +41,7 @@ description: "Task list for Exaero Auxiliary Engines implementation"
 
 ---
 
-## Phase 3: User Story 1 - Optional Compilation via CMake (Priority: P1) MVP ([PR #4](https://github.com/bbakernoaa/MKPP/pull/4))
+## Phase 3: User Story 1 - Optional Compilation via CMake (Priority: P1) MVP) ([PR #4](https://github.com/bbakernoaa/MKPP/pull/4))
 
 **Goal**: Conditionally compile Cloud-J and ISORROPIA-Lite into Exaero via CMake flags.
 **Independent Test**: Run CMake with varying flag combinations and verify successful compilation/linking.
@@ -57,7 +57,7 @@ description: "Task list for Exaero Auxiliary Engines implementation"
 
 ---
 
-## Phase 4: User Story 2 - Zero-Copy Dispatch to Fortran Engines (Priority: P1) ([PR #5](https://github.com/bbakernoaa/MKPP/pull/5))
+## Phase 4: User Story 2 - Zero-Copy Dispatch to Fortran Engines (Priority: P1)) ([PR #5](https://github.com/bbakernoaa/MKPP/pull/5))
 
 **Goal**: Dispatch calculations using zero-copy memory handshakes and Fortran API contracts.
 **Independent Test**: Profile memory allocations during simulation step to ensure zero redundant copies at C++/Fortran boundary.
@@ -76,7 +76,7 @@ description: "Task list for Exaero Auxiliary Engines implementation"
 
 ---
 
-## Phase 5: User Story 3 - GPU Load Balanced Execution (Priority: P2) ([PR #6](https://github.com/bbakernoaa/MKPP/pull/6))
+## Phase 5: User Story 3 - GPU Load Balanced Execution (Priority: P2)) ([PR #6](https://github.com/bbakernoaa/MKPP/pull/6))
 
 **Goal**: Execute on GPUs using balanced workloads without warp divergence.
 **Independent Test**: Profile GPU execution to verify thread occupancy and hierarchical parallelism.
@@ -90,7 +90,7 @@ description: "Task list for Exaero Auxiliary Engines implementation"
 
 ---
 
-## Phase 6: Polish & Cross-Cutting Concerns ([PR #7](https://github.com/bbakernoaa/MKPP/pull/7))
+## Phase 6: Polish & Cross-Cutting Concerns) ([PR #7](https://github.com/bbakernoaa/MKPP/pull/7))
 
 **Purpose**: Improvements that affect multiple user stories
 
@@ -104,9 +104,9 @@ description: "Task list for Exaero Auxiliary Engines implementation"
 
 ### Phase Dependencies
 
-- **Setup (Phase 1)**: No dependencies — start immediately ([PR #1](https://github.com/bbakernoaa/MKPP/pull/1))
-- **Foundational (Phase 2)**: Depends on Setup — BLOCKS all user stories ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
-- **User Stories (Phase 3+)**: All depend on Foundational completion ([PR #4](https://github.com/bbakernoaa/MKPP/pull/4))
+- **Setup (Phase 1)**: No dependencies — start immediately) ([PR #1](https://github.com/bbakernoaa/MKPP/pull/1))
+- **Foundational (Phase 2)**: Depends on Setup — BLOCKS all user stories) ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
+- **User Stories (Phase 3+)**: All depend on Foundational completion) ([PR #4](https://github.com/bbakernoaa/MKPP/pull/4))
 - **Polish (Final Phase)**: Depends on all desired user stories being complete
 
 ### Parallel Opportunities

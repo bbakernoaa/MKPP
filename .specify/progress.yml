@@ -1,7 +1,7 @@
 stack:
   anchor_pr_number: 1
   anchor_pr_url: "https://github.com/bbakernoaa/MKPP/pull/1"
-  total_layers: 11
+  total_layers: 12
   layers:
     - phase: 1
       branch: "feature/001-mkpp-engine"
@@ -47,3 +47,7 @@ stack:
       branch: "feature/011-exaero-auxiliary-setup"
       pr_number: 12
       pr_url: "https://github.com/bbakernoaa/MKPP/pull/12"
+    - phase: 12
+      branch: "feature/012-exaero-auxiliary-cmake"
+      pr_number: 13
+      pr_url: "https://github.com/bbakernoaa/MKPP/pull/13"
