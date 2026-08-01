@@ -1,4 +1,4 @@
-# Exaero C++ Driver Quickstart
+# Exaero C++ Utility Quickstart
 
 ## Prerequisites
 - A mechanism compiled via the MKPP Python tool (e.g. `python -m mkpp compile ... --out build/mkpp-generated`).

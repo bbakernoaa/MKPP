@@ -1,6 +1,6 @@
-# Tasks: Exaero C++ Host Driver & Mechanism Registry
+# Tasks: Exaero C++ Utility & Mechanism Registry
 
-**Input**: Design documents from `/specs/002-exaero-cpp-driver/`
+**Input**: Design documents from `/specs/002-exaero-cpp-utility/`
 
 **Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/
 

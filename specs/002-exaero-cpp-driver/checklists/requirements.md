@@ -1,4 +1,4 @@
-# Specification Quality Checklist: exaero-cpp-driver
+# Specification Quality Checklist: exaero-cpp-utility
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-08-01

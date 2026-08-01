@@ -1,4 +1,4 @@
-# Data Model: Exaero C++ Driver
+# Data Model: Exaero C++ Utility
 
 ## Key Entities
 
@@ -16,6 +16,6 @@ The structure of arrays mapping directly to the Host Fortran pointers.
     *   `meteorology`: `Kokkos::View<double****, Kokkos::LayoutLeft, Kokkos::MemoryUnmanaged>`
 
 ## State Transitions
-1.  **Driver Initialization**: Host calls `exaero_init(mechanism_name, n_cells)`. `ExaeroContext` is instantiated. Persistent sorting views are allocated. Registry validates `mechanism_name`.
+1.  **Utility Initialization**: Host calls `exaero_init(mechanism_name, n_cells)`. `ExaeroContext` is instantiated. Persistent sorting views are allocated. Registry validates `mechanism_name`.
 2.  **Timestep Execution**: Host calls `exaero_solve(...)` passing raw pointers. Unmanaged Views are bound. SZA array is analyzed, and the persistent index map is updated. `Kokkos::TeamPolicy` dispatches the active mechanism.
-3.  **Driver Teardown**: Host calls `exaero_finalize()`. `ExaeroContext` is destroyed.
+3.  **Utility Teardown**: Host calls `exaero_finalize()`. `ExaeroContext` is destroyed.

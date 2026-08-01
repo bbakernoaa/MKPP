@@ -1,8 +1,8 @@
-# Implementation Plan: Exaero C++ Host Driver & Mechanism Registry
+# Implementation Plan: Exaero C++ Utility & Mechanism Registry
 
 **Goal:** Build the native C++ execution layer (`exaero`) that dynamically registers, links, and dispatches the MKPP AOT-generated block-sparse Kokkos C++ headers over a 3D host grid. Ensure workloads are dynamically load-balanced via a Solar Zenith Angle (SZA) sorter, using persistent `Kokkos::MemoryUnmanaged` Views for zero-copy coupling to external host environments (e.g., Fortran UFS/CMAQ wrappers).
 
-**Architecture:** The driver lives in `src/exaero/`. It implements a Factory/Registry pattern to map configuration strings to specific generated kernels at runtime. It implements a core `TeamPolicy Dispatcher` that evaluates a dedicated SZA array to partition the global grid into balanced Kokkos thread blocks before calling the chemistry solver. 
+**Architecture:** The utility lives in `src/exaero/`. It implements a Factory/Registry pattern to map configuration strings to specific generated kernels at runtime. It implements a core `TeamPolicy Dispatcher` that evaluates a dedicated SZA array to partition the global grid into balanced Kokkos thread blocks before calling the chemistry solver. 
 
 **Tech Stack:** C++23, Kokkos, CMake 3.24, CTest (with optionally compiled Python-generated fixtures from MKPP).
 
@@ -12,13 +12,13 @@
 - `System MUST guarantee zero-copy data interoperability using Fortran-compatible LayoutLeft unmanaged views.`
 - `System MUST fail fast and loudly during module initialization if a requested mechanism is not present in the linked registry.`
 - `The build system (CMake) MUST provide flags to conditionally compile specific pre-generated mechanisms directly into the main static/shared library.`
-- `The driver MUST allocate persistent Kokkos views once during initialization for any sorting/scratch buffers, and reuse them at every timestep to avoid dynamic memory allocation overhead.`
+- `The utility MUST allocate persistent Kokkos views once during initialization for any sorting/scratch buffers, and reuse them at every timestep to avoid dynamic memory allocation overhead.`
 - `Code inside this repository... Zero dead code allowed.`
 - `Never use switch/case or heavy if/else logic for evaluating thermodynamic phase branches inside Kokkos kernels to prevent warp divergence.`
 
 ## Summary
 
-The `exaero` C++ driver bridges the gap between the host Fortran models (which own the actual physical grid data) and the high-performance Kokkos solvers emitted by the MKPP AOT Python compiler. It provides an `extern "C"` Fortran-compatible entry point, allocates minimal persistent scratch spaces for sorting overhead, and manages the intelligent execution dispatch (grouping stiff and non-stiff computational domains) to perfectly load-balance the GPU via `Kokkos::TeamPolicy`. Pre-generated mechanisms (like Chapman or CRACMM) are compiled into a static library via CMake configuration flags and invoked dynamically via a lightweight Registry class.
+The `exaero` C++ utility bridges the gap between the host Fortran models (which own the actual physical grid data) and the high-performance Kokkos solvers emitted by the MKPP AOT Python compiler. It provides an `extern "C"` Fortran-compatible entry point, allocates minimal persistent scratch spaces for sorting overhead, and manages the intelligent execution dispatch (grouping stiff and non-stiff computational domains) to perfectly load-balance the GPU via `Kokkos::TeamPolicy`. Pre-generated mechanisms (like Chapman or CRACMM) are compiled into a static library via CMake configuration flags and invoked dynamically via a lightweight Registry class.
 
 ## Technical Context
 
@@ -40,7 +40,7 @@ The `exaero` C++ driver bridges the gap between the host Fortran models (which o
 | Clarity Over Cleverness | PASS | The registry pattern will be flat and explicitly mapped, avoiding dynamic `dlopen` trickery. |
 | Defensive Programming | PASS | The registry explicitly checks if the string maps to a linked target and aborts loudly otherwise. |
 | Fail Fast, Fail Loudly | PASS | Runtime registry failures or incorrect layout ranks from the host map directly to fatal crashes. |
-| High-Performance HPC & MPI | PASS | The driver operates entirely on sub-communicators or local grid blocks without triggering root-rank gathers. |
+| High-Performance HPC & MPI | PASS | The utility operates entirely on sub-communicators or local grid blocks without triggering root-rank gathers. |
 | GPU Acceleration & Kokkos | PASS | The sorting logic is designed strictly for `Kokkos::TeamPolicy` utilization. |
 | Zero-Copy Data Interoperability | PASS | Uses `Kokkos::View<..., Kokkos::LayoutLeft, Kokkos::MemoryUnmanaged>` internally. |
 | Scientific Hygiene & Determinism | PASS | C++ logic defers scientific execution entirely to the deterministically generated MKPP headers. |
@@ -50,7 +50,7 @@ The `exaero` C++ driver bridges the gap between the host Fortran models (which o
 ### Documentation (this feature)
 
 ```text
-specs/002-exaero-cpp-driver/
+specs/002-exaero-cpp-utility/
 ├── spec.md
 ├── plan.md
 ├── research.md

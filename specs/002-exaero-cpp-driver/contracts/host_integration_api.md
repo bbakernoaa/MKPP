@@ -2,7 +2,7 @@
 
 ## C-Compatible Entrypoints
 
-The Exaero C++ driver exposes the following `extern "C"` interfaces for integration into Fortran (`ISO_C_BINDING`) and other native host models.
+The Exaero C++ utility exposes the following `extern "C"` interfaces for integration into Fortran (`ISO_C_BINDING`) and other native host models.
 
 ```cpp
 #include <stdint.h>
@@ -10,7 +10,7 @@ The Exaero C++ driver exposes the following `extern "C"` interfaces for integrat
 extern "C" {
 
 /**
- * @brief Initializes the Exaero driver, validating the registry and allocating persistent scratch views.
+ * @brief Initializes the Exaero utility, validating the registry and allocating persistent scratch views.
  * @param mechanism_name Null-terminated string matching an AOT-compiled mechanism (e.g. "ChapmanCycle").
  * @param total_cells Total size of the horizontal/vertical execution grid.
  * @return 0 on success, non-zero on fatal failure (e.g., mechanism not found).
