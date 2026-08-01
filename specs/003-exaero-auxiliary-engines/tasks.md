@@ -64,13 +64,13 @@ description: "Task list for Exaero Auxiliary Engines implementation"
 
 ### Tests for User Story 2
 
-- [ ] T007 [P] [TDD] [US2] Write unit tests in `src/exaero/tests/test_auxiliary_engines.cpp` verifying zero-copy view configurations (`layout_left`, unmanaged) and dummy ops
+- [x] T007 [P] [TDD] [US2] Write unit tests in `src/exaero/tests/test_auxiliary_engines.cpp` verifying zero-copy view configurations (`layout_left`, unmanaged) and dummy ops
 
 ### Implementation for User Story 2
 
-- [ ] T008 [US2] Declare `extern "C"` interfaces for Fortran drivers in `src/exaero/src/auxiliary_engines.cpp`
-- [ ] T009 [US2] Implement C++ zero-copy dispatch wrappers extracting `.data()` and passing extents explicitly to Fortran `bind(c)` boundaries using unmanaged `layout_left` Kokkos views in `src/exaero/include/auxiliary_engines.hpp`
-- [ ] T010 [P] [US2] Implement preprocessor conditionals (`#ifdef EXAERO_WITH_CLOUDJ`, etc.) to execute Fortran calls or dummy pass-throughs in `src/exaero/src/auxiliary_engines.cpp`
+- [x] T008 [US2] Declare `extern "C"` interfaces for Fortran drivers in `src/exaero/src/auxiliary_engines.cpp`
+- [x] T009 [US2] Implement C++ zero-copy dispatch wrappers extracting `.data()` and passing extents explicitly to Fortran `bind(c)` boundaries using unmanaged `layout_left` Kokkos views in `src/exaero/include/auxiliary_engines.hpp`
+- [x] T010 [P] [US2] Implement preprocessor conditionals (`#ifdef EXAERO_WITH_CLOUDJ`, etc.) to execute Fortran calls or dummy pass-throughs in `src/exaero/src/auxiliary_engines.cpp`
 
 **Checkpoint**: User Story 2 fully functional. Fortran linkage and dummy pass-throughs work.
 
@@ -83,8 +83,8 @@ description: "Task list for Exaero Auxiliary Engines implementation"
 
 ### Implementation for User Story 3
 
-- [ ] T011 [US3] Wrap dispatch invocations in `Kokkos::TeamPolicy` parallel regions inside `src/exaero/src/auxiliary_engines.cpp`
-- [ ] T012 [US3] Use `Kokkos::TeamThreadRange` within the dispatch logic to distribute cell calculations without starvation in `src/exaero/src/auxiliary_engines.cpp`
+- [x] T011 [US3] Wrap dispatch invocations in `Kokkos::TeamPolicy` parallel regions inside `src/exaero/src/auxiliary_engines.cpp`
+- [x] T012 [US3] Use `Kokkos::TeamThreadRange` within the dispatch logic to distribute cell calculations without starvation in `src/exaero/src/auxiliary_engines.cpp`
 
 **Checkpoint**: User Story 3 fully functional. GPU parallelism is correctly implemented.
 
@@ -96,7 +96,7 @@ description: "Task list for Exaero Auxiliary Engines implementation"
 
 - [ ] T013 [P] [SUBAGENT] Update `src/exaero/README.md` with new auxiliary engine CMake flags documentation
 - [ ] T014 [REVIEW] Review zero-copy and hierarchical parallel logic in `src/exaero/src/auxiliary_engines.cpp` against CON-001 and CON-002 constraints
-- [ ] T015 Run full CTest suite in `build/` to verify baseline integrations match
+- [x] T015 Run full CTest suite in `build/` to verify baseline integrations match
 
 ---
 
@@ -114,6 +114,6 @@ description: "Task list for Exaero Auxiliary Engines implementation"
 - CMake logic for ISORROPIA (T005) can be developed in parallel with Cloud-J CMake logic (T004)
 - Zero-copy view unit tests (T007) can be written independently before wrapper implementation
 - Preprocessor conditionals (T010) can be added independently to the dispatch implementation
-- [ ] T016 Write E2E integration tests comparing MKPP's dispatched outputs against standalone engine baselines (SC-004).
-- [ ] T017 Implement pre-dispatch validation checks for `NaN`/`Inf` conditions on incoming arrays.
-- [ ] T018 Profile the compiled executable with Nsight Compute / HPCToolkit to assert 0-byte memory allocation overhead and >80% GPU warp efficiency.
+- [x] T016 Write E2E integration tests comparing MKPP's dispatched outputs against standalone engine baselines (SC-004).
+- [x] T017 Implement pre-dispatch validation checks for `NaN`/`Inf` conditions on incoming arrays.
+- [x] T018 Profile the compiled executable with Nsight Compute / HPCToolkit to assert 0-byte memory allocation overhead and >80% GPU warp efficiency.
