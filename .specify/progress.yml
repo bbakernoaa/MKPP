@@ -1,7 +1,7 @@
 stack:
   anchor_pr_number: 1
   anchor_pr_url: "https://github.com/bbakernoaa/MKPP/pull/1"
-  total_layers: 8
+  total_layers: 9
   layers:
     - phase: 1
       branch: "feature/001-mkpp-engine"
@@ -35,3 +35,7 @@ stack:
       branch: "feature/008-exaero-cpp-driver"
       pr_number: 9
       pr_url: "https://github.com/bbakernoaa/MKPP/pull/9"
+    - phase: 9
+      branch: "feature/009-exaero-cpp-driver-registry"
+      pr_number: 10
+      pr_url: "https://github.com/bbakernoaa/MKPP/pull/10"
