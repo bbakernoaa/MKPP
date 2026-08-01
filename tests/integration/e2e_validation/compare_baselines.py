@@ -4,6 +4,10 @@ import numpy as np
 import csv
 import re
 
+def solve_ros2_in_python():
+    pass
+
+
 def eval_jacobian_eqn(eqn_str, state_list):
     eqn_str = eqn_str.replace('**', '**')
     state = state_list
@@ -65,7 +69,7 @@ def main():
         
     if args.target:
         print(f"Comparing {args.baseline} with {args.target}")
-        sys.exit(0) # We skip the concentration check for now since we are just simulating Euler
+        
 
 if __name__ == "__main__":
     main()
