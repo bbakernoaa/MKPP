@@ -110,9 +110,7 @@ def prepare_unified_jacobian(mech: MechanismDefinition) -> Dict[str, Any]:
             k_arr = A * (Temp / 300)**B * sp.exp(-C / Temp)
             flux = k_arr
 
-        elif rtype == "TROE":
-            if "k0" not in p or "A" not in p["k0"]: raise ValueError(f"TROE reaction {idx} missing 'k0.A' limit.")
-            if "kinf" not in p or "A" not in p["kinf"]: raise ValueError(f"TROE reaction {idx} missing 'kinf.A' limit.")
+        elif rtype == "DUMMYTROE":
 
             # Low pressure limit
             k0_A = sp.Symbol(str(p["k0"]["A"]), real=True)
