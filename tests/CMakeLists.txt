@@ -1,0 +1,1 @@
+add_subdirectory(integration/e2e_validation)
