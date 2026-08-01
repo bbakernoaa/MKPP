@@ -44,9 +44,34 @@ def generate_headers(mech: MechanismDefinition, out_dir: str = "build/mkpp-gener
                 
         f.write("  template<typename DeviceType>\n")
         f.write("  struct SolverKernels {\n")
-        f.write("      KOKKOS_INLINE_FUNCTION void integrate_forward() const {}\n")
-        f.write("      KOKKOS_INLINE_FUNCTION void compute_adjoint() const {}\n")
+        f.write("      KOKKOS_INLINE_FUNCTION void integrate_forward(double* state, double* J_block) const {\n")
+        
+        # Inject the SymPy-calculated analytical Jacobian scalar equations
+        sympy_meta = getattr(mech, "sympy_metadata", None)
+        if sympy_meta:
+            J = sympy_meta["jacobian_matrix"]
+            for i in range(J.shape[0]):
+                for j in range(J.shape[1]):
+                    if J[i, j] != 0:
+                        f.write(f"          J_block[{i * J.shape[1] + j}] = {J[i, j]};\n")
+                        
+        f.write("      }\n")
+        f.write("      KOKKOS_INLINE_FUNCTION void compute_adjoint(double* state, double* J_adj_block) const {\n")
+        if sympy_meta:
+            J_adj = sympy_meta["adjoint_matrix"]
+            for i in range(J_adj.shape[0]):
+                for j in range(J_adj.shape[1]):
+                    if J_adj[i, j] != 0:
+                        f.write(f"          J_adj_block[{i * J_adj.shape[1] + j}] = {J_adj[i, j]};\n")
+        f.write("      }\n")
         f.write("      KOKKOS_INLINE_FUNCTION void compute_tlm() const {}\n")
+        
+        # Section 2.5: Algebraic Elemental Mass Conservation Projection Step
+        f.write("      KOKKOS_INLINE_FUNCTION void project_mass_conservation(double* C_projected, double* C) const {\n")
+        f.write("          // C_projected = C - E^T (E E^T)^-1 (E C - m_0)\n")
+        f.write("          // (Emitting analytical pseudo-inverse arrays here in full production implementation)\n")
+        f.write("      }\n")
+        
         f.write("  };\n")
         f.write("}\n")
         

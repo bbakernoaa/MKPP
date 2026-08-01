@@ -38,8 +38,9 @@ def run_compiler(mech_path: str, env_path: str, out_dir: str, strict: bool, emit
         blocks = partition_reactions(mech)
         mech.partition_metadata = blocks.get("metadata")
         
-        from .lowering import prepare_adjoint_and_tlm
+        from .lowering import prepare_adjoint_and_tlm, prepare_unified_jacobian
         adjoint_metadata = prepare_adjoint_and_tlm(mech)
+        mech.sympy_metadata = prepare_unified_jacobian(mech)
         
         # Generate artifacts
         generate_headers(mech, out_dir=out_dir)

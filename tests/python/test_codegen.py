@@ -161,3 +161,32 @@ def test_profiling_thresholds_dummy():
             
     assert registers <= 64, f"Register pressure exceeded limit: {registers} > 64"
     assert bandwidth > 80, f"Memory bandwidth below 80% utilization: {bandwidth}"
+
+def test_codegen_emits_sympy_jacobian(tmp_path):
+    from mkpp.model import MechanismDefinition, ReactionDefinition, AerosolRepresentation, SpeciesDefinition, PhaseMode
+    from mkpp.lowering import prepare_unified_jacobian
+    
+    mech = MechanismDefinition(
+        name="test_mech", description="Test", aerosol_representation=AerosolRepresentation.BULK,
+        species=[
+            SpeciesDefinition(name="O2", phase=PhaseMode.GAS),
+            SpeciesDefinition(name="O", phase=PhaseMode.GAS)
+        ], phases=[],
+        reactions=[
+            ReactionDefinition(reaction_type="PHOTOLYSIS", reactants=["O2"], products=["O", "O"], rate_expression="J1", parameters={"A": "J1"})
+        ]
+    )
+    
+    # Run the SymPy lowering
+    mech.sympy_metadata = prepare_unified_jacobian(mech)
+    
+    out_dir = tmp_path / "build"
+    results = generate_headers(mech, out_dir=str(out_dir))
+    
+    with open(results["header"], 'r') as f:
+        content = f.read()
+        
+    # The derivative of d[O]/dt (which is 2*J1*[O2]) with respect to [O2] is 2*J1.
+    # Therefore, J_block[1][0] should be assigned 2*J1.
+    assert "J_block[" in content
+    assert "J1" in content

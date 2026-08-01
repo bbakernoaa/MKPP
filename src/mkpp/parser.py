@@ -34,11 +34,23 @@ def parse_mechanism_micm(name: str, data: Dict[str, Any]) -> MechanismDefinition
         rtype = r.get("type", "UNKNOWN")
         reactants = list(r.get("reactants", {}).keys())
         products = list(r.get("products", {}).keys())
+        
+        # Extract all potential rate parameters instead of just A
+        # For MICM compliance, parameters can include k0_A, kinf_A, Fc, gamma, etc.
+        parameters = {}
+        for k, v in r.items():
+            if k not in ("type", "reactants", "products", "stiff", "continuous_transition"):
+                parameters[k] = str(v)
+                
+        # Maintain backwards compat for the simple tests
+        base_rate = str(r.get("A", ""))
+        
         reactions.append(ReactionDefinition(
             reaction_type=rtype,
             reactants=reactants,
             products=products,
-            rate_expression=str(r.get("A", "")), # Simplify base expression for MVP
+            rate_expression=base_rate,
+            parameters=parameters,
             stiff=r.get("stiff", False),
             continuous_transition=r.get("continuous_transition", False)
         ))
