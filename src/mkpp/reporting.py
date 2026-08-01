@@ -1,0 +1,96 @@
+import os
+import networkx as nx
+import matplotlib.pyplot as plt
+from pathlib import Path
+
+def write_report(mech, sympy_meta, out_dir):
+    out_path = Path(out_dir)
+    out_path.mkdir(parents=True, exist_ok=True)
+    
+    # 1. Graph Generation
+    G = nx.DiGraph()
+    for r in mech.reactions:
+        for reactant in r.reactants.keys():
+            for product in r.products.keys():
+                if reactant != product:
+                    G.add_edge(reactant, product)
+    
+    plt.figure(figsize=(12, 10))
+    # Use spring layout for better separation
+    pos = nx.spring_layout(G, k=1.5, iterations=50)
+    
+    # Calculate degree centrality to size nodes
+    degrees = dict(G.degree())
+    node_sizes = [v * 100 for v in degrees.values()]
+    
+    nx.draw_networkx_nodes(G, pos, node_size=node_sizes, node_color='lightblue', alpha=0.7)
+    nx.draw_networkx_edges(G, pos, alpha=0.3, arrows=True)
+    nx.draw_networkx_labels(G, pos, font_size=8, font_weight='bold')
+    
+    plt.title(f"Chemical Mechanism Topology: {mech.name}")
+    plt.axis('off')
+    
+    graph_path = out_path / f"network_graph_{mech.name}.png"
+    plt.savefig(graph_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    
+    # 2. Stiffness Analytics
+    J = sympy_meta.get("jacobian_matrix")
+    if J:
+        # Count non-zeros per row (species)
+        species_list = sympy_meta["species_map"]
+        row_density = []
+        for i in range(J.shape[0]):
+            nz = sum([1 for j in range(J.shape[1]) if J[i, j] != 0])
+            row_density.append((species_list[i], nz))
+            
+        row_density.sort(key=lambda x: x[1], reverse=True)
+        top_dense = row_density[:5]
+    else:
+        top_dense = []
+
+    # Count reaction types
+    type_counts = {}
+    for r in mech.reactions:
+        type_counts[r.reaction_type] = type_counts.get(r.reaction_type, 0) + 1
+
+    # 3. Write Markdown Report
+    report_path = out_path / f"report_{mech.name}.md"
+    with open(report_path, "w") as f:
+        f.write(f"# MKPP Mechanism Diagnostic Report: {mech.name}\n\n")
+        
+        f.write("## Overview\n")
+        f.write(f"- **Total Species**: {len(mech.species)}\n")
+        f.write(f"- **Total Reactions**: {len(mech.reactions)}\n\n")
+        
+        f.write("### Reaction Types Breakdown\n")
+        for rt, cnt in type_counts.items():
+            f.write(f"- **{rt}**: {cnt}\n")
+        f.write("\n")
+        
+        f.write("## Topology & Graph\n")
+        f.write(f"![Network Graph](network_graph_{mech.name}.png)\n\n")
+        
+        f.write("## Performance & Stiffness Diagnostics\n")
+        if top_dense:
+            f.write("The following species are the most heavily coupled (densest Jacobian rows). These dictate the performance ceiling of the Dense LU / ROS2 implicit solver block:\n\n")
+            f.write("| Species | Non-Zero Dependencies |\n")
+            f.write("|---------|-----------------------|\n")
+            for sp, nz in top_dense:
+                f.write(f"| {sp} | {nz} |\n")
+        f.write("\n")
+        
+        f.write("### Warnings\n")
+        warnings = []
+        if len(mech.species) > 50:
+            warnings.append("Mechanism exceeds 50 species. Consider running with `--enable-drgep` to auto-reduce.")
+        if type_counts.get("TROE", 0) > 0 or type_counts.get("EP2", 0) > 0 or type_counts.get("EP3", 0) > 0:
+            warnings.append("Mechanism contains complex pressure-dependent or empirical falloff rates which expand the AST depth significantly.")
+            
+        if warnings:
+            for w in warnings:
+                f.write(f"- ⚠️ {w}\n")
+        else:
+            f.write("No major warnings.\n")
+
+    print(f"Report emitted to {report_path}")
