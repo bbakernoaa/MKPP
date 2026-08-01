@@ -1,7 +1,7 @@
 stack:
   anchor_pr_number: 1
   anchor_pr_url: "https://github.com/bbakernoaa/MKPP/pull/1"
-  total_layers: 5
+  total_layers: 8
   layers:
     - phase: 1
       branch: "feature/001-mkpp-engine"
@@ -23,3 +23,15 @@ stack:
       branch: "feature/005-mkpp-polish-and-compliance"
       pr_number: 6
       pr_url: "https://github.com/bbakernoaa/MKPP/pull/6"
+    - phase: 6
+      branch: "feature/006-mkpp-sympy-unified-jacobian"
+      pr_number: 7
+      pr_url: "https://github.com/bbakernoaa/MKPP/pull/7"
+    - phase: 7
+      branch: "feature/007-mkpp-production-math-engine"
+      pr_number: 8
+      pr_url: "https://github.com/bbakernoaa/MKPP/pull/8"
+    - phase: 8
+      branch: "feature/008-exaero-cpp-driver"
+      pr_number: 9
+      pr_url: "https://github.com/bbakernoaa/MKPP/pull/9"

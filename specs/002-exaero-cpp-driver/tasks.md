@@ -38,7 +38,7 @@
 
 ---
 
-## Phase 3: User Story 2 - Modular Pre-generated Mechanism Registry (Priority: P1) 🎯 MVP
+## Phase 3: User Story 2 - Modular Pre-generated Mechanism Registry (Priority: P1) 🎯 MVP [#10](https://github.com/bbakernoaa/MKPP/pull/10)
 
 **Goal**: Support a library of pre-generated, optional mechanism headers alongside the ability to link new configurations dynamically.
 
@@ -57,7 +57,7 @@
 
 ---
 
-## Phase 4: User Story 1 - Kokkos Execution and Multi-Rate Dispatch (Priority: P1)
+## Phase 4: User Story 1 - Kokkos Execution and Multi-Rate Dispatch (Priority: P1) [#9](https://github.com/bbakernoaa/MKPP/pull/9)
 
 **Goal**: Ingest the block-sparse Kokkos C++ headers and execute them using hierarchical parallelism with persistent, dynamically SZA-sorted grid cells.
 
