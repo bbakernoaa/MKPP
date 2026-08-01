@@ -1,6 +1,6 @@
 # Implementation Plan: Exaero C++ Utility & Mechanism Registry
 
-**Goal:** Build the native C++ execution layer (`exaero`) that dynamically registers, links, and dispatches the MKPP AOT-generated block-sparse Kokkos C++ headers over a 3D host grid. Ensure workloads are dynamically load-balanced via a Solar Zenith Angle (SZA) sorter, using persistent `Kokkos::MemoryUnmanaged` Views for zero-copy coupling to external host environments (e.g., Fortran UFS/CMAQ wrappers).
+**Goal:** Build the native C++ execution layer (`exaero`) that dynamically registers, links, and dispatches the MKPP AOT-generated block-sparse Kokkos C++ headers over a 3D host grid. Ensure workloads are dynamically load-balanced via a Solar Zenith Angle (SZA) sorter, using persistent `Kokkos::MemoryUnmanaged` Views for zero-copy coupling to external host environments (e.g., Fortran UFS/CMAQ wrappers). `exaero` acts as a shared utility that can be utilized by both the Host Model and MKPP as needed, providing physical diagnostics, sorting, and structural abstractions.
 
 **Architecture:** The utility lives in `src/exaero/`. It implements a Factory/Registry pattern to map configuration strings to specific generated kernels at runtime. It implements a core `TeamPolicy Dispatcher` that evaluates a dedicated SZA array to partition the global grid into balanced Kokkos thread blocks before calling the chemistry solver. 
 
@@ -18,7 +18,7 @@
 
 ## Summary
 
-The `exaero` C++ utility bridges the gap between the host Fortran models (which own the actual physical grid data) and the high-performance Kokkos solvers emitted by the MKPP AOT Python compiler. It provides an `extern "C"` Fortran-compatible entry point, allocates minimal persistent scratch spaces for sorting overhead, and manages the intelligent execution dispatch (grouping stiff and non-stiff computational domains) to perfectly load-balance the GPU via `Kokkos::TeamPolicy`. Pre-generated mechanisms (like Chapman or CRACMM) are compiled into a static library via CMake configuration flags and invoked dynamically via a lightweight Registry class.
+The `exaero` C++ utility bridges the gap between the host Fortran models (which own the actual physical grid data) and the high-performance Kokkos solvers emitted by the MKPP AOT Python compiler. Because `exaero` is a shared utility, it can be invoked by the host model to manage zero-copy inputs, or called by MKPP components to access physical abstractions (like cloud optical diagnostics). It provides an `extern "C"` Fortran-compatible entry point, allocates minimal persistent scratch spaces for sorting overhead, and manages the intelligent execution dispatch (grouping stiff and non-stiff computational domains) to perfectly load-balance the GPU via `Kokkos::TeamPolicy`. Pre-generated mechanisms (like Chapman or CRACMM) are compiled into a static library via CMake configuration flags and invoked dynamically via a lightweight Registry class.
 
 ## Technical Context
 

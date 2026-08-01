@@ -6,7 +6,7 @@
 
 **Status**: Draft
 
-**Input**: User description: "Create the specification for the `exaero` native C++ utility (User Story: Kokkos Execution and Multi-Rate dispatch) that will ingest the MKPP headers. Integrate preexisting mechanisms as optional mechanisms in the utility. This way we can have a set of pregenerated mechanisms and then add to it dynamically when we have a new configuration that we may want."
+**Input**: User description: "Create the specification for the `exaero` native C++ utility (User Story: Kokkos Execution and Multi-Rate dispatch) that will ingest the MKPP headers. Integrate preexisting mechanisms as optional mechanisms in the utility. This way we can have a set of pregenerated mechanisms and then add to it dynamically when we have a new configuration that we may want. Note: exaero is a utility that can be used by the host model AND MKPP where needed, not just a host driver."
 
 ## Clarifications
 ### Session 2026-08-01
