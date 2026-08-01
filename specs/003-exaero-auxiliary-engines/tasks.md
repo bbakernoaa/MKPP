@@ -25,7 +25,7 @@ description: "Task list for Exaero Auxiliary Engines implementation"
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Create wrapper files in `src/exaero/include/auxiliary_engines.hpp` and `src/exaero/src/auxiliary_engines.cpp`
+- [x] T001 Create wrapper files in `src/exaero/include/auxiliary_engines.hpp` and `src/exaero/src/auxiliary_engines.cpp`
 
 **Execution notes**: Setup the placeholder files before CMake configuration.
 
@@ -35,7 +35,7 @@ description: "Task list for Exaero Auxiliary Engines implementation"
 
 **Purpose**: Core infrastructure that MUST be complete before ANY user story
 
-- [ ] T002 [TDD] Create test skeleton in `src/exaero/tests/test_auxiliary_engines.cpp` and register it in `src/exaero/CMakeLists.txt`
+- [x] T002 [TDD] Create test skeleton in `src/exaero/tests/test_auxiliary_engines.cpp` and register it in `src/exaero/CMakeLists.txt`
 
 **Checkpoint**: Foundation ready. Proceed to User Stories.
 
