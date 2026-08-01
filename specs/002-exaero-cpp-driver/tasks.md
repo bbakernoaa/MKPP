@@ -18,9 +18,9 @@
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 [P] Create CMake library structure for `exaero` in `src/exaero/CMakeLists.txt`
-- [ ] T002 [P] Create initial CTest setup for exaero in `src/exaero/tests/CMakeLists.txt`
-- [ ] T003 [P] Create dummy headers in `src/exaero/include/exaero/` for api, registry, dispatcher, and sorter
+- [x] T001 [P] Create CMake library structure for `exaero` in `src/exaero/CMakeLists.txt`
+- [x] T002 [P] Create initial CTest setup for exaero in `src/exaero/tests/CMakeLists.txt` and stub out `test_registry.cpp`, `test_sorter.cpp`, and `test_dispatcher.cpp` to satisfy I1.
+- [x] T003 [P] Create dummy headers in `src/exaero/include/exaero/` for api, registry, dispatcher, and sorter
 
 ---
 
@@ -30,9 +30,9 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 Implement `extern "C"` declarations and Host Integration API in `src/exaero/include/exaero/api.hpp` matching `host_integration_api.md`
-- [ ] T005 Implement `ExaeroContext` and `UnmanagedDeviceState` zero-copy bindings in `src/exaero/include/exaero/state.hpp` based on `data-model.md`
-- [ ] T006 Write tests for `ExaeroContext` instantiation and zero-allocation view bindings in `src/exaero/tests/test_state.cpp`
+- [x] T004 Implement `extern "C"` declarations and Host Integration API in `src/exaero/include/exaero/api.hpp` matching `host_integration_api.md`
+- [x] T005 Implement `ExaeroContext` and `UnmanagedDeviceState` zero-copy bindings in `src/exaero/include/exaero/state.hpp` based on `data-model.md`. **Must explicitly alias `Kokkos::LayoutLeft` within `UnmanagedDeviceState` to satisfy U2**.
+- [x] T006 Write tests for `ExaeroContext` instantiation and zero-allocation view bindings in `src/exaero/tests/test_state.cpp`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -46,12 +46,12 @@
 
 ### Tests for User Story 2 (MANDATORY - blocks implementation) ⚠️
 
-- [ ] T007 [P] [US2] Write registry resolution tests in `src/exaero/tests/test_registry.cpp` verifying successful dispatch and fast-failing behavior
+- [x] T007 [P] [US2] Write registry resolution tests in `src/exaero/tests/test_registry.cpp` verifying successful dispatch and fast-failing behavior
 
 ### Implementation for User Story 2
 
-- [ ] T008 [US2] Define registry CMake injection flag (`-DEXAERO_MECHANISMS`) and auto-generate the switchboard in `src/exaero/CMakeLists.txt`
-- [ ] T009 [US2] Implement Registry pattern in `src/exaero/src/registry.cpp` and `src/exaero/include/exaero/registry.hpp` to route string identifiers to C++ functor targets
+- [x] T008 [US2] Define registry CMake injection flag (`-DEXAERO_MECHANISMS`) and auto-generate the switchboard in `src/exaero/CMakeLists.txt`. **Must implement a CMake generation script or custom command that translates the `-DEXAERO_MECHANISMS` string list into a C++ header containing `#include` statements and `if/else` registry factory routes to satisfy U1**.
+- [x] T009 [US2] Implement Registry pattern in `src/exaero/src/registry.cpp` and `src/exaero/include/exaero/registry.hpp` to route string identifiers to C++ functor targets
 
 **Checkpoint**: At this point, the Registry should be fully functional and testable independently. (US2 prioritized over US1 because dispatch depends on registry mapping).
 
@@ -65,14 +65,14 @@
 
 ### Tests for User Story 1 (MANDATORY - blocks implementation) ⚠️
 
-- [ ] T010 [P] [US1] Write SZA sorting algorithm tests verifying zero allocations during sort in `src/exaero/tests/test_sorter.cpp`
-- [ ] T011 [P] [US1] Write Kokkos TeamPolicy dispatch tests in `src/exaero/tests/test_dispatcher.cpp` checking perfectly balanced workload chunks
+- [x] T010 [P] [US1] Write SZA sorting algorithm tests verifying zero allocations during sort in `src/exaero/tests/test_sorter.cpp`
+- [x] T011 [P] [US1] Write Kokkos TeamPolicy dispatch tests in `src/exaero/tests/test_dispatcher.cpp` checking perfectly balanced workload chunks
 
 ### Implementation for User Story 1
 
-- [ ] T012 [P] [US1] Implement persistent `Kokkos::View` index mapping and sorting logic in `src/exaero/src/sorter.cpp`
-- [ ] T013 [US1] Implement `TeamPolicy` dispatcher inside `src/exaero/src/dispatcher.cpp` to launch the hierarchical multi-rate kernel (depends on `sorter.cpp`)
-- [ ] T014 [US1] Wire the full execution chain in `src/exaero/src/api.cpp`: `exaero_solve` -> Sorter -> Registry -> Dispatcher
+- [x] T012 [P] [US1] Implement persistent `Kokkos::View` index mapping and sorting logic in `src/exaero/src/sorter.cpp`
+- [x] T013 [US1] Implement `TeamPolicy` dispatcher inside `src/exaero/src/dispatcher.cpp` to launch the hierarchical multi-rate kernel (depends on `sorter.cpp`)
+- [x] T014 [US1] Wire the full execution chain in `src/exaero/src/api.cpp`: `exaero_solve` -> Sorter -> Registry -> Dispatcher
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently.
 
@@ -80,8 +80,8 @@
 
 ## Phase 5: Polish & Cross-Cutting Concerns
 
-- [ ] T015 Verify zero-copy alignment (`Kokkos::LayoutLeft`) across the entire execution loop.
-- [ ] T016 Run comprehensive memory profiling (`test_sorter` and `test_dispatcher`) asserting 0 bytes of dynamic allocation during timestep execution (SC-003).
+- [x] T015 Verify zero-copy alignment (`Kokkos::LayoutLeft`) across the entire execution loop.
+- [x] T016 Run comprehensive memory profiling (`test_sorter` and `test_dispatcher`) asserting 0 bytes of dynamic allocation during timestep execution (SC-003). **Must explicitly use `Kokkos::Profiling::space_allocate` hooks to verify 0 bytes to satisfy A1**.
 
 ## Dependencies & Execution Order
 
