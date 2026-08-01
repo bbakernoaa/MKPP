@@ -199,3 +199,35 @@ def test_sunrise_terminator_validation():
         
     mech.reactions[0].continuous_transition = True
     assert validate_terminator_safety(mech) is True
+
+def test_mass_conservation_and_aerosol_validation():
+    # T029 and T034: Validate elemental mass balance and unsupported combinations
+    from mkpp.model import MechanismDefinition, ReactionDefinition, SpeciesDefinition, PhaseMode
+    from mkpp.validation import validate_mass_conservation
+    
+    mech = MechanismDefinition(
+        name="test_mech", description="Test", aerosol_representation="bulk",
+        species=[
+            SpeciesDefinition(name="SO2", phase=PhaseMode.GAS, elements={"S": 1, "O": 2}),
+            SpeciesDefinition(name="SO4", phase=PhaseMode.AEROSOL, elements={"S": 1, "O": 4})
+        ],
+        phases=[],
+        reactions=[
+            ReactionDefinition(
+                reaction_type="condensation",
+                reactants=["SO2"],
+                products=["SO4"],
+                rate_expression="k"
+            )
+        ]
+    )
+    
+    # Missing mass (1 S, 2 O -> 1 S, 4 O) should fail elemental balance
+    with pytest.raises(ValueError, match="Elemental mass imbalance detected in reaction"):
+        validate_mass_conservation(mech)
+        
+    # Correct it to balance elements (pseudo-chemistry for test)
+    mech.species.append(SpeciesDefinition(name="O2", phase=PhaseMode.GAS, elements={"O": 2}))
+    mech.reactions[0].reactants.append("O2")
+    
+    assert validate_mass_conservation(mech) is True

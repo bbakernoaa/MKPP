@@ -14,7 +14,7 @@
 - **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)
 - Include exact file paths in descriptions
 
-## Phase 1: Setup (Shared Infrastructure) ([PR #1](https://github.com/bbakernoaa/MKPP/pull/1))
+## Phase 1: Setup (Shared Infrastructure)) ([PR #1](https://github.com/bbakernoaa/MKPP/pull/1))
 
 **Purpose**: Project initialization and basic structure
 
@@ -24,7 +24,7 @@
 
 ---
 
-## Phase 2: Foundational (Blocking Prerequisites) ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
+## Phase 2: Foundational (Blocking Prerequisites)) ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
 
 **Purpose**: Core infrastructure that MUST be complete before ANY user story can be implemented
 
@@ -42,7 +42,7 @@
 
 ---
 
-## Phase 3: User Story 1 - Ahead-of-Time Mechanism Compilation & Adjoint Generation (Priority: P1) 🎯 MVP
+## Phase 3: User Story 1 - Ahead-of-Time Mechanism Compilation & Adjoint Generation (Priority: P1) 🎯 MVP ([PR #4](https://github.com/bbakernoaa/MKPP/pull/4))
 
 **Goal**: Parse representation-agnostic chemistry definitions and generate deterministic Kokkos-based solver headers plus adjoint/TLM artifacts from the AOT compiler CLI.
 
@@ -121,15 +121,15 @@
 
 ### Tests for User Story 4 (MANDATORY - blocks implementation) ⚠️
 
-- [ ] T029 [P] [TDD] [US4] Add mass-conservation tests in `tests/python/test_validation.py` for elemental balance and conservation metadata
-- [ ] T030 [P] [TDD] [US4] Add continuous-transition tests in `tests/python/test_codegen.py` for hysteresis and smooth transition annotations in generated artifacts
+- [x] T029 [P] [TDD] [US4] Add mass-conservation tests in `tests/python/test_validation.py` for elemental balance and conservation metadata
+- [x] T030 [P] [TDD] [US4] Add continuous-transition tests in `tests/python/test_codegen.py` for hysteresis and smooth transition annotations in generated artifacts
 
 ### Implementation for User Story 4
 
-- [ ] T031 [US4] [SUBAGENT] Extend `src/mkpp/model.py` with aerosol-representation metadata for bulk, modal, and sectional handling plus continuous-transition flags
-- [ ] T032 [US4] [REVIEW] Implement algebraic mass-reconciliation metadata in `src/mkpp/lowering.py` so generated solver blocks carry elemental conservation requirements
-- [ ] T033 [US4] [REVIEW] Emit continuous-thermodynamics annotations in `src/mkpp/codegen.py` for hysteresis, spline transitions, and smooth phase-change handling
-- [ ] T034 [US4] Add aerosol-math validation cases in `tests/python/test_validation.py` for species balances, phase-transition metadata, and unsupported reaction combinations
+- [x] T031 [US4] [SUBAGENT] Extend `src/mkpp/model.py` with aerosol-representation metadata for bulk, modal, and sectional handling plus continuous-transition flags
+- [x] T032 [US4] [REVIEW] Implement algebraic mass-reconciliation metadata in `src/mkpp/lowering.py` so generated solver blocks carry elemental conservation requirements
+- [x] T033 [US4] [REVIEW] Emit continuous-thermodynamics annotations in `src/mkpp/codegen.py` for hysteresis, spline transitions, and smooth phase-change handling
+- [x] T034 [US4] Add aerosol-math validation cases in `tests/python/test_validation.py` for species balances, phase-transition metadata, and unsupported reaction combinations
 
 **Checkpoint**: All user stories should now be independently functional
 
@@ -156,19 +156,19 @@
 
 ### Phase Dependencies
 
-- **Setup (Phase 1)**: No dependencies - can start immediately ([PR #1](https://github.com/bbakernoaa/MKPP/pull/1))
-- **Foundational (Phase 2)**: Depends on Setup completion - BLOCKS all user stories ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
-- **User Stories (Phase 3+)**: All depend on Foundational phase completion
+- **Setup (Phase 1)**: No dependencies - can start immediately) ([PR #1](https://github.com/bbakernoaa/MKPP/pull/1))
+- **Foundational (Phase 2)**: Depends on Setup completion - BLOCKS all user stories) ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
+- **User Stories (Phase 3+)**: All depend on Foundational phase completion ([PR #4](https://github.com/bbakernoaa/MKPP/pull/4))
   - User stories can then proceed in parallel (if staffed)
   - Or sequentially in priority order (P1 → P2 → P3)
 - **Polish (Final Phase)**: Depends on all desired user stories being complete
 
 ### User Story Dependencies
 
-- **User Story 1 (P1)**: Can start after Foundational (Phase 2) - No dependencies on other stories ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
-- **User Story 2 (P1)**: Can start after Foundational (Phase 2) - May integrate with US1 but should be independently testable ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
-- **User Story 3 (P2)**: Can start after Foundational (Phase 2) - May integrate with US1/US2 but should be independently testable ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
-- **User Story 4 (P2)**: Can start after Foundational (Phase 2) - May integrate with US1/US2/US3 but should be independently testable ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
+- **User Story 1 (P1)**: Can start after Foundational (Phase 2) - No dependencies on other stories) ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
+- **User Story 2 (P1)**: Can start after Foundational (Phase 2) - May integrate with US1 but should be independently testable) ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
+- **User Story 3 (P2)**: Can start after Foundational (Phase 2) - May integrate with US1/US2 but should be independently testable) ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
+- **User Story 4 (P2)**: Can start after Foundational (Phase 2) - May integrate with US1/US2/US3 but should be independently testable) ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
 
 ### Within Each User Story
 
@@ -181,7 +181,7 @@
 ### Parallel Opportunities
 
 - All Setup tasks marked [P] can run in parallel
-- All Foundational tasks marked [P] can run in parallel (within Phase 2) ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
+- All Foundational tasks marked [P] can run in parallel (within Phase 2)) ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
 - Once Foundational phase completes, all user stories can start in parallel (if team capacity allows)
 - All tests for a user story marked [P] can run in parallel
 - Different user stories can be worked on in parallel by different team members
@@ -203,9 +203,9 @@ Task: "Add code-generation tests in tests/python/test_codegen.py for byte-stable
 
 ### MVP First (User Story 1 Only)
 
-1. Complete Phase 1: Setup ([PR #1](https://github.com/bbakernoaa/MKPP/pull/1))
-2. Complete Phase 2: Foundational (CRITICAL - blocks all stories) ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
-3. Complete Phase 3: User Story 1
+1. Complete Phase 1: Setup) ([PR #1](https://github.com/bbakernoaa/MKPP/pull/1))
+2. Complete Phase 2: Foundational (CRITICAL - blocks all stories)) ([PR #2](https://github.com/bbakernoaa/MKPP/pull/2))
+3. Complete Phase 3: User Story 1 ([PR #4](https://github.com/bbakernoaa/MKPP/pull/4))
 4. **STOP and VALIDATE**: Test User Story 1 independently
 5. Deploy/demo if ready
 

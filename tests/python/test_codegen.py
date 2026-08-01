@@ -115,3 +115,28 @@ def test_sorted_artifact_metadata(tmp_path):
     with open(results["header"], 'r') as f:
         content = f.read()
     assert "// SZA Workload Sorted: true" in content
+
+def test_continuous_transition_annotations(tmp_path):
+    # T030: Add continuous-transition tests in codegen
+    from mkpp.model import MechanismDefinition, ReactionDefinition, AerosolRepresentation
+    mech = MechanismDefinition(
+        name="test_mech", description="Test", aerosol_representation=AerosolRepresentation.BULK,
+        species=[], phases=[],
+        reactions=[
+            ReactionDefinition(
+                reaction_type="phase_change", reactants=[], products=[], rate_expression="K",
+                continuous_transition=True
+            )
+        ]
+    )
+    from mkpp.model import SpeciesDefinition, PhaseMode
+    mech.species.append(SpeciesDefinition(name="O3", phase=PhaseMode.GAS))
+    
+    out_dir = tmp_path / "build"
+    results = generate_headers(mech, out_dir=str(out_dir))
+    
+    with open(results["header"], 'r') as f:
+        content = f.read()
+    
+    # Verify continuous-thermodynamics annotation is emitted
+    assert "// Hysteresis/Spline Continuous Transition: true" in content

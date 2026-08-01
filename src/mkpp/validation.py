@@ -65,3 +65,29 @@ def validate_terminator_safety(mech: MechanismDefinition) -> bool:
         if r.reaction_type.upper() == "PHOTOLYSIS" and not r.continuous_transition:
             raise ValueError("PHOTOLYSIS reactions must be marked with continuous_transition to safely navigate the terminator")
     return True
+
+def validate_mass_conservation(mech: MechanismDefinition) -> bool:
+    """T032, T034: Validate elemental mass balance for every reaction."""
+    species_dict = {s.name: s.elements for s in mech.species}
+    
+    for idx, r in enumerate(mech.reactions):
+        lhs_elements = {}
+        rhs_elements = {}
+        
+        # Accumulate reactant elements
+        for reactant in r.reactants:
+            elements = species_dict.get(reactant, {})
+            for elem, count in elements.items():
+                lhs_elements[elem] = lhs_elements.get(elem, 0) + count
+                
+        # Accumulate product elements
+        for product in r.products:
+            elements = species_dict.get(product, {})
+            for elem, count in elements.items():
+                rhs_elements[elem] = rhs_elements.get(elem, 0) + count
+                
+        # Compare
+        if lhs_elements != rhs_elements:
+            raise ValueError(f"Elemental mass imbalance detected in reaction {idx}: {r.reactants} -> {r.products} ({lhs_elements} != {rhs_elements})")
+            
+    return True

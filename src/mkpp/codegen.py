@@ -26,6 +26,11 @@ def generate_headers(mech: MechanismDefinition, out_dir: str = "build/mkpp-gener
         if partition_meta and partition_meta.get("sza_sorted"):
             f.write("// SZA Workload Sorted: true\n")
             
+        # T033: Emit continuous-thermodynamics annotations
+        has_continuous_rxns = any(r.continuous_transition for r in mech.reactions)
+        if has_continuous_rxns:
+            f.write("// Hysteresis/Spline Continuous Transition: true\n")
+            
         f.write("namespace mkpp {\n")
         f.write("  // Pure Kokkos abstractions (no raw pragmas allowed)\n")
         
