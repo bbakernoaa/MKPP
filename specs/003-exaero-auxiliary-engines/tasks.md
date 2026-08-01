@@ -48,10 +48,10 @@ description: "Task list for Exaero Auxiliary Engines implementation"
 
 ### Implementation for User Story 1
 
-- [ ] T003 [US1] Add `EXAERO_WITH_CLOUDJ` and `EXAERO_WITH_ISORROPIALITE` options to `src/exaero/CMakeLists.txt`
-- [ ] T004 [US1] Update `src/exaero/CMakeLists.txt` to enable device-linkage configuration (e.g., CUDA_SEPARABLE_COMPILATION) for Fortran compatibility and  `src/exaero/CMakeLists.txt` to conditionally `add_subdirectory` and `target_link_libraries` for `Cloud-J`
-- [ ] T005 [P] [US1] Update `src/exaero/CMakeLists.txt` to conditionally `add_subdirectory` and `target_link_libraries` for `isorropialite`
-- [ ] T006 [US1] Add compile definitions (`-DEXAERO_WITH_CLOUDJ`, `-DEXAERO_WITH_ISORROPIALITE`) to the Exaero target based on flags in `src/exaero/CMakeLists.txt`
+- [x] T003 [US1] Add `EXAERO_WITH_CLOUDJ` and `EXAERO_WITH_ISORROPIALITE` options to `src/exaero/CMakeLists.txt`
+- [x] T004 [US1] Update `src/exaero/CMakeLists.txt` to enable device-linkage configuration (e.g., CUDA_SEPARABLE_COMPILATION) for Fortran compatibility and  `src/exaero/CMakeLists.txt` to conditionally `add_subdirectory` and `target_link_libraries` for `Cloud-J`
+- [x] T005 [P] [US1] Update `src/exaero/CMakeLists.txt` to conditionally `add_subdirectory` and `target_link_libraries` for `isorropialite`
+- [x] T006 [US1] Add compile definitions (`-DEXAERO_WITH_CLOUDJ`, `-DEXAERO_WITH_ISORROPIALITE`) to the Exaero target based on flags in `src/exaero/CMakeLists.txt`
 
 **Checkpoint**: User Story 1 fully functional. CMake configuration works.
 
