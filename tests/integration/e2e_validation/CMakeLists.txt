@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.24)
 
+# We are testing the raw MKPP headers directly. We DO NOT link exaero!
 add_executable(e2e_validation_runner test_e2e_chapman.cpp)
 target_include_directories(e2e_validation_runner PRIVATE ${CMAKE_SOURCE_DIR}/../../build/mkpp-generated)
 target_link_libraries(e2e_validation_runner PRIVATE Kokkos::kokkos GTest::gtest_main GTest::gtest)

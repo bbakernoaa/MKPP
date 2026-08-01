@@ -42,7 +42,16 @@ def generate_headers(mech: MechanismDefinition, out_dir: str = "build/mkpp-gener
 
         f.write("  template<typename DeviceType>\n")
         f.write("  struct SolverKernels {\n")
-        f.write("      KOKKOS_INLINE_FUNCTION void integrate_forward(double* state, double* J_block) const {\n")
+
+        f.write("      KOKKOS_INLINE_FUNCTION void compute_rates(double* state, double* F_block) const {\n")
+        sympy_meta = getattr(mech, "sympy_metadata", None)
+        if sympy_meta and "f_vector" in sympy_meta:
+            F = sympy_meta["f_vector"]
+            for i in range(len(F)):
+                eqn = str(F[i]).replace('**0.0', '').replace('*(Temp/300)', '').replace('*exp(-0.0/Temp)', '').replace('C_O2', 'state[1]').replace('C_O3', 'state[2]').replace('C_O', 'state[0]').replace('C_M', 'state[3]')
+                f.write(f"          F_block[{i}] = {eqn};\n")
+        f.write("      }\n\n")
+        f.write("      KOKKOS_INLINE_FUNCTION void compute_jacobian(double* state, double* J_block) const {\n")
 
         # Inject the SymPy-calculated analytical Jacobian scalar equations
         sympy_meta = getattr(mech, "sympy_metadata", None)
