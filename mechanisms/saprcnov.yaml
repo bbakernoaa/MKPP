@@ -1,6 +1,7 @@
 name: saprcnov
 description: Translated from saprcnov KPP mechanism
 species:
+- name: M
 - name: O3
 - name: H2O2
 - name: 'NO'
@@ -147,13 +148,19 @@ reactions:
   B: 0.0
   C: '-120.0'
   stiff: true
-- type: ARRHENIUS
+- type: TROE
   reactants:
     O3P: 1.0
     NO2: 1.0
   products:
     NO3: 1.0
-  A: FALL(9.00e-32,  0.0,  -2.00,  2.20e-11,  0.0,  0.0,  0.80)
+  k0_A: '9.00e-32'
+  k0_B: '0.0'
+  k0_C: '-2.00'
+  kinf_A: '2.20e-11'
+  kinf_B: '0.0'
+  kinf_C: '0.0'
+  Fc: '0.80'
   stiff: true
 - type: ARRHENIUS
   reactants:
@@ -195,21 +202,33 @@ reactions:
   B: 0.0
   C: '-530.0'
   stiff: true
-- type: ARRHENIUS
+- type: TROE
   reactants:
     NO2: 1.0
     NO3: 1.0
   products:
     N2O5: 1.0
-  A: FALL(2.80e-30, 0.0, -3.50,  2.00e-12,  0.0,  0.20,  0.45)
+  k0_A: '2.80e-30'
+  k0_B: '0.0'
+  k0_C: '-3.50'
+  kinf_A: '2.00e-12'
+  kinf_B: '0.0'
+  kinf_C: '0.20'
+  Fc: '0.45'
   stiff: true
-- type: ARRHENIUS
+- type: TROE
   reactants:
     N2O5: 1.0
   products:
     NO2: 1.0
     NO3: 1.0
-  A: FALL(1.e-3, 11000.0, -3.5,  9.7e14,  11080.0,  0.1,  0.45)
+  k0_A: '1.e-3'
+  k0_B: '11000.0'
+  k0_C: '-3.5'
+  kinf_A: 9.7e14
+  kinf_B: '11080.0'
+  kinf_C: '0.1'
+  Fc: '0.45'
   stiff: true
 - type: ARRHENIUS
   reactants:
@@ -281,13 +300,19 @@ reactions:
   B: 0.0
   C: '-95.0'
   stiff: true
-- type: ARRHENIUS
+- type: TROE
   reactants:
     OH: 1.0
     'NO': 1.0
   products:
     HONO: 1.0
-  A: FALL(7.00e-31,  0.0,  -2.60,  3.60e-11,  0.0,  -0.10,  0.60)
+  k0_A: '7.00e-31'
+  k0_B: '0.0'
+  k0_C: '-2.60'
+  kinf_A: '3.60e-11'
+  kinf_B: '0.0'
+  kinf_C: '-0.10'
+  Fc: '0.60'
   stiff: true
 - type: PHOTOLYSIS
   reactants:
@@ -317,13 +342,19 @@ reactions:
   B: 0.0
   C: '-260.0'
   stiff: true
-- type: ARRHENIUS
+- type: TROE
   reactants:
     OH: 1.0
     NO2: 1.0
   products:
     HNO3: 1.0
-  A: FALL(2.43e-30,  0.0,  -3.10,  1.67e-11,  0.0,  -2.10,  0.60)
+  k0_A: '2.43e-30'
+  k0_B: '0.0'
+  k0_C: '-3.10'
+  kinf_A: '1.67e-11'
+  kinf_B: '0.0'
+  kinf_C: '-2.10'
+  Fc: '0.60'
   stiff: true
 - type: ARRHENIUS
   reactants:
@@ -334,13 +365,18 @@ reactions:
     NO2: 1.0
   A: '2.00e-11'
   stiff: true
-- type: ARRHENIUS
+- type: EP2
   reactants:
     OH: 1.0
     HNO3: 1.0
   products:
     NO3: 1.0
-  A: EP2(7.20e-15,  -785.0,  4.10e-16,  -1440.0,  1.90e-33,  -725.0)
+  A0: '7.20e-15'
+  C0: '-785.0'
+  A2: '4.10e-16'
+  C2: '-1440.0'
+  A3: '1.90e-33'
+  C3: '-725.0'
   stiff: true
 - type: PHOTOLYSIS
   reactants:
@@ -351,13 +387,16 @@ reactions:
   A: 1.0*SUN
   continuous_transition: true
   stiff: false
-- type: ARRHENIUS
+- type: EP3
   reactants:
     OH: 1.0
     CO: 1.0
   products:
     HO2: 1.0
-  A: EP3(1.30e-13, 0.0, 3.19e-33, 0.0)
+  A1: '1.30e-13'
+  C1: '0.0'
+  A2: '3.19e-33'
+  C2: '0.0'
   stiff: true
 - type: ARRHENIUS
   reactants:
@@ -380,21 +419,33 @@ reactions:
   B: 0.0
   C: '-270.0'
   stiff: true
-- type: ARRHENIUS
+- type: TROE
   reactants:
     HO2: 1.0
     NO2: 1.0
   products:
     HNO4: 1.0
-  A: FALL(1.80e-31, 0.0, -3.20, 4.70e-12, 0.0, 0.0, 0.60)
+  k0_A: '1.80e-31'
+  k0_B: '0.0'
+  k0_C: '-3.20'
+  kinf_A: '4.70e-12'
+  kinf_B: '0.0'
+  kinf_C: '0.0'
+  Fc: '0.60'
   stiff: true
-- type: ARRHENIUS
+- type: TROE
   reactants:
     HNO4: 1.0
   products:
     HO2: 1.0
     NO2: 1.0
-  A: FALL(4.10e-05, 10650.0, 0.0, 5.7e+15, 11170.0, 0.0, 0.5)
+  k0_A: '4.10e-05'
+  k0_B: '10650.0'
+  k0_C: '0.0'
+  kinf_A: '5.7e+15'
+  kinf_B: '11170.0'
+  kinf_C: '0.0'
+  Fc: '0.5'
   stiff: true
 - type: ARRHENIUS
   reactants:
@@ -416,29 +467,38 @@ reactions:
   B: 0.0
   C: '600.0'
   stiff: true
-- type: ARRHENIUS
+- type: EP3
   reactants:
     HO2: 2.0
   products:
     H2O2: 1.0
-  A: EP3(2.20e-13, -600.0, 1.85e-33, -980.0)
+  A1: '2.20e-13'
+  C1: '-600.0'
+  A2: '1.85e-33'
+  C2: '-980.0'
   stiff: true
-- type: ARRHENIUS
+- type: EP3
   reactants:
     HO2: 1.0
     HO2: 1.0
     H2O: 1.0
   products:
     H2O2: 1.0
-  A: EP3(3.08e-34, -2800.0, 2.59e-54, -3180.0)
+  A1: '3.08e-34'
+  C1: '-2800.0'
+  A2: '2.59e-54'
+  C2: '-3180.0'
   stiff: true
-- type: ARRHENIUS
+- type: EP3
   reactants:
     HO2: 2.0
     H2O: 1.0
   products:
     H2O2: 1.0
-  A: EP3(3.08e-34, -2800.0, 2.59e-38, -3180.0)
+  A1: '3.08e-34'
+  C1: '-2800.0'
+  A2: '2.59e-38'
+  C2: '-3180.0'
   stiff: true
 - type: ARRHENIUS
   reactants:
@@ -488,14 +548,20 @@ reactions:
   B: 0.0
   C: '-250.0'
   stiff: true
-- type: ARRHENIUS
+- type: TROE
   reactants:
     OH: 1.0
     SO2: 1.0
   products:
     HO2: 1.0
     H2SO4: 1.0
-  A: FALL(4.00e-31, 0.0, -3.30, 2.00e-12, 0.0, 0.0, 0.45)
+  k0_A: '4.00e-31'
+  k0_B: '0.0'
+  k0_C: '-3.30'
+  kinf_A: '2.00e-12'
+  kinf_B: '0.0'
+  kinf_C: '0.0'
+  Fc: '0.45'
   stiff: true
 - type: ARRHENIUS
   reactants:
@@ -613,21 +679,33 @@ reactions:
     R2O2: 2.0
   A: '0.0'
   stiff: true
-- type: ARRHENIUS
+- type: TROE
   reactants:
     CCO_O2: 1.0
     NO2: 1.0
   products:
     PAN: 1.0
-  A: FALL(2.70e-28, 0.0, -7.10, 1.20e-11, 0.0, -0.90, 0.30)
+  k0_A: '2.70e-28'
+  k0_B: '0.0'
+  k0_C: '-7.10'
+  kinf_A: '1.20e-11'
+  kinf_B: '0.0'
+  kinf_C: '-0.90'
+  Fc: '0.30'
   stiff: true
-- type: ARRHENIUS
+- type: TROE
   reactants:
     PAN: 1.0
   products:
     CCO_O2: 1.0
     NO2: 1.0
-  A: FALL(4.90e-3, 12100.0, 0.0, 4.0e+16, 13600.0, 0., 0.3)
+  k0_A: '4.90e-3'
+  k0_B: '12100.0'
+  k0_C: '0.0'
+  kinf_A: '4.0e+16'
+  kinf_B: '13600.0'
+  kinf_C: '0.'
+  Fc: '0.3'
   stiff: true
 - type: ARRHENIUS
   reactants:

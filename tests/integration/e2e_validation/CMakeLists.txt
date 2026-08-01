@@ -7,12 +7,20 @@ execute_process(
     OUTPUT_VARIABLE CHAPMAN_SPEC
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
+execute_process(
+    COMMAND ${Python3_EXECUTABLE} -c "import yaml; print(len(yaml.safe_load(open('../../mechanisms/small_strato.yaml'))['species']))"
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE SMALL_STRATO_SPEC
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
 
-set(MECHS "chapman")
+set(MECHS "chapman" "small_strato")
 
 foreach(MECH ${MECHS})
     if("${MECH}" STREQUAL "chapman")
         set(NUM_SPEC ${CHAPMAN_SPEC})
+    elseif("${MECH}" STREQUAL "small_strato")
+        set(NUM_SPEC ${SMALL_STRATO_SPEC})
     endif()
 
     add_executable(e2e_${MECH}_runner test_e2e_mechanisms.cpp)
