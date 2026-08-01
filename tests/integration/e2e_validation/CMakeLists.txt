@@ -1,12 +1,27 @@
 cmake_minimum_required(VERSION 3.24)
 
-# We are testing the raw MKPP headers directly. We DO NOT link exaero!
-add_executable(e2e_validation_runner test_e2e_chapman.cpp)
-target_include_directories(e2e_validation_runner PRIVATE ${CMAKE_SOURCE_DIR}/../../build/mkpp-generated)
-target_link_libraries(e2e_validation_runner PRIVATE Kokkos::kokkos GTest::gtest_main GTest::gtest)
+# To get the python number of species dynamically
+execute_process(
+    COMMAND ${Python3_EXECUTABLE} -c "import yaml; print(len(yaml.safe_load(open('../../mechanisms/chapman.yaml'))['species']))"
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE CHAPMAN_SPEC
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
 
-add_test(NAME E2ESolverValidation COMMAND e2e_validation_runner)
+set(MECHS "chapman")
 
-# T014: CTest definition
-add_test(NAME E2EBaselineCompare COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/compare_baselines.py --baseline ${CMAKE_CURRENT_SOURCE_DIR}/data/kpp_baseline_chapman.csv --target e2e_output.csv --hpp ${CMAKE_SOURCE_DIR}/../../build/mkpp-generated/chapman.hpp)
-set_tests_properties(E2EBaselineCompare PROPERTIES DEPENDS E2ESolverValidation)
+foreach(MECH ${MECHS})
+    if("${MECH}" STREQUAL "chapman")
+        set(NUM_SPEC ${CHAPMAN_SPEC})
+    endif()
+
+    add_executable(e2e_${MECH}_runner test_e2e_mechanisms.cpp)
+    target_include_directories(e2e_${MECH}_runner PRIVATE ${CMAKE_SOURCE_DIR}/../../build/mkpp-generated)
+    target_link_libraries(e2e_${MECH}_runner PRIVATE Kokkos::kokkos GTest::gtest_main GTest::gtest)
+    target_compile_definitions(e2e_${MECH}_runner PRIVATE MECH_HEADER=${MECH}.hpp NUM_SPECIES_MACRO=${NUM_SPEC})
+    
+    add_test(NAME E2ESolver_${MECH} COMMAND e2e_${MECH}_runner)
+
+    add_test(NAME E2ECompare_${MECH} COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/compare_baselines.py --baseline ${CMAKE_CURRENT_SOURCE_DIR}/data/kpp_baseline_${MECH}.csv --target e2e_output.csv --hpp ${CMAKE_SOURCE_DIR}/../../build/mkpp-generated/${MECH}.hpp)
+    set_tests_properties(E2ECompare_${MECH} PROPERTIES DEPENDS E2ESolver_${MECH})
+endforeach()
