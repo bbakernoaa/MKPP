@@ -48,7 +48,7 @@ class ReactionDefinition:
     reactants: List[str]
     products: List[str]
     rate_expression: str
-    parameters: Dict[str, str] = field(default_factory=dict)
+    parameters: Dict[str, Any] = field(default_factory=dict)
     unit_policy: str = "canonical"
     stiff: bool = False
     continuous_transition: bool = False

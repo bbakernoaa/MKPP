@@ -64,12 +64,41 @@ def generate_headers(mech: MechanismDefinition, out_dir: str = "build/mkpp-gener
                     if J_adj[i, j] != 0:
                         f.write(f"          J_adj_block[{i * J_adj.shape[1] + j}] = {J_adj[i, j]};\n")
         f.write("      }\n")
-        f.write("      KOKKOS_INLINE_FUNCTION void compute_tlm() const {}\n")
+        
+        f.write("      KOKKOS_INLINE_FUNCTION void compute_tlm(double* state, double* delta_C, double* dF_block) const {\n")
+        if sympy_meta:
+            J = sympy_meta["jacobian_matrix"]
+            for i in range(J.shape[0]):
+                f.write(f"          dF_block[{i}] = 0.0;\n")
+                for j in range(J.shape[1]):
+                    if J[i, j] != 0:
+                        f.write(f"          dF_block[{i}] += ({J[i, j]}) * delta_C[{j}];\n")
+        f.write("      }\n")
         
         # Section 2.5: Algebraic Elemental Mass Conservation Projection Step
-        f.write("      KOKKOS_INLINE_FUNCTION void project_mass_conservation(double* C_projected, double* C) const {\n")
+        f.write("      KOKKOS_INLINE_FUNCTION void project_mass_conservation(double* C_projected, double* C, double* m_0) const {\n")
         f.write("          // C_projected = C - E^T (E E^T)^-1 (E C - m_0)\n")
-        f.write("          // (Emitting analytical pseudo-inverse arrays here in full production implementation)\n")
+        if sympy_meta and "mass_projector" in sympy_meta:
+            P = sympy_meta["mass_projector"]
+            elements = sympy_meta["element_map"]
+            
+            # 1. Calculate mass deviation vector: delta_m = E * C - m_0
+            f.write("          double delta_m[100] = {0.0};\n") # Assume max 100 elements safely inside kernel
+            for j, sp_name in enumerate(sympy_meta["species_map"]):
+                s_def = next(s for s in mech.species if s.name == sp_name)
+                for i, elem in enumerate(elements):
+                    if elem in s_def.elements:
+                        f.write(f"          delta_m[{i}] += {s_def.elements[elem]} * C[{j}];\n")
+            for i in range(len(elements)):
+                f.write(f"          delta_m[{i}] -= m_0[{i}];\n")
+                
+            # 2. Project back onto concentrations: C_projected = C - P * delta_m
+            for i in range(P.shape[0]):
+                f.write(f"          C_projected[{i}] = C[{i}];\n")
+                for j in range(P.shape[1]):
+                    if P[i, j] != 0:
+                        f.write(f"          C_projected[{i}] -= ({P[i, j]}) * delta_m[{j}];\n")
+                        
         f.write("      }\n")
         
         f.write("  };\n")

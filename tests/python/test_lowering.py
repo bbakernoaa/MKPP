@@ -72,19 +72,19 @@ def test_sympy_explicit_reaction_types():
         ], phases=[],
         reactions=[
             # 1. ARRHENIUS: standard k * [O] * [O2] * [M]
-            ReactionDefinition(reaction_type="ARRHENIUS", reactants=["O", "O2", "M"], products=["O3"], rate_expression="k_arr"),
+            ReactionDefinition(reaction_type="ARRHENIUS", reactants=["O", "O2", "M"], products=["O3"], rate_expression="", parameters={"A": "1.0"}),
             
             # 2. TROE: Pressure-dependent falloff using k_0, k_inf
-            ReactionDefinition(reaction_type="TROE", reactants=["O", "O2"], products=["O3"], rate_expression="k_troe"),
+            ReactionDefinition(reaction_type="TROE", reactants=["O", "O2"], products=["O3"], rate_expression="", parameters={"k0": {"A": "1.0"}, "kinf": {"A": "2.0"}}),
             
             # 3. PHOTOLYSIS: Linear J-rate
-            ReactionDefinition(reaction_type="PHOTOLYSIS", reactants=["O2"], products=["O", "O"], rate_expression="J_photo", continuous_transition=True),
+            ReactionDefinition(reaction_type="PHOTOLYSIS", reactants=["O2"], products=["O", "O"], rate_expression="", parameters={"A": "J_photo"}, continuous_transition=True),
             
             # 4. HETEROGENEOUS: Uptake
-            ReactionDefinition(reaction_type="HETEROGENEOUS", reactants=["O2"], products=["SULFATE"], rate_expression="gamma_het"),
+            ReactionDefinition(reaction_type="HETEROGENEOUS", reactants=["O2"], products=["SULFATE"], rate_expression="", parameters={"gamma": "0.1"}),
             
             # 5. TUNNELING / SPLINES
-            ReactionDefinition(reaction_type="TUNNELING", reactants=["O"], products=["O2"], rate_expression="Y_spline")
+            ReactionDefinition(reaction_type="TUNNELING", reactants=["O"], products=["O2"], rate_expression="", parameters={"Y_spline": "Y_spline"})
         ]
     )
     

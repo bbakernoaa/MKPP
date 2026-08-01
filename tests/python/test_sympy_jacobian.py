@@ -22,7 +22,7 @@ def test_prepare_unified_jacobian_exact_equations():
             ReactionDefinition(reaction_type="ARRHENIUS", reactants=["O", "O2", "M"], products=["O3", "M"], rate_expression="", parameters={"A": "1.0", "B": "0.0", "C": "200.0"}),
             
             # 3. TROE: O3 + O -> 2O2
-            ReactionDefinition(reaction_type="TROE", reactants=["O3", "O"], products=["O2", "O2"], rate_expression="", parameters={"k0_A": "1.0", "kinf_A": "2.0", "Fc": "0.6", "N": "1.0"}),
+            ReactionDefinition(reaction_type="TROE", reactants=["O3", "O"], products=["O2", "O2"], rate_expression="", parameters={"k0": {"A": "1.0"}, "kinf": {"A": "2.0"}, "Fc": "0.6", "N": "1.0"}),
             
             # 4. HETEROGENEOUS: O2 -> SULFATE
             ReactionDefinition(reaction_type="HETEROGENEOUS", reactants=["O2"], products=["SULFATE"], rate_expression="", parameters={"gamma": "0.1"}),

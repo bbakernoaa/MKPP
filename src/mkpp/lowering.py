@@ -98,35 +98,48 @@ def prepare_unified_jacobian(mech: MechanismDefinition) -> Dict[str, Any]:
         flux = sp.Integer(0)
         
         if rtype == "PHOTOLYSIS":
-            # R_r = J_photo * [C_reactant]
-            J_photo = sp.Symbol(p.get("A", f"J_{idx}"), real=True)
+            if "A" not in p: raise ValueError(f"PHOTOLYSIS reaction {idx} missing 'A' parameter (J-rate).")
+            J_photo = sp.Symbol(str(p["A"]), real=True)
             flux = J_photo
             
         elif rtype == "ARRHENIUS":
-            # k(T) = A * (T/300)^B * exp(-C/T)
-            A = sp.Symbol(p.get("A", "1.0"), real=True)
-            B = sp.Symbol(p.get("B", "0.0"), real=True)
-            C = sp.Symbol(p.get("C", "0.0"), real=True)
+            if "A" not in p: raise ValueError(f"ARRHENIUS reaction {idx} missing 'A' coefficient.")
+            A = sp.Symbol(str(p["A"]), real=True)
+            B = sp.Symbol(str(p.get("B", 0.0)), real=True)
+            C = sp.Symbol(str(p.get("C", 0.0)), real=True)
             k_arr = A * (Temp / 300)**B * sp.exp(-C / Temp)
             flux = k_arr
             
         elif rtype == "TROE":
-            # k(T, P) = (k0[M] / (1 + k0[M]/kinf)) * Fc^(1 / (1 + (log10(k0[M]/kinf)/N)^2))
-            k0 = sp.Symbol(p.get("k0_A", "1.0"), real=True)
-            kinf = sp.Symbol(p.get("kinf_A", "1.0"), real=True)
-            Fc = sp.Symbol(p.get("Fc", "0.6"), real=True)
-            N = sp.Symbol(p.get("N", "1.0"), real=True)
+            if "k0" not in p or "A" not in p["k0"]: raise ValueError(f"TROE reaction {idx} missing 'k0.A' limit.")
+            if "kinf" not in p or "A" not in p["kinf"]: raise ValueError(f"TROE reaction {idx} missing 'kinf.A' limit.")
+            
+            # Low pressure limit
+            k0_A = sp.Symbol(str(p["k0"]["A"]), real=True)
+            k0_B = sp.Symbol(str(p["k0"].get("B", 0.0)), real=True)
+            k0_C = sp.Symbol(str(p["k0"].get("C", 0.0)), real=True)
+            k0 = k0_A * (Temp / 300)**k0_B * sp.exp(-k0_C / Temp)
+            
+            # High pressure limit
+            kinf_A = sp.Symbol(str(p["kinf"]["A"]), real=True)
+            kinf_B = sp.Symbol(str(p["kinf"].get("B", 0.0)), real=True)
+            kinf_C = sp.Symbol(str(p["kinf"].get("C", 0.0)), real=True)
+            kinf = kinf_A * (Temp / 300)**kinf_B * sp.exp(-kinf_C / Temp)
+            
+            Fc = sp.Symbol(str(p.get("Fc", 0.6)), real=True)
+            N = sp.Symbol(str(p.get("N", 1.0)), real=True)
+            
             ratio = (k0 * M_density) / kinf
             flux = ((k0 * M_density) / (1 + ratio)) * (Fc ** (1 / (1 + (sp.log(ratio, 10)/N)**2)))
             
         elif rtype == "HETEROGENEOUS":
-            # k_het = 0.25 * v_gas * S_a * gamma
-            gamma = sp.Symbol(p.get("gamma", "0.1"), real=True)
+            if "gamma" not in p: raise ValueError(f"HETEROGENEOUS reaction {idx} missing 'gamma' parameter.")
+            gamma = sp.Symbol(str(p["gamma"]), real=True)
             flux = 0.25 * v_gas * S_a * gamma
             
         elif rtype == "TUNNELING":
-            # Splines or tunneling
-            Y_spline = sp.Symbol(p.get("Y_spline", f"Y_{idx}"), real=True)
+            if "Y_spline" not in p: raise ValueError(f"TUNNELING reaction {idx} missing 'Y_spline' parameter.")
+            Y_spline = sp.Symbol(str(p["Y_spline"]), real=True)
             flux = Y_spline
             
         else:
@@ -160,9 +173,32 @@ def prepare_unified_jacobian(mech: MechanismDefinition) -> Dict[str, Any]:
     # Evaluate the transposed Adjoint (J^T)
     adjoint_matrix = jacobian_matrix.transpose()
     
+    # 5. Mass Conservation Pseudo-Inverse (E^T (E E^T)^-1)
+    # Build elemental stoichiometry matrix E [num_elements x num_species]
+    unique_elements = sorted(list(set(elem for s in mech.species for elem in s.elements.keys())))
+    if unique_elements:
+        E_matrix = sp.zeros(len(unique_elements), len(ordered_species))
+        for j, sp_name in enumerate(ordered_species):
+            species_def = next(s for s in mech.species if s.name == sp_name)
+            for i, elem in enumerate(unique_elements):
+                E_matrix[i, j] = species_def.elements.get(elem, 0)
+                
+        # Calculate pseudo-inverse projector (E^T (E E^T)^-1)
+        # Note: (E E^T) must be invertible. We use a pseudo-inverse for general stability in the AST
+        try:
+            E_E_T = E_matrix * E_matrix.transpose()
+            mass_projector = E_matrix.transpose() * E_E_T.pinv()
+        except Exception:
+            mass_projector = sp.zeros(len(ordered_species), len(unique_elements))
+    else:
+        E_matrix = sp.zeros(1, len(ordered_species))
+        mass_projector = sp.zeros(len(ordered_species), 1)
+    
     return {
         "species_map": ordered_species,
         "f_vector": f_vector,
         "jacobian_matrix": jacobian_matrix,
-        "adjoint_matrix": adjoint_matrix
+        "adjoint_matrix": adjoint_matrix,
+        "mass_projector": mass_projector,
+        "element_map": unique_elements
     }
