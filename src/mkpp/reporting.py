@@ -85,6 +85,15 @@ def write_report(mech, sympy_meta, out_dir, suffix=""):
         if hasattr(mech, "reduction_metadata") and mech.reduction_metadata:
             pruned_species = mech.reduction_metadata["pruned_species"]
             dropped_rxns = mech.reduction_metadata["dropped_reactions"]
+            
+        if hasattr(mech, "amore_metadata") and mech.amore_metadata:
+            meta = mech.amore_metadata
+            f.write("## AMORE Auto-Lumping Summary\n")
+            f.write(f"- **Explicit Species Collapsed**: {len(meta['pruned_explicits'])}\n")
+            f.write(f"- **Surrogates Added**: {len(meta['surrogates_added'])}\n")
+            f.write(f"- **Redundant Reactions Merged**: {meta['total_collapsed']}\n\n")
+            f.write("### Target Surrogates\n")
+            f.write(f"{', '.join(meta['surrogates_added'])}\n\n")
             f.write("## DRGEP Auto-Reduction Summary\n")
             f.write(f"- **Species Pruned**: {len(pruned_species)}\n")
             f.write(f"- **Reactions Dropped**: {len(dropped_rxns)}\n\n")
@@ -126,7 +135,7 @@ def write_report(mech, sympy_meta, out_dir, suffix=""):
         f.write("### Warnings\n")
         warnings = []
         if len(mech.species) > 50:
-            warnings.append("Mechanism exceeds 50 species. Consider running with `--enable-drgep` to auto-reduce.")
+            warnings.append("Mechanism exceeds 50 species. Consider running with `--lump` to auto-reduce.")
         if type_counts.get("TROE", 0) > 0 or type_counts.get("EP2", 0) > 0 or type_counts.get("EP3", 0) > 0:
             warnings.append("Mechanism contains complex pressure-dependent or empirical falloff rates which expand the AST depth significantly.")
             
