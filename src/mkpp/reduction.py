@@ -45,7 +45,7 @@ def reduce_mechanism_drgep(mech: MechanismDefinition, threshold: float = 0.05) -
             pruned_species.add(node)
             
     # Always keep target radicals/oxidants for integrity
-    keep_list = {"OH", "HO2", "NO", "NO2", "O3", "O3P", "O1D"}
+    keep_list = {"OH", "HO2", "NO", "NO2", "O3", "O3P", "O1D", "ISOPRENE", "SO2", "HONO", "CH4", "CO"}
     for sp in list(pruned_species):
         if sp in keep_list:
             pruned_species.remove(sp)
@@ -55,6 +55,7 @@ def reduce_mechanism_drgep(mech: MechanismDefinition, threshold: float = 0.05) -
     
     # 4. Prune reactions where all reactants OR all products were pruned
     new_reactions = []
+    dropped_reactions = []
     for r in mech.reactions:
         reactants_exist = any(react not in pruned_species for react in r.reactants.keys())
         products_exist = any(prod not in pruned_species for prod in r.products.keys())
@@ -66,7 +67,12 @@ def reduce_mechanism_drgep(mech: MechanismDefinition, threshold: float = 0.05) -
             new_r.products = {k: v for k, v in r.products.items() if k not in pruned_species}
             if len(new_r.reactants) > 0 or len(new_r.products) > 0:
                 new_reactions.append(new_r)
+            else:
+                dropped_reactions.append(r)
+        else:
+            dropped_reactions.append(r)
             
     mech.species = new_species
     mech.reactions = new_reactions
+    mech.reduction_metadata = {"pruned_species": list(pruned_species), "dropped_reactions": dropped_reactions}
     return mech
