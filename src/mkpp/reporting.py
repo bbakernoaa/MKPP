@@ -3,7 +3,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from pathlib import Path
 
-def write_report(mech, sympy_meta, out_dir):
+def write_report(mech, sympy_meta, out_dir, suffix=""):
     out_path = Path(out_dir)
     out_path.mkdir(parents=True, exist_ok=True)
     
@@ -30,7 +30,7 @@ def write_report(mech, sympy_meta, out_dir):
     plt.title(f"Chemical Mechanism Topology: {mech.name}")
     plt.axis('off')
     
-    graph_path = out_path / f"network_graph_{mech.name}.png"
+    graph_path = out_path / f"network_graph_{mech.name}{suffix}.png"
     plt.savefig(graph_path, dpi=300, bbox_inches='tight')
     plt.close()
     
@@ -61,7 +61,7 @@ def write_report(mech, sympy_meta, out_dir):
             non_stiff_count += 1
 
     # 3. Write Markdown Report
-    report_path = out_path / f"report_{mech.name}.md"
+    report_path = out_path / f"report_{mech.name}{suffix}.md"
     with open(report_path, "w") as f:
         f.write(f"# MKPP Mechanism Diagnostic Report: {mech.name}\n\n")
         
@@ -82,8 +82,37 @@ def write_report(mech, sympy_meta, out_dir):
             f.write("- **Graph Topology Status**: Mechanism contains cyclically dependent fast radicals. Tarjan SCC was applied.\n")
         f.write("\n")
         
+        if hasattr(mech, "reduction_metadata") and mech.reduction_metadata:
+            pruned_species = mech.reduction_metadata["pruned_species"]
+            dropped_rxns = mech.reduction_metadata["dropped_reactions"]
+            f.write("## DRGEP Auto-Reduction Summary\n")
+            f.write(f"- **Species Pruned**: {len(pruned_species)}\n")
+            f.write(f"- **Reactions Dropped**: {len(dropped_rxns)}\n\n")
+            
+            f.write("### Pruned Species\n")
+            f.write(f"The following species were determined to have negligible kinetic impact and were removed: {', '.join(pruned_species)}\n\n")
+            
+            import yaml
+            spc_yaml = out_path / f"species_{mech.name}{suffix}.yaml"
+            rxn_yaml = out_path / f"reactions_{mech.name}{suffix}.yaml"
+            
+            with open(spc_yaml, "w") as fy:
+                yaml.dump([{"name": s.name} for s in mech.species], fy, sort_keys=False)
+            with open(rxn_yaml, "w") as fy:
+                yaml_data = []
+                for rxn in mech.reactions:
+                    d = {"type": rxn.reaction_type, "reactants": rxn.reactants, "products": rxn.products}
+                    d.update(rxn.parameters)
+                    yaml_data.append(d)
+                yaml.dump(yaml_data, fy, sort_keys=False)
+                
+            f.write(f"### Reduced Mechanism Definitions\n")
+            f.write(f"- Download the reduced species config: [{spc_yaml.name}]({spc_yaml.name})\n")
+            f.write(f"- Download the reduced reactions config: [{rxn_yaml.name}]({rxn_yaml.name})\n\n")
+
+        
         f.write("## Topology & Graph\n")
-        f.write(f"![Network Graph](network_graph_{mech.name}.png)\n\n")
+        f.write(f"![Network Graph](network_graph_{mech.name}{suffix}.png)\n\n")
         
         f.write("## Performance & Stiffness Diagnostics\n")
         if top_dense:
