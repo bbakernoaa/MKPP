@@ -1,11 +1,11 @@
 {
-  "mechanism": "saprc99",
+  "mechanism": "saprcnov",
   "aerosol_representation": "bulk",
-  "checksum": "7e83abcf1396431dd70b87dd62d2902db928f41db56b2a5215ebf4e6d710ca8a",
+  "checksum": "d51dd3ebb3c78d4d91d8397bcbf60d26b8dd9468f8cf8341cff1173db0ce3854",
   "artifacts": [
     {
       "kind": "header",
-      "file": "saprc99_lumped.hpp"
+      "file": "saprcnov.hpp"
     },
     {
       "kind": "adjoint_tlm_record",
@@ -22,8 +22,8 @@
   "solver_partition": {
     "sza_sorted": true,
     "micro_blocks": {
-      "implicit": 145,
-      "explicit": 6
+      "implicit": 186,
+      "explicit": 1
     },
     "scc_count": 1
   }

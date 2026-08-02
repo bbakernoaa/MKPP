@@ -484,7 +484,7 @@ reactions:
   stiff: true
 - type: EP3
   reactants:
-    //<38> HO2: 1.0
+    HO2: 1.0
     HO2: 1.0
     H2O: 1.0
   products:
