@@ -34,12 +34,41 @@ def parse_mechanism_micm(name: str, data: Dict[str, Any]) -> MechanismDefinition
         rtype = r.get("type", "UNKNOWN")
         reactants = list(r.get("reactants", {}).keys())
         products = list(r.get("products", {}).keys())
+        
+        # Extract all potential rate parameters instead of just A
+        # For MICM compliance, parameters can include k0, kinf, Fc, gamma, etc.
+        parameters = {}
+        for k, v in r.items():
+            if k not in ("type", "reactants", "products", "stiff", "continuous_transition"):
+                parameters[k] = v
+                
+        # Maintain backwards compat for the simple tests
+        base_rate = str(r.get("A", ""))
+        
         reactions.append(ReactionDefinition(
             reaction_type=rtype,
             reactants=reactants,
             products=products,
-            rate_expression=str(r.get("A", "")) # Simplify base expression for MVP
+            rate_expression=base_rate,
+            parameters=parameters,
+            stiff=r.get("stiff", False),
+            continuous_transition=r.get("continuous_transition", False)
         ))
+        
+    from .model import HostInterfaceSchema, ArrayDefinition
+    host_interface = None
+    if "host_interface" in data and "arrays" in data["host_interface"]:
+        arrays = []
+        for arr_data in data["host_interface"]["arrays"]:
+            arrays.append(ArrayDefinition(
+                name=arr_data.get("name", "unknown"),
+                rank=arr_data.get("rank", 0),
+                layout=arr_data.get("layout", "LayoutLeft"),
+                extent=arr_data.get("extent"),
+                unit=arr_data.get("unit", "unknown"),
+                ownership=arr_data.get("ownership", "host")
+            ))
+        host_interface = HostInterfaceSchema(arrays=arrays)
         
     return MechanismDefinition(
         name=name,
@@ -47,7 +76,8 @@ def parse_mechanism_micm(name: str, data: Dict[str, Any]) -> MechanismDefinition
         aerosol_representation=AerosolRepresentation.BULK,
         species=species,
         phases=phases,
-        reactions=reactions
+        reactions=reactions,
+        host_interface=host_interface
     )
 
 def load_mechanism(path: str) -> MechanismDefinition:

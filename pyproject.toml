@@ -9,7 +9,8 @@ requires-python = ">=3.11"
 dependencies = [
     "pyyaml",
     "sympy",
-    "jinja2"
+    "jinja2",
+    "networkx"
 ]
 
 [project.scripts]

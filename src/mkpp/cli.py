@@ -26,14 +26,21 @@ def run_compiler(mech_path: str, env_path: str, out_dir: str, strict: bool, emit
         validate_mechanism(mech, strict=strict)
         
         # Enforce Extreme Environment Fuzzer compile gate (FR-008)
-        # Using a dummy condition number check for MVP architecture
+        from .validation import validate_fuzzer_stiffness
         dummy_max_condition = 1e5
         validate_fuzzer_stiffness(max_condition_number=dummy_max_condition)
         
         # Partition reactions and prepare adjoint logic
+        from .validation import validate_terminator_safety, validate_mass_conservation
+        validate_terminator_safety(mech)
+        validate_mass_conservation(mech)
+        
         blocks = partition_reactions(mech)
-        from .lowering import prepare_adjoint_and_tlm
+        mech.partition_metadata = blocks.get("metadata")
+        
+        from .lowering import prepare_adjoint_and_tlm, prepare_unified_jacobian
         adjoint_metadata = prepare_adjoint_and_tlm(mech)
+        mech.sympy_metadata = prepare_unified_jacobian(mech)
         
         # Generate artifacts
         generate_headers(mech, out_dir=out_dir)

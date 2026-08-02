@@ -18,6 +18,16 @@ class AerosolRepresentation(Enum):
     MODAL = "modal"
     SECTIONAL = "sectional"
 
+class ReactionType(Enum):
+    ARRHENIUS = "ARRHENIUS"
+    TROE = "TROE"
+    PHOTOLYSIS = "PHOTOLYSIS"
+    HETEROGENEOUS = "HETEROGENEOUS"
+    TUNNELING = "TUNNELING"
+    CONDENSATION = "CONDENSATION"
+    PHASE_CHANGE = "PHASE_CHANGE"
+    UNKNOWN = "UNKNOWN"
+
 @dataclass
 class SpeciesDefinition:
     name: str
@@ -34,13 +44,27 @@ class PhaseDefinition:
 
 @dataclass
 class ReactionDefinition:
-    reaction_type: str
+    reaction_type: str  # e.g., ARRHENIUS, PHOTOLYSIS
     reactants: List[str]
     products: List[str]
     rate_expression: str
+    parameters: Dict[str, Any] = field(default_factory=dict)
     unit_policy: str = "canonical"
     stiff: bool = False
     continuous_transition: bool = False
+
+@dataclass
+class ArrayDefinition:
+    name: str
+    rank: int
+    layout: str = "LayoutLeft" # Default to Fortran-compatible column-major
+    extent: Optional[List[int]] = None
+    unit: str = "unknown"
+    ownership: str = "host" # 'host' or 'device'
+    
+@dataclass
+class HostInterfaceSchema:
+    arrays: List[ArrayDefinition] = field(default_factory=list)
 
 @dataclass
 class MechanismDefinition:
@@ -50,6 +74,7 @@ class MechanismDefinition:
     species: List[SpeciesDefinition]
     phases: List[PhaseDefinition]
     reactions: List[ReactionDefinition]
+    host_interface: Optional['HostInterfaceSchema'] = None
     units: str = "canonical"
     metadata: Dict[str, str] = field(default_factory=dict)
 

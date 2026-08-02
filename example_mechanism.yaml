@@ -1,0 +1,49 @@
+name: ChapmanCycle
+description: A simplified stratospheric ozone chemistry mechanism.
+species:
+  - name: O
+    phase: gas
+    elements: {O: 1}
+  - name: O2
+    phase: gas
+    elements: {O: 2}
+  - name: O3
+    phase: gas
+    elements: {O: 3}
+  - name: M
+    phase: gas
+    role: third_body
+phases:
+  - name: gas
+    solver_mode: explicit
+reactions:
+  - type: PHOTOLYSIS
+    reactants: {O2: 1.0}
+    products: {O: 2.0}
+    continuous_transition: true
+    stiff: false
+    A: J1
+  - type: KINETIC
+    reactants: {O: 1.0, O2: 1.0, M: 1.0}
+    products: {O3: 1.0, M: 1.0}
+    stiff: true
+    A: k2
+  - type: PHOTOLYSIS
+    reactants: {O3: 1.0}
+    products: {O2: 1.0, O: 1.0}
+    continuous_transition: true
+    stiff: false
+    A: J3
+  - type: KINETIC
+    reactants: {O3: 1.0, O: 1.0}
+    products: {O2: 2.0}
+    stiff: true
+    A: k4
+host_interface:
+  arrays:
+    - name: temperature
+      rank: 3
+      layout: LayoutLeft
+      extent: [100, 100, 30]
+      unit: K
+      ownership: host

@@ -100,3 +100,134 @@ def test_validate_mechanism_strict():
     # Should fail in strict mode
     with pytest.raises(ValueError, match="Strict mode requires a mechanism description"):
         validate_mechanism(mech, strict=True)
+
+def test_host_interface_schema_validation():
+    from mkpp.model import MechanismDefinition, AerosolRepresentation, SpeciesDefinition, PhaseMode
+    
+    # Missing required host interface definition should fail preflight
+    mech = MechanismDefinition(
+        name="test_mech", description="Test", aerosol_representation=AerosolRepresentation.BULK,
+        species=[SpeciesDefinition(name="O3", phase=PhaseMode.GAS)], phases=[], reactions=[]
+    )
+    from mkpp.validation import validate_host_interface
+    with pytest.raises(ValueError, match="Host interface schema is missing required arrays"):
+        validate_host_interface(mech)
+
+def test_host_interface_schema_shape_and_units():
+    from mkpp.model import MechanismDefinition, HostInterfaceSchema, ArrayDefinition
+    from mkpp.validation import validate_host_interface
+    
+    # Missing extent
+    mech = MechanismDefinition(name="test", description="test", aerosol_representation="bulk", species=[], phases=[], reactions=[])
+    mech.host_interface = HostInterfaceSchema(
+        arrays=[ArrayDefinition(name="cloud_liquid_water", rank=3, layout="LayoutLeft", unit="kg/kg")]
+    )
+    with pytest.raises(ValueError, match="Host interface array 'cloud_liquid_water' must define extent vector matching rank 3"):
+        validate_host_interface(mech)
+        
+    # Mismatched rank and extent
+    mech.host_interface.arrays[0].extent = [100, 100] # Rank is 3, extent is 2
+    with pytest.raises(ValueError, match="Extent length 2 does not match rank 3"):
+        validate_host_interface(mech)
+        
+    # Valid
+    mech.host_interface.arrays[0].extent = [100, 100, 30]
+    mech.host_interface.arrays[0].ownership = "host"
+    assert validate_host_interface(mech) is True
+
+def test_parse_micm_host_interface():
+    from mkpp.parser import parse_mechanism_micm
+    import yaml
+    
+    yaml_content = """
+    species: [{name: O3}]
+    host_interface:
+      arrays:
+        - name: cloud_liquid_water
+          rank: 3
+          layout: LayoutLeft
+          extent: [100, 100, 30]
+          unit: kg/kg
+          ownership: host
+    """
+    raw_data = yaml.safe_load(yaml_content)
+    mech = parse_mechanism_micm("test_mech", raw_data)
+    
+    assert mech.host_interface is not None
+    assert len(mech.host_interface.arrays) == 1
+    
+    arr = mech.host_interface.arrays[0]
+    assert arr.name == "cloud_liquid_water"
+    assert arr.rank == 3
+    assert arr.layout == "LayoutLeft"
+    assert arr.extent == [100, 100, 30]
+    assert arr.unit == "kg/kg"
+    assert arr.ownership == "host"
+
+def test_host_interface_schema_units_and_c_compat():
+    from mkpp.model import MechanismDefinition, HostInterfaceSchema, ArrayDefinition
+    from mkpp.validation import validate_host_interface
+    
+    mech = MechanismDefinition(name="test", description="test", aerosol_representation="bulk", species=[], phases=[], reactions=[])
+    mech.host_interface = HostInterfaceSchema(
+        arrays=[ArrayDefinition(name="cloud_liquid_water", rank=3, extent=[100, 100, 30], layout="LayoutLeft", unit="unknown", ownership="host")]
+    )
+    
+    # Missing canonical unit
+    with pytest.raises(ValueError, match="Host interface array 'cloud_liquid_water' must define a known physical unit"):
+        validate_host_interface(mech)
+        
+    mech.host_interface.arrays[0].unit = "kg/kg"
+    assert validate_host_interface(mech) is True
+
+def test_sunrise_terminator_validation():
+    # T028: Assert abrupt photolysis changes do not invalidate the partitioning contract
+    from mkpp.model import MechanismDefinition, ReactionDefinition, AerosolRepresentation
+    from mkpp.validation import validate_terminator_safety
+    
+    mech = MechanismDefinition(
+        name="test_mech", description="Test", aerosol_representation=AerosolRepresentation.BULK,
+        species=[], phases=[],
+        reactions=[
+            # Photolysis without continuous transition across the terminator will crash the explicitly sorted chunks
+            ReactionDefinition(reaction_type="PHOTOLYSIS", reactants=[], products=[], rate_expression="J", continuous_transition=False)
+        ]
+    )
+    
+    with pytest.raises(ValueError, match="PHOTOLYSIS reactions must be marked with continuous_transition"):
+        validate_terminator_safety(mech)
+        
+    mech.reactions[0].continuous_transition = True
+    assert validate_terminator_safety(mech) is True
+
+def test_mass_conservation_and_aerosol_validation():
+    # T029 and T034: Validate elemental mass balance and unsupported combinations
+    from mkpp.model import MechanismDefinition, ReactionDefinition, SpeciesDefinition, PhaseMode
+    from mkpp.validation import validate_mass_conservation
+    
+    mech = MechanismDefinition(
+        name="test_mech", description="Test", aerosol_representation="bulk",
+        species=[
+            SpeciesDefinition(name="SO2", phase=PhaseMode.GAS, elements={"S": 1, "O": 2}),
+            SpeciesDefinition(name="SO4", phase=PhaseMode.AEROSOL, elements={"S": 1, "O": 4})
+        ],
+        phases=[],
+        reactions=[
+            ReactionDefinition(
+                reaction_type="condensation",
+                reactants=["SO2"],
+                products=["SO4"],
+                rate_expression="k"
+            )
+        ]
+    )
+    
+    # Missing mass (1 S, 2 O -> 1 S, 4 O) should fail elemental balance
+    with pytest.raises(ValueError, match="Elemental mass imbalance detected in reaction"):
+        validate_mass_conservation(mech)
+        
+    # Correct it to balance elements (pseudo-chemistry for test)
+    mech.species.append(SpeciesDefinition(name="O2", phase=PhaseMode.GAS, elements={"O": 2}))
+    mech.reactions[0].reactants.append("O2")
+    
+    assert validate_mass_conservation(mech) is True

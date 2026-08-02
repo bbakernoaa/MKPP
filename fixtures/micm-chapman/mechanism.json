@@ -1,0 +1,55 @@
+{
+  "name": "MICM_Chapman",
+  "description": "Standard Chapman ozone cycle adapted for MICM/OpenAtmos",
+  "species": [
+    { "name": "O", "type": "CHEM_SPEC", "phase": "GAS" },
+    { "name": "O2", "type": "CHEM_SPEC", "phase": "GAS" },
+    { "name": "O3", "type": "CHEM_SPEC", "phase": "GAS" },
+    { "name": "M", "type": "CHEM_SPEC", "phase": "GAS" }
+  ],
+  "phases": [
+    { "name": "GAS" }
+  ],
+  "reactions": [
+    {
+      "type": "PHOTOLYSIS",
+      "reactants": { "O2": {} },
+      "products": { "O": { "yield": 2.0 } },
+      "A": "J1",
+      "continuous_transition": true
+    },
+    {
+      "type": "ARRHENIUS",
+      "reactants": { "O": {}, "O2": {}, "M": {} },
+      "products": { "O3": {}, "M": {} },
+      "stiff": true,
+      "A": 6.0e-34
+    },
+    {
+      "type": "PHOTOLYSIS",
+      "reactants": { "O3": {} },
+      "products": { "O2": {}, "O": {} },
+      "A": "J3",
+      "continuous_transition": true
+    },
+    {
+      "type": "ARRHENIUS",
+      "reactants": { "O3": {}, "O": {} },
+      "products": { "O2": { "yield": 2.0 } },
+      "stiff": true,
+      "A": 8.0e-12
+    }
+  ],
+  "host_interface": {
+    "arrays": [
+      {
+        "name": "temperature",
+        "rank": 3,
+        "layout": "LayoutLeft",
+        "extent": [100, 100, 30],
+        "unit": "K",
+        "ownership": "host"
+      }
+    ]
+  }
+}
