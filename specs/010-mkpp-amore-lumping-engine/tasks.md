@@ -7,7 +7,7 @@
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Create `src/mkpp/amore.py` module skeleton
+- [x] T001 Create `src/mkpp/amore.py` module skeleton
 
 **Execution notes**: No special discipline required. Verify project builds before proceeding.
 
@@ -19,8 +19,8 @@
 
 **CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T002 [P] [TDD] Implement `LumpingRule` entity and YAML validation logic in `src/mkpp/amore.py`
-- [ ] T003 [P] [TDD] Implement `CollapsedReaction` data model in `src/mkpp/amore.py`
+- [x] T002 [P] [TDD] Implement `LumpingRule` entity and YAML validation logic in `src/mkpp/amore.py`
+- [x] T003 [P] [TDD] Implement `CollapsedReaction` data model in `src/mkpp/amore.py`
 
 **Execution notes**: Tasks marked [TDD] — write tests first, verify they fail, then implement.
 
@@ -35,13 +35,13 @@
 
 ### Tests for User Story 1 (if TDD applies)
 
-- [ ] T004 [P] [TDD] [US1] Write unit tests for explicit species substitution in `tests/python/test_amore.py`
-- [ ] T005 [P] [TDD] [US1] Write unit tests for reaction merging and $A_{eff}$ calculation in `tests/python/test_amore.py`
+- [x] T004 [P] [TDD] [US1] Write unit tests for explicit species substitution in `tests/python/test_amore.py`
+- [x] T005 [P] [TDD] [US1] Write unit tests for reaction merging and $A_{eff}$ calculation in `tests/python/test_amore.py`
 
 ### Implementation for User Story 1
 
-- [ ] T006 [US1] Implement AST explicit species substitution in `src/mkpp/amore.py`
-- [ ] T007 [US1] Implement reaction merging and effective rate expression ($A_{eff}$) calculation in `src/mkpp/amore.py`
+- [x] T006 [US1] Implement AST explicit species substitution in `src/mkpp/amore.py`
+- [x] T007 [US1] Implement reaction merging and effective rate expression ($A_{eff}$) calculation in `src/mkpp/amore.py`
 
 **Execution notes**: T006 and T007 handle the core AST node collapsing.
 
@@ -56,7 +56,7 @@
 
 ### Tests for User Story 2 (if TDD applies)
 
-- [ ] T008 [P] [TDD] [US2] Write unit tests for carbon scaling factors calculation in `tests/python/test_amore.py`
+- [x] T008 [P] [TDD] [US2] Write unit tests for carbon scaling factors calculation in `tests/python/test_amore.py`
 
 ### Implementation for User Story 2
 
