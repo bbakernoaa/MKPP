@@ -137,6 +137,13 @@ def write_report(mech, sympy_meta, out_dir, suffix=""):
         f.write("## Generated SymPy Rate Expressions\n")
         f.write("Below are the exact algebraic AST expressions evaluated by SymPy for the Unified Jacobian.\n\n")
         f.write("```text\n")
+        if hasattr(mech, "sympy_reactions_strings"):
+            for i, r_str in enumerate(mech.sympy_reactions_strings):
+                f.write(f"R{i+1}: {r_str}\n")
+        else:
+            for i, r in enumerate(mech.reactions):
+                f.write(f"R{i+1}: {r.reaction_type} | Reactants: {list(r.reactants.keys())} | Products: {list(r.products.keys())} | A: {r.parameters.get('A', 'N/A')}\n")
+
         
         if sympy_meta and "f_implicit" in sympy_meta:
             F_imp = sympy_meta["f_implicit"]

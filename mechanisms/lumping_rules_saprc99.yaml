@@ -1,0 +1,8 @@
+# Experimental mapping to test generalized AMORE
+ALK1_SURR:
+  - ALK1
+  - ALK2
+  - ALK3
+ARO_SURR:
+  - ARO1
+  - ARO2
