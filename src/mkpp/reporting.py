@@ -51,8 +51,14 @@ def write_report(mech, sympy_meta, out_dir):
 
     # Count reaction types
     type_counts = {}
+    stiff_count = 0
+    non_stiff_count = 0
     for r in mech.reactions:
         type_counts[r.reaction_type] = type_counts.get(r.reaction_type, 0) + 1
+        if r.stiff:
+            stiff_count += 1
+        else:
+            non_stiff_count += 1
 
     # 3. Write Markdown Report
     report_path = out_path / f"report_{mech.name}.md"
@@ -66,6 +72,14 @@ def write_report(mech, sympy_meta, out_dir):
         f.write("### Reaction Types Breakdown\n")
         for rt, cnt in type_counts.items():
             f.write(f"- **{rt}**: {cnt}\n")
+        f.write("\n")
+        
+        f.write("### Stiffness Partitioning\n")
+        f.write(f"- **Implicit (Stiff) Reactions**: {stiff_count}\n")
+        f.write(f"- **Explicit (Non-Stiff) Reactions**: {non_stiff_count}\n")
+        
+        if hasattr(mech, "partition_metadata") and mech.partition_metadata:
+            f.write("- **Graph Topology Status**: Mechanism contains cyclically dependent fast radicals. Tarjan SCC was applied.\n")
         f.write("\n")
         
         f.write("## Topology & Graph\n")
