@@ -33,13 +33,10 @@
 - name: DCB3
 - name: ETHENE
 - name: ISOPRENE
-- name: ALK1_SURR
-- name: ALK4
-- name: ALK5
+- name: ALK_SURR
 - name: ARO_SURR
-- name: OLE1
-- name: OLE2
-- name: TERP
+- name: OLE_SURR
+- name: TERP_SURR
 - name: RNO3
 - name: NPHE
 - name: PHEN

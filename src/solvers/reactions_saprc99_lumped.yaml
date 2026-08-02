@@ -1826,7 +1826,7 @@
   A: '3.60e-11'
 - type: ARRHENIUS
   reactants:
-    TERP: 1.0
+    TERP_SURR: 1.0
     OH: 1.0
   products:
     RO2_R: 0.75
@@ -1840,7 +1840,7 @@
   C: '-449.0'
 - type: ARRHENIUS
   reactants:
-    TERP: 1.0
+    TERP_SURR: 1.0
     O3: 1.0
   products:
     OH: 0.567
@@ -1864,7 +1864,7 @@
   C: '821.0'
 - type: ARRHENIUS
   reactants:
-    TERP: 1.0
+    TERP_SURR: 1.0
     NO3: 1.0
   products:
     NO2: 0.474
@@ -1878,7 +1878,7 @@
   C: '-175.0'
 - type: ARRHENIUS
   reactants:
-    TERP: 1.0
+    TERP_SURR: 1.0
     O3P: 1.0
   products:
     RCHO: 0.147
@@ -1886,63 +1886,29 @@
   A: '3.27e-11'
 - type: ARRHENIUS
   reactants:
-    ALK1_SURR: 1.0
+    ALK_SURR: 1.0
     OH: 1.0
   products:
-    RO2_R: 0.7505
-    CCHO: 0.7225
+    RO2_R: 0.7228749999999999
+    CCHO: 0.343875
     OH: 0.123
     HO2: 0.0605
-    RO2_N: 0.04025
-    CO: 0.08
-    HCHO: 0.02275
-    RCHO: 0.09975
-    ACET: 0.11624999999999999
+    RO2_N: 0.2193125
+    CO: 0.041
+    HCHO: 0.0246875
+    RCHO: 0.18793749999999998
+    ACET: 0.1780625
     GLY: 0.124
     HCOOH: 0.0605
-    R2O2: 0.2795
+    R2O2: 0.777875
     TBU_O: 0.118
-    MEK: 0.166
-  A: ((1.37e-12) + (9.87e-12)) + (1.019e-11)
+    MEK: 0.1135
+    C_O2: 0.0055
+    CCO_O2: 0.0055
+    PROD2: 0.23975
+  A: ((((1.37e-12) + (9.87e-12)) + (1.019e-11)) + (5.946e-12)) + (1.112e-11)
   C: '498.0'
   B: '2.0'
-- type: ARRHENIUS
-  reactants:
-    ALK4: 1.0
-    OH: 1.0
-  products:
-    RO2_R: 0.835
-    RO2_N: 0.143
-    R2O2: 0.936
-    C_O2: 0.011
-    CCO_O2: 0.011
-    CO: 0.002
-    HCHO: 0.024
-    CCHO: 0.455
-    RCHO: 0.244
-    ACET: 0.452
-    MEK: 0.11
-    PROD2: 0.125
-  A: '5.946e-12'
-  B: 0.0
-  C: '91.0'
-- type: ARRHENIUS
-  reactants:
-    ALK5: 1.0
-    OH: 1.0
-  products:
-    RO2_R: 0.653
-    RO2_N: 0.347
-    R2O2: 0.948
-    HCHO: 0.026
-    CCHO: 0.099
-    RCHO: 0.204
-    ACET: 0.072
-    MEK: 0.089
-    PROD2: 0.417
-  A: '1.112e-11'
-  B: 0.0
-  C: '52.0'
 - type: ARRHENIUS
   reactants:
     ARO_SURR: 1.0
@@ -1966,146 +1932,87 @@
   C: '-355.0'
 - type: ARRHENIUS
   reactants:
-    OLE1: 1.0
+    OLE_SURR: 1.0
     OH: 1.0
   products:
-    RO2_R: 0.91
-    RO2_N: 0.09
-    R2O2: 0.205
-    HCHO: 0.732
-    CCHO: 0.294
-    RCHO: 0.497
-    ACET: 0.005
+    RO2_R: 0.914
+    RO2_N: 0.086
+    R2O2: 0.103
+    HCHO: 0.488
+    CCHO: 0.513
+    RCHO: 0.504
+    ACET: 0.066
     PROD2: 0.119
-  A: '7.095e-12'
+    MEK: 0.036
+    BALD: 0.0305
+    METHACRO: 0.0125
+    ISOPROD: 0.0125
+  A: (7.095e-12) + (1.743e-11)
   B: 0.0
   C: '-451.0'
 - type: ARRHENIUS
   reactants:
-    OLE1: 1.0
+    OLE_SURR: 1.0
     O3: 1.0
   products:
-    OH: 0.155
-    HO2: 0.056
-    RO2_R: 0.022
-    RO2_N: 0.001
-    C_O2: 0.076
-    CO: 0.345
-    HCHO: 0.5
-    CCHO: 0.154
-    RCHO: 0.363
-    ACET: 0.001
-    PROD2: 0.215
-    HCOOH: 0.185
-    CCO_OH: 0.05
-    RCO_OH: 0.119
-  A: '2.617e-15'
+    OH: 0.2665
+    HO2: 0.029500000000000002
+    RO2_R: 0.0275
+    RO2_N: 0.0015
+    C_O2: 0.1365
+    CO: 0.305
+    HCHO: 0.3845
+    CCHO: 0.305
+    RCHO: 0.33399999999999996
+    ACET: 0.023
+    PROD2: 0.129
+    HCOOH: 0.129
+    CCO_OH: 0.0895
+    RCO_OH: 0.183
+    R2O2: 0.0685
+    CCO_O2: 0.0685
+    RCO_O2: 0.003
+    MEK: 0.013
+    BALD: 0.021
+    METHACRO: 0.013
+    MVK: 0.0095
+  A: (2.617e-15) + (5.022e-16)
   B: 0.0
   C: '1640.0'
 - type: ARRHENIUS
   reactants:
-    OLE1: 1.0
+    OLE_SURR: 1.0
     NO3: 1.0
   products:
-    RO2_R: 0.824
-    RO2_N: 0.176
-    R2O2: 0.488
-    CCHO: 0.009
-    RCHO: 0.037
-    ACET: 0.024
-    RNO3: 0.511
-  A: '4.453e-14'
+    RO2_R: 0.633
+    RO2_N: 0.156
+    R2O2: 0.5994999999999999
+    CCHO: 0.258
+    RCHO: 0.094
+    ACET: 0.063
+    RNO3: 0.41600000000000004
+    NO2: 0.1955
+    C_O2: 0.015
+    HCHO: 0.0395
+    MEK: 0.0005
+    BALD: 0.0075
+    MVK: 0.024
+  A: (4.453e-14) + (7.265e-13)
   B: 0.0
   C: '376.0'
 - type: ARRHENIUS
   reactants:
-    OLE1: 1.0
+    OLE_SURR: 1.0
     O3P: 1.0
   products:
-    RCHO: 0.45
-    MEK: 0.437
-    PROD2: 0.113
-  A: '1.074e-11'
+    RCHO: 0.2595
+    MEK: 0.548
+    PROD2: 0.186
+    HO2: 0.0065
+    RO2_R: 0.006
+    RO2_N: 0.0005
+    CO: 0.006
+    METHACRO: 0.006
+  A: (1.074e-11) + (2.085e-11)
   B: 0.0
   C: '234.0'
-- type: ARRHENIUS
-  reactants:
-    OLE2: 1.0
-    OH: 1.0
-  products:
-    RO2_R: 0.918
-    RO2_N: 0.082
-    R2O2: 0.001
-    HCHO: 0.244
-    CCHO: 0.732
-    RCHO: 0.511
-    ACET: 0.127
-    MEK: 0.072
-    BALD: 0.061
-    METHACRO: 0.025
-    ISOPROD: 0.025
-  A: '1.743e-11'
-  B: 0.0
-  C: '-384.0'
-- type: ARRHENIUS
-  reactants:
-    OLE2: 1.0
-    O3: 1.0
-  products:
-    OH: 0.378
-    HO2: 0.003
-    RO2_R: 0.033
-    RO2_N: 0.002
-    R2O2: 0.137
-    C_O2: 0.197
-    CCO_O2: 0.137
-    RCO_O2: 0.006
-    CO: 0.265
-    HCHO: 0.269
-    CCHO: 0.456
-    RCHO: 0.305
-    ACET: 0.045
-    MEK: 0.026
-    PROD2: 0.043
-    BALD: 0.042
-    METHACRO: 0.026
-    MVK: 0.019
-    HCOOH: 0.073
-    CCO_OH: 0.129
-    RCO_OH: 0.247
-  A: '5.022e-16'
-  B: 0.0
-  C: '461.0'
-- type: ARRHENIUS
-  reactants:
-    OLE2: 1.0
-    NO3: 1.0
-  products:
-    NO2: 0.391
-    RO2_R: 0.442
-    RO2_N: 0.136
-    R2O2: 0.711
-    C_O2: 0.03
-    HCHO: 0.079
-    CCHO: 0.507
-    RCHO: 0.151
-    ACET: 0.102
-    MEK: 0.001
-    BALD: 0.015
-    MVK: 0.048
-    RNO3: 0.321
-  A: '7.265e-13'
-- type: ARRHENIUS
-  reactants:
-    OLE2: 1.0
-    O3P: 1.0
-  products:
-    HO2: 0.013
-    RO2_R: 0.012
-    RO2_N: 0.001
-    CO: 0.012
-    RCHO: 0.069
-    MEK: 0.659
-    PROD2: 0.259
-    METHACRO: 0.012
-  A: '2.085e-11'
