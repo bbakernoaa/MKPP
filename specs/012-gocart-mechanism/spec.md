@@ -68,7 +68,7 @@ As a framework developer, I want the GOCART mechanism to utilize all supported r
 
 - **SC-001**: The `gocart.yaml` file parses 100% successfully using the existing MKPP parser.
 - **SC-002**: The MKPP engine successfully generates `gocart.hpp` and `gocart_reduced.hpp` solver routines from the YAML without compilation errors.
-- **SC-003**: The generated solver routines successfully model the chemical and phase-transfer kinetics of GOCART, and pass an automated verification script proving no emission or saltation terms exist in the output.
+- **SC-003**: The generated solver routines successfully model the chemical and phase-transfer kinetics of GOCART, and pass an automated verification script proving no emission or saltation terms exist in the output. Unlike legacy KPP, this includes continuous phase transfer without host-level operator splitting.
 
 ## Assumptions
 
