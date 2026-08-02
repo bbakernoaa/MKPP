@@ -6,49 +6,56 @@ from .model import MechanismDefinition
 
 
 def format_eqn(eqn_str, species_list):
-    s = str(eqn_str)
+    import sympy as sp
+    import re
+    
+    # 1. Clean up double negatives first because sympy might fail to parse `--` in strings
+    s = str(eqn_str).replace('--', '+').replace('^+', '^').replace('**+', '**')
     if s == '0': return '0.0'
     
-    # 1. Clean up unused mathematical factors from the SymPy AST (e.g., ^0.0 or *exp(0.0))
-    s = s.replace('**0.0', '').replace('*(Temp/300)', '').replace('*exp(-0.0/Temp)', '')
-    
-    # 2. Fix the power syntax (C++ doesn't have **, it uses ^, but wait actually in Kokkos we can just expand simple powers or leave it if it's 1.0)
-    # Actually, for Sympy emission, we should map '**2' to '* C_X'. 
-    # But C++ `std::pow` is heavy. A regex is fine:
-    import re
-    s = re.sub(r'\*\*(\d+\.\d+|\d+)', r'^\1', s)
-    
-    # 3. Handle specific hardcoded driver variables that Legacy KPP used internally
-    s = re.sub(r'\bC_DummyCH4\b', '1.0', s)
-    s = re.sub(r'\bC_DummyNMVOC\b', '1.0', s)
-    s = re.sub(r'\bC_FixedOH\b', '1.0', s)
-    s = re.sub(r'\bC_FixedCl\b', '1.0', s)
-    s = re.sub(r'\bC_CO\b', '1.0', s)
-    s = re.sub(r'\bC_NO2\b', '1.0', s)
-    s = re.sub(r'\bC_NO\b', '1.0', s)
-    s = re.sub(r'\bC_CH4\b', '1.0', s)
-    s = re.sub(r'\bC_N2O\b', '1.0', s)
-    s = re.sub(r'\bC_H2O\b', '1.0', s)
-    s = re.sub(r'\bC_H2\b', '1.0', s)
-    s = re.sub(r'\bC_CO2\b', '1.0', s)
-    s = re.sub(r'\bC_O1D\b', '1.0', s)
-    s = re.sub(r'\bSUN\b', '1.0', s)
-    s = re.sub(r'\bTEMP\b', 'Temp', s)
-    s = re.sub(r'\btemp\b', 'Temp', s)
-    
-    # 4. Map the C_X species symbols from the SymPy AST directly into the `state` array indices.
+    # 2. Try to use SymPy's C-code generator for robust math formatting
+    try:
+        expr = sp.sympify(s)
+        # Substitute legacy KPP dummy vars to 1.0 before C-code generation
+        subs_dict = {
+            sp.Symbol('C_DummyCH4'): 1.0,
+            sp.Symbol('C_DummyNMVOC'): 1.0,
+            sp.Symbol('C_FixedOH'): 1.0,
+            sp.Symbol('C_FixedCl'): 1.0,
+            sp.Symbol('C_CO'): 1.0,
+            sp.Symbol('C_NO2'): 1.0,
+            sp.Symbol('C_NO'): 1.0,
+            sp.Symbol('C_CH4'): 1.0,
+            sp.Symbol('C_N2O'): 1.0,
+            sp.Symbol('C_H2O'): 1.0,
+            sp.Symbol('C_H2'): 1.0,
+            sp.Symbol('C_CO2'): 1.0,
+            sp.Symbol('C_O1D'): 1.0,
+            sp.Symbol('SUN'): 1.0,
+            sp.Symbol('TEMP'): 300.0,
+            sp.Symbol('temp'): 300.0,
+            sp.Symbol('Temp'): 300.0,
+            sp.Symbol('S_a'): 1.0,
+            sp.Symbol('v_gas'): 1.0
+        }
+        
+        expr = expr.subs(subs_dict)
+        s = sp.ccode(expr)
+    except Exception as e:
+        # Fallback to regex if sympy fails
+        s = re.sub(r'([a-zA-Z0-9_\(\)\.\+\-\*\/]+)\*\*(\-?\d+\.\d+|\-?\d+)', r'pow(\1, \2)', s)
+        s = s.replace('Temp', '300.0')
+        s = s.replace('S_a', '1.0')
+        s = s.replace('v_gas', '1.0')
+
+    # 3. Map the C_X species symbols from the SymPy AST directly into the `state` array indices.
     # We sort by length descending so that C_O3 matches before C_O!
     sorted_sp = sorted(list(enumerate(species_list)), key=lambda x: len(x[1].name), reverse=True)
     for idx_s, sp in sorted_sp:
         # We use simple exact string replacement, but protected by word boundaries
         s = re.sub(r'\bC_' + sp.name + r'(?!\w)', f'state[{idx_s}]', s)
         
-    # Final cleanup of any stray SymPy constants
-    s = s.replace('Temp', '300.0') # For validation
-    s = s.replace('S_a', '1.0')
-    s = s.replace('v_gas', '1.0')
     return s
-
 
 def generate_headers(mech: MechanismDefinition, out_dir: str = "src/solvers", suffix: str = "") -> Dict[str, str]:
     """Emit the Kokkos headers and manifest artifact."""
