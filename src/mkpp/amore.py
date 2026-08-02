@@ -29,23 +29,40 @@ def apply_amore_lumping(mech: MechanismDefinition, rules: Dict[str, List[str]]) 
         else:
             new_species.append(sp)
 
-    # 3. Substitute species in reactions
+    # Calculate Carbon ratios for scaling BEFORE substitution
+    def get_carbon(sp_name):
+        # We need the original species objects to check element dicts
+        s = next((x for x in mech.species if x.name == sp_name), None)
+        if s and hasattr(s, "elements"):
+            return float(s.elements.get("C", 1.0))
+        return 1.0
+
+    # 3. Substitute species in reactions with Carbon Conservation
     substituted_reactions = []
     for r in mech.reactions:
         new_r = copy.deepcopy(r)
         
-        # Substitute Reactants
+        # We find what the primary organic reactant was before substitution to scale products appropriately.
+        # Atmospheric models typically scale based on the primary reacting VOC.
+        primary_reactant_carbon = max([get_carbon(react) for react in r.reactants.keys()] + [1.0])
+        
         new_reactants = {}
         for react, stoich in new_r.reactants.items():
             mapped_sp = explicit_to_surrogate.get(react, react)
             new_reactants[mapped_sp] = new_reactants.get(mapped_sp, 0.0) + float(stoich)
         new_r.reactants = new_reactants
         
-        # Substitute Products
         new_products = {}
         for prod, stoich in new_r.products.items():
-            mapped_sp = explicit_to_surrogate.get(prod, prod)
-            new_products[mapped_sp] = new_products.get(mapped_sp, 0.0) + float(stoich)
+            if prod in explicit_to_surrogate:
+                mapped_sp = explicit_to_surrogate[prod]
+                surrogate_carbon = get_carbon(mapped_sp)
+                # Apply Algebraic Mass Conservation Scaling
+                # E.g. If primary reacting VOC is C5, and surrogate is C3, we multiply yield by 5/3.
+                carbon_scale = primary_reactant_carbon / surrogate_carbon if surrogate_carbon > 0 else 1.0
+                new_products[mapped_sp] = new_products.get(mapped_sp, 0.0) + float(stoich) * carbon_scale
+            else:
+                new_products[prod] = new_products.get(prod, 0.0) + float(stoich)
         new_r.products = new_products
         
         substituted_reactions.append(new_r)
@@ -98,7 +115,8 @@ def apply_amore_lumping(mech: MechanismDefinition, rules: Dict[str, List[str]]) 
     mech.amore_metadata = {
         "pruned_explicits": list(pruned_explicits),
         "surrogates_added": list(seen_surrogates),
-        "total_collapsed": len(substituted_reactions) - len(mech.reactions)
+        "total_collapsed": len(substituted_reactions) - len(mech.reactions),
+        "mapping": explicit_to_surrogate
     }
     
     return mech
