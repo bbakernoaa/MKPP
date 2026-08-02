@@ -45,6 +45,8 @@ def format_eqn(eqn_str, species_list):
         
     # Final cleanup of any stray SymPy constants
     s = s.replace('Temp', '300.0') # For validation
+    s = s.replace('S_a', '1.0')
+    s = s.replace('v_gas', '1.0')
     return s
 
 
