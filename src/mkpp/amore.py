@@ -29,22 +29,31 @@ def apply_amore_lumping(mech: MechanismDefinition, rules: Dict[str, List[str]]) 
         else:
             new_species.append(sp)
 
-    # Calculate Carbon ratios for scaling BEFORE substitution
-    def get_carbon(sp_name):
-        # We need the original species objects to check element dicts
+    # Calculate Elemental ratios for scaling BEFORE substitution
+    def get_element(sp_name, elem_symbol):
         s = next((x for x in mech.species if x.name == sp_name), None)
         if s and hasattr(s, "elements"):
-            return float(s.elements.get("C", 1.0))
-        return 1.0
+            return float(s.elements.get(elem_symbol, 0.0))
+        return 0.0
+        
+    def get_primary_reactant(r_dict):
+        # The primary reacting explicit species usually dictates the yield scaling
+        # Find the reactant with the largest carbon weight as a heuristic, else fall back to N, S
+        best_sp = None
+        best_weight = -1.0
+        for react in r_dict.keys():
+            weight = get_element(react, "C") * 100 + get_element(react, "N") * 10 + get_element(react, "S") * 10 + get_element(react, "O")
+            if weight > best_weight:
+                best_weight = weight
+                best_sp = react
+        return best_sp
 
-    # 3. Substitute species in reactions with Carbon Conservation
+    # 3. Substitute species in reactions with Universal Elemental Conservation
     substituted_reactions = []
     for r in mech.reactions:
         new_r = copy.deepcopy(r)
         
-        # We find what the primary organic reactant was before substitution to scale products appropriately.
-        # Atmospheric models typically scale based on the primary reacting VOC.
-        primary_reactant_carbon = max([get_carbon(react) for react in r.reactants.keys()] + [1.0])
+        primary_react = get_primary_reactant(r.reactants)
         
         new_reactants = {}
         for react, stoich in new_r.reactants.items():
@@ -56,11 +65,19 @@ def apply_amore_lumping(mech: MechanismDefinition, rules: Dict[str, List[str]]) 
         for prod, stoich in new_r.products.items():
             if prod in explicit_to_surrogate:
                 mapped_sp = explicit_to_surrogate[prod]
-                surrogate_carbon = get_carbon(mapped_sp)
-                # Apply Algebraic Mass Conservation Scaling
-                # E.g. If primary reacting VOC is C5, and surrogate is C3, we multiply yield by 5/3.
-                carbon_scale = primary_reactant_carbon / surrogate_carbon if surrogate_carbon > 0 else 1.0
-                new_products[mapped_sp] = new_products.get(mapped_sp, 0.0) + float(stoich) * carbon_scale
+                
+                # Determine which element to scale by based on what the surrogate represents
+                # If the surrogate is a lumped VOC, scale by C. If it's a generic nitrate, scale by N.
+                scale = 1.0
+                if primary_react:
+                    for elem in ["C", "N", "S", "O"]:
+                        surr_count = get_element(mapped_sp, elem)
+                        react_count = get_element(primary_react, elem)
+                        if surr_count > 0 and react_count > 0:
+                            scale = react_count / surr_count
+                            break # Once we match the primary conserved element (C > N > S > O), apply the scale
+                            
+                new_products[mapped_sp] = new_products.get(mapped_sp, 0.0) + float(stoich) * scale
             else:
                 new_products[prod] = new_products.get(prod, 0.0) + float(stoich)
         new_r.products = new_products

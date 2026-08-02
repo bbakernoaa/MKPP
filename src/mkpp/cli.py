@@ -50,7 +50,6 @@ def run_compiler(mech_path: str, env_path: str, out_dir: str, strict: bool, emit
         if lump_path:
             import copy
             from .amore import apply_amore_lumping
-            from .parser import load_mechanism
             
             with open(lump_path, 'r') as fl:
                 rules = yaml.safe_load(fl)
@@ -65,6 +64,29 @@ def run_compiler(mech_path: str, env_path: str, out_dir: str, strict: bool, emit
             
             generate_headers(mech_lumped, out_dir=out_dir, suffix="_lumped")
 
+
+        if lump_path:
+            import copy
+            import yaml as pyyaml
+            from .amore import apply_amore_lumping
+            
+            with open(lump_path, 'r') as fl:
+                rules = pyyaml.safe_load(fl)
+                
+            mech_lumped = load_mechanism(mech_path)
+            mech_lumped = apply_amore_lumping(mech_lumped, rules)
+            
+            blocks_l = partition_reactions(mech_lumped)
+            mech_lumped.partition_metadata = blocks_l.get("metadata")
+            adjoint_metadata_l = prepare_adjoint_and_tlm(mech_lumped)
+            mech_lumped.sympy_metadata = prepare_unified_jacobian(mech_lumped)
+            
+            generate_headers(mech_lumped, out_dir=out_dir, suffix="_lumped")
+            
+            if report:
+                from .reporting import write_report
+                write_report(mech_lumped, mech_lumped.sympy_metadata, out_dir, suffix="_lumped")
+
         if enable_drgep:
             print("FATAL ERROR: DRGEP is not physically stable. Use AMORE lumping via --lump instead.", file=sys.stderr)
             sys.exit(1)
@@ -76,7 +98,6 @@ def run_compiler(mech_path: str, env_path: str, out_dir: str, strict: bool, emit
         if lump_path:
             import copy
             from .amore import apply_amore_lumping
-            from .parser import load_mechanism
             
             with open(lump_path, 'r') as fl:
                 rules = yaml.safe_load(fl)
