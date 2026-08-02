@@ -117,6 +117,23 @@ def write_report(mech, sympy_meta, out_dir, suffix=""):
             f.write(f"- Download the lumped species config: [{spc_yaml.name}]({spc_yaml.name})\n")
             f.write(f"- Download the lumped reactions config: [{rxn_yaml.name}]({rxn_yaml.name})\n\n")
 
+        if hasattr(mech, "amore_metadata") and mech.amore_metadata:
+            f.write("### Lumped Reaction Parameters\n")
+            f.write("When explicit paths were collapsed, their kinetic parameters were aggregated into the following effective rates ($A_{eff}$):\n\n")
+            f.write("```yaml\n")
+            import yaml
+            surrogates = mech.amore_metadata["surrogates_added"]
+            for rxn in mech.reactions:
+                has_surrogate = False
+                for r in rxn.reactants:
+                    if r in surrogates: has_surrogate = True
+                for p in rxn.products:
+                    if p in surrogates: has_surrogate = True
+                if has_surrogate:
+                    d = {"type": rxn.reaction_type, "reactants": rxn.reactants, "products": rxn.products}
+                    d.update(rxn.parameters)
+                    yaml.dump([d], f, sort_keys=False)
+            f.write("```\n\n")
         f.write("## Generated SymPy Rate Expressions\n")
         f.write("Below are the exact algebraic AST expressions evaluated by SymPy for the Unified Jacobian.\n\n")
         f.write("```text\n")
