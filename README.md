@@ -1,19 +1,26 @@
-# EMC Repository Template
+# Multiphase Kinetic PreProcessor (MKPP) Engine
 
-Getting all the right files in the right place can be a pain. 
-This is a simple template repository that you can use to ensure you have all the right files present in your repo.
+MKPP is a highly optimized, block-sparse Kokkos C++ chemistry solver generator that translates atmospheric chemistry mechanisms (defined via OpenAtmos YAML) into Exascale-ready Kokkos C++ headers using SymPy.
 
-## Files you need
+## Mechanisms Included
+- **Chapman Cycle** (`chapman.yaml`)
+- **Small Stratospheric** (`small_strato.yaml`)
+- **Carbon** (`carbon.yaml`)
+- **GOCART** (`gocart.yaml`)
+- **SAPRC** mechanisms (`saprc99.yaml`, `saprcnov.yaml`)
 
-These should be at the top level of your repository:
+## Building and Testing
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+mkdir build && cd build
+cmake ..
+ninja
+ctest
+```
 
-* `README.md` - The `README.md` file should have a short section at the bottom
-  called "DISCLAIMER", with a really brief statement saying that code is provided on an "as is" basis, and the user assumes responsibility for its use.
-* `LICENSE` - The text of the `CC0` license.
-* `DISCLAIMER` - Disclaimer 
-   
 ## License
 
 This project is part of NOAA-EMC Ecosystem. 
-
 See LICENSE and DISCLAIMER for details.
