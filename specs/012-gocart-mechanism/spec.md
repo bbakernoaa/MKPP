@@ -60,7 +60,7 @@ As a framework developer, I want the GOCART mechanism to utilize all supported r
 
 ### Key Entities
 
-- **GOCART Species**: Dust (various size bins), Sea Salt (various size bins), Sulfate precursors ($SO_2$, DMS), Sulfate aerosol, Black Carbon, Organic Carbon.
+- **GOCART Species**: Dust (various size bins), Sea Salt (various size bins), Sulfate precursors ($SO_2$, DMS), Sulfate aerosol, Black Carbon, Organic Carbon, Nitrogen precursors/aerosols ($HNO_3$, $NH_3$, $NH_{4_a}$, $NO_{3_{an1-3}}$).
 
 ## Success Criteria *(mandatory)*
 
