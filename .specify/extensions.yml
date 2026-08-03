@@ -1,5 +1,7 @@
 installed:
 - diagram
+- diataxis
+- prompter
 - red-team
 - stack
 settings:
