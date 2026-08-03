@@ -291,11 +291,35 @@ def prepare_unified_jacobian(mech: MechanismDefinition) -> Dict[str, Any]:
     }
 
     try:
-        lu_plan = compute_symbolic_lu_decomposition(jacobian_matrix, ordered_species)
+        # Run sparsity analysis: fill-in prediction, RCM reordering, block detection
+        N = jacobian_matrix.shape[0]
+        jacobian_structure = set()
+        for i in range(N):
+            for j in range(N):
+                if jacobian_matrix[i, j] != 0:
+                    jacobian_structure.add((i, j))
+
+        sparsity = SparsityOptimizer(jacobian_structure, N)
+        analysis = sparsity.analyze()
+
+        # Pass sparsity analysis to LU decomposition
+        lu_plan = compute_symbolic_lu_decomposition(
+            jacobian_matrix,
+            ordered_species,
+            permutation=analysis.permutation,
+            blocks=analysis.blocks,
+            is_block_diagonal=analysis.is_block_diagonal,
+        )
+
         result["symbolic_lu_plan"] = lu_plan
+        result["sparsity_analysis"] = analysis
     except Exception as e:
-        # Pass exception through or handle depending on scenario
-        pass
+        # Fallback: compute LU without sparsity optimization
+        try:
+            lu_plan = compute_symbolic_lu_decomposition(jacobian_matrix, ordered_species)
+            result["symbolic_lu_plan"] = lu_plan
+        except Exception:
+            pass
 
     return result
 
