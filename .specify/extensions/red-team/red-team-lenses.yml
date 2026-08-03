@@ -1,0 +1,8 @@
+# Inherited lenses from project
+lenses:
+  - name: "Performance Profiler"
+    prompt: "Analyze the specification for any requirements that would trigger dynamic memory allocations inside tight GPU loops or prevent contiguous memory access."
+  - name: "Security Engineer"
+    prompt: "Review the specification for path traversal vulnerabilities or execution environment injection risks during registry loading."
+  - name: "HPC Sysadmin"
+    prompt: "Review the specification for adherence to MPI distributed computing rules. Does it attempt to gather data to root?"
