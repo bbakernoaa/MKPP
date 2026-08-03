@@ -99,6 +99,64 @@ For any generated workflow (CI/CD or operational job chain), enforce the followi
 
 * **Failure Handling:** Any failing gate must stop the workflow and emit a clear `FATAL ERROR:`-prefixed message in logs where applicable.
 
+### 7.2 Pull Request Titles & Descriptions (Required)
+
+When generating PR titles and descriptions, follow these conventions:
+
+#### Title Format
+* **Conventional Commit Prefix:** PR titles must begin with a type prefix matching the Conventional Commits spec: `feat:`, `fix:`, `perf:`, `refactor:`, `test:`, `docs:`, `ci:`, `chore:`.
+* **Concise Summary:** Keep titles under 70 characters. Describe the *what*, not the *how*.
+* **Scope (Optional):** Use parenthesized scope for targeted changes: `feat(codegen):`, `fix(lowering):`, `perf(solver):`.
+* **No Period:** Do not end titles with a period.
+
+**Examples:**
+```
+feat(codegen): upgrade to ROS-3 solver with KPP error estimator
+fix(codegen): remove incorrect species substitution in format_eqn
+perf(lowering): parallelize Jacobian column differentiation
+refactor(cli): add structured CompilationError reporting
+```
+
+#### Description Structure
+PR descriptions must include the following sections in order:
+
+1. **Summary** (1–3 sentences): What this PR does and why. Reference the scientific/algorithmic motivation.
+2. **Changes** (bullet list): Concise list of what was modified, grouped by component.
+3. **Verification** (required): How correctness was validated:
+   - Test results (number passing, new tests added)
+   - Benchmark results (if performance-related)
+   - Numerical accuracy comparison (if solver/algorithm changes)
+4. **Breaking Changes** (if any): Explicit callout of API, CLI, or output format changes.
+5. **References** (optional): Links to papers, specs, or related issues.
+
+#### Description Template
+```markdown
+## Summary
+<1-3 sentences: what and why>
+
+## Changes
+- **component:** description of change
+- **component:** description of change
+
+## Verification
+- [ ] All N tests pass (`pytest tests/python/ -v`)
+- [ ] Benchmark: <timing result vs baseline>
+- [ ] Numerical accuracy: <comparison statement>
+
+## Breaking Changes
+<none, or explicit description>
+
+## References
+- <paper, issue, or spec link>
+```
+
+#### Quality Rules
+* **No Implementation Details in Titles:** Titles describe outcomes, not implementation mechanics.
+* **Quantify Performance Claims:** Never say "faster" without a number. Include baseline and improved measurements.
+* **Cite Scientific References:** When PRs implement published algorithms (e.g., Rosenbrock methods, DRGEP, RCM reordering), cite the source paper.
+* **Link Specs:** If the PR implements tasks from a `.kiro/specs/` document, reference it in the description.
+* **Reviewer Guidance:** If the PR touches numerical algorithms, note which tests provide confidence in correctness (e.g., "Property tests validate fill-in prediction against actual LU factorization").
+
 ### 8. Global Quality Gates & Scientific Hygiene
 * **Deterministic Output:** Scientific results must be completely reproducible. Avoid non-deterministic algorithms, race conditions, or unseeded random state initialization.
 * **Unified Jacobian & No Operator Splitting:** Do not artificially pause chemistry solvers to run aerosol modules. Evaluate gas kinetics, photolysis, and phase-transfers simultaneously to eliminate time-truncation errors.

@@ -1,6 +1,37 @@
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Optional, Any, Set, Tuple
 from enum import Enum
+
+
+@dataclass
+class CompilationError(Exception):
+    """Structured error for compilation pipeline failures."""
+    stage: str           # "parsing", "validation", "lowering", "codegen"
+    message: str
+    reaction_index: Optional[int] = None
+    species_name: Optional[str] = None
+    yaml_location: Optional[str] = None  # "file.yaml:line:col"
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Return a JSON-serializable dictionary of the error fields."""
+        d: Dict[str, Any] = {"stage": self.stage, "message": self.message}
+        if self.reaction_index is not None:
+            d["reaction_index"] = self.reaction_index
+        if self.species_name is not None:
+            d["species_name"] = self.species_name
+        if self.yaml_location is not None:
+            d["yaml_location"] = self.yaml_location
+        return d
+
+    def __str__(self) -> str:
+        parts = [f"[{self.stage}] {self.message}"]
+        if self.reaction_index is not None:
+            parts.append(f"reaction_index={self.reaction_index}")
+        if self.species_name is not None:
+            parts.append(f"species={self.species_name}")
+        if self.yaml_location is not None:
+            parts.append(f"at {self.yaml_location}")
+        return " | ".join(parts)
 
 class PhaseMode(Enum):
     GAS = "gas"
@@ -105,4 +136,30 @@ class SymbolicLUPlan:
     lu_expressions_ordered: List[Tuple[str, int, int, str]] = field(default_factory=list)
     forward_sub_steps: List[Tuple[int, str]] = field(default_factory=list)
     backward_sub_steps: List[Tuple[int, str]] = field(default_factory=list)
+    permutation: Optional[List[int]] = None
+    blocks: Optional[List[List[int]]] = None
+    fill_in_count: int = 0
+    annotated_expressions: Optional[List['AnnotatedLUExpression']] = None
 
+
+
+@dataclass
+class AnnotatedLUExpression:
+    """LU expression with species-dependency metadata for auto-reduction."""
+    kind: str              # "L" or "U"
+    row: int
+    col: int
+    expr: str
+    depends_on: Set[int]   # species indices whose activity affects this entry
+
+
+@dataclass
+class SparsityAnalysis:
+    """Result of sparsity optimization pass."""
+    original_nnz: int
+    fill_in_positions: Set[Tuple[int, int]]
+    total_nnz_after_fill: int
+    permutation: List[int]
+    inverse_permutation: List[int]
+    blocks: List[List[int]]
+    is_block_diagonal: bool

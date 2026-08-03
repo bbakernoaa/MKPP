@@ -52,3 +52,5 @@ Thumbs.db
 *.swo
 
 kpp_run*/
+.mkpp_cache/
+.hypothesis/
