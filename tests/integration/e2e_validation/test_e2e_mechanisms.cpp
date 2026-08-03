@@ -89,11 +89,46 @@ TEST(E2ESolverValidation, MechanismIntegration) {
         return mode != nullptr && std::string(mode) == "serial";
     }();
 
+    // Provide Cloud-J photolysis rates (jvals) for mechanisms with PHOTOLYSIS reactions.
+    // For benchmark/validation purposes, use typical mid-day J-values (s^-1).
+    std::vector<double> jvals_data(64, 0.0);
+    // Representative SAPRC-99 J-values at SZA ~30 degrees (typical clear-sky noon):
+    jvals_data[0] = 5.0e-6;   // NO2_IUPAC04
+    jvals_data[1] = 5.0e-6;   // NO2 -> NO + O3P
+    jvals_data[2] = 3.0e-5;   // O3 -> O3P
+    jvals_data[3] = 3.0e-5;   // O3 -> O1D
+    jvals_data[4] = 2.0e-4;   // HONO -> HO + NO
+    jvals_data[5] = 2.0e-4;   // HONO alt
+    jvals_data[6] = 6.0e-6;   // HNO3
+    jvals_data[7] = 5.0e-5;   // HNO4
+    jvals_data[8] = 1.0e-5;   // NO3 -> NO2
+    jvals_data[9] = 3.0e-5;   // HCHO -> HO2 + CO
+    jvals_data[10] = 4.0e-5;  // HCHO -> H2 + CO
+    jvals_data[11] = 1.0e-5;  // CCHO
+    jvals_data[12] = 5.0e-6;  // RCHO
+    jvals_data[13] = 7.0e-6;  // ACET
+    jvals_data[14] = 4.0e-6;  // MEK
+    jvals_data[15] = 3.0e-6;  // COOH
+    jvals_data[16] = 5.0e-5;  // GLY -> formaldehyde
+    jvals_data[17] = 2.0e-5;  // GLY -> glyoxal
+    jvals_data[18] = 1.0e-5;  // MGLY
+    jvals_data[19] = 1.0e-5;  // BACL
+    jvals_data[20] = 3.0e-6;  // BALD
+    jvals_data[21] = 4.0e-6;  // AFG1
+    jvals_data[22] = 3.0e-5;  // METHACRO
+    jvals_data[23] = 2.0e-5;  // MVK
+    jvals_data[24] = 3.0e-5;  // ISOPROD
+    jvals_data[25] = 4.0e-5;  // PROD2
+    jvals_data[26] = 1.0e-5;  // DCB1
+    jvals_data[27] = 1.0e-5;  // IC3ONO2
+    jvals_data[28] = 1.0e-5;  // HOCCHO
+    const double* jvals = jvals_data.data();
+
     auto start = std::chrono::high_resolution_clock::now();
     if (use_serial_host) {
-        mkpp::host::execute_mechanism_serial_steps<mkpp::SolverKernels<ExecSpace>>(state, dt_step, steps);
+        mkpp::host::execute_mechanism_serial_steps<mkpp::SolverKernels<ExecSpace>>(state, dt_step, steps, jvals);
     } else {
-        mkpp::host::execute_mechanism_steps<mkpp::SolverKernels<ExecSpace>>(TOSTRING(MECH_HEADER), state, dt_step, steps);
+        mkpp::host::execute_mechanism_steps<mkpp::SolverKernels<ExecSpace>>(TOSTRING(MECH_HEADER), state, dt_step, steps, jvals);
     }
     Kokkos::fence();
     auto end = std::chrono::high_resolution_clock::now();

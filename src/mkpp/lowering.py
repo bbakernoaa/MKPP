@@ -303,10 +303,14 @@ def prepare_unified_jacobian(mech: MechanismDefinition) -> Dict[str, Any]:
         analysis = sparsity.analyze()
 
         # Pass sparsity analysis to LU decomposition
+        # NOTE: Only pass permutation when codegen fully supports permuted state access
+        # across all solver stages (rates, Jacobian, LU, fwd/bwd sub, solution update).
+        # For now, disable permutation to avoid state-access mismatch segfaults.
+        # Block-diagonal decomposition is safe since it doesn't reorder state access.
         lu_plan = compute_symbolic_lu_decomposition(
             jacobian_matrix,
             ordered_species,
-            permutation=analysis.permutation,
+            permutation=None,
             blocks=analysis.blocks,
             is_block_diagonal=analysis.is_block_diagonal,
         )
