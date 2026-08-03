@@ -1,10 +1,10 @@
-from src.mkpp.model import ReactionDefinition
-from src.mkpp.amore import apply_amore_lumping
+from mkpp.model import ReactionDefinition
+from mkpp.amore import apply_amore_lumping
 import yaml
 
 with open('mechanisms/saprc99.yaml') as f:
     data = yaml.safe_load(f)
-    
+
 rules = {"ALK1_SURR": ["ALK1", "ALK2", "ALK3"]}
 
 def sig(r):
@@ -21,13 +21,13 @@ for r in data['reactions']:
             mapped = rules.get("ALK1_SURR", [])
             new_k = "ALK1_SURR" if k in mapped else k
             new_reacts[new_k] = new_reacts.get(new_k, 0) + v
-            
+
         new_prods = {}
         for k, v in r.get('products', {}).items():
             mapped = rules.get("ALK1_SURR", [])
             new_k = "ALK1_SURR" if k in mapped else k
             new_prods[new_k] = new_prods.get(new_k, 0) + v
-            
+
         r['reactants'] = new_reacts
         r['products'] = new_prods
         print("Substituted Reaction:", r)
