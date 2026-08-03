@@ -16,7 +16,7 @@ Extend the Exaero C++ Utility to conditionally compile and dispatch preexisting 
 **Target Platform**: Linux HPC clusters, GPUs (NVIDIA/AMD)
 **Project Type**: C++ utility / driver application
 **Performance Goals**: >80% GPU efficiency, zero-copy memory overhead, no thread starvation
-**Constraints**: 
+**Constraints**:
 - **CON-001**: TeamPolicy divergence (must use Kokkos hierarchical parallelism, avoid warp divergence)
 - **CON-002**: LayoutLeft interoperability (zero-copy handshakes using column-major mapping)
 

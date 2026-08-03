@@ -81,10 +81,45 @@
           "speckit.stack.submit",
           "speckit.stack.sync",
           "speckit.stack.patch"
+        ],
+        "gemini": [
+          "speckit.stack.init",
+          "speckit.stack.execute",
+          "speckit.stack.submit",
+          "speckit.stack.sync",
+          "speckit.stack.patch"
         ]
       },
       "registered_skills": [],
-      "installed_at": "2026-08-01T15:26:03.497038+00:00"
+      "installed_at": "2026-08-01T17:55:25.031865+00:00"
+    },
+    "prompter": {
+      "version": "1.0.0",
+      "source": "local",
+      "manifest_hash": "sha256:faa3da32df278144f4cf04c0267e3835f08a7e08023989c17397c877fe6efdf8",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "gemini": [
+          "speckit.prompter.specify"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-08-02T20:49:57.781238+00:00"
+    },
+    "diataxis": {
+      "version": "1.1.0",
+      "source": "local",
+      "manifest_hash": "sha256:ce2c7e97b75660162c07cda2946f32a15365547dac5844196507819af2237f09",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "copilot": [
+          "speckit.diataxis.diataxis"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-08-03T13:14:24.165780+00:00"
     }
   }
 }

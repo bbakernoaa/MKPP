@@ -12,39 +12,45 @@ def parse_mechanism_micm(name: str, data: Dict[str, Any]) -> MechanismDefinition
     """Parse MICM/OpenAtmos standard dictionary into internal model."""
     if "species" not in data or not data["species"]:
         raise ValueError("MICM data must define at least one species")
-        
+
     species = []
     for s in data.get("species", []):
         sp_name = s.get("name")
         if not sp_name:
             raise ValueError("Species must have a name")
         # Default to GAS if not specified in basic MICM
-        phase = PhaseMode.GAS 
-        species.append(SpeciesDefinition(name=sp_name, phase=phase))
-        
+        phase = PhaseMode.GAS
+        sp_type = str(s.get("type", "")).lower()
+        sp_role = str(s.get("role", "")).lower()
+        if sp_name in ("AIR", "O2", "H2O", "H2", "CH4", "M", "N2", "RO2") or sp_type == "fixed" or sp_role == "fixed":
+            role = "fixed"
+        else:
+            role = "variable"
+        species.append(SpeciesDefinition(name=sp_name, phase=phase, role=role))
+
     phases = []
     for p in data.get("phases", []):
         phases.append(PhaseDefinition(
             name=p.get("name"),
             solver_mode=SolverMode.IMPLICIT
         ))
-        
+
     reactions = []
     for r in data.get("reactions", []):
         rtype = r.get("type", "UNKNOWN")
-        reactants = list(r.get("reactants", {}).keys())
-        products = list(r.get("products", {}).keys())
-        
+        reactants = r.get("reactants", {})
+        products = r.get("products", {})
+
         # Extract all potential rate parameters instead of just A
         # For MICM compliance, parameters can include k0, kinf, Fc, gamma, etc.
         parameters = {}
         for k, v in r.items():
             if k not in ("type", "reactants", "products", "stiff", "continuous_transition"):
                 parameters[k] = v
-                
+
         # Maintain backwards compat for the simple tests
         base_rate = str(r.get("A", ""))
-        
+
         reactions.append(ReactionDefinition(
             reaction_type=rtype,
             reactants=reactants,
@@ -54,7 +60,7 @@ def parse_mechanism_micm(name: str, data: Dict[str, Any]) -> MechanismDefinition
             stiff=r.get("stiff", False),
             continuous_transition=r.get("continuous_transition", False)
         ))
-        
+
     from .model import HostInterfaceSchema, ArrayDefinition
     host_interface = None
     if "host_interface" in data and "arrays" in data["host_interface"]:
@@ -69,7 +75,7 @@ def parse_mechanism_micm(name: str, data: Dict[str, Any]) -> MechanismDefinition
                 ownership=arr_data.get("ownership", "host")
             ))
         host_interface = HostInterfaceSchema(arrays=arrays)
-        
+
     return MechanismDefinition(
         name=name,
         description=data.get("description", ""),

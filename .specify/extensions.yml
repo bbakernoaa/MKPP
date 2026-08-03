@@ -1,5 +1,7 @@
 installed:
 - diagram
+- diataxis
+- prompter
 - red-team
 - spec-kit-gh-stack
 - stack

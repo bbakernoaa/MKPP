@@ -25,6 +25,7 @@ __pycache__/
 .tox/
 .coverage
 htmlcov/
+dist/
 *.egg-info/
 venv/
 env/
@@ -42,6 +43,12 @@ core           # Core dumps
 .vscode/
 .idea/
 .DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.csv
 *~
 *.swp
 *.swo
+
+kpp_run*/

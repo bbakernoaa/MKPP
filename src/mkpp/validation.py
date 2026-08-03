@@ -13,12 +13,12 @@ def validate_mechanism(mech: MechanismDefinition, strict: bool = False):
     """Validate mechanism references and schema deterministic rules."""
     if not mech or not mech.species:
         raise ValueError("Mechanism cannot be empty")
-        
+
     if strict and not mech.description:
         raise ValueError("Strict mode requires a mechanism description")
-        
+
     species_names = {s.name for s in mech.species}
-    
+
     for idx, r in enumerate(mech.reactions):
         for reactant in r.reactants:
             if reactant not in species_names:
@@ -47,7 +47,7 @@ def validate_host_interface(mech: MechanismDefinition):
     """T022: Validate the zero-copy host interface schema."""
     if not getattr(mech, "host_interface", None) or not mech.host_interface.arrays:
         raise ValueError("Host interface schema is missing required arrays")
-        
+
     for arr in mech.host_interface.arrays:
         if not arr.extent:
             raise ValueError(f"Host interface array '{arr.name}' must define extent vector matching rank {arr.rank}")
@@ -69,25 +69,25 @@ def validate_terminator_safety(mech: MechanismDefinition) -> bool:
 def validate_mass_conservation(mech: MechanismDefinition) -> bool:
     """T032, T034: Validate elemental mass balance for every reaction."""
     species_dict = {s.name: s.elements for s in mech.species}
-    
+
     for idx, r in enumerate(mech.reactions):
         lhs_elements = {}
         rhs_elements = {}
-        
+
         # Accumulate reactant elements
         for reactant in r.reactants:
             elements = species_dict.get(reactant, {})
             for elem, count in elements.items():
                 lhs_elements[elem] = lhs_elements.get(elem, 0) + count
-                
+
         # Accumulate product elements
         for product in r.products:
             elements = species_dict.get(product, {})
             for elem, count in elements.items():
                 rhs_elements[elem] = rhs_elements.get(elem, 0) + count
-                
+
         # Compare
         if lhs_elements != rhs_elements:
             raise ValueError(f"Elemental mass imbalance detected in reaction {idx}: {r.reactants} -> {r.products} ({lhs_elements} != {rhs_elements})")
-            
+
     return True

@@ -15,7 +15,7 @@ def test_parse_complex_troe_parameters():
             }
         ]
     }
-    
+
     mech = parse_mechanism_micm("test", data)
     assert mech.reactions[0].reaction_type == "TROE"
     assert "k0" in mech.reactions[0].parameters

@@ -2,7 +2,7 @@
 
 **Goal:** Build the native C++ execution layer (`exaero`) that dynamically registers, links, and dispatches the MKPP AOT-generated block-sparse Kokkos C++ headers over a 3D host grid. Ensure workloads are dynamically load-balanced via a Solar Zenith Angle (SZA) sorter, using persistent `Kokkos::MemoryUnmanaged` Views for zero-copy coupling to external host environments (e.g., Fortran UFS/CMAQ wrappers). `exaero` acts as a shared utility that can be utilized by both the Host Model and MKPP as needed, providing physical diagnostics, sorting, and structural abstractions.
 
-**Architecture:** The utility lives in `src/exaero/`. It implements a Factory/Registry pattern to map configuration strings to specific generated kernels at runtime. It implements a core `TeamPolicy Dispatcher` that evaluates a dedicated SZA array to partition the global grid into balanced Kokkos thread blocks before calling the chemistry solver. 
+**Architecture:** The utility lives in `src/exaero/`. It implements a Factory/Registry pattern to map configuration strings to specific generated kernels at runtime. It implements a core `TeamPolicy Dispatcher` that evaluates a dedicated SZA array to partition the global grid into balanced Kokkos thread blocks before calling the chemistry solver.
 
 **Tech Stack:** C++23, Kokkos, CMake 3.24, CTest (with optionally compiled Python-generated fixtures from MKPP).
 

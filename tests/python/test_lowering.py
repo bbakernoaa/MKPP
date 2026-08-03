@@ -41,18 +41,18 @@ def test_workload_partitioning_sorting():
         ]
     )
     blocks = partition_reactions(mech)
-    
+
     # Must contain metadata for SZA sorting and micro-blocks
     assert "metadata" in blocks
     assert blocks["metadata"]["sza_sorted"] is True
     assert blocks["metadata"]["scc_count"] == 1  # 1 strongly connected component (O <-> O3)
-    
+
     # Cyclic reactions should be dynamically assigned to implicit
     assert len(blocks["implicit"]) == 2
     # Linear/Slow reactions should be assigned to explicit
     assert len(blocks["explicit"]) == 1
     assert blocks["explicit"][0].reaction_type == "CONDENSATION"
-    
+
     # Deterministic sorting (ARRHENIUS should sort before PHOTOLYSIS alphabetically)
     assert blocks["implicit"][0].reaction_type == "ARRHENIUS"
     assert blocks["implicit"][1].reaction_type == "PHOTOLYSIS"
@@ -61,7 +61,7 @@ def test_sympy_explicit_reaction_types():
     # Verify exact math representations for different reaction types (Section 2.2 constraints)
     from mkpp.model import MechanismDefinition, ReactionDefinition, AerosolRepresentation, SpeciesDefinition, PhaseMode
     from mkpp.lowering import prepare_unified_jacobian
-    
+
     mech = MechanismDefinition(
         name="math_test", description="Test", aerosol_representation=AerosolRepresentation.BULK,
         species=[
@@ -73,24 +73,24 @@ def test_sympy_explicit_reaction_types():
         reactions=[
             # 1. ARRHENIUS: standard k * [O] * [O2] * [M]
             ReactionDefinition(reaction_type="ARRHENIUS", reactants=["O", "O2", "M"], products=["O3"], rate_expression="", parameters={"A": "1.0"}),
-            
+
             # 2. TROE: Pressure-dependent falloff using k_0, k_inf
             ReactionDefinition(reaction_type="TROE", reactants=["O", "O2"], products=["O3"], rate_expression="", parameters={"k0": {"A": "1.0"}, "kinf": {"A": "2.0"}}),
-            
+
             # 3. PHOTOLYSIS: Linear J-rate
             ReactionDefinition(reaction_type="PHOTOLYSIS", reactants=["O2"], products=["O", "O"], rate_expression="", parameters={"A": "J_photo"}, continuous_transition=True),
-            
+
             # 4. HETEROGENEOUS: Uptake
             ReactionDefinition(reaction_type="HETEROGENEOUS", reactants=["O2"], products=["SULFATE"], rate_expression="", parameters={"gamma": "0.1"}),
-            
+
             # 5. TUNNELING / SPLINES
             ReactionDefinition(reaction_type="TUNNELING", reactants=["O"], products=["O2"], rate_expression="", parameters={"Y_spline": "Y_spline"})
         ]
     )
-    
+
     # We expect prepare_unified_jacobian to generate specific symbolic constructs for these.
     jacobian_metadata = prepare_unified_jacobian(mech)
     J = jacobian_metadata["jacobian_matrix"]
-    
+
     # Just asserting the script didn't crash and actually processed all 5 types into the matrix.
     assert J.shape == (4, 4)

@@ -1,0 +1,94 @@
+#pragma once
+#include <Kokkos_Core.hpp>
+#include <string>
+
+namespace mkpp {
+namespace host {
+
+/// @brief Serial host integrator for single-thread CPU benchmark parity.
+/// @tparam SolverKernelsType Generated solver kernel type callable on host.
+/// @tparam StateViewType Kokkos view type containing cell-major concentrations.
+/// @param state Four-dimensional concentration view with cell extent in dimension 0.
+/// @param dt Integration timestep in seconds.
+/// @param steps Number of timesteps to integrate per cell.
+template <typename SolverKernelsType, typename StateViewType>
+void execute_mechanism_serial_steps(StateViewType state, const double dt, const int steps) {
+    const int num_cells = state.extent(0);
+
+    for (int cell_idx = 0; cell_idx < num_cells; ++cell_idx) {
+        SolverKernelsType solver;
+        auto sub_state = Kokkos::subview(state, cell_idx, Kokkos::ALL(), 0, 0);
+        for (int step = 0; step < steps; ++step) {
+            solver.integrate(dt, sub_state);
+        }
+    }
+}
+
+/// @brief Serial host integrator for a single timestep.
+/// @tparam SolverKernelsType Generated solver kernel type callable on host.
+/// @tparam StateViewType Kokkos view type containing cell-major concentrations.
+/// @param state Four-dimensional concentration view with cell extent in dimension 0.
+/// @param dt Integration timestep in seconds.
+template <typename SolverKernelsType, typename StateViewType>
+void execute_mechanism_serial(StateViewType state, const double dt) {
+    execute_mechanism_serial_steps<SolverKernelsType>(state, dt, 1);
+}
+
+template <typename SolverKernelsType, typename StateViewType>
+struct TiledCellIntegrator {
+    StateViewType m_state;
+    double m_dt;
+
+    TiledCellIntegrator(StateViewType s, double dt) : m_state(s), m_dt(dt) {}
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(const int cell_idx) const {
+        SolverKernelsType solver;
+        auto sub_state = Kokkos::subview(m_state, cell_idx, Kokkos::ALL(), 0, 0);
+        solver.integrate(m_dt, sub_state);
+    }
+};
+
+template <typename SolverKernelsType, typename StateViewType>
+struct TiledCellTimeIntegrator {
+    StateViewType m_state;
+    double m_dt;
+    int m_steps;
+
+    TiledCellTimeIntegrator(StateViewType s, double dt, int steps) : m_state(s), m_dt(dt), m_steps(steps) {}
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(const int cell_idx) const {
+        SolverKernelsType solver;
+        auto sub_state = Kokkos::subview(m_state, cell_idx, Kokkos::ALL(), 0, 0);
+        for (int step = 0; step < m_steps; ++step) {
+            solver.integrate(m_dt, sub_state);
+        }
+    }
+};
+
+/// @brief Integrate all requested timesteps with a single Kokkos launch.
+/// @tparam SolverKernelsType Generated solver kernel type callable in the active execution space.
+/// @tparam StateViewType Kokkos view type containing cell-major concentrations.
+/// @param name Mechanism name used for Kokkos profiling labels.
+/// @param state Four-dimensional concentration view with cell extent in dimension 0.
+/// @param dt Integration timestep in seconds.
+/// @param steps Number of timesteps to integrate per cell.
+template <typename SolverKernelsType, typename StateViewType>
+void execute_mechanism_steps(const std::string& name, StateViewType state, const double dt, const int steps) {
+    using ExecSpace = Kokkos::DefaultExecutionSpace;
+    const int num_cells = state.extent(0);
+
+    Kokkos::parallel_for("MKPP_Grid_Dispatch_" + name,
+        Kokkos::RangePolicy<ExecSpace>(0, num_cells, Kokkos::ChunkSize(64)),
+        TiledCellTimeIntegrator<SolverKernelsType, StateViewType>(state, dt, steps)
+    );
+}
+
+template <typename SolverKernelsType, typename StateViewType>
+void execute_mechanism(const std::string& name, StateViewType state, double dt) {
+    execute_mechanism_steps<SolverKernelsType>(name, state, dt, 1);
+}
+
+} // namespace host
+} // namespace mkpp

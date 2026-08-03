@@ -64,9 +64,11 @@ Atmospheric chemistry is the most computationally demanding component of modern 
 |                        (Ingests Cloud Water, Outputs Optical Diagnostics)                         |
 \+---------------------------------------------------------------------------------------------------+
 
-### **2.1 Block-Sparse Build-Time Compilation (KokkosBatched) & Auto-Adjoints**
+### **2.1 Block-Sparse Build-Time Compilation & AOT Symbolic LU Factorization**
 
-Unrolling a massive 400-species Jacobian into a single flat array assignment exhausts GPU registers, stalling the compiler. MKPP uses graph analysis to map the chemical mechanism into dense micro-blocks (e.g., 16x16 highly coupled species clusters). The emitted C++ utilizes KokkosBatched::TeamLU and KokkosBatched::TeamTrsv. Because the Jacobian is analytically derived via SymPy, the compiler also auto-generates the analytical Adjoint/TLM kernels, providing out-of-the-box compatibility for advanced 4D-Var Data Assimilation without manual developer effort.
+MKPP shifts matrix decomposition and solver unrolling entirely to an Ahead-Of-Time (AOT) Python preprocessor. Rather than allocating dense thread-local matrices (`Jac[N]`, `W[N]`) or relying on triple-nested runtime $O(N^3)$ loops that cause severe GPU register pressure and local memory spilling, MKPP pre-computes a symbolic sparse LU decomposition plan at build time.
+
+The emitted C++ headers map matrix decomposition, forward substitution, and backward substitution into a flat, branchless sequence of scalar assignments mapped directly to GPU/CPU registers. For smaller to mid-sized mechanisms, flat scalar unrolling guarantees 0 bytes of thread-local array allocation and $O(1)$ loop control overhead; for massive mechanisms, graph analysis partitions species into micro-blocks integrated with `KokkosBatched::TeamLU` and `KokkosBatched::TeamTrsv`. Because the Jacobian is analytically derived via SymPy, the compiler also auto-generates analytical Adjoint/TLM kernels for 4D-Var Data Assimilation (JEDI).
 
 ### **2.2 Representation-Agnostic Aerosol Math**
 
@@ -244,7 +246,7 @@ namespace MKPP {
         // Architecture-Aware Layout: Automatically selects SoA (LayoutLeft) for GPUs
         // and AoS (LayoutRight) for CPUs to guarantee 100% memory bandwidth utilization.
         using StateView \= Kokkos::View\<double\*\*, typename ExecSpace::array\_layout, typename ExecSpace::memory\_space\>;
-        using TeamPolicy \= Kokkos::TeamPolicy\<ExecSpace\>;
+        using TeamPolicy \= yesKokkos::TeamPolicy\<ExecSpace\>;
         using MemberType \= typename TeamPolicy::member\_type;
 
         StateView state;

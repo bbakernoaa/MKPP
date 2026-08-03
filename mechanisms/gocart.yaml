@@ -1,0 +1,284 @@
+name: GOCART_Mechanism
+description: GOCART mechanism focusing strictly on chemistry and phase-transfer kinetics.
+species:
+- name: OH
+- name: NO3
+- name: H2O2
+- name: DMS
+- name: SO2
+- name: SO4
+- name: BC1
+- name: BC2
+- name: OC1
+- name: OC2
+- name: DUST1
+- name: DUST2
+- name: DUST3
+- name: DUST4
+- name: DUST5
+- name: SS1
+- name: SS2
+- name: SS3
+- name: SS4
+- name: SS5
+- name: HNO3
+- name: NH3
+- name: NH4a
+- name: NO3an1
+- name: NO3an2
+- name: NO3an3
+reactions:
+- type: ARRHENIUS
+  reactants:
+    DMS: 1.0
+    OH: 1.0
+  products:
+    SO2: 1.0
+  A: 1.2e-11
+  C: 260.0
+- type: ARRHENIUS
+  reactants:
+    DMS: 1.0
+    NO3: 1.0
+  products:
+    SO2: 1.0
+  A: 1.9e-13
+  C: 520.0
+- type: ARRHENIUS
+  reactants:
+    SO2: 1.0
+    OH: 1.0
+  products:
+    SO4: 1.0
+  A: 3.3e-12
+  stiff: true
+- type: HETEROGENEOUS
+  reactants:
+    SO2: 1.0
+    H2O2: 1.0
+  products:
+    SO4: 1.0
+  activation_trigger: meteo.cloud_liquid_water > 1.0e-6
+  continuous_transition: true
+  gamma: 0.01
+- type: ARRHENIUS
+  reactants:
+    BC1: 1.0
+  products:
+    BC2: 1.0
+  A: 5.0e-06
+  stiff: false
+- type: ARRHENIUS
+  reactants:
+    OC1: 1.0
+  products:
+    OC2: 1.0
+  A: 5.0e-06
+  stiff: false
+- type: PHOTOLYSIS
+  reactants:
+    H2O2: 1.0
+  products:
+    OH: 2.0
+  A: 1.0e-05
+  continuous_transition: true
+- type: HETEROGENEOUS
+  reactants:
+    SO2: 1.0
+    DUST1: 1.0
+  products:
+    SO4: 1.0
+    DUST1: 1.0
+  gamma: 0.0001
+  continuous_transition: true
+- type: HETEROGENEOUS
+  reactants:
+    SO2: 1.0
+    DUST2: 1.0
+  products:
+    SO4: 1.0
+    DUST2: 1.0
+  gamma: 0.0001
+  continuous_transition: true
+- type: HETEROGENEOUS
+  reactants:
+    SO2: 1.0
+    DUST3: 1.0
+  products:
+    SO4: 1.0
+    DUST3: 1.0
+  gamma: 0.0001
+  continuous_transition: true
+- type: HETEROGENEOUS
+  reactants:
+    SO2: 1.0
+    DUST4: 1.0
+  products:
+    SO4: 1.0
+    DUST4: 1.0
+  gamma: 0.0001
+  continuous_transition: true
+- type: HETEROGENEOUS
+  reactants:
+    SO2: 1.0
+    DUST5: 1.0
+  products:
+    SO4: 1.0
+    DUST5: 1.0
+  gamma: 0.0001
+  continuous_transition: true
+- type: HETEROGENEOUS
+  reactants:
+    SO2: 1.0
+    SS1: 1.0
+  products:
+    SO4: 1.0
+    SS1: 1.0
+  gamma: 0.001
+  continuous_transition: true
+- type: HETEROGENEOUS
+  reactants:
+    SO2: 1.0
+    SS2: 1.0
+  products:
+    SO4: 1.0
+    SS2: 1.0
+  gamma: 0.001
+  continuous_transition: true
+- type: HETEROGENEOUS
+  reactants:
+    SO2: 1.0
+    SS3: 1.0
+  products:
+    SO4: 1.0
+    SS3: 1.0
+  gamma: 0.001
+  continuous_transition: true
+- type: HETEROGENEOUS
+  reactants:
+    SO2: 1.0
+    SS4: 1.0
+  products:
+    SO4: 1.0
+    SS4: 1.0
+  gamma: 0.001
+  continuous_transition: true
+- type: HETEROGENEOUS
+  reactants:
+    SO2: 1.0
+    SS5: 1.0
+  products:
+    SO4: 1.0
+    SS5: 1.0
+  gamma: 0.001
+  continuous_transition: true
+- type: HETEROGENEOUS
+  reactants:
+    HNO3: 1.0
+    DUST1: 1.0
+  products:
+    NO3an1: 1.0
+    DUST1: 1.0
+  gamma: 0.1
+  continuous_transition: true
+- type: HETEROGENEOUS
+  reactants:
+    HNO3: 1.0
+    DUST2: 1.0
+  products:
+    NO3an2: 1.0
+    DUST2: 1.0
+  gamma: 0.1
+  continuous_transition: true
+- type: HETEROGENEOUS
+  reactants:
+    HNO3: 1.0
+    DUST3: 1.0
+  products:
+    NO3an3: 1.0
+    DUST3: 1.0
+  gamma: 0.1
+  continuous_transition: true
+- type: HETEROGENEOUS
+  reactants:
+    HNO3: 1.0
+    DUST4: 1.0
+  products:
+    NO3an1: 1.0
+    DUST4: 1.0
+  gamma: 0.1
+  continuous_transition: true
+- type: HETEROGENEOUS
+  reactants:
+    HNO3: 1.0
+    DUST5: 1.0
+  products:
+    NO3an2: 1.0
+    DUST5: 1.0
+  gamma: 0.1
+  continuous_transition: true
+- type: HETEROGENEOUS
+  reactants:
+    HNO3: 1.0
+    SS1: 1.0
+  products:
+    NO3an3: 1.0
+    SS1: 1.0
+  gamma: 0.1
+  continuous_transition: true
+- type: HETEROGENEOUS
+  reactants:
+    HNO3: 1.0
+    SS2: 1.0
+  products:
+    NO3an1: 1.0
+    SS2: 1.0
+  gamma: 0.1
+  continuous_transition: true
+- type: HETEROGENEOUS
+  reactants:
+    HNO3: 1.0
+    SS3: 1.0
+  products:
+    NO3an2: 1.0
+    SS3: 1.0
+  gamma: 0.1
+  continuous_transition: true
+- type: HETEROGENEOUS
+  reactants:
+    HNO3: 1.0
+    SS4: 1.0
+  products:
+    NO3an3: 1.0
+    SS4: 1.0
+  gamma: 0.1
+  continuous_transition: true
+- type: HETEROGENEOUS
+  reactants:
+    HNO3: 1.0
+    SS5: 1.0
+  products:
+    NO3an1: 1.0
+    SS5: 1.0
+  gamma: 0.1
+  continuous_transition: true
+- type: PHASE_CHANGE
+  reactants:
+    NH3: 1.0
+    HNO3: 1.0
+    SO4: 1.0
+  products:
+    NH4a: 1.0
+    NO3an1: 1.0
+  description: RPMARES / ISORROPIA-Lite inorganic thermodynamic equilibration
+  continuous_transition: true
+host_interface:
+  arrays:
+  - name: concentrations
+    rank: 4
+    layout: LayoutLeft
+    extent:
+    - 26
+    - 10
+    - 10
+    - 1
