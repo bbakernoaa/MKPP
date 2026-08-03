@@ -99,6 +99,10 @@ def prepare_unified_jacobian(mech: MechanismDefinition) -> Dict[str, Any]:
 
     blocks = partition_reactions(mech)
 
+    # Track photolysis reactions for Cloud-J integration
+    photo_idx = 0
+    photolysis_reactions = []
+
     for idx, r in enumerate(mech.reactions):
         rtype = r.reaction_type.upper()
         p = r.parameters
@@ -106,8 +110,17 @@ def prepare_unified_jacobian(mech: MechanismDefinition) -> Dict[str, Any]:
 
         if rtype == "PHOTOLYSIS":
             if "A" not in p: raise ValueError(f"PHOTOLYSIS reaction {idx} missing 'A' parameter (J-rate).")
-            J_photo = parse_sym_or_val(p["A"])
-            flux = J_photo
+            # Create a runtime symbol for this photolysis rate.
+            # The actual value comes from Cloud-J at runtime via jvals[photo_idx].
+            flux = sp.Symbol(f"J_{photo_idx}", real=True, nonnegative=True)
+            photolysis_reactions.append({
+                "photo_idx": photo_idx,
+                "reaction_idx": idx,
+                "reactants": r.reactants,
+                "products": r.products,
+                "original_A": str(p["A"]),
+            })
+            photo_idx += 1
 
         elif rtype == "ARRHENIUS":
             if "A" not in p: raise ValueError(f"ARRHENIUS reaction {idx} missing 'A' coefficient.")
@@ -272,7 +285,9 @@ def prepare_unified_jacobian(mech: MechanismDefinition) -> Dict[str, Any]:
         "jacobian_matrix": jacobian_matrix,
         "adjoint_matrix": adjoint_matrix,
         "mass_projector": mass_projector,
-        "element_map": unique_elements
+        "element_map": unique_elements,
+        "photolysis_count": photo_idx,
+        "photolysis_reactions": photolysis_reactions,
     }
 
     try:
@@ -313,6 +328,9 @@ def _build_f_total(mech: MechanismDefinition) -> Dict[str, Any]:
 
     blocks = partition_reactions(mech)
 
+    # Track photolysis reactions for Cloud-J integration (same as prepare_unified_jacobian)
+    photo_idx = 0
+
     for idx, r in enumerate(mech.reactions):
         rtype = r.reaction_type.upper()
         p = r.parameters
@@ -321,8 +339,9 @@ def _build_f_total(mech: MechanismDefinition) -> Dict[str, Any]:
         if rtype == "PHOTOLYSIS":
             if "A" not in p:
                 raise ValueError(f"PHOTOLYSIS reaction {idx} missing 'A' parameter (J-rate).")
-            J_photo = parse_sym_or_val(p["A"])
-            flux = J_photo
+            # Create a runtime symbol for this photolysis rate (Cloud-J provides at runtime)
+            flux = sp.Symbol(f"J_{photo_idx}", real=True, nonnegative=True)
+            photo_idx += 1
 
         elif rtype == "ARRHENIUS":
             if "A" not in p:

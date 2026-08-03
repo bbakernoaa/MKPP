@@ -51,7 +51,7 @@ def format_eqn(eqn_str, species_list, state_var="state", use_parentheses=True):
             sp.Symbol('C_FixedOH'): 1.0,
             sp.Symbol('C_FixedCl'): 1.0,
             # Environmental parameters (not species concentrations)
-            sp.Symbol('SUN'): 1.0,
+            # NOTE: SUN is NOT substituted — photolysis rates are runtime J-values from Cloud-J
             sp.Symbol('TEMP'): 300.0,
             sp.Symbol('temp'): 300.0,
             sp.Symbol('Temp'): 300.0,
@@ -78,6 +78,9 @@ def format_eqn(eqn_str, species_list, state_var="state", use_parentheses=True):
         else:
             repl = f"{state_var}_{idx_s}"
         s = re.sub(r'\bC_' + sp.name + r'(?!\w)', repl, s)
+
+    # 4. Map J_<idx> photolysis symbols to the jvals array (Cloud-J runtime input)
+    s = re.sub(r'\bJ_(\d+)\b', r'jvals[\1]', s)
 
     s = _strength_reduce_squares(s)
 
@@ -131,7 +134,7 @@ def generate_headers(mech: MechanismDefinition, out_dir: str = "src/solvers", su
 
         # 1. compute_rates
         f.write("      template <class StateView, class RateView>\n")
-        f.write("      KOKKOS_INLINE_FUNCTION void compute_rates(const StateView& state, RateView& F_block) const {\n")
+        f.write("      KOKKOS_INLINE_FUNCTION void compute_rates(const StateView& state, RateView& F_block, const double* jvals) const {\n")
         if sympy_meta:
             if "f_implicit" in sympy_meta and "f_explicit" in sympy_meta:
                 F = sympy_meta["f_implicit"] + sympy_meta["f_explicit"]
@@ -146,7 +149,7 @@ def generate_headers(mech: MechanismDefinition, out_dir: str = "src/solvers", su
 
         # 2. compute_jacobian
         f.write("      template <class StateView, class JacView>\n")
-        f.write("      KOKKOS_INLINE_FUNCTION void compute_jacobian(const StateView& state, JacView& J_block) const {\n")
+        f.write("      KOKKOS_INLINE_FUNCTION void compute_jacobian(const StateView& state, JacView& J_block, const double* jvals) const {\n")
         if sympy_meta and "jacobian_matrix" in sympy_meta:
             J = sympy_meta["jacobian_matrix"]
             for i in range(J.shape[0]):
@@ -158,7 +161,7 @@ def generate_headers(mech: MechanismDefinition, out_dir: str = "src/solvers", su
 
         # 3. compute_adjoint
         f.write("      template <class StateView, class JacView>\n")
-        f.write("      KOKKOS_INLINE_FUNCTION void compute_adjoint(const StateView& state, JacView& J_adj_block) const {\n")
+        f.write("      KOKKOS_INLINE_FUNCTION void compute_adjoint(const StateView& state, JacView& J_adj_block, const double* jvals) const {\n")
         if sympy_meta and "adjoint_matrix" in sympy_meta:
             J_adj = sympy_meta["adjoint_matrix"]
             for i in range(J_adj.shape[0]):
@@ -170,7 +173,7 @@ def generate_headers(mech: MechanismDefinition, out_dir: str = "src/solvers", su
 
         # 4. compute_tlm
         f.write("      template <class StateView, class DeltaView, class RateView>\n")
-        f.write("      KOKKOS_INLINE_FUNCTION void compute_tlm(const StateView& state, const DeltaView& delta_C, RateView& dF_block) const {\n")
+        f.write("      KOKKOS_INLINE_FUNCTION void compute_tlm(const StateView& state, const DeltaView& delta_C, RateView& dF_block, const double* jvals) const {\n")
         if sympy_meta and "jacobian_matrix" in sympy_meta:
             J = sympy_meta["jacobian_matrix"]
             for i in range(J.shape[0]):
@@ -229,9 +232,24 @@ def generate_headers(mech: MechanismDefinition, out_dir: str = "src/solvers", su
         f.write(f"      static constexpr double atol[NUM_SPECIES] = {{ {atol_str} }};\n")
         f.write(f"      static constexpr double rtol[NUM_SPECIES] = {{ {rtol_str} }};\n\n")
 
+        # Photolysis metadata (Cloud-J input mapping)
+        num_photolysis = 0
+        photolysis_reactions_meta = []
+        if sympy_meta:
+            num_photolysis = sympy_meta.get("photolysis_count", 0)
+            photolysis_reactions_meta = sympy_meta.get("photolysis_reactions", [])
+
+        if num_photolysis > 0:
+            f.write(f"      // Photolysis reactions (Cloud-J input mapping):\n")
+            for pr in photolysis_reactions_meta:
+                reactants_str = ", ".join(f"{k}" for k in (pr["reactants"].keys() if isinstance(pr["reactants"], dict) else pr["reactants"]))
+                products_str = ", ".join(f"{k}" for k in (pr["products"].keys() if isinstance(pr["products"], dict) else pr["products"]))
+                f.write(f"      //   jvals[{pr['photo_idx']}] = {reactants_str} -> {products_str}  (original A: {pr['original_A']})\n")
+            f.write(f"      static constexpr int NUM_PHOTOLYSIS = {num_photolysis};\n\n")
+
         # 6. integrate (AOT Symbolic LU, ROS-3: 3-stage, 3rd order, L-stable, Sandu & Sander 2006)
         f.write("      template <class StateView>\n")
-        f.write("      KOKKOS_INLINE_FUNCTION void integrate(double dt_total, StateView& state) const {\n")
+        f.write("      KOKKOS_INLINE_FUNCTION void integrate(double dt_total, StateView& state, const double* jvals) const {\n")
         f.write(f"          const int NUM_SPECIES = {N};\n")
         f.write("          // ROS-3 coefficients (Sandu & Sander 2006, KPP Ros3 subroutine)\n")
         f.write("          const double g = 0.43586652150845899941601945119356;\n")
@@ -503,7 +521,7 @@ def generate_headers(mech: MechanismDefinition, out_dir: str = "src/solvers", su
         # 7. integrate_with_reduction (Auto-Reduction Kernel)
         f.write("      template <class StateView>\n")
         f.write("      KOKKOS_INLINE_FUNCTION void integrate_with_reduction(\n")
-        f.write("          double dt_total, StateView& state, double importance_threshold) const\n")
+        f.write("          double dt_total, StateView& state, const double* jvals, double importance_threshold) const\n")
         f.write("      {\n")
         f.write(f"          const int NUM_SPECIES = {N};\n")
         f.write("          const double g = 1.70710678118654752440;\n")

@@ -186,7 +186,7 @@ def test_codegen_emits_sympy_jacobian(tmp_path):
     with open(results["header"], 'r') as f:
         content = f.read()
 
-    # The derivative of d[O]/dt (which is 2*J1*[O2]) with respect to [O2] is 2*J1.
-    # Therefore, J_block(1, 0) should be assigned 2*J1.
+    # The derivative of d[O]/dt (which is 2*J_0*[O2]) with respect to [O2] is 2*J_0.
+    # Therefore, J_block(1, 0) should be assigned 2*jvals[0].
     assert "J_block(" in content
-    assert "J1" in content
+    assert "jvals[0]" in content

@@ -11,15 +11,16 @@ namespace host {
 /// @param state Four-dimensional concentration view with cell extent in dimension 0.
 /// @param dt Integration timestep in seconds.
 /// @param steps Number of timesteps to integrate per cell.
+/// @param jvals Pointer to Cloud-J photolysis rate array (may be nullptr if no photolysis).
 template <typename SolverKernelsType, typename StateViewType>
-void execute_mechanism_serial_steps(StateViewType state, const double dt, const int steps) {
+void execute_mechanism_serial_steps(StateViewType state, const double dt, const int steps, const double* jvals = nullptr) {
     const int num_cells = state.extent(0);
 
     for (int cell_idx = 0; cell_idx < num_cells; ++cell_idx) {
         SolverKernelsType solver;
         auto sub_state = Kokkos::subview(state, cell_idx, Kokkos::ALL(), 0, 0);
         for (int step = 0; step < steps; ++step) {
-            solver.integrate(dt, sub_state);
+            solver.integrate(dt, sub_state, jvals);
         }
     }
 }
@@ -29,23 +30,25 @@ void execute_mechanism_serial_steps(StateViewType state, const double dt, const 
 /// @tparam StateViewType Kokkos view type containing cell-major concentrations.
 /// @param state Four-dimensional concentration view with cell extent in dimension 0.
 /// @param dt Integration timestep in seconds.
+/// @param jvals Pointer to Cloud-J photolysis rate array (may be nullptr if no photolysis).
 template <typename SolverKernelsType, typename StateViewType>
-void execute_mechanism_serial(StateViewType state, const double dt) {
-    execute_mechanism_serial_steps<SolverKernelsType>(state, dt, 1);
+void execute_mechanism_serial(StateViewType state, const double dt, const double* jvals = nullptr) {
+    execute_mechanism_serial_steps<SolverKernelsType>(state, dt, 1, jvals);
 }
 
 template <typename SolverKernelsType, typename StateViewType>
 struct TiledCellIntegrator {
     StateViewType m_state;
     double m_dt;
+    const double* m_jvals;
 
-    TiledCellIntegrator(StateViewType s, double dt) : m_state(s), m_dt(dt) {}
+    TiledCellIntegrator(StateViewType s, double dt, const double* jvals = nullptr) : m_state(s), m_dt(dt), m_jvals(jvals) {}
 
     KOKKOS_INLINE_FUNCTION
     void operator()(const int cell_idx) const {
         SolverKernelsType solver;
         auto sub_state = Kokkos::subview(m_state, cell_idx, Kokkos::ALL(), 0, 0);
-        solver.integrate(m_dt, sub_state);
+        solver.integrate(m_dt, sub_state, m_jvals);
     }
 };
 
@@ -54,15 +57,16 @@ struct TiledCellTimeIntegrator {
     StateViewType m_state;
     double m_dt;
     int m_steps;
+    const double* m_jvals;
 
-    TiledCellTimeIntegrator(StateViewType s, double dt, int steps) : m_state(s), m_dt(dt), m_steps(steps) {}
+    TiledCellTimeIntegrator(StateViewType s, double dt, int steps, const double* jvals = nullptr) : m_state(s), m_dt(dt), m_steps(steps), m_jvals(jvals) {}
 
     KOKKOS_INLINE_FUNCTION
     void operator()(const int cell_idx) const {
         SolverKernelsType solver;
         auto sub_state = Kokkos::subview(m_state, cell_idx, Kokkos::ALL(), 0, 0);
         for (int step = 0; step < m_steps; ++step) {
-            solver.integrate(m_dt, sub_state);
+            solver.integrate(m_dt, sub_state, m_jvals);
         }
     }
 };
@@ -74,20 +78,21 @@ struct TiledCellTimeIntegrator {
 /// @param state Four-dimensional concentration view with cell extent in dimension 0.
 /// @param dt Integration timestep in seconds.
 /// @param steps Number of timesteps to integrate per cell.
+/// @param jvals Pointer to Cloud-J photolysis rate array (may be nullptr if no photolysis).
 template <typename SolverKernelsType, typename StateViewType>
-void execute_mechanism_steps(const std::string& name, StateViewType state, const double dt, const int steps) {
+void execute_mechanism_steps(const std::string& name, StateViewType state, const double dt, const int steps, const double* jvals = nullptr) {
     using ExecSpace = Kokkos::DefaultExecutionSpace;
     const int num_cells = state.extent(0);
 
     Kokkos::parallel_for("MKPP_Grid_Dispatch_" + name,
         Kokkos::RangePolicy<ExecSpace>(0, num_cells, Kokkos::ChunkSize(64)),
-        TiledCellTimeIntegrator<SolverKernelsType, StateViewType>(state, dt, steps)
+        TiledCellTimeIntegrator<SolverKernelsType, StateViewType>(state, dt, steps, jvals)
     );
 }
 
 template <typename SolverKernelsType, typename StateViewType>
-void execute_mechanism(const std::string& name, StateViewType state, double dt) {
-    execute_mechanism_steps<SolverKernelsType>(name, state, dt, 1);
+void execute_mechanism(const std::string& name, StateViewType state, double dt, const double* jvals = nullptr) {
+    execute_mechanism_steps<SolverKernelsType>(name, state, dt, 1, jvals);
 }
 
 } // namespace host

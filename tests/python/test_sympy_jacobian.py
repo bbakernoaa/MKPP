@@ -39,7 +39,7 @@ def test_prepare_unified_jacobian_exact_equations():
     # constructed complex equations containing SymPy functions like 'exp', 'log', and 'Temp'.
     matrix_str = str(J)
 
-    assert "J1" in matrix_str
+    assert "J_0" in matrix_str
     assert "Temp" in matrix_str
     assert "exp" in matrix_str
     assert "k0" in matrix_str or "kinf" in matrix_str or "Fc" in matrix_str or "log" in matrix_str
