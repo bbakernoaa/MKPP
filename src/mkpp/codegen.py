@@ -269,7 +269,7 @@ def generate_headers(mech: MechanismDefinition, out_dir: str = "src/solvers", su
         f.write("          const double max_growth = 6.0;\n")
         f.write("          const double min_shrink = 0.2;\n")
         f.write("          double t = 0.0;\n")
-        f.write("          double dt = dt_total;\n\n")
+        f.write("          double dt = Kokkos::fmin(dt_total, 1.0);  // conservative initial step\n\n")
         f.write("          while (t < dt_total) {\n")
         f.write("          dt = Kokkos::min(dt, dt_total - t);\n")
         f.write("          const double inv_g_dt = 1.0 / (g * dt);\n\n")
@@ -313,22 +313,33 @@ def generate_headers(mech: MechanismDefinition, out_dir: str = "src/solvers", su
                     f.write(f"          double F1_{i} = {eqn};\n")
 
             # Jacobian Non-Zeros
-            f.write("\n          // 2. Analytical Jacobian & Iteration Matrix W = inv_g_dt*I - J\n")
+            f.write("\n          // 2. Analytical Jacobian & Iteration Matrix W = inv_g_dt*I - J (sparse)\n")
             non_zero_jac_set = set()
             for i, j, expr_str in lu_plan.non_zero_jacobian:
                 non_zero_jac_set.add((i, j))
                 eqn = format_eqn(expr_str, mech.species, state_var="S", use_parentheses=False)
                 f.write(f"          double J_{i}_{j} = {eqn};\n")
 
-            for i in range(N):
-                for j in range(N):
-                    if i == j:
-                        if (i, i) in non_zero_jac_set:
-                            f.write(f"          double W_{i}_{i} = inv_g_dt - J_{i}_{i};\n")
-                        else:
-                            f.write(f"          double W_{i}_{i} = inv_g_dt;\n")
-                    elif (i, j) in non_zero_jac_set:
-                        f.write(f"          double W_{i}_{j} = -J_{i}_{j};\n")
+            # Determine which W entries are actually needed by the LU plan
+            import re as _re_w
+            needed_w = set()
+            for _i in range(N):
+                needed_w.add((_i, _i))  # Diagonal always needed
+            for _kind, _i, _j, _expr_str in lu_plan.lu_expressions_ordered:
+                for _m in _re_w.finditer(r'W_(\d+)_(\d+)', _expr_str):
+                    needed_w.add((int(_m.group(1)), int(_m.group(2))))
+
+            for i, j in sorted(needed_w):
+                if i == j:
+                    if (i, i) in non_zero_jac_set:
+                        f.write(f"          double W_{i}_{i} = inv_g_dt - J_{i}_{i};\n")
+                    else:
+                        f.write(f"          double W_{i}_{i} = inv_g_dt;\n")
+                elif (i, j) in non_zero_jac_set:
+                    f.write(f"          double W_{i}_{j} = -J_{i}_{j};\n")
+                else:
+                    # Fill-in dependency: W referenced by LU but no Jacobian entry
+                    f.write(f"          double W_{i}_{j} = 0.0;\n")
 
             # Symbolic LU Factorization
             f.write("\n          // 3. Symbolic Doolittle Sparse LU Factorization\n")
@@ -534,7 +545,7 @@ def generate_headers(mech: MechanismDefinition, out_dir: str = "src/solvers", su
         f.write("          const double min_shrink = 0.2;\n\n")
         f.write("          bool active[NUM_SPECIES];\n")
         f.write("          double t = 0.0;\n")
-        f.write("          double dt = dt_total;\n\n")
+        f.write("          double dt = Kokkos::fmin(dt_total, 1.0);  // conservative initial step\n\n")
         f.write("          // Initialize all species as active\n")
         for i in range(N):
             f.write(f"          active[{i}] = true;\n")
@@ -580,16 +591,32 @@ def generate_headers(mech: MechanismDefinition, out_dir: str = "src/solvers", su
                 eqn = format_eqn(expr_str, mech.species, state_var="S", use_parentheses=False)
                 f.write(f"          double J_{i}_{j} = {eqn};\n")
 
-            # Emit W with conditional logic for frozen species
-            for i in range(N):
-                for j in range(N):
-                    if i == j:
-                        if (i, i) in non_zero_jac_set:
-                            f.write(f"          double W_{i}_{i} = active[{i}] ? (inv_g_dt - J_{i}_{i}) : 1.0;\n")
-                        else:
-                            f.write(f"          double W_{i}_{i} = active[{i}] ? inv_g_dt : 1.0;\n")
-                    elif (i, j) in non_zero_jac_set:
-                        f.write(f"          double W_{i}_{j} = (active[{i}] && active[{j}]) ? (-J_{i}_{j}) : 0.0;\n")
+            # Emit W with conditional logic for frozen species (sparse: only needed entries)
+            import re as _re_w
+            needed_w2 = set()
+            for _i in range(N):
+                needed_w2.add((_i, _i))  # Diagonal always needed
+            # Gather W references from LU expressions (annotated or plain)
+            if lu_plan.annotated_expressions:
+                for ann_expr in lu_plan.annotated_expressions:
+                    for _m in _re_w.finditer(r'W_(\d+)_(\d+)', ann_expr.expr):
+                        needed_w2.add((int(_m.group(1)), int(_m.group(2))))
+            else:
+                for _kind, _i, _j, _expr_str in lu_plan.lu_expressions_ordered:
+                    for _m in _re_w.finditer(r'W_(\d+)_(\d+)', _expr_str):
+                        needed_w2.add((int(_m.group(1)), int(_m.group(2))))
+
+            for i, j in sorted(needed_w2):
+                if i == j:
+                    if (i, i) in non_zero_jac_set:
+                        f.write(f"          double W_{i}_{i} = active[{i}] ? (inv_g_dt - J_{i}_{i}) : 1.0;\n")
+                    else:
+                        f.write(f"          double W_{i}_{i} = active[{i}] ? inv_g_dt : 1.0;\n")
+                elif (i, j) in non_zero_jac_set:
+                    f.write(f"          double W_{i}_{j} = (active[{i}] && active[{j}]) ? (-J_{i}_{j}) : 0.0;\n")
+                else:
+                    # Fill-in dependency: W referenced by LU but no Jacobian entry
+                    f.write(f"          double W_{i}_{j} = 0.0;\n")
 
             # Symbolic LU Factorization with conditional skip for frozen species
             f.write("\n          // 4. Symbolic LU Factorization (conditional skip for frozen species)\n")
