@@ -9,148 +9,150 @@ namespace mkpp {
   using concentrations_view_t = Kokkos::View<double****, Kokkos::LayoutLeft, Kokkos::MemoryUnmanaged>;
   template<typename DeviceType>
   struct SolverKernels {
-      KOKKOS_INLINE_FUNCTION void lu_decompose(double* A, int N, int* indx) const {
-          for (int i = 0; i < N; i++) {
-              double max_val = 0.0;
-              int max_idx = i;
-              for (int k = i; k < N; k++) {
-                  double val = A[k * N + i];
-                  if (val < 0) val = -val;
-                  if (val > max_val) { max_val = val; max_idx = k; }
-              }
-              indx[i] = max_idx;
-              if (max_idx != i) {
-                  for (int j = 0; j < N; j++) {
-                      double temp = A[i * N + j];
-                      A[i * N + j] = A[max_idx * N + j];
-                      A[max_idx * N + j] = temp;
-                  }
-              }
-              for (int j = i + 1; j < N; j++) {
-                  A[j * N + i] /= A[i * N + i];
-                  for (int k = i + 1; k < N; k++) {
-                      A[j * N + k] -= A[j * N + i] * A[i * N + k];
-                  }
-              }
-          }
+      template <class StateView, class RateView>
+      KOKKOS_INLINE_FUNCTION void compute_rates(const StateView& state, RateView& F_block) const {
+          F_block(0) = -6.0e-34*state(3)*state(0)*state(1) - 7.9999999999999998e-12*state(0)*state(2) + 2.0000000000000002e-5*state(1) + 0.001*state(2);
+          F_block(1) = 0.0;
+          F_block(2) = 6.0e-34*state(3)*state(0)*state(1) - 7.9999999999999998e-12*state(0)*state(2) - 0.001*state(2);
+          F_block(3) = 0.0;
       }
 
-      KOKKOS_INLINE_FUNCTION void lu_solve(double* A, int N, int* indx, double* b) const {
-          for (int i = 0; i < N; i++) {
-              int ip = indx[i];
-              double sum = b[ip];
-              b[ip] = b[i];
-              for (int j = 0; j < i; j++) {
-                  sum -= A[i * N + j] * b[j];
-              }
-              b[i] = sum;
-          }
-          for (int i = N - 1; i >= 0; i--) {
-              double sum = b[i];
-              for (int j = i + 1; j < N; j++) {
-                  sum -= A[i * N + j] * b[j];
-              }
-              b[i] = sum / A[i * N + i];
-          }
+      template <class StateView, class JacView>
+      KOKKOS_INLINE_FUNCTION void compute_jacobian(const StateView& state, JacView& J_block) const {
+          J_block(0, 0) = -6.0e-34*state(3)*state(1) - 7.9999999999999998e-12*state(2);
+          J_block(0, 1) = -6.0e-34*state(3)*state(0) + 2.0000000000000002e-5;
+          J_block(0, 2) = 0.001 - 7.9999999999999998e-12*state(0);
+          J_block(0, 3) = -6.0e-34*state(0)*state(1);
+          J_block(2, 0) = 6.0e-34*state(3)*state(1) - 7.9999999999999998e-12*state(2);
+          J_block(2, 1) = 6.0e-34*state(3)*state(0);
+          J_block(2, 2) = -7.9999999999999998e-12*state(0) - 0.001;
+          J_block(2, 3) = 6.0e-34*state(0)*state(1);
       }
 
-      KOKKOS_INLINE_FUNCTION void integrate(double dt, double* state) const {
-          const int NUM_SPECIES = 4;
-          const double g = 1.70710678118655;
-          const double ros_A[1] = {1.0/g};
-          const double ros_C[1] = {-2.0/g};
-          const double ros_M[2] = {3.0/(2.0*g), 1.0/(2.0*g)};
-          
-          double Ynew[100];
-          double F1[100], F2[100];
-          double K1[100], K2[100];
-          double Jac[10000] = {0.0};
-          double W[10000];
-          int indx[100];
-          
-          compute_rates(state, F1);
-          compute_jacobian(state, Jac);
-          
-          for(int i=0; i<NUM_SPECIES; i++) {
-              for(int j=0; j<NUM_SPECIES; j++) {
-                  W[i*NUM_SPECIES + j] = -Jac[i*NUM_SPECIES + j];
-                  if (i==j) W[i*NUM_SPECIES + j] += 1.0/(g*dt);
-              }
-          }
-          lu_decompose(W, NUM_SPECIES, indx);
-          
-          for(int i=0; i<NUM_SPECIES; i++) K1[i] = F1[i];
-          lu_solve(W, NUM_SPECIES, indx, K1);
-          
-          for(int i=0; i<NUM_SPECIES; i++) Ynew[i] = state[i] + ros_A[0] * K1[i];
-          compute_rates(Ynew, F2);
-          
-          for(int i=0; i<NUM_SPECIES; i++) {
-              K2[i] = F2[i] + (ros_C[0]/dt) * K1[i];
-          }
-          lu_solve(W, NUM_SPECIES, indx, K2);
-          
-          for(int i=0; i<NUM_SPECIES; i++) {
-              state[i] += ros_M[0] * K1[i] + ros_M[1] * K2[i];
-          }
+      template <class StateView, class JacView>
+      KOKKOS_INLINE_FUNCTION void compute_adjoint(const StateView& state, JacView& J_adj_block) const {
+          J_adj_block(0, 0) = -6.0e-34*state(3)*state(1) - 7.9999999999999998e-12*state(2);
+          J_adj_block(0, 2) = 6.0e-34*state(3)*state(1) - 7.9999999999999998e-12*state(2);
+          J_adj_block(1, 0) = -6.0e-34*state(3)*state(0) + 2.0000000000000002e-5;
+          J_adj_block(1, 2) = 6.0e-34*state(3)*state(0);
+          J_adj_block(2, 0) = 0.001 - 7.9999999999999998e-12*state(0);
+          J_adj_block(2, 2) = -7.9999999999999998e-12*state(0) - 0.001;
+          J_adj_block(3, 0) = -6.0e-34*state(0)*state(1);
+          J_adj_block(3, 2) = 6.0e-34*state(0)*state(1);
       }
 
-      KOKKOS_INLINE_FUNCTION void compute_rates(double* state, double* F_block) const {
+      template <class StateView, class DeltaView, class RateView>
+      KOKKOS_INLINE_FUNCTION void compute_tlm(const StateView& state, const DeltaView& delta_C, RateView& dF_block) const {
+          dF_block(0) = 0.0;
+          dF_block(0) += (-6.0e-34*state(3)*state(1) - 7.9999999999999998e-12*state(2)) * delta_C(0);
+          dF_block(0) += (-6.0e-34*state(3)*state(0) + 2.0000000000000002e-5) * delta_C(1);
+          dF_block(0) += (0.001 - 7.9999999999999998e-12*state(0)) * delta_C(2);
+          dF_block(0) += (-6.0e-34*state(0)*state(1)) * delta_C(3);
+          dF_block(1) = 0.0;
+          dF_block(2) = 0.0;
+          dF_block(2) += (6.0e-34*state(3)*state(1) - 7.9999999999999998e-12*state(2)) * delta_C(0);
+          dF_block(2) += (6.0e-34*state(3)*state(0)) * delta_C(1);
+          dF_block(2) += (-7.9999999999999998e-12*state(0) - 0.001) * delta_C(2);
+          dF_block(2) += (6.0e-34*state(0)*state(1)) * delta_C(3);
+          dF_block(3) = 0.0;
       }
 
-      KOKKOS_INLINE_FUNCTION void compute_jacobian(double* state, double* J_block) const {
-          J_block[0] = -1.0*6e-34*state[3]*state[1] - 1.0*8e-12*state[2];
-          J_block[1] = 2.0*1e-05 - 1.0*6e-34*state[3]*state[0];
-          J_block[2] = 1.0*0.001 - 1.0*8e-12*state[0];
-          J_block[3] = -1.0*6e-34*state[0]*state[1];
-          J_block[4] = -1.0*6e-34*state[3]*state[1] + 2.0*8e-12*state[2];
-          J_block[5] = -1.0*1e-05 - 1.0*6e-34*state[3]*state[0];
-          J_block[6] = 1.0*0.001 + 2.0*8e-12*state[0];
-          J_block[7] = -1.0*6e-34*state[0]*state[1];
-          J_block[8] = 1.0*6e-34*state[3]*state[1] - 1.0*8e-12*state[2];
-          J_block[9] = 1.0*6e-34*state[3]*state[0];
-          J_block[10] = -1.0*0.001 - 1.0*8e-12*state[0];
-          J_block[11] = 1.0*6e-34*state[0]*state[1];
-      }
-      KOKKOS_INLINE_FUNCTION void compute_adjoint(double* state, double* J_adj_block) const {
-          J_adj_block[0] = -1.0*6e-34*state[3]*state[1] - 1.0*8e-12*state[2];
-          J_adj_block[1] = -1.0*6e-34*state[3]*state[1] + 2.0*8e-12*state[2];
-          J_adj_block[2] = 1.0*6e-34*state[3]*state[1] - 1.0*8e-12*state[2];
-          J_adj_block[4] = 2.0*1e-05 - 1.0*6e-34*state[3]*state[0];
-          J_adj_block[5] = -1.0*1e-05 - 1.0*6e-34*state[3]*state[0];
-          J_adj_block[6] = 1.0*6e-34*state[3]*state[0];
-          J_adj_block[8] = 1.0*0.001 - 1.0*8e-12*state[0];
-          J_adj_block[9] = 1.0*0.001 + 2.0*8e-12*state[0];
-          J_adj_block[10] = -1.0*0.001 - 1.0*8e-12*state[0];
-          J_adj_block[12] = -1.0*6e-34*state[0]*state[1];
-          J_adj_block[13] = -1.0*6e-34*state[0]*state[1];
-          J_adj_block[14] = 1.0*6e-34*state[0]*state[1];
-      }
-      KOKKOS_INLINE_FUNCTION void compute_tlm(double* state, double* delta_C, double* dF_block) const {
-          dF_block[0] = 0.0;
-          dF_block[0] += (-1.0*6e-34*state[3]*state[1] - 1.0*8e-12*state[2]) * delta_C[0];
-          dF_block[0] += (2.0*1e-05 - 1.0*6e-34*state[3]*state[0]) * delta_C[1];
-          dF_block[0] += (1.0*0.001 - 1.0*8e-12*state[0]) * delta_C[2];
-          dF_block[0] += (-1.0*6e-34*state[0]*state[1]) * delta_C[3];
-          dF_block[1] = 0.0;
-          dF_block[1] += (-1.0*6e-34*state[3]*state[1] + 2.0*8e-12*state[2]) * delta_C[0];
-          dF_block[1] += (-1.0*1e-05 - 1.0*6e-34*state[3]*state[0]) * delta_C[1];
-          dF_block[1] += (1.0*0.001 + 2.0*8e-12*state[0]) * delta_C[2];
-          dF_block[1] += (-1.0*6e-34*state[0]*state[1]) * delta_C[3];
-          dF_block[2] = 0.0;
-          dF_block[2] += (1.0*6e-34*state[3]*state[1] - 1.0*8e-12*state[2]) * delta_C[0];
-          dF_block[2] += (1.0*6e-34*state[3]*state[0]) * delta_C[1];
-          dF_block[2] += (-1.0*0.001 - 1.0*8e-12*state[0]) * delta_C[2];
-          dF_block[2] += (1.0*6e-34*state[0]*state[1]) * delta_C[3];
-          dF_block[3] = 0.0;
-      }
-      KOKKOS_INLINE_FUNCTION void project_mass_conservation(double* C_projected, double* C, double* m_0) const {
+      template <class StateView, class MassView>
+      KOKKOS_INLINE_FUNCTION void project_mass_conservation(StateView& C_projected, const StateView& C, const MassView& m_0) const {
           // C_projected = C - E^T (E E^T)^-1 (E C - m_0)
-          double delta_m[100] = {0.0};
-          C_projected[0] = C[0];
-          C_projected[1] = C[1];
-          C_projected[2] = C[2];
-          C_projected[3] = C[3];
+          C_projected(0) = C(0);
+          C_projected(1) = C(1);
+          C_projected(2) = C(2);
+          C_projected(3) = C(3);
+      }
+
+      template <class StateView>
+      KOKKOS_INLINE_FUNCTION void integrate(double dt, StateView& state) const {
+          const int NUM_SPECIES = 4;
+          const double g = 1.70710678118654752440;
+          const double ros_A0 = 1.0 / g;
+          const double ros_C0 = -2.0 / g;
+          const double ros_M0 = 3.0 / (2.0 * g);
+          const double ros_M1 = 1.0 / (2.0 * g);
+          const double inv_g_dt = 1.0 / (g * dt);
+
+          // 1. Stage 1 Rates (F1)
+          double F1_0 = -6.0e-34*state(3)*state(0)*state(1) - 7.9999999999999998e-12*state(0)*state(2) + 2.0000000000000002e-5*state(1) + 0.001*state(2);
+          double F1_1 = 0.0;
+          double F1_2 = 6.0e-34*state(3)*state(0)*state(1) - 7.9999999999999998e-12*state(0)*state(2) - 0.001*state(2);
+          double F1_3 = 0.0;
+
+          // 2. Analytical Jacobian & Iteration Matrix W = inv_g_dt*I - J
+          double J_0_0 = -6.0e-34*state(3)*state(1) - 7.9999999999999998e-12*state(2);
+          double J_0_1 = -6.0e-34*state(3)*state(0) + 2.0000000000000002e-5;
+          double J_0_2 = 0.001 - 7.9999999999999998e-12*state(0);
+          double J_0_3 = -6.0e-34*state(0)*state(1);
+          double J_2_0 = 6.0e-34*state(3)*state(1) - 7.9999999999999998e-12*state(2);
+          double J_2_1 = 6.0e-34*state(3)*state(0);
+          double J_2_2 = -7.9999999999999998e-12*state(0) - 0.001;
+          double J_2_3 = 6.0e-34*state(0)*state(1);
+          double W_0_0 = inv_g_dt - J_0_0;
+          double W_0_1 = -J_0_1;
+          double W_0_2 = -J_0_2;
+          double W_0_3 = -J_0_3;
+          double W_1_1 = inv_g_dt;
+          double W_2_0 = -J_2_0;
+          double W_2_1 = -J_2_1;
+          double W_2_2 = inv_g_dt - J_2_2;
+          double W_2_3 = -J_2_3;
+          double W_3_3 = inv_g_dt;
+
+          // 3. Symbolic Doolittle Sparse LU Factorization
+          double U_0_0 = W_0_0;
+          double U_0_1 = W_0_1;
+          double U_0_2 = W_0_2;
+          double U_0_3 = W_0_3;
+          double L_2_0 = (W_2_0) / U_0_0;
+          double U_1_1 = W_1_1;
+          double L_2_1 = (W_2_1 - L_2_0 * U_0_1) / U_1_1;
+          double U_2_2 = W_2_2 - L_2_0 * U_0_2;
+          double U_2_3 = W_2_3 - L_2_0 * U_0_3;
+          double U_3_3 = W_3_3;
+
+          // 4. Forward & Backward Substitution for Stage K1
+          double y1_0 = F1_0;
+          double y1_1 = F1_1;
+          double y1_2 = F1_2 - L_2_0 * y1_0 - L_2_1 * y1_1;
+          double y1_3 = F1_3;
+          double K1_0 = F1_3;
+          double K1_1 = F1_3;
+          double K1_2 = F1_3;
+          double K1_3 = F1_3;
+
+          // 5. Fused Intermediate State Ynew
+          double Ynew_0 = state(0) + ros_A0 * K1_0;
+          double Ynew_1 = state(1) + ros_A0 * K1_1;
+          double Ynew_2 = state(2) + ros_A0 * K1_2;
+          double Ynew_3 = state(3) + ros_A0 * K1_3;
+
+          // 6. Stage 2 Rates (F2) & Substitution for Stage K2
+          double F2_0 = -6.0e-34*Ynew_3*Ynew_0*Ynew_1 - 7.9999999999999998e-12*Ynew_0*Ynew_2 + 2.0000000000000002e-5*Ynew_1 + 0.001*Ynew_2;
+          double rhs2_0 = F2_0 + (ros_C0 / dt) * K1_0;
+          double F2_1 = 0.0;
+          double rhs2_1 = F2_1 + (ros_C0 / dt) * K1_1;
+          double F2_2 = 6.0e-34*Ynew_3*Ynew_0*Ynew_1 - 7.9999999999999998e-12*Ynew_0*Ynew_2 - 0.001*Ynew_2;
+          double rhs2_2 = F2_2 + (ros_C0 / dt) * K1_2;
+          double F2_3 = 0.0;
+          double rhs2_3 = F2_3 + (ros_C0 / dt) * K1_3;
+          double y2_0 = rhs2_0;
+          double y2_1 = rhs2_1;
+          double y2_2 = rhs2_2 - L_2_0 * y2_0 - L_2_1 * y2_1;
+          double y2_3 = rhs2_3;
+          double K2_0 = (y2_0 - U_0_1 * K2_1 - U_0_2 * K2_2 - U_0_3 * K2_3) / U_0_0;
+          double K2_1 = y2_1 / U_1_1;
+          double K2_2 = (y2_2 - U_2_3 * K2_3) / U_2_2;
+          double K2_3 = y2_3 / U_3_3;
+
+          // 7. Final Fused State Update
+          state(0) += ros_M0 * K1_0 + ros_M1 * K2_0;
+          state(1) += ros_M0 * K1_1 + ros_M1 * K2_1;
+          state(2) += ros_M0 * K1_2 + ros_M1 * K2_2;
+          state(3) += ros_M0 * K1_3 + ros_M1 * K2_3;
       }
   };
 }

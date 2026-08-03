@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Ensure execution from repository root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$REPO_ROOT"
+
 # Activate the virtual environment
 source .venv/bin/activate
 export PYTHONPATH=src
@@ -23,9 +28,9 @@ for MECH in "${MECHANISMS[@]}"; do
     echo "Compiling $MECH..."
     echo "========================================"
     if [ "$MECH" = "mechanisms/saprc99.yaml" ]; then
-        python3 -m mkpp.cli compile "$MECH" --test-env "$TEST_ENV" --out "$OUT_DIR" --lump "mechanisms/lumping_rules_saprc99.yaml"
+        .venv/bin/python -m mkpp.cli compile "$MECH" --test-env "$TEST_ENV" --out "$OUT_DIR" --lump "mechanisms/lumping_rules_saprc99.yaml"
     else
-        python3 -m mkpp.cli compile "$MECH" --test-env "$TEST_ENV" --out "$OUT_DIR"
+        .venv/bin/python -m mkpp.cli compile "$MECH" --test-env "$TEST_ENV" --out "$OUT_DIR"
     fi
     if [ $? -ne 0 ]; then
         echo "Error compiling $MECH"

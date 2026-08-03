@@ -1,7 +1,11 @@
 import re
 import sys
+import os
 
-with open("mkpp-generated/gocart.hpp", "r") as f:
+repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+gocart_header = os.path.join(repo_root, "mkpp-generated", "gocart.hpp")
+
+with open(gocart_header, "r") as f:
     content = f.read().lower()
 
 emission_terms = ["emission", "saltation", "threshold velocity", "dust flux", "ustar", "u_thresh", "rustar", "fecandrylimit", "fecan", "gwettop", "roughness"]
