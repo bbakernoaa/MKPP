@@ -146,21 +146,17 @@ def prepare_unified_jacobian(mech: MechanismDefinition) -> Dict[str, Any]:
             Fc_val = parse_sym_or_val(p.get("Fc", 0.6))
 
         elif rtype == "TROE" or rtype == "FALLOFF":
+            # YAML stores TROE sub-params in KPP positional order:
+            #   B = KPP's b0 (exponential coefficient: exp(-b0/T))
+            #   C = KPP's c0 (temperature power exponent: (T/300)^c0)
+            # MKPP internal formula: K = A * (T/300)^B_int * exp(-C_int/T)
+            # So mapping is: B_internal=YAML_C, C_internal=YAML_B (always swap)
             def get_troe_sub_params(sub_p):
                 a = parse_sym_or_val(sub_p.get("A", 0.0))
-                b = parse_sym_or_val(sub_p.get("B", 0.0))
-                c = parse_sym_or_val(sub_p.get("C", 0.0))
-                # Distinguish activation energy Ea/R (large magnitude) from temperature exponent n
-                try:
-                    b_float = float(b)
-                    c_float = float(c)
-                    if abs(b_float) > 50.0:
-                        return a, c, b
-                    if abs(c_float) > 50.0:
-                        return a, b, c
-                except Exception:
-                    pass
-                return a, b, c
+                b = parse_sym_or_val(sub_p.get("B", 0.0))  # KPP b0: exp coeff
+                c = parse_sym_or_val(sub_p.get("C", 0.0))  # KPP c0: temp power
+                # Always swap: return (A, temp_power, exp_coeff)
+                return a, c, b
 
             if "k0" in p and isinstance(p["k0"], dict):
                 A0, B0, C0 = get_troe_sub_params(p["k0"])
@@ -178,7 +174,9 @@ def prepare_unified_jacobian(mech: MechanismDefinition) -> Dict[str, Any]:
 
             K0 = A0 * sp.exp(-C0/Temp) * (Temp/300)**B0
             K1 = A1 * sp.exp(-C1/Temp) * (Temp/300)**B1
-            K0 = K0 * 1.0e6
+            # KPP FALL: k0 = k0 * CFACTOR * 1.0E6 where CFACTOR*1e6 = [AIR] (number density)
+            # Use the AIR species concentration symbol directly
+            K0 = K0 * species_symbols.get("AIR", M_density)
             K_ratio = K0 / K1
             F_broadening = CF ** (1.0 / (1.0 + (sp.log(K_ratio, 10))**2))
             flux = (K0 / (1.0 + K_ratio)) * F_broadening
@@ -192,7 +190,8 @@ def prepare_unified_jacobian(mech: MechanismDefinition) -> Dict[str, Any]:
             C3 = parse_sym_or_val(p.get("C3", 0.0))
             K0 = A0 * sp.exp(-C0/Temp)
             K2 = A2 * sp.exp(-C2/Temp)
-            K3 = A3 * sp.exp(-C3/Temp) * 1.0e6
+            # KPP EP2: k3 = k3 * CFACTOR * 1.0E6 where CFACTOR*1e6 = [AIR]
+            K3 = A3 * sp.exp(-C3/Temp) * species_symbols.get("AIR", M_density)
             flux = K0 + K3 / (1.0 + K3/K2)
 
         elif rtype == "EP3":
@@ -202,7 +201,8 @@ def prepare_unified_jacobian(mech: MechanismDefinition) -> Dict[str, Any]:
             C2 = parse_sym_or_val(p.get("C2", 0.0))
             K1 = A1 * sp.exp(-C1/Temp)
             K2 = A2 * sp.exp(-C2/Temp)
-            flux = K1 + K2 * 1.0e6
+            # KPP EP3: k = k1 + k2*(1.0E6 * CFACTOR) where CFACTOR*1e6 = [AIR]
+            flux = K1 + K2 * species_symbols.get("AIR", M_density)
 
         elif rtype == "HETEROGENEOUS":
             gamma = parse_sym_or_val(p["gamma"])
@@ -388,20 +388,17 @@ def _build_f_total(mech: MechanismDefinition) -> Dict[str, Any]:
             Fc_val = parse_sym_or_val(p.get("Fc", 0.6))
 
         elif rtype == "TROE" or rtype == "FALLOFF":
+            # YAML stores TROE sub-params in KPP positional order:
+            #   B = KPP's b0 (exponential coefficient: exp(-b0/T))
+            #   C = KPP's c0 (temperature power exponent: (T/300)^c0)
+            # MKPP internal formula: K = A * (T/300)^B_int * exp(-C_int/T)
+            # So mapping is: B_internal=YAML_C, C_internal=YAML_B (always swap)
             def get_troe_sub_params(sub_p):
                 a = parse_sym_or_val(sub_p.get("A", 0.0))
-                b = parse_sym_or_val(sub_p.get("B", 0.0))
-                c = parse_sym_or_val(sub_p.get("C", 0.0))
-                try:
-                    b_float = float(b)
-                    c_float = float(c)
-                    if abs(b_float) > 50.0:
-                        return a, c, b
-                    if abs(c_float) > 50.0:
-                        return a, b, c
-                except Exception:
-                    pass
-                return a, b, c
+                b = parse_sym_or_val(sub_p.get("B", 0.0))  # KPP b0: exp coeff
+                c = parse_sym_or_val(sub_p.get("C", 0.0))  # KPP c0: temp power
+                # Always swap: return (A, temp_power, exp_coeff)
+                return a, c, b
 
             if "k0" in p and isinstance(p["k0"], dict):
                 A0, B0, C0 = get_troe_sub_params(p["k0"])
@@ -419,7 +416,8 @@ def _build_f_total(mech: MechanismDefinition) -> Dict[str, Any]:
 
             K0 = A0 * sp.exp(-C0/Temp) * (Temp/300)**B0
             K1 = A1 * sp.exp(-C1/Temp) * (Temp/300)**B1
-            K0 = K0 * 1.0e6
+            # KPP FALL: k0 = k0 * CFACTOR * 1.0E6 where CFACTOR*1e6 = [AIR]
+            K0 = K0 * species_symbols.get("AIR", M_density)
             K_ratio = K0 / K1
             F_broadening = CF ** (1.0 / (1.0 + (sp.log(K_ratio, 10))**2))
             flux = (K0 / (1.0 + K_ratio)) * F_broadening
@@ -433,7 +431,8 @@ def _build_f_total(mech: MechanismDefinition) -> Dict[str, Any]:
             C3 = parse_sym_or_val(p.get("C3", 0.0))
             K0 = A0 * sp.exp(-C0/Temp)
             K2 = A2 * sp.exp(-C2/Temp)
-            K3 = A3 * sp.exp(-C3/Temp) * 1.0e6
+            # KPP EP2: k3 = k3 * CFACTOR * 1.0E6 where CFACTOR*1e6 = [AIR]
+            K3 = A3 * sp.exp(-C3/Temp) * species_symbols.get("AIR", M_density)
             flux = K0 + K3 / (1.0 + K3/K2)
 
         elif rtype == "EP3":
@@ -443,7 +442,8 @@ def _build_f_total(mech: MechanismDefinition) -> Dict[str, Any]:
             C2 = parse_sym_or_val(p.get("C2", 0.0))
             K1 = A1 * sp.exp(-C1/Temp)
             K2 = A2 * sp.exp(-C2/Temp)
-            flux = K1 + K2 * 1.0e6
+            # KPP EP3: k = k1 + k2*(1.0E6 * CFACTOR) where CFACTOR*1e6 = [AIR]
+            flux = K1 + K2 * species_symbols.get("AIR", M_density)
 
         elif rtype == "HETEROGENEOUS":
             gamma = parse_sym_or_val(p["gamma"])
