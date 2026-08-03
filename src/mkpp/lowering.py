@@ -1,7 +1,18 @@
-from typing import Dict, List
+from typing import Dict, List, Any
 import networkx as nx
 import sympy as sp
-from .model import MechanismDefinition, ReactionDefinition
+from .model import MechanismDefinition, ReactionDefinition, SymbolicLUPlan
+
+def parse_sym_or_val(val, default=0.0):
+    if val is None:
+        return sp.Float(default)
+    if isinstance(val, (int, float)):
+        return sp.Float(val)
+    s = str(val).strip().replace(" ", "")
+    try:
+        return sp.Float(float(s))
+    except ValueError:
+        return sp.Symbol(s, real=True)
 
 def partition_reactions(mech: MechanismDefinition) -> Dict[str, List[ReactionDefinition]]:
     """
@@ -82,7 +93,8 @@ def prepare_unified_jacobian(mech: MechanismDefinition) -> Dict[str, Any]:
 
     df_dt_implicit = {s.name: sp.Integer(0) for s in mech.species}
     df_dt_explicit = {s.name: sp.Integer(0) for s in mech.species}
-    
+    fixed_species = set(s.name for s in mech.species if getattr(s, "role", None) == "fixed")
+
     blocks = partition_reactions(mech)
 
     for idx, r in enumerate(mech.reactions):
@@ -92,92 +104,135 @@ def prepare_unified_jacobian(mech: MechanismDefinition) -> Dict[str, Any]:
 
         if rtype == "PHOTOLYSIS":
             if "A" not in p: raise ValueError(f"PHOTOLYSIS reaction {idx} missing 'A' parameter (J-rate).")
-            J_photo = sp.Symbol(str(p["A"]), real=True)
+            J_photo = parse_sym_or_val(p["A"])
             flux = J_photo
 
         elif rtype == "ARRHENIUS":
             if "A" not in p: raise ValueError(f"ARRHENIUS reaction {idx} missing 'A' coefficient.")
-            A = sp.Symbol(str(p["A"]), real=True)
-            B = sp.Symbol(str(p.get("B", 0.0)), real=True)
-            C = sp.Symbol(str(p.get("C", 0.0)), real=True)
+            A = parse_sym_or_val(p["A"])
+            B = parse_sym_or_val(p.get("B", 0.0))
+            C = parse_sym_or_val(p.get("C", 0.0))
             k_arr = A * (Temp / 300)**B * sp.exp(-C / Temp)
             flux = k_arr
 
         elif rtype == "DUMMYTROE":
             # Low pressure limit
-            k0_A = sp.Symbol(str(p["k0"]["A"]), real=True)
-            k0_B = sp.Symbol(str(p["k0"].get("B", 0.0)), real=True)
-            k0_C = sp.Symbol(str(p["k0"].get("C", 0.0)), real=True)
+            k0_A = parse_sym_or_val(p["k0"]["A"])
+            k0_B = parse_sym_or_val(p["k0"].get("B", 0.0))
+            k0_C = parse_sym_or_val(p["k0"].get("C", 0.0))
             k0_val = k0_A * (Temp / 300)**k0_B * sp.exp(-k0_C / Temp)
 
             # High pressure limit
-            kinf_A = sp.Symbol(str(p["kinf"]["A"]), real=True)
-            kinf_B = sp.Symbol(str(p["kinf"].get("B", 0.0)), real=True)
-            kinf_C = sp.Symbol(str(p["kinf"].get("C", 0.0)), real=True)
+            kinf_A = parse_sym_or_val(p["kinf"]["A"])
+            kinf_B = parse_sym_or_val(p["kinf"].get("B", 0.0))
+            kinf_C = parse_sym_or_val(p["kinf"].get("C", 0.0))
             kinf_val = kinf_A * (Temp / 300)**kinf_B * sp.exp(-kinf_C / Temp)
 
-            Fc_val = sp.Symbol(str(p.get("Fc", 0.6)), real=True)
+            Fc_val = parse_sym_or_val(p.get("Fc", 0.6))
 
         elif rtype == "TROE" or rtype == "FALLOFF":
-            A0 = sp.Symbol(str(p.get("k0_A", 0.0)), real=True)
-            B0 = sp.Symbol(str(p.get("k0_B", 0.0)), real=True)
-            C0 = sp.Symbol(str(p.get("k0_C", 0.0)), real=True)
-            A1 = sp.Symbol(str(p.get("kinf_A", 0.0)), real=True)
-            B1 = sp.Symbol(str(p.get("kinf_B", 0.0)), real=True)
-            C1 = sp.Symbol(str(p.get("kinf_C", 0.0)), real=True)
-            CF = sp.Symbol(str(p.get("Fc", 0.6)), real=True)
-            
-            K0 = A0 * sp.exp(-B0/Temp) * (Temp/300)**C0
-            K1 = A1 * sp.exp(-B1/Temp) * (Temp/300)**C1
+            def get_troe_sub_params(sub_p):
+                a = parse_sym_or_val(sub_p.get("A", 0.0))
+                b = parse_sym_or_val(sub_p.get("B", 0.0))
+                c = parse_sym_or_val(sub_p.get("C", 0.0))
+                # Distinguish activation energy Ea/R (large magnitude) from temperature exponent n
+                try:
+                    b_float = float(b)
+                    c_float = float(c)
+                    if abs(b_float) > 50.0:
+                        return a, c, b
+                    if abs(c_float) > 50.0:
+                        return a, b, c
+                except Exception:
+                    pass
+                return a, b, c
+
+            if "k0" in p and isinstance(p["k0"], dict):
+                A0, B0, C0 = get_troe_sub_params(p["k0"])
+            else:
+                flat_k0 = {"A": p.get("k0_A", 0.0), "B": p.get("k0_B", 0.0), "C": p.get("k0_C", 0.0)}
+                A0, B0, C0 = get_troe_sub_params(flat_k0)
+
+            if "kinf" in p and isinstance(p["kinf"], dict):
+                A1, B1, C1 = get_troe_sub_params(p["kinf"])
+            else:
+                flat_kinf = {"A": p.get("kinf_A", 0.0), "B": p.get("kinf_B", 0.0), "C": p.get("kinf_C", 0.0)}
+                A1, B1, C1 = get_troe_sub_params(flat_kinf)
+
+            CF = parse_sym_or_val(p.get("Fc", 0.6))
+
+            K0 = A0 * sp.exp(-C0/Temp) * (Temp/300)**B0
+            K1 = A1 * sp.exp(-C1/Temp) * (Temp/300)**B1
             K0 = K0 * 1.0e6
             K_ratio = K0 / K1
             F_broadening = CF ** (1.0 / (1.0 + (sp.log(K_ratio, 10))**2))
             flux = (K0 / (1.0 + K_ratio)) * F_broadening
 
         elif rtype == "EP2":
-            A0 = sp.Symbol(str(p.get("A0", 0.0)), real=True)
-            C0 = sp.Symbol(str(p.get("C0", 0.0)), real=True)
-            A2 = sp.Symbol(str(p.get("A2", 0.0)), real=True)
-            C2 = sp.Symbol(str(p.get("C2", 0.0)), real=True)
-            A3 = sp.Symbol(str(p.get("A3", 0.0)), real=True)
-            C3 = sp.Symbol(str(p.get("C3", 0.0)), real=True)
+            A0 = parse_sym_or_val(p.get("A0", 0.0))
+            C0 = parse_sym_or_val(p.get("C0", 0.0))
+            A2 = parse_sym_or_val(p.get("A2", 0.0))
+            C2 = parse_sym_or_val(p.get("C2", 0.0))
+            A3 = parse_sym_or_val(p.get("A3", 0.0))
+            C3 = parse_sym_or_val(p.get("C3", 0.0))
             K0 = A0 * sp.exp(-C0/Temp)
             K2 = A2 * sp.exp(-C2/Temp)
             K3 = A3 * sp.exp(-C3/Temp) * 1.0e6
             flux = K0 + K3 / (1.0 + K3/K2)
-            
+
         elif rtype == "EP3":
-            A1 = sp.Symbol(str(p.get("A1", 0.0)), real=True)
-            C1 = sp.Symbol(str(p.get("C1", 0.0)), real=True)
-            A2 = sp.Symbol(str(p.get("A2", 0.0)), real=True)
-            C2 = sp.Symbol(str(p.get("C2", 0.0)), real=True)
+            A1 = parse_sym_or_val(p.get("A1", 0.0))
+            C1 = parse_sym_or_val(p.get("C1", 0.0))
+            A2 = parse_sym_or_val(p.get("A2", 0.0))
+            C2 = parse_sym_or_val(p.get("C2", 0.0))
             K1 = A1 * sp.exp(-C1/Temp)
             K2 = A2 * sp.exp(-C2/Temp)
             flux = K1 + K2 * 1.0e6
 
         elif rtype == "HETEROGENEOUS":
-            gamma = sp.Symbol(str(p["gamma"]), real=True)
+            gamma = parse_sym_or_val(p["gamma"])
             k_het = 0.25 * gamma * v_gas * S_a
             flux = k_het
 
         elif rtype == "PHASE_CHANGE":
             flux = sp.Symbol(f"Rate_{idx}", real=True)
 
-        for reactant, stoich in r.reactants.items():
+        elif rtype == "TUNNELING":
+            if "Y_spline" in p:
+                flux = parse_sym_or_val(p["Y_spline"])
+            elif "A" in p:
+                A = parse_sym_or_val(p["A"])
+                C = parse_sym_or_val(p.get("C", 0.0))
+                flux = A * sp.exp(-C / Temp)
+            else:
+                flux = sp.Symbol(f"Rate_{idx}", real=True)
+
+        else:
+            if "A" in p:
+                flux = parse_sym_or_val(p["A"])
+            elif "Y_spline" in p:
+                flux = parse_sym_or_val(p["Y_spline"])
+            else:
+                flux = sp.Symbol(f"Rate_{idx}", real=True)
+
+        reactants_dict = r.reactants if isinstance(r.reactants, dict) else {sp: 1.0 for sp in r.reactants}
+        products_dict = r.products if isinstance(r.products, dict) else {sp: 1.0 for sp in r.products}
+
+        for reactant, stoich in reactants_dict.items():
             if reactant in species_symbols:
                 flux *= (species_symbols[reactant] ** sp.Integer(int(stoich)))
 
         is_implicit = r in blocks["implicit"]
 
-        for reactant, stoich in r.reactants.items():
-            if reactant in df_dt_implicit:
+        for reactant, stoich in reactants_dict.items():
+            if reactant in df_dt_implicit and reactant not in fixed_species:
                 if is_implicit:
                     df_dt_implicit[reactant] -= flux * sp.Float(stoich)
                 else:
                     df_dt_explicit[reactant] -= flux * sp.Float(stoich)
 
-        for product, stoich in r.products.items():
-            if product in df_dt_implicit:
+        for product, stoich in products_dict.items():
+            if product in df_dt_implicit and product not in fixed_species:
                 if is_implicit:
                     df_dt_implicit[product] += flux * sp.Float(stoich)
                 else:
@@ -186,9 +241,10 @@ def prepare_unified_jacobian(mech: MechanismDefinition) -> Dict[str, Any]:
     ordered_species = [s.name for s in mech.species]
     f_implicit = sp.Matrix([df_dt_implicit[s] for s in ordered_species])
     f_explicit = sp.Matrix([df_dt_explicit[s] for s in ordered_species])
+    f_total = f_implicit + f_explicit
     c_vector = sp.Matrix([species_symbols[s] for s in ordered_species])
 
-    jacobian_matrix = f_implicit.jacobian(c_vector)
+    jacobian_matrix = f_total.jacobian(c_vector)
     adjoint_matrix = jacobian_matrix.transpose()
 
     unique_elements = sorted(list(set(elem for s in mech.species for elem in s.elements.keys())))
@@ -207,7 +263,7 @@ def prepare_unified_jacobian(mech: MechanismDefinition) -> Dict[str, Any]:
         E_matrix = sp.zeros(1, len(ordered_species))
         mass_projector = sp.zeros(len(ordered_species), 1)
 
-    return {
+    result = {
         "species_map": ordered_species,
         "f_implicit": f_implicit,
         "f_explicit": f_explicit,
@@ -216,3 +272,132 @@ def prepare_unified_jacobian(mech: MechanismDefinition) -> Dict[str, Any]:
         "mass_projector": mass_projector,
         "element_map": unique_elements
     }
+
+    try:
+        lu_plan = compute_symbolic_lu_decomposition(jacobian_matrix, ordered_species)
+        result["symbolic_lu_plan"] = lu_plan
+    except Exception as e:
+        # Pass exception through or handle depending on scenario
+        pass
+
+    return result
+
+def compute_symbolic_lu_decomposition(J_matrix: sp.Matrix, species_map: List[str]) -> SymbolicLUPlan:
+    """
+    Computes build-time symbolic sparse LU factorization schedule (Doolittle method) on W = inv_g_dt * I - J.
+    Extracts flat scalar L, U matrix entry expressions and forward/backward substitution steps referencing previously
+    computed scalar variables.
+    """
+    N = J_matrix.shape[0]
+    if N == 0:
+        raise ValueError("Cannot perform symbolic LU decomposition on empty matrix.")
+
+    non_zero_jac = []
+    non_zero_w = set()
+    for i in range(N):
+        non_zero_w.add((i, i)) # diagonal is always non-zero due to inv_g_dt
+        for j in range(N):
+            if J_matrix[i, j] != 0:
+                non_zero_jac.append((i, j, str(J_matrix[i, j])))
+                non_zero_w.add((i, j))
+
+    nz_L = set((i, i) for i in range(N))
+    nz_U = set()
+
+    l_exprs = []
+    u_exprs = []
+    lu_exprs_ordered = []
+
+    for i in range(N):
+        # Compute U(i, j) for j >= i
+        for j in range(i, N):
+            sub_terms = []
+            for k in range(i):
+                if (i, k) in nz_L and (k, j) in nz_U:
+                    sub_terms.append(f"L_{i}_{k} * U_{k}_{j}")
+
+            has_w = (i, j) in non_zero_w
+            if has_w or sub_terms:
+                nz_U.add((i, j))
+                rhs = f"W_{i}_{j}" if has_w else "0.0"
+                if sub_terms:
+                    rhs += " - " + " - ".join(sub_terms)
+                u_exprs.append((i, j, rhs))
+                lu_exprs_ordered.append(("U", i, j, rhs))
+
+        if (i, i) not in nz_U:
+            raise ValueError(
+                f"Singular or zero pivot encountered at species index {i} ('{species_map[i]}') "
+                "during build-time symbolic LU decomposition."
+            )
+
+        # Compute L(j, i) for j > i
+        for j in range(i + 1, N):
+            sub_terms = []
+            for k in range(i):
+                if (j, k) in nz_L and (k, i) in nz_U:
+                    sub_terms.append(f"L_{j}_{k} * U_{k}_{i}")
+
+            has_w = (j, i) in non_zero_w
+            if has_w or sub_terms:
+                nz_L.add((j, i))
+                rhs = f"W_{j}_{i}" if has_w else "0.0"
+                if sub_terms:
+                    rhs += " - " + " - ".join(sub_terms)
+                l_exprs.append((j, i, f"({rhs}) / U_{i}_{i}"))
+                lu_exprs_ordered.append(("L", j, i, f"({rhs}) / U_{i}_{i}"))
+
+    # Generate forward substitution steps for L y = b
+    forward_steps = []
+    for i in range(N):
+        sub_terms = []
+        for k in range(i):
+            if (i, k) in nz_L:
+                sub_terms.append(f"L_{i}_{k} * y_{k}")
+        if sub_terms:
+            expr_str = f"b_{i} - " + " - ".join(sub_terms)
+        else:
+            expr_str = f"b_{i}"
+        forward_steps.append((i, expr_str))
+
+    # Generate backward substitution steps for U x = y
+    backward_steps = []
+    for i in range(N - 1, -1, -1):
+        sub_terms = []
+        for k in range(i + 1, N):
+            if (i, k) in nz_U:
+                sub_terms.append(f"U_{i}_{k} * x_{k}")
+        if sub_terms:
+            num_str = f"y_{i} - " + " - ".join(sub_terms)
+            expr_str = f"({num_str}) / U_{i}_{i}"
+        else:
+            expr_str = f"y_{i} / U_{i}_{i}"
+        backward_steps.append((i, expr_str))
+
+    return SymbolicLUPlan(
+        num_species=N,
+        species_map=species_map,
+        non_zero_jacobian=non_zero_jac,
+        l_expressions=l_exprs,
+        u_expressions=u_exprs,
+        lu_expressions_ordered=lu_exprs_ordered,
+        forward_sub_steps=forward_steps,
+        backward_sub_steps=backward_steps
+    )
+
+def build_sympy_matrices(mech: MechanismDefinition) -> Dict[str, Any]:
+    """
+    Lowering function to compute unified Jacobian and symbolic sparse LU plan.
+    Attaches results to mechanism metadata.
+    """
+    res = prepare_unified_jacobian(mech)
+    plan = res.get("symbolic_lu_plan")
+    if plan is None:
+        plan = compute_symbolic_lu_decomposition(res["jacobian_matrix"], res["species_map"])
+        res["symbolic_lu_plan"] = plan
+
+    if getattr(mech, "metadata", None) is None:
+        mech.metadata = {}
+    mech.metadata["sympy_metadata"] = res
+    mech.metadata["symbolic_lu_plan"] = plan
+    return res

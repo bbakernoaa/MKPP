@@ -52,7 +52,7 @@ def test_generate_headers_adjoint_metadata(tmp_path):
         content = f.read()
     assert "compute_adjoint" in content
     assert "compute_tlm" in content
-    assert "KokkosBatched_LU" in content
+    assert "integrate" in content
 
     # Assert manifest records the Adjoint/TLM capability
     with open(results["manifest"], 'r') as f:
@@ -173,7 +173,7 @@ def test_codegen_emits_sympy_jacobian(tmp_path):
             SpeciesDefinition(name="O", phase=PhaseMode.GAS)
         ], phases=[],
         reactions=[
-            ReactionDefinition(reaction_type="PHOTOLYSIS", reactants=["O2"], products=["O", "O"], rate_expression="J1", parameters={"A": "J1"})
+            ReactionDefinition(reaction_type="PHOTOLYSIS", reactants={"O2": 1.0}, products={"O": 2.0}, rate_expression="J1", parameters={"A": "J1"})
         ]
     )
 
@@ -187,6 +187,6 @@ def test_codegen_emits_sympy_jacobian(tmp_path):
         content = f.read()
 
     # The derivative of d[O]/dt (which is 2*J1*[O2]) with respect to [O2] is 2*J1.
-    # Therefore, J_block[1][0] should be assigned 2*J1.
-    assert "J_block[" in content
+    # Therefore, J_block(1, 0) should be assigned 2*J1.
+    assert "J_block(" in content
     assert "J1" in content

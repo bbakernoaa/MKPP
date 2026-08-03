@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any, Tuple
 from enum import Enum
 
 class PhaseMode(Enum):
@@ -94,3 +94,15 @@ class GeneratedArtifact:
     path: str
     dependencies: List[str]
     checksum: Optional[str] = None
+
+@dataclass
+class SymbolicLUPlan:
+    num_species: int
+    species_map: List[str]
+    non_zero_jacobian: List[Tuple[int, int, str]] = field(default_factory=list)
+    l_expressions: List[Tuple[int, int, str]] = field(default_factory=list)
+    u_expressions: List[Tuple[int, int, str]] = field(default_factory=list)
+    lu_expressions_ordered: List[Tuple[str, int, int, str]] = field(default_factory=list)
+    forward_sub_steps: List[Tuple[int, str]] = field(default_factory=list)
+    backward_sub_steps: List[Tuple[int, str]] = field(default_factory=list)
+

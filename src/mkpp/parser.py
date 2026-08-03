@@ -20,7 +20,13 @@ def parse_mechanism_micm(name: str, data: Dict[str, Any]) -> MechanismDefinition
             raise ValueError("Species must have a name")
         # Default to GAS if not specified in basic MICM
         phase = PhaseMode.GAS
-        species.append(SpeciesDefinition(name=sp_name, phase=phase))
+        sp_type = str(s.get("type", "")).lower()
+        sp_role = str(s.get("role", "")).lower()
+        if sp_name in ("AIR", "O2", "H2O", "H2", "CH4", "M", "N2", "RO2") or sp_type == "fixed" or sp_role == "fixed":
+            role = "fixed"
+        else:
+            role = "variable"
+        species.append(SpeciesDefinition(name=sp_name, phase=phase, role=role))
 
     phases = []
     for p in data.get("phases", []):

@@ -3,6 +3,9 @@
 #include <fstream>
 #include <vector>
 #include <string>
+#include <chrono>
+#include <iomanip>
+#include <cstdlib>
 
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
@@ -14,33 +17,95 @@ using ExecSpace = Kokkos::DefaultExecutionSpace;
 
 TEST(E2ESolverValidation, MechanismIntegration) {
     int cells = 1;
-    // We get n_spec dynamically from the Kokkos View initialization size
-    // Wait, we need to know n_spec BEFORE creating host_data.
-    // Fortunately mkpp_to_kpp mappings exist in compare_baselines.py, but for the C++ harness
-    // we can pass it via CMake definition `-DNUM_SPECIES_MACRO=` or we can just make it large enough.
-    // However, the Kokkos array extent must match. 
-    int n_spec = 0;
+    if (const char* env_c = std::getenv("NUM_CELLS")) {
+        cells = std::atoi(env_c);
+    }
+    int steps = 1;
+    if (const char* env_s = std::getenv("NUM_STEPS")) {
+        steps = std::atoi(env_s);
+    }
 
-    
+    int n_spec = NUM_SPECIES_MACRO;
+    if (n_spec == 0) n_spec = 100;
 
-    if(n_spec == 0) n_spec = 100; // fallback, but we will pass it from CMake
-    
-    std::vector<double> host_data(cells * n_spec * 1 * 1, 0.0);
-    for (int i=0; i<cells; i++) {
-        for (int k=0; k<n_spec; k++) {
-            host_data[i * n_spec + k] = 100.0;
+    std::vector<double> host_data(cells * n_spec * 1 * 1, 1.0e8);
+
+    // Match initial concentrations from KPP def using exact MKPP species indices
+    const double cfactor = 2.447600e+13;
+    if (n_spec >= 79) {
+        for (int i = 0; i < cells; ++i) {
+            double* c = &host_data[i * n_spec];
+            for (int k = 0; k < n_spec; ++k) c[k] = 0.0;
+            c[ 2] = (0.1) * cfactor;       // NO
+            c[ 3] = (0.05) * cfactor;      // NO2
+            c[ 6] = (0.001) * cfactor;     // HONO
+            c[ 9] = (0.05) * cfactor;      // SO2
+            c[12] = (0.01121) * cfactor;   // HCHO
+            c[13] = (0.002316) * cfactor;  // CCHO
+            c[14] = (0.00172) * cfactor;   // RCHO
+            c[15] = (0.00507) * cfactor;   // ACET
+            c[16] = (0.00326) * cfactor;   // MEK
+            c[17] = (0.000677) * cfactor;  // HCOOH
+            c[18] = (0.00589) * cfactor;   // MEOH
+            c[19] = (0.00116) * cfactor;   // CCO_OH
+            c[20] = (0.000392) * cfactor;  // RCO_OH
+            c[21] = (0.000121) * cfactor;  // GLY
+            c[22] = (8.37e-05) * cfactor;  // MGLY
+            c[24] = (0.00056) * cfactor;   // CRES
+            c[25] = (7.51e-05) * cfactor;  // BALD
+            c[26] = (8.93e-05) * cfactor;  // ISOPROD
+            c[27] = (0.0013) * cfactor;    // METHACRO
+            c[29] = (0.00193) * cfactor;   // PROD2
+            c[33] = (0.0189) * cfactor;    // ETHENE
+            c[34] = (0.000433) * cfactor;  // ISOPRENE
+            c[35] = (0.01167) * cfactor;   // ALK1
+            c[36] = (0.0188) * cfactor;    // ALK2
+            c[37] = (0.0469) * cfactor;    // ALK3
+            c[38] = (0.0417) * cfactor;    // ALK4
+            c[39] = (0.0306) * cfactor;    // ALK5
+            c[40] = (0.0118) * cfactor;    // ARO1
+            c[41] = (0.00874) * cfactor;   // ARO2
+            c[42] = (0.0104) * cfactor;    // OLE1
+            c[43] = (0.00797) * cfactor;   // OLE2
+            c[44] = (0.00082) * cfactor;   // TERP
+            c[47] = (0.000606) * cfactor;  // PHEN
+            c[56] = (0.2) * cfactor;       // XC
+            c[57] = (7.843e-09) * cfactor; // O3P
+            c[74] = (1000000.0) * cfactor; // AIR
+            c[75] = (209000.0) * cfactor;  // O2
+            c[76] = (20000.0) * cfactor;   // H2O
+            c[78] = (1.0) * cfactor;       // CH4
         }
     }
-    
+
+    double dt_step = 60.0;
+    if (const char* env_dt = std::getenv("DT_STEP")) {
+        dt_step = std::atof(env_dt);
+    }
+
     mkpp::concentrations_view_t state(host_data.data(), cells, n_spec, 1, 1);
-    
-    mkpp::host::execute_mechanism<mkpp::SolverKernels<ExecSpace>>(TOSTRING(MECH_HEADER), state, 3600.0);
+    const bool use_serial_host = []() {
+        const char* mode = std::getenv("MKPP_EXECUTION_MODE");
+        return mode != nullptr && std::string(mode) == "serial";
+    }();
+
+    auto start = std::chrono::high_resolution_clock::now();
+    if (use_serial_host) {
+        mkpp::host::execute_mechanism_serial_steps<mkpp::SolverKernels<ExecSpace>>(state, dt_step, steps);
+    } else {
+        mkpp::host::execute_mechanism_steps<mkpp::SolverKernels<ExecSpace>>(TOSTRING(MECH_HEADER), state, dt_step, steps);
+    }
     Kokkos::fence();
-    
+    auto end = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double, std::milli> elapsed = end - start;
+    std::cout << "Execution mode: " << (use_serial_host ? "serial" : "kokkos") << "\n";
+    std::cout << "Time: " << std::fixed << std::setprecision(2) << elapsed.count() << " ms\n";
+
     std::ofstream out("e2e_output.csv");
     out << "time_step,species_name,concentration\n";
     for(int k=0; k<n_spec; k++) {
-        out << "1," << k << "," << host_data[k] << "\n";
+        out << steps << "," << k << "," << std::scientific << std::setprecision(12) << host_data[k] << "\n";
     }
     out.close();
 }
