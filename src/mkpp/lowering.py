@@ -1,4 +1,6 @@
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional, Set, Tuple
+import multiprocessing
+import warnings
 import networkx as nx
 import sympy as sp
 from .model import MechanismDefinition, ReactionDefinition, SymbolicLUPlan
@@ -282,15 +284,424 @@ def prepare_unified_jacobian(mech: MechanismDefinition) -> Dict[str, Any]:
 
     return result
 
-def compute_symbolic_lu_decomposition(J_matrix: sp.Matrix, species_map: List[str]) -> SymbolicLUPlan:
+
+def _compute_jacobian_column(args: Tuple[int, List[str], str]) -> Tuple[int, List[str]]:
+    """Worker function for multiprocessing — computes one Jacobian column."""
+    j, f_total_serialized, c_j_srepr = args
+    import sympy as _sp
+    f_total = _sp.Matrix([_sp.sympify(expr) for expr in f_total_serialized])
+    c_j = _sp.sympify(c_j_srepr)
+    column = f_total.diff(c_j)
+    return j, [_sp.srepr(expr) for expr in column]
+
+
+def _build_f_total(mech: MechanismDefinition) -> Dict[str, Any]:
+    """
+    Shared helper that builds f_total, c_vector, and auxiliary data from a mechanism.
+    Used by both sequential and parallel Jacobian builders.
+    """
+    species_symbols = {s.name: sp.Symbol(f"C_{s.name}", real=True, nonnegative=True) for s in mech.species}
+    Temp = sp.Symbol("Temp", real=True, nonnegative=True)
+    Press = sp.Symbol("Press", real=True, nonnegative=True)
+    M_density = sp.Symbol("M_density", real=True, nonnegative=True)
+    v_gas = sp.Symbol("v_gas", real=True, nonnegative=True)
+    S_a = sp.Symbol("S_a", real=True, nonnegative=True)
+
+    df_dt_implicit = {s.name: sp.Integer(0) for s in mech.species}
+    df_dt_explicit = {s.name: sp.Integer(0) for s in mech.species}
+    fixed_species = set(s.name for s in mech.species if getattr(s, "role", None) == "fixed")
+
+    blocks = partition_reactions(mech)
+
+    for idx, r in enumerate(mech.reactions):
+        rtype = r.reaction_type.upper()
+        p = r.parameters
+        flux = sp.Integer(0)
+
+        if rtype == "PHOTOLYSIS":
+            if "A" not in p:
+                raise ValueError(f"PHOTOLYSIS reaction {idx} missing 'A' parameter (J-rate).")
+            J_photo = parse_sym_or_val(p["A"])
+            flux = J_photo
+
+        elif rtype == "ARRHENIUS":
+            if "A" not in p:
+                raise ValueError(f"ARRHENIUS reaction {idx} missing 'A' coefficient.")
+            A = parse_sym_or_val(p["A"])
+            B = parse_sym_or_val(p.get("B", 0.0))
+            C = parse_sym_or_val(p.get("C", 0.0))
+            k_arr = A * (Temp / 300)**B * sp.exp(-C / Temp)
+            flux = k_arr
+
+        elif rtype == "DUMMYTROE":
+            k0_A = parse_sym_or_val(p["k0"]["A"])
+            k0_B = parse_sym_or_val(p["k0"].get("B", 0.0))
+            k0_C = parse_sym_or_val(p["k0"].get("C", 0.0))
+            k0_val = k0_A * (Temp / 300)**k0_B * sp.exp(-k0_C / Temp)
+
+            kinf_A = parse_sym_or_val(p["kinf"]["A"])
+            kinf_B = parse_sym_or_val(p["kinf"].get("B", 0.0))
+            kinf_C = parse_sym_or_val(p["kinf"].get("C", 0.0))
+            kinf_val = kinf_A * (Temp / 300)**kinf_B * sp.exp(-kinf_C / Temp)
+
+            Fc_val = parse_sym_or_val(p.get("Fc", 0.6))
+
+        elif rtype == "TROE" or rtype == "FALLOFF":
+            def get_troe_sub_params(sub_p):
+                a = parse_sym_or_val(sub_p.get("A", 0.0))
+                b = parse_sym_or_val(sub_p.get("B", 0.0))
+                c = parse_sym_or_val(sub_p.get("C", 0.0))
+                try:
+                    b_float = float(b)
+                    c_float = float(c)
+                    if abs(b_float) > 50.0:
+                        return a, c, b
+                    if abs(c_float) > 50.0:
+                        return a, b, c
+                except Exception:
+                    pass
+                return a, b, c
+
+            if "k0" in p and isinstance(p["k0"], dict):
+                A0, B0, C0 = get_troe_sub_params(p["k0"])
+            else:
+                flat_k0 = {"A": p.get("k0_A", 0.0), "B": p.get("k0_B", 0.0), "C": p.get("k0_C", 0.0)}
+                A0, B0, C0 = get_troe_sub_params(flat_k0)
+
+            if "kinf" in p and isinstance(p["kinf"], dict):
+                A1, B1, C1 = get_troe_sub_params(p["kinf"])
+            else:
+                flat_kinf = {"A": p.get("kinf_A", 0.0), "B": p.get("kinf_B", 0.0), "C": p.get("kinf_C", 0.0)}
+                A1, B1, C1 = get_troe_sub_params(flat_kinf)
+
+            CF = parse_sym_or_val(p.get("Fc", 0.6))
+
+            K0 = A0 * sp.exp(-C0/Temp) * (Temp/300)**B0
+            K1 = A1 * sp.exp(-C1/Temp) * (Temp/300)**B1
+            K0 = K0 * 1.0e6
+            K_ratio = K0 / K1
+            F_broadening = CF ** (1.0 / (1.0 + (sp.log(K_ratio, 10))**2))
+            flux = (K0 / (1.0 + K_ratio)) * F_broadening
+
+        elif rtype == "EP2":
+            A0 = parse_sym_or_val(p.get("A0", 0.0))
+            C0 = parse_sym_or_val(p.get("C0", 0.0))
+            A2 = parse_sym_or_val(p.get("A2", 0.0))
+            C2 = parse_sym_or_val(p.get("C2", 0.0))
+            A3 = parse_sym_or_val(p.get("A3", 0.0))
+            C3 = parse_sym_or_val(p.get("C3", 0.0))
+            K0 = A0 * sp.exp(-C0/Temp)
+            K2 = A2 * sp.exp(-C2/Temp)
+            K3 = A3 * sp.exp(-C3/Temp) * 1.0e6
+            flux = K0 + K3 / (1.0 + K3/K2)
+
+        elif rtype == "EP3":
+            A1 = parse_sym_or_val(p.get("A1", 0.0))
+            C1 = parse_sym_or_val(p.get("C1", 0.0))
+            A2 = parse_sym_or_val(p.get("A2", 0.0))
+            C2 = parse_sym_or_val(p.get("C2", 0.0))
+            K1 = A1 * sp.exp(-C1/Temp)
+            K2 = A2 * sp.exp(-C2/Temp)
+            flux = K1 + K2 * 1.0e6
+
+        elif rtype == "HETEROGENEOUS":
+            gamma = parse_sym_or_val(p["gamma"])
+            k_het = 0.25 * gamma * v_gas * S_a
+            flux = k_het
+
+        elif rtype == "PHASE_CHANGE":
+            flux = sp.Symbol(f"Rate_{idx}", real=True)
+
+        elif rtype == "TUNNELING":
+            if "Y_spline" in p:
+                flux = parse_sym_or_val(p["Y_spline"])
+            elif "A" in p:
+                A = parse_sym_or_val(p["A"])
+                C = parse_sym_or_val(p.get("C", 0.0))
+                flux = A * sp.exp(-C / Temp)
+            else:
+                flux = sp.Symbol(f"Rate_{idx}", real=True)
+
+        else:
+            if "A" in p:
+                flux = parse_sym_or_val(p["A"])
+            elif "Y_spline" in p:
+                flux = parse_sym_or_val(p["Y_spline"])
+            else:
+                flux = sp.Symbol(f"Rate_{idx}", real=True)
+
+        reactants_dict = r.reactants if isinstance(r.reactants, dict) else {sp_name: 1.0 for sp_name in r.reactants}
+        products_dict = r.products if isinstance(r.products, dict) else {sp_name: 1.0 for sp_name in r.products}
+
+        for reactant, stoich in reactants_dict.items():
+            if reactant in species_symbols:
+                flux *= (species_symbols[reactant] ** sp.Integer(int(stoich)))
+
+        is_implicit = r in blocks["implicit"]
+
+        for reactant, stoich in reactants_dict.items():
+            if reactant in df_dt_implicit and reactant not in fixed_species:
+                if is_implicit:
+                    df_dt_implicit[reactant] -= flux * sp.Float(stoich)
+                else:
+                    df_dt_explicit[reactant] -= flux * sp.Float(stoich)
+
+        for product, stoich in products_dict.items():
+            if product in df_dt_implicit and product not in fixed_species:
+                if is_implicit:
+                    df_dt_implicit[product] += flux * sp.Float(stoich)
+                else:
+                    df_dt_explicit[product] += flux * sp.Float(stoich)
+
+    ordered_species = [s.name for s in mech.species]
+    f_implicit = sp.Matrix([df_dt_implicit[s] for s in ordered_species])
+    f_explicit = sp.Matrix([df_dt_explicit[s] for s in ordered_species])
+    f_total = f_implicit + f_explicit
+    c_vector = sp.Matrix([species_symbols[s] for s in ordered_species])
+
+    return {
+        "species_symbols": species_symbols,
+        "ordered_species": ordered_species,
+        "f_implicit": f_implicit,
+        "f_explicit": f_explicit,
+        "f_total": f_total,
+        "c_vector": c_vector,
+    }
+
+
+def prepare_unified_jacobian_parallel(mech: MechanismDefinition) -> Dict[str, Any]:
+    """Same as prepare_unified_jacobian but with parallel Jacobian column computation.
+
+    Uses multiprocessing.Pool to compute each column df/dC_j independently, then
+    assembles the full Jacobian in deterministic column order.  Falls back to
+    sequential computation if multiprocessing raises an error.
+    """
+    built = _build_f_total(mech)
+    ordered_species = built["ordered_species"]
+    f_implicit = built["f_implicit"]
+    f_explicit = built["f_explicit"]
+    f_total = built["f_total"]
+    c_vector = built["c_vector"]
+    species_symbols = built["species_symbols"]
+
+    N = len(ordered_species)
+
+    # Serialize f_total expressions for multiprocessing (SymPy objects aren't picklable)
+    f_total_serialized = [sp.srepr(expr) for expr in f_total]
+    c_sreprs = [sp.srepr(sym) for sym in c_vector]
+
+    try:
+        with multiprocessing.Pool() as pool:
+            args = [(j, f_total_serialized, c_sreprs[j]) for j in range(N)]
+            results = pool.map(_compute_jacobian_column, args)
+
+        # Assemble in deterministic column order
+        results.sort(key=lambda x: x[0])
+        columns = []
+        for _j, col_strs in results:
+            columns.append(sp.Matrix([sp.sympify(s) for s in col_strs]))
+        jacobian_matrix = sp.Matrix.hstack(*[col.reshape(N, 1) for col in columns])
+    except Exception as e:
+        warnings.warn(
+            f"Parallel Jacobian computation failed, falling back to sequential: {e}"
+        )
+        jacobian_matrix = f_total.jacobian(c_vector)
+
+    adjoint_matrix = jacobian_matrix.transpose()
+
+    # Mass conservation projector
+    unique_elements = sorted(list(set(elem for s in mech.species for elem in s.elements.keys())))
+    if unique_elements:
+        E_matrix = sp.zeros(len(unique_elements), len(ordered_species))
+        for j, sp_name in enumerate(ordered_species):
+            species_def = next(s for s in mech.species if s.name == sp_name)
+            for i, elem in enumerate(unique_elements):
+                E_matrix[i, j] = species_def.elements.get(elem, 0)
+        try:
+            E_E_T = E_matrix * E_matrix.transpose()
+            mass_projector = E_matrix.transpose() * E_E_T.pinv()
+        except Exception:
+            mass_projector = sp.zeros(len(ordered_species), len(unique_elements))
+    else:
+        E_matrix = sp.zeros(1, len(ordered_species))
+        mass_projector = sp.zeros(len(ordered_species), 1)
+
+    result = {
+        "species_map": ordered_species,
+        "f_implicit": f_implicit,
+        "f_explicit": f_explicit,
+        "jacobian_matrix": jacobian_matrix,
+        "adjoint_matrix": adjoint_matrix,
+        "mass_projector": mass_projector,
+        "element_map": unique_elements,
+    }
+
+    try:
+        lu_plan = compute_symbolic_lu_decomposition(jacobian_matrix, ordered_species)
+        result["symbolic_lu_plan"] = lu_plan
+    except Exception:
+        pass
+
+    return result
+
+
+def compute_symbolic_lu_decomposition(
+    J_matrix: sp.Matrix,
+    species_map: List[str],
+    permutation: 'Optional[List[int]]' = None,
+    blocks: 'Optional[List[List[int]]]' = None,
+    is_block_diagonal: bool = False,
+) -> SymbolicLUPlan:
     """
     Computes build-time symbolic sparse LU factorization schedule (Doolittle method) on W = inv_g_dt * I - J.
     Extracts flat scalar L, U matrix entry expressions and forward/backward substitution steps referencing previously
     computed scalar variables.
+
+    When is_block_diagonal=True and blocks is provided, compute per-block LU plans independently
+    and combine results into a single SymbolicLUPlan with block metadata.
+
+    When permutation is provided (but not block-diagonal), apply the permutation to J before
+    computing LU and store the permutation in the resulting plan.
     """
     N = J_matrix.shape[0]
     if N == 0:
         raise ValueError("Cannot perform symbolic LU decomposition on empty matrix.")
+
+    # Handle block-diagonal case: compute per-block LU independently
+    if is_block_diagonal and blocks is not None and len(blocks) > 1:
+        return _compute_block_diagonal_lu(J_matrix, species_map, blocks)
+
+    # Handle permutation case: reorder J before LU
+    if permutation is not None:
+        J_perm = sp.zeros(N, N)
+        for i in range(N):
+            for j in range(N):
+                J_perm[i, j] = J_matrix[permutation[i], permutation[j]]
+        perm_species_map = [species_map[permutation[i]] for i in range(N)]
+        plan = _compute_lu_core(J_perm, perm_species_map)
+        plan.permutation = permutation
+        return plan
+
+    return _compute_lu_core(J_matrix, species_map)
+
+
+def _compute_block_diagonal_lu(
+    J_matrix: sp.Matrix,
+    species_map: List[str],
+    blocks: List[List[int]],
+) -> SymbolicLUPlan:
+    """Compute per-block LU decompositions and combine into a single plan."""
+    N = J_matrix.shape[0]
+    combined_non_zero_jac = []
+    combined_l_exprs = []
+    combined_u_exprs = []
+    combined_lu_exprs_ordered = []
+    combined_forward_steps = []
+    combined_backward_steps = []
+    total_fill_in = 0
+
+    for block_indices in blocks:
+        block_size = len(block_indices)
+        # Extract sub-matrix for this block
+        sub_matrix = sp.zeros(block_size, block_size)
+        for bi, gi in enumerate(block_indices):
+            for bj, gj in enumerate(block_indices):
+                sub_matrix[bi, bj] = J_matrix[gi, gj]
+
+        sub_species = [species_map[idx] for idx in block_indices]
+        sub_plan = _compute_lu_core(sub_matrix, sub_species)
+
+        # Map block-local indices back to global indices
+        for i, j, expr_str in sub_plan.non_zero_jacobian:
+            gi, gj = block_indices[i], block_indices[j]
+            # Remap variable references in expression from local to global
+            remapped_expr = _remap_indices(expr_str, block_indices, "W")
+            combined_non_zero_jac.append((gi, gj, remapped_expr))
+
+        for i, j, expr_str in sub_plan.l_expressions:
+            gi, gj = block_indices[i], block_indices[j]
+            remapped_expr = _remap_lu_expr(expr_str, block_indices)
+            combined_l_exprs.append((gi, gj, remapped_expr))
+
+        for i, j, expr_str in sub_plan.u_expressions:
+            gi, gj = block_indices[i], block_indices[j]
+            remapped_expr = _remap_lu_expr(expr_str, block_indices)
+            combined_u_exprs.append((gi, gj, remapped_expr))
+
+        for kind, i, j, expr_str in sub_plan.lu_expressions_ordered:
+            gi, gj = block_indices[i], block_indices[j]
+            remapped_expr = _remap_lu_expr(expr_str, block_indices)
+            combined_lu_exprs_ordered.append((kind, gi, gj, remapped_expr))
+
+        for i, expr_str in sub_plan.forward_sub_steps:
+            gi = block_indices[i]
+            remapped_expr = _remap_solve_expr(expr_str, block_indices, "b", "y", "L")
+            combined_forward_steps.append((gi, remapped_expr))
+
+        for i, expr_str in sub_plan.backward_sub_steps:
+            gi = block_indices[i]
+            remapped_expr = _remap_solve_expr(expr_str, block_indices, "y", "x", "U")
+            combined_backward_steps.append((gi, remapped_expr))
+
+        total_fill_in += sub_plan.fill_in_count
+
+    return SymbolicLUPlan(
+        num_species=N,
+        species_map=species_map,
+        non_zero_jacobian=combined_non_zero_jac,
+        l_expressions=combined_l_exprs,
+        u_expressions=combined_u_exprs,
+        lu_expressions_ordered=combined_lu_exprs_ordered,
+        forward_sub_steps=combined_forward_steps,
+        backward_sub_steps=combined_backward_steps,
+        blocks=blocks,
+        fill_in_count=total_fill_in,
+    )
+
+
+def _remap_indices(expr_str: str, block_indices: List[int], prefix: str) -> str:
+    """Remap local indices in a W_i_j style expression to global indices."""
+    import re
+    def replacer(m):
+        i, j = int(m.group(1)), int(m.group(2))
+        return f"{prefix}_{block_indices[i]}_{block_indices[j]}"
+    return re.sub(rf'{prefix}_(\d+)_(\d+)', replacer, expr_str)
+
+
+def _remap_lu_expr(expr_str: str, block_indices: List[int]) -> str:
+    """Remap L_i_j, U_i_j, and W_i_j references from block-local to global indices."""
+    import re
+    def replacer(m):
+        prefix = m.group(1)
+        i, j = int(m.group(2)), int(m.group(3))
+        return f"{prefix}_{block_indices[i]}_{block_indices[j]}"
+    return re.sub(r'([LUW])_(\d+)_(\d+)', replacer, expr_str)
+
+
+def _remap_solve_expr(expr_str: str, block_indices: List[int],
+                      rhs_prefix: str, sol_prefix: str, mat_prefix: str) -> str:
+    """Remap forward/backward sub expressions from block-local to global indices."""
+    import re
+    def rhs_replacer(m):
+        i = int(m.group(1))
+        return f"{rhs_prefix}_{block_indices[i]}"
+
+    def sol_replacer(m):
+        i = int(m.group(1))
+        return f"{sol_prefix}_{block_indices[i]}"
+
+    def mat_replacer(m):
+        i, j = int(m.group(1)), int(m.group(2))
+        return f"{mat_prefix}_{block_indices[i]}_{block_indices[j]}"
+
+    result = re.sub(rf'{rhs_prefix}_(\d+)', rhs_replacer, expr_str)
+    result = re.sub(rf'{sol_prefix}_(\d+)', sol_replacer, result)
+    result = re.sub(rf'{mat_prefix}_(\d+)_(\d+)', mat_replacer, result)
+    return result
+
+def _compute_lu_core(J_matrix: sp.Matrix, species_map: List[str]) -> SymbolicLUPlan:
+    """Core LU decomposition logic on a single (possibly sub-) matrix."""
+    N = J_matrix.shape[0]
 
     non_zero_jac = []
     non_zero_w = set()
@@ -308,6 +719,8 @@ def compute_symbolic_lu_decomposition(J_matrix: sp.Matrix, species_map: List[str
     u_exprs = []
     lu_exprs_ordered = []
 
+    fill_in_count = 0
+
     for i in range(N):
         # Compute U(i, j) for j >= i
         for j in range(i, N):
@@ -318,6 +731,8 @@ def compute_symbolic_lu_decomposition(J_matrix: sp.Matrix, species_map: List[str
 
             has_w = (i, j) in non_zero_w
             if has_w or sub_terms:
+                if not has_w and sub_terms:
+                    fill_in_count += 1
                 nz_U.add((i, j))
                 rhs = f"W_{i}_{j}" if has_w else "0.0"
                 if sub_terms:
@@ -340,6 +755,8 @@ def compute_symbolic_lu_decomposition(J_matrix: sp.Matrix, species_map: List[str
 
             has_w = (j, i) in non_zero_w
             if has_w or sub_terms:
+                if not has_w and sub_terms:
+                    fill_in_count += 1
                 nz_L.add((j, i))
                 rhs = f"W_{j}_{i}" if has_w else "0.0"
                 if sub_terms:
@@ -382,7 +799,8 @@ def compute_symbolic_lu_decomposition(J_matrix: sp.Matrix, species_map: List[str
         u_expressions=u_exprs,
         lu_expressions_ordered=lu_exprs_ordered,
         forward_sub_steps=forward_steps,
-        backward_sub_steps=backward_steps
+        backward_sub_steps=backward_steps,
+        fill_in_count=fill_in_count,
     )
 
 def build_sympy_matrices(mech: MechanismDefinition) -> Dict[str, Any]:
@@ -401,3 +819,176 @@ def build_sympy_matrices(mech: MechanismDefinition) -> Dict[str, Any]:
     mech.metadata["sympy_metadata"] = res
     mech.metadata["symbolic_lu_plan"] = plan
     return res
+
+
+def apply_cse_to_plan(lu_plan: SymbolicLUPlan, f_vector: sp.Matrix) -> Tuple[List, List]:
+    """Apply sympy.cse() to all expressions in the LU plan + rate vector.
+
+    Returns:
+        replacements: List of (Symbol, expression) tuples for CSE temporaries
+        reduced: List of simplified expressions with CSE symbols substituted
+    """
+    all_exprs = []
+    for i, j, expr_str in lu_plan.non_zero_jacobian:
+        all_exprs.append(sp.sympify(expr_str))
+    for expr in f_vector:
+        all_exprs.append(expr)
+
+    replacements, reduced = sp.cse(all_exprs, optimizations='basic')
+    return replacements, reduced
+
+
+class SparsityOptimizer:
+    """Analyzes Jacobian sparsity for fill-in prediction, reordering, and block detection."""
+
+    def __init__(self, jacobian_structure: 'Set[Tuple[int, int]]', n: int):
+        self.structure = jacobian_structure
+        self.n = n
+
+    def predict_fill_in(self) -> 'Set[Tuple[int, int]]':
+        """
+        Graph-reachability fill-in prediction (symbolic Gaussian elimination).
+        For Doolittle LU, position (i,j) fills in if there exists k < min(i,j)
+        such that both (i,k) and (k,j) are structurally non-zero (transitively).
+        """
+        active = set(self.structure)
+        active |= {(i, i) for i in range(self.n)}  # diagonal always present
+        fill = set()
+
+        for k in range(self.n):
+            rows_with_k = [i for i in range(k + 1, self.n) if (i, k) in active]
+            cols_with_k = [j for j in range(k + 1, self.n) if (k, j) in active]
+
+            for i in rows_with_k:
+                for j in cols_with_k:
+                    if (i, j) not in active:
+                        fill.add((i, j))
+                        active.add((i, j))
+
+        return fill
+
+    def compute_rcm_ordering(self) -> 'List[int]':
+        """
+        Reverse Cuthill-McKee on the symmetrized structure graph.
+        Returns permutation vector p where new_index = p[old_index].
+        """
+        G = nx.Graph()
+        G.add_nodes_from(range(self.n))
+        for i, j in self.structure:
+            if i != j:
+                G.add_edge(i, j)
+
+        # Handle disconnected graphs (no edges means no bandwidth to reduce)
+        if G.number_of_edges() == 0:
+            return list(range(self.n))
+
+        # NetworkX provides Cuthill-McKee ordering directly
+        # cuthill_mckee_ordering returns nodes in CM order; reverse for RCM
+        cm_order = list(nx.utils.rcm.cuthill_mckee_ordering(G))
+        # Reverse for RCM (Reverse Cuthill-McKee)
+        rcm_order = list(reversed(cm_order))
+
+        return rcm_order
+
+    def detect_blocks(self) -> 'List[List[int]]':
+        """
+        Run Tarjan SCC on the directed Jacobian structure graph.
+        Each SCC with no cross-block edges becomes an independent block.
+        """
+        G = nx.DiGraph()
+        G.add_nodes_from(range(self.n))
+        for i, j in self.structure:
+            if i != j:
+                G.add_edge(i, j)
+
+        sccs = list(nx.strongly_connected_components(G))
+        # Sort blocks deterministically by minimum index
+        blocks = sorted([sorted(list(scc)) for scc in sccs], key=lambda b: b[0])
+        return blocks
+
+    def _check_block_independence(self, blocks: 'List[List[int]]') -> bool:
+        """
+        Check if blocks are independent (no cross-block non-zeros after fill-in).
+        Returns True if the system is truly block-diagonal.
+        """
+        if len(blocks) <= 1:
+            return False  # Single block is not "block-diagonal"
+
+        # Build a mapping from species index to block index
+        species_to_block: Dict[int, int] = {}
+        for block_idx, block in enumerate(blocks):
+            for species_idx in block:
+                species_to_block[species_idx] = block_idx
+
+        # Include fill-in positions in the check
+        fill = self.predict_fill_in()
+        all_positions = self.structure | fill | {(i, i) for i in range(self.n)}
+
+        # Check for cross-block non-zeros
+        for i, j in all_positions:
+            if i == j:
+                continue
+            if species_to_block.get(i) != species_to_block.get(j):
+                return False  # Cross-block coupling exists
+
+        return True
+
+    def analyze(self) -> 'SparsityAnalysis':
+        """Full sparsity analysis pipeline."""
+        from .model import SparsityAnalysis
+        fill = self.predict_fill_in()
+        perm = self.compute_rcm_ordering()
+        inv_perm = [0] * self.n
+        for new_idx, old_idx in enumerate(perm):
+            inv_perm[old_idx] = new_idx
+
+        blocks = self.detect_blocks()
+        is_block_diag = self._check_block_independence(blocks)
+
+        return SparsityAnalysis(
+            original_nnz=len(self.structure),
+            fill_in_positions=fill,
+            total_nnz_after_fill=len(self.structure) + len(fill),
+            permutation=perm,
+            inverse_permutation=inv_perm,
+            blocks=blocks,
+            is_block_diagonal=is_block_diag,
+        )
+
+
+def annotate_lu_expressions(lu_plan: SymbolicLUPlan) -> 'List[AnnotatedLUExpression]':
+    """Annotate each LU expression with the set of species indices it depends on.
+
+    For each expression in lu_expressions_ordered, determines which species indices
+    affect that entry. An expression at (row, col) directly depends on species row
+    and col. Additionally, any W_i_j, L_i_j, or U_i_j references in the expression
+    add species i and j to the dependency set.
+
+    Args:
+        lu_plan: The symbolic LU plan with lu_expressions_ordered populated.
+
+    Returns:
+        List of AnnotatedLUExpression with depends_on sets populated.
+    """
+    import re
+    from .model import AnnotatedLUExpression
+
+    annotated = []
+    for kind, row, col, expr_str in lu_plan.lu_expressions_ordered:
+        # Direct dependencies: the species at row and column positions
+        depends_on: Set[int] = {row, col}
+
+        # Also check for references to other W/L/U entries
+        for match in re.finditer(r'[WLU]_(\d+)_(\d+)', expr_str):
+            depends_on.add(int(match.group(1)))
+            depends_on.add(int(match.group(2)))
+
+        annotated.append(AnnotatedLUExpression(
+            kind=kind,
+            row=row,
+            col=col,
+            expr=expr_str,
+            depends_on=depends_on,
+        ))
+
+    return annotated
