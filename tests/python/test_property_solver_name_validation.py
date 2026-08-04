@@ -19,9 +19,7 @@ VALID_SOLVER_NAMES = {"ros2", "ros3", "ros4", "rodas3", "rodas4"}
 
 
 # Strategy for generating arbitrary strings that are NOT valid solver names
-invalid_solver_names = st.text(min_size=0, max_size=30).filter(
-    lambda s: s not in VALID_SOLVER_NAMES
-)
+invalid_solver_names = st.text(min_size=0, max_size=30).filter(lambda s: s not in VALID_SOLVER_NAMES)
 
 
 def test_valid_solver_set_matches_solver_coefficients():
@@ -32,8 +30,7 @@ def test_valid_solver_set_matches_solver_coefficients():
     **Validates: Requirements 1.1**
     """
     assert set(SOLVER_COEFFICIENTS.keys()) == VALID_SOLVER_NAMES, (
-        f"SOLVER_COEFFICIENTS keys {set(SOLVER_COEFFICIENTS.keys())} "
-        f"do not match expected valid set {VALID_SOLVER_NAMES}"
+        f"SOLVER_COEFFICIENTS keys {set(SOLVER_COEFFICIENTS.keys())} " f"do not match expected valid set {VALID_SOLVER_NAMES}"
     )
 
 
@@ -61,10 +58,7 @@ def test_valid_solver_names_accepted_by_cli(solver_name, monkeypatch):
             ]
         )
 
-    assert exc_info.value.code == 0, (
-        f"Valid solver name '{solver_name}' was rejected by CLI "
-        f"(exit code {exc_info.value.code})"
-    )
+    assert exc_info.value.code == 0, f"Valid solver name '{solver_name}' was rejected by CLI " f"(exit code {exc_info.value.code})"
 
 
 @given(solver_name=invalid_solver_names)
@@ -91,8 +85,7 @@ def test_invalid_solver_names_rejected_by_cli(solver_name):
         )
 
     assert exc_info.value.code != 0, (
-        f"Invalid solver name '{solver_name}' was accepted by CLI "
-        f"(exit code {exc_info.value.code}), expected non-zero"
+        f"Invalid solver name '{solver_name}' was accepted by CLI " f"(exit code {exc_info.value.code}), expected non-zero"
     )
 
 
@@ -119,6 +112,5 @@ def test_specific_invalid_solver_names_rejected(solver_name):
         )
 
     assert exc_info.value.code == 2, (
-        f"Invalid solver name '{solver_name}' did not produce exit code 2 "
-        f"(got {exc_info.value.code})"
+        f"Invalid solver name '{solver_name}' did not produce exit code 2 " f"(got {exc_info.value.code})"
     )

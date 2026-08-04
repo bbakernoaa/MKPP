@@ -56,12 +56,8 @@ def test_workload_partitioning_sorting():
         phases=[],
         reactions=[
             # Cyclic (Stiff) Reactions: O -> O3 -> O
-            ReactionDefinition(
-                reaction_type="ARRHENIUS", reactants=["O"], products=["O3"], rate_expression="B"
-            ),
-            ReactionDefinition(
-                reaction_type="PHOTOLYSIS", reactants=["O3"], products=["O"], rate_expression="A"
-            ),
+            ReactionDefinition(reaction_type="ARRHENIUS", reactants=["O"], products=["O3"], rate_expression="B"),
+            ReactionDefinition(reaction_type="PHOTOLYSIS", reactants=["O3"], products=["O"], rate_expression="A"),
             # Linear (Explicit) Reaction: VOC -> SOA
             ReactionDefinition(
                 reaction_type="CONDENSATION",

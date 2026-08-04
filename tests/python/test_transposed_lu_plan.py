@@ -196,7 +196,7 @@ class TestComputeTransposedLUPlan:
             backward_sub_steps=[],  # Not used in this test
         )
 
-        result = compute_transposed_lu_plan(plan)
+        compute_transposed_lu_plan(plan)
 
         # Now execute the transposed solve numerically
         b = rng.standard_normal(N)
@@ -210,9 +210,7 @@ class TestComputeTransposedLUPlan:
         # Backward sub with L^T: x_i = y_i - sum_{k>i} L[k,i]*x_k
         x = np.zeros(N)
         for i in range(N - 1, -1, -1):
-            s = sum(
-                L[k, i] * x[k] for k in range(i + 1, N) if (k, i) in {(r, c) for r, c, _ in l_exprs}
-            )
+            s = sum(L[k, i] * x[k] for k in range(i + 1, N) if (k, i) in {(r, c) for r, c, _ in l_exprs})
             x[i] = y[i] - s
 
         # Compare with numpy: solve(W.T, b)

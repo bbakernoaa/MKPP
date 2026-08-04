@@ -31,15 +31,9 @@ def generate_kpp_baseline(mech_name, kpp_dir, out_dir):
     kpp_bin = os.path.abspath(f"{kpp_dir}/bin/kpp")
     env = os.environ.copy()
     env["KPP_HOME"] = os.path.abspath(kpp_dir)
-    res = subprocess.run(
-        [kpp_bin, f"{mech_name}.def"], cwd=str(run_dir), env=env, capture_output=True, text=True
-    )
+    subprocess.run([kpp_bin, f"{mech_name}.def"], cwd=str(run_dir), env=env, capture_output=True, text=True)
 
-    yaml_path = (
-        f"mechanisms/{mech_name}.yaml"
-        if mech_name != "chapman"
-        else "tests/integration/e2e_validation/data/chapman.yaml"
-    )
+    yaml_path = f"mechanisms/{mech_name}.yaml" if mech_name != "chapman" else "tests/integration/e2e_validation/data/chapman.yaml"
     with open(yaml_path) as f:
         mech = yaml.safe_load(f)
     mkpp_species = [s["name"] for s in mech["species"]]
@@ -61,9 +55,7 @@ def generate_kpp_baseline(mech_name, kpp_dir, out_dir):
 
     c_map_str = "int mkpp_to_kpp[] = {" + ",".join(map(str, mkpp_to_kpp)) + "};"
     c_inv_str = (
-        "int kpp_to_mkpp[] = {"
-        + ",".join([str(mkpp_species.index(s)) if s in mkpp_species else "-1" for s in kpp_species])
-        + "};"
+        "int kpp_to_mkpp[] = {" + ",".join([str(mkpp_species.index(s)) if s in mkpp_species else "-1" for s in kpp_species]) + "};"
     )
 
     c_driver = f"""#include <stdio.h>
@@ -164,8 +156,6 @@ int main() {{
     c_files = glob.glob(str(run_dir / "*.c"))
     c_files = [c for c in c_files if "Main" not in c and "mex" not in c]
 
-    import glob
-
     for c_file in c_files:
         with open(c_file) as f:
             c_text = f.read()
@@ -177,14 +167,14 @@ int main() {{
         with open(c_file, "w") as f:
             f.write(c_text)
 
-    res = subprocess.run(
+    subprocess.run(
         ["gcc", "-c"] + [os.path.basename(c) for c in c_files],
         cwd=str(run_dir),
         capture_output=True,
         text=True,
     )
     o_files = glob.glob(str(run_dir / "*.o"))
-    res = subprocess.run(
+    subprocess.run(
         ["gcc"] + [os.path.basename(o) for o in o_files] + ["-o", "generator", "-lm"],
         cwd=str(run_dir),
         capture_output=True,

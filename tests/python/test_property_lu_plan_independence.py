@@ -147,9 +147,7 @@ def _extract_lu_section(code: str) -> str:
 def _generate_for_all_solvers(mech: MechanismDefinition) -> dict:
     """Generate headers for all 5 solvers and return a dict {solver_name: code_string}."""
     lowering_data = prepare_unified_jacobian(mech)
-    plan = compute_symbolic_lu_decomposition(
-        lowering_data["jacobian_matrix"], lowering_data["species_map"]
-    )
+    plan = compute_symbolic_lu_decomposition(lowering_data["jacobian_matrix"], lowering_data["species_map"])
     mech.metadata["sympy_metadata"] = lowering_data
     mech.metadata["symbolic_lu_plan"] = plan
 
@@ -190,9 +188,7 @@ class TestLUPlanIndependenceFromSolverChoice:
         lu_sections = {}
         for solver_name, code in solver_codes.items():
             lu_section = _extract_lu_section(code)
-            assert (
-                lu_section
-            ), f"[{solver_name}] No LU factorization section found in generated code"
+            assert lu_section, f"[{solver_name}] No LU factorization section found in generated code"
             lu_sections[solver_name] = lu_section
 
         # Compare all solvers against the first (ros2)
@@ -219,9 +215,7 @@ class TestLUPlanIndependenceFromSolverChoice:
         lu_sections = {}
         for solver_name, code in solver_codes.items():
             lu_section = _extract_lu_section(code)
-            assert (
-                lu_section
-            ), f"[{solver_name}] No LU factorization section found in generated code"
+            assert lu_section, f"[{solver_name}] No LU factorization section found in generated code"
             lu_sections[solver_name] = lu_section
 
         # Compare all solvers against the first
@@ -266,9 +260,7 @@ class TestLUPlanIndependenceFromSolverChoice:
         """
         mech = _build_chapman_mechanism()
         lowering_data = prepare_unified_jacobian(mech)
-        plan = compute_symbolic_lu_decomposition(
-            lowering_data["jacobian_matrix"], lowering_data["species_map"]
-        )
+        plan = compute_symbolic_lu_decomposition(lowering_data["jacobian_matrix"], lowering_data["species_map"])
         mech.metadata["sympy_metadata"] = lowering_data
         mech.metadata["symbolic_lu_plan"] = plan
 

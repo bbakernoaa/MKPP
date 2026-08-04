@@ -166,9 +166,7 @@ def _evaluate_rates_at_state(f_total, species_map, state, jvals):
 # ---------------------------------------------------------------------------
 
 
-def _rosenbrock_forward_checkpoint(
-    state_0, dt_total, tableau, J_sym, f_total, species_map, jvals, num_steps=5
-):
+def _rosenbrock_forward_checkpoint(state_0, dt_total, tableau, J_sym, f_total, species_map, jvals, num_steps=5):
     """
     Rosenbrock forward integration with fixed step sizes, saving checkpoints.
 
@@ -525,12 +523,8 @@ class TestAdjointIdentity:
                 lam = np.zeros(N)
                 lam[j] = 1.0
 
-                tlm_result = _rosenbrock_tlm(
-                    delta_C, checkpoints, tableau, J_sym, species_map, jvals
-                )
-                adj_result = _rosenbrock_adjoint(
-                    lam, checkpoints, tableau, J_sym, species_map, jvals
-                )
+                tlm_result = _rosenbrock_tlm(delta_C, checkpoints, tableau, J_sym, species_map, jvals)
+                adj_result = _rosenbrock_adjoint(lam, checkpoints, tableau, J_sym, species_map, jvals)
 
                 lhs = np.dot(tlm_result, lam)
                 rhs = np.dot(delta_C, adj_result)
@@ -594,6 +588,5 @@ class TestAdjointIdentity:
             rel_err = abs(lhs - rhs) / denom
 
             assert rel_err < 1e-12, (
-                f"[{solver_name}] Adjoint identity violated for scenario "
-                f"state={state_0}: relative error = {rel_err:.3e}"
+                f"[{solver_name}] Adjoint identity violated for scenario " f"state={state_0}: relative error = {rel_err:.3e}"
             )

@@ -46,16 +46,14 @@ def benchmark_build_metrics(mech_path, lump_path=None):
             rules = yaml.safe_load(f)
         mech = apply_amore_lumping(mech, rules)
 
-    print(
-        f"Mechanism: {mech.name} | Species: {len(mech.species)} | Reactions: {len(mech.reactions)}"
-    )
+    print(f"Mechanism: {mech.name} | Species: {len(mech.species)} | Reactions: {len(mech.reactions)}")
 
     t0 = time.time()
     lowering_data = prepare_unified_jacobian(mech)
     t_lower = (time.time() - t0) * 1000.0
 
     lu_plan = lowering_data.get("symbolic_lu_plan")
-    sparsity = lowering_data.get("sparsity_analysis")
+    lowering_data.get("sparsity_analysis")
 
     nnz_jac = len(lu_plan.non_zero_jacobian) if lu_plan else 0
     l_exprs = len(lu_plan.l_expressions) if lu_plan else 0
@@ -71,9 +69,7 @@ def benchmark_build_metrics(mech_path, lump_path=None):
     print(f"Block-Diagonal Blocks:   {len(blocks) if blocks else 1}")
 
     print("\n" + "-" * 80)
-    print(
-        f"{'Solver':<10} | {'Stages':<8} | {'Order (ELO)':<10} | {'Header Size':<12} | {'CodeGen Time':<14}"
-    )
+    print(f"{'Solver':<10} | {'Stages':<8} | {'Order (ELO)':<10} | {'Header Size':<12} | {'CodeGen Time':<14}")
     print("-" * 80)
 
     results = {}
@@ -86,9 +82,7 @@ def benchmark_build_metrics(mech_path, lump_path=None):
             "symbolic_lu_plan": lu_plan,
         }
         t0 = time.time()
-        artifacts = generate_headers(
-            mech, out_dir=str(tmp_out), solver_name=solver_name, suffix=f"_{solver_name}"
-        )
+        artifacts = generate_headers(mech, out_dir=str(tmp_out), solver_name=solver_name, suffix=f"_{solver_name}")
         t_gen = (time.time() - t0) * 1000.0
 
         header_path = Path(artifacts["header"])
@@ -132,15 +126,11 @@ def run_cpp_solver_benchmark(solvers):
         # Compile C++ target
         res = run_cmd("cmake --build build --target e2e_saprc99_runner")
         if res.returncode != 0:
-            print(
-                f"{solver_name.upper():<10} | {'BUILD FAIL':<12} | {'N/A':<12} | {'N/A':<16} | {'N/A':<24}"
-            )
+            print(f"{solver_name.upper():<10} | {'BUILD FAIL':<12} | {'N/A':<12} | {'N/A':<16} | {'N/A':<24}")
             continue
 
         # Execute 1 cell
-        res_1 = run_cmd(
-            "NUM_CELLS=1 NUM_STEPS=1440 ./build/tests/integration/e2e_validation/e2e_saprc99_runner"
-        )
+        res_1 = run_cmd("NUM_CELLS=1 NUM_STEPS=1440 ./build/tests/integration/e2e_validation/e2e_saprc99_runner")
         time_1ms = "N/A"
         if res_1.returncode == 0:
             m = re.search(r"Time:\s*([\d\.]+)\s*ms", res_1.stdout)
@@ -148,9 +138,7 @@ def run_cpp_solver_benchmark(solvers):
                 time_1ms = f"{float(m.group(1)):.2f}"
 
         # Execute 1000 cells
-        res_1000 = run_cmd(
-            "NUM_CELLS=1000 NUM_STEPS=1440 ./build/tests/integration/e2e_validation/e2e_saprc99_runner"
-        )
+        res_1000 = run_cmd("NUM_CELLS=1000 NUM_STEPS=1440 ./build/tests/integration/e2e_validation/e2e_saprc99_runner")
         time_1000ms = "N/A"
         throughput_str = "N/A"
         if res_1000.returncode == 0:
@@ -162,9 +150,7 @@ def run_cpp_solver_benchmark(solvers):
                     tp = (1000.0 * 1440.0) / (t_ms / 1000.0)
                     throughput_str = f"{tp:.2e}"
 
-        print(
-            f"{solver_name.upper():<10} | {'SUCCESS':<12} | {time_1ms:>10} ms | {time_1000ms:>14} ms | {throughput_str:>24}"
-        )
+        print(f"{solver_name.upper():<10} | {'SUCCESS':<12} | {time_1ms:>10} ms | {time_1000ms:>14} ms | {throughput_str:>24}")
 
 
 def main():

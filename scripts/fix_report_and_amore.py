@@ -1,3 +1,5 @@
+import re
+
 with open("src/mkpp/amore.py") as f:
     amore_code = f.read()
 
@@ -13,8 +15,6 @@ new_sig = """
         react_str = ",".join(f"{k}:{v}" for k, v in sorted(r.reactants.items()))
         return f"{r.reaction_type}|R={react_str}"
 """
-
-import re
 
 amore_code = re.sub(
     r'    def sig\(r\):[\s\S]*?return f"\{r\.reaction_type\}\|R=\{react_str\}\|P=\{prod_str\}"',

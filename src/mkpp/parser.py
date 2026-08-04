@@ -29,11 +29,7 @@ def parse_mechanism_micm(name: str, data: dict[str, Any]) -> MechanismDefinition
         phase = PhaseMode.GAS
         sp_type = str(s.get("type", "")).lower()
         sp_role = str(s.get("role", "")).lower()
-        if (
-            sp_name in ("AIR", "O2", "H2O", "H2", "CH4", "M", "N2", "RO2")
-            or sp_type == "fixed"
-            or sp_role == "fixed"
-        ):
+        if sp_name in ("AIR", "O2", "H2O", "H2", "CH4", "M", "N2", "RO2") or sp_type == "fixed" or sp_role == "fixed":
             role = "fixed"
         else:
             role = "variable"

@@ -58,9 +58,7 @@ def _generate_code_for_solver(solver_name: str) -> str:
     """Generate C++ code for the given solver and return the full source text."""
     mech = _build_test_mechanism()
     lowering_data = prepare_unified_jacobian(mech)
-    plan = compute_symbolic_lu_decomposition(
-        lowering_data["jacobian_matrix"], lowering_data["species_map"]
-    )
+    plan = compute_symbolic_lu_decomposition(lowering_data["jacobian_matrix"], lowering_data["species_map"])
     mech.metadata = {
         "sympy_metadata": lowering_data,
         "symbolic_lu_plan": plan,
@@ -87,30 +85,23 @@ def test_property_7_step_size_comment_mentions_correct_order(solver_name: str):
 
     # The generated code emits a comment like:
     # // Step Size Control (order 3: exponent = 1/3 = 0.33333333333333331)
-    comment_pattern = re.compile(
-        r"// Step Size Control \(order (\d+): exponent = 1/(\d+) = ([\d.e+-]+)\)"
-    )
+    comment_pattern = re.compile(r"// Step Size Control \(order (\d+): exponent = 1/(\d+) = ([\d.e+-]+)\)")
     matches = comment_pattern.findall(code)
-    assert (
-        len(matches) >= 1
-    ), f"Solver '{solver_name}': No step-size control comment found in generated code"
+    assert len(matches) >= 1, f"Solver '{solver_name}': No step-size control comment found in generated code"
 
     for order_str, divisor_str, exponent_str in matches:
         # Verify the order matches ELO
         assert int(order_str) == int(tableau.ELO), (
-            f"Solver '{solver_name}': Comment says order {order_str}, "
-            f"expected {int(tableau.ELO)}"
+            f"Solver '{solver_name}': Comment says order {order_str}, " f"expected {int(tableau.ELO)}"
         )
         # Verify the divisor matches ELO
         assert int(divisor_str) == int(tableau.ELO), (
-            f"Solver '{solver_name}': Comment says 1/{divisor_str}, "
-            f"expected 1/{int(tableau.ELO)}"
+            f"Solver '{solver_name}': Comment says 1/{divisor_str}, " f"expected 1/{int(tableau.ELO)}"
         )
         # Verify the exponent value is numerically correct
         actual_exponent = float(exponent_str)
         assert abs(actual_exponent - elo_exponent) < 1e-10, (
-            f"Solver '{solver_name}': Comment exponent value {actual_exponent} "
-            f"does not match 1/ELO = {elo_exponent}"
+            f"Solver '{solver_name}': Comment exponent value {actual_exponent} " f"does not match 1/ELO = {elo_exponent}"
         )
 
 
@@ -133,28 +124,24 @@ def test_property_7_step_size_exponent_matches_elo(solver_name: str):
         # For ELO=2, the code uses: safety / Kokkos::sqrt(err_norm)
         # which is equivalent to safety * err_norm^(-1/2), exponent = 0.5
         assert "Kokkos::sqrt(err_norm)" in code, (
-            f"Solver '{solver_name}' (ELO=2): Expected 'Kokkos::sqrt(err_norm)' "
-            f"for exponent 1/2, not found in generated code"
+            f"Solver '{solver_name}' (ELO=2): Expected 'Kokkos::sqrt(err_norm)' " f"for exponent 1/2, not found in generated code"
         )
         # Verify it's in the factor computation line
         factor_pattern = re.compile(r"double factor = safety / Kokkos::sqrt\(err_norm\)")
         assert factor_pattern.search(code) is not None, (
-            f"Solver '{solver_name}' (ELO=2): Expected "
-            f"'double factor = safety / Kokkos::sqrt(err_norm)'"
+            f"Solver '{solver_name}' (ELO=2): Expected " f"'double factor = safety / Kokkos::sqrt(err_norm)'"
         )
 
     elif tableau.ELO == 3.0:
         # For ELO=3, the code uses: safety / Kokkos::cbrt(err_norm)
         # which is equivalent to safety * err_norm^(-1/3), exponent = 1/3
         assert "Kokkos::cbrt(err_norm)" in code, (
-            f"Solver '{solver_name}' (ELO=3): Expected 'Kokkos::cbrt(err_norm)' "
-            f"for exponent 1/3, not found in generated code"
+            f"Solver '{solver_name}' (ELO=3): Expected 'Kokkos::cbrt(err_norm)' " f"for exponent 1/3, not found in generated code"
         )
         # Verify it's in the factor computation line
         factor_pattern = re.compile(r"double factor = safety / Kokkos::cbrt\(err_norm\)")
         assert factor_pattern.search(code) is not None, (
-            f"Solver '{solver_name}' (ELO=3): Expected "
-            f"'double factor = safety / Kokkos::cbrt(err_norm)'"
+            f"Solver '{solver_name}' (ELO=3): Expected " f"'double factor = safety / Kokkos::cbrt(err_norm)'"
         )
 
     else:
@@ -183,32 +170,23 @@ def test_property_7_both_functions_use_same_exponent(solver_name: str):
 
     **Validates: Requirements 4.1, 4.2, 4.3**
     """
-    tableau = SOLVER_COEFFICIENTS[solver_name]
+    SOLVER_COEFFICIENTS[solver_name]
     code = _generate_code_for_solver(solver_name)
 
     # The step-size comment appears once per function (integrate + integrate_with_reduction)
-    comment_pattern = re.compile(
-        r"// Step Size Control \(order (\d+): exponent = 1/(\d+) = ([\d.e+-]+)\)"
-    )
+    comment_pattern = re.compile(r"// Step Size Control \(order (\d+): exponent = 1/(\d+) = ([\d.e+-]+)\)")
     matches = comment_pattern.findall(code)
 
     # Should appear exactly twice (once in each function)
     assert len(matches) == 2, (
-        f"Solver '{solver_name}': Expected 2 step-size control comments "
-        f"(one per function), found {len(matches)}"
+        f"Solver '{solver_name}': Expected 2 step-size control comments " f"(one per function), found {len(matches)}"
     )
 
     # Both should have identical ELO and exponent values
     order_1, divisor_1, exp_1 = matches[0]
     order_2, divisor_2, exp_2 = matches[1]
     assert order_1 == order_2, (
-        f"Solver '{solver_name}': Mismatched orders between integrate() "
-        f"and integrate_with_reduction(): {order_1} vs {order_2}"
+        f"Solver '{solver_name}': Mismatched orders between integrate() " f"and integrate_with_reduction(): {order_1} vs {order_2}"
     )
-    assert divisor_1 == divisor_2, (
-        f"Solver '{solver_name}': Mismatched divisors between functions: "
-        f"{divisor_1} vs {divisor_2}"
-    )
-    assert exp_1 == exp_2, (
-        f"Solver '{solver_name}': Mismatched exponents between functions: " f"{exp_1} vs {exp_2}"
-    )
+    assert divisor_1 == divisor_2, f"Solver '{solver_name}': Mismatched divisors between functions: " f"{divisor_1} vs {divisor_2}"
+    assert exp_1 == exp_2, f"Solver '{solver_name}': Mismatched exponents between functions: " f"{exp_1} vs {exp_2}"

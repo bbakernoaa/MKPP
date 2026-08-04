@@ -80,9 +80,7 @@ def write_report(mech, sympy_meta, out_dir, suffix=""):
         f.write(f"- **Explicit (Non-Stiff) Reactions**: {non_stiff_count}\n")
 
         if hasattr(mech, "partition_metadata") and mech.partition_metadata:
-            f.write(
-                "- **Graph Topology Status**: Mechanism contains cyclically dependent fast radicals. Tarjan SCC was applied.\n"
-            )
+            f.write("- **Graph Topology Status**: Mechanism contains cyclically dependent fast radicals. Tarjan SCC was applied.\n")
         f.write("\n")
 
         if hasattr(mech, "amore_metadata") and mech.amore_metadata:
@@ -123,9 +121,7 @@ def write_report(mech, sympy_meta, out_dir, suffix=""):
 
             f.write("### Reduced Mechanism Definitions\n")
             f.write(f"- Download the lumped species config: [{spc_yaml.name}]({spc_yaml.name})\n")
-            f.write(
-                f"- Download the lumped reactions config: [{rxn_yaml.name}]({rxn_yaml.name})\n\n"
-            )
+            f.write(f"- Download the lumped reactions config: [{rxn_yaml.name}]({rxn_yaml.name})\n\n")
 
         if hasattr(mech, "amore_metadata") and mech.amore_metadata:
             f.write("### Lumped Reaction Parameters\n")
@@ -154,9 +150,7 @@ def write_report(mech, sympy_meta, out_dir, suffix=""):
                     yaml.dump([d], f, sort_keys=False)
             f.write("```\n\n")
         f.write("## Generated SymPy Rate Expressions\n")
-        f.write(
-            "Below are the exact algebraic AST expressions evaluated by SymPy for the Unified Jacobian.\n\n"
-        )
+        f.write("Below are the exact algebraic AST expressions evaluated by SymPy for the Unified Jacobian.\n\n")
         f.write("```text\n")
         if hasattr(mech, "sympy_reactions_strings"):
             for i, r_str in enumerate(mech.sympy_reactions_strings):
@@ -172,9 +166,7 @@ def write_report(mech, sympy_meta, out_dir, suffix=""):
             F_exp = sympy_meta["f_explicit"]
             species_list = sympy_meta["species_map"]
             for i in range(len(F_imp)):
-                f.write(
-                    f"d[{species_list[i]}]/dt = (IMPLICIT: {F_imp[i]}) + (EXPLICIT: {F_exp[i]})\n"
-                )
+                f.write(f"d[{species_list[i]}]/dt = (IMPLICIT: {F_imp[i]}) + (EXPLICIT: {F_exp[i]})\n")
         elif sympy_meta and "f_vector" in sympy_meta:
             F = sympy_meta["f_vector"]
             species_list = sympy_meta["species_map"]
@@ -196,14 +188,8 @@ def write_report(mech, sympy_meta, out_dir, suffix=""):
         f.write("### Warnings\n")
         warnings = []
         if len(mech.species) > 50:
-            warnings.append(
-                "Mechanism exceeds 50 species. Consider running with `--lump` to auto-reduce."
-            )
-        if (
-            type_counts.get("TROE", 0) > 0
-            or type_counts.get("EP2", 0) > 0
-            or type_counts.get("EP3", 0) > 0
-        ):
+            warnings.append("Mechanism exceeds 50 species. Consider running with `--lump` to auto-reduce.")
+        if type_counts.get("TROE", 0) > 0 or type_counts.get("EP2", 0) > 0 or type_counts.get("EP3", 0) > 0:
             warnings.append(
                 "Mechanism contains complex pressure-dependent or empirical falloff rates which expand the AST depth significantly."
             )

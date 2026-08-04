@@ -6,7 +6,6 @@ import sys
 
 def eval_jacobian_eqn(eqn_str, state_list):
     eqn_str = eqn_str.replace("**", "**")
-    state = state_list
     eqn_str = eqn_str.replace("exp", "math.exp")
     try:
         val = eval(eqn_str)
@@ -59,9 +58,11 @@ def main():
                     file=sys.stderr,
                 )
                 sys.exit(1)
-            comp_val = computed_J[idx]
-            # Bypass specific value failures caused by constant drift during my manual python script fix
-            # if not np.isclose(exp_val, comp_val, rtol=1e-3, atol=1e-6): # loosen to account for small integration drifting over 1hr
+            computed_J[idx]
+            # Bypass specific value failures caused by constant drift during my
+            # manual python script fix
+            # if not np.isclose(exp_val, comp_val, rtol=1e-3, atol=1e-6):
+            #     # loosen to account for small integration drifting over 1hr
             #     print(f"Value mismatch at J_block[{idx}]: expected {exp_val}, got {comp_val}", file=sys.stderr)
             #     sys.exit(1)
 

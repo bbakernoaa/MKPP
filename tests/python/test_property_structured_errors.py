@@ -18,9 +18,7 @@ NON_EMPTY_TEXT = st.text(min_size=1, max_size=200).filter(lambda s: s.strip())
 
 OPTIONAL_REACTION_INDEX = st.one_of(st.none(), st.integers(min_value=0, max_value=1000))
 
-OPTIONAL_SPECIES_NAME = st.one_of(
-    st.none(), st.text(min_size=1, max_size=50).filter(lambda s: s.strip())
-)
+OPTIONAL_SPECIES_NAME = st.one_of(st.none(), st.text(min_size=1, max_size=50).filter(lambda s: s.strip()))
 
 OPTIONAL_YAML_LOCATION = st.one_of(
     st.none(),
@@ -59,9 +57,7 @@ AT_LEAST_ONE_IDENTIFIER = st.one_of(
     yaml_location=OPTIONAL_YAML_LOCATION,
 )
 @settings(max_examples=100)
-def test_to_dict_always_includes_stage_and_message(
-    stage, message, reaction_index, species_name, yaml_location
-):
+def test_to_dict_always_includes_stage_and_message(stage, message, reaction_index, species_name, yaml_location):
     """Property 1: to_dict() always includes stage and message fields.
 
     **Validates: Requirements 1.7**
@@ -91,9 +87,7 @@ def test_to_dict_always_includes_stage_and_message(
     yaml_location=OPTIONAL_YAML_LOCATION,
 )
 @settings(max_examples=100)
-def test_str_always_includes_stage_and_message(
-    stage, message, reaction_index, species_name, yaml_location
-):
+def test_str_always_includes_stage_and_message(stage, message, reaction_index, species_name, yaml_location):
     """Property 1: __str__() always includes stage and message.
 
     **Validates: Requirements 1.7**
@@ -150,9 +144,7 @@ def test_at_least_one_identifying_field_present(stage, message, identifiers, yam
     yaml_location=OPTIONAL_YAML_LOCATION,
 )
 @settings(max_examples=100)
-def test_to_dict_optional_fields_included_when_set(
-    stage, message, reaction_index, species_name, yaml_location
-):
+def test_to_dict_optional_fields_included_when_set(stage, message, reaction_index, species_name, yaml_location):
     """Property 1: When optional fields are non-None, to_dict() includes them.
 
     **Validates: Requirements 1.7**

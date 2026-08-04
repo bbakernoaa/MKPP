@@ -84,9 +84,7 @@ def test_zero_copy_manifest_metadata(tmp_path):
     # Inject dummy host interface schema
     from mkpp.model import ArrayDefinition, HostInterfaceSchema
 
-    mech.host_interface = HostInterfaceSchema(
-        arrays=[ArrayDefinition(name="cloud_liquid_water", rank=3, layout="LayoutLeft")]
-    )
+    mech.host_interface = HostInterfaceSchema(arrays=[ArrayDefinition(name="cloud_liquid_water", rank=3, layout="LayoutLeft")])
 
     out_dir = tmp_path / "build"
     results = generate_headers(mech, out_dir=str(out_dir))
@@ -104,10 +102,7 @@ def test_zero_copy_manifest_metadata(tmp_path):
     assert "host_interface" in manifest
     assert manifest["host_interface"]["cloud_liquid_water"]["layout"] == "LayoutLeft"
     assert "lifetime" in manifest["host_interface"]["cloud_liquid_water"]
-    assert (
-        manifest["host_interface"]["cloud_liquid_water"]["lifetime"]
-        == "unmanaged_borrowed_from_host"
-    )
+    assert manifest["host_interface"]["cloud_liquid_water"]["lifetime"] == "unmanaged_borrowed_from_host"
 
 
 def test_sorted_artifact_metadata(tmp_path):
@@ -275,9 +270,7 @@ def test_all_rosenbrock_tableaus_codegen(tmp_path):
     )
 
     for solver_name in ["ros2", "ros3", "ros4", "rodas3", "rodas4"]:
-        results = generate_headers(
-            mech, out_dir=str(tmp_path), solver_name=solver_name, suffix=f"_{solver_name}"
-        )
+        results = generate_headers(mech, out_dir=str(tmp_path), solver_name=solver_name, suffix=f"_{solver_name}")
         header_file = Path(results["header"])
         assert header_file.exists()
         with open(header_file) as f:
@@ -285,10 +278,7 @@ def test_all_rosenbrock_tableaus_codegen(tmp_path):
 
         tableau = SOLVER_COEFFICIENTS[solver_name]
         assert "// Generated solver for test_mech" in content
-        assert (
-            f"// {tableau.name} coefficients ({tableau.stages}-stage, order {tableau.ELO:.0f})"
-            in content
-        )
+        assert f"// {tableau.name} coefficients ({tableau.stages}-stage, order {tableau.ELO:.0f})" in content
         assert f"// --- Stage {tableau.stages} ---" in content
         assert f"K{tableau.stages}_0" in content
 

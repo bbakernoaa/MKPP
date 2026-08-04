@@ -1,4 +1,6 @@
 import os
+import sys
+from typing import Any
 
 from .model import MechanismDefinition
 
@@ -31,10 +33,6 @@ def validate_mechanism(mech: MechanismDefinition, strict: bool = False):
                 raise ValueError(f"Unknown product '{product}' in reaction {idx}")
 
 
-import sys
-from typing import Any
-
-
 def validate_fuzzer_stiffness(max_condition_number: float, threshold: float = 1e12):
     """Extreme Environment Fuzzer compile gate (T042)."""
     if max_condition_number > threshold:
@@ -60,19 +58,13 @@ def validate_host_interface(mech: MechanismDefinition):
 
     for arr in mech.host_interface.arrays:
         if not arr.extent:
-            raise ValueError(
-                f"Host interface array '{arr.name}' must define extent vector matching rank {arr.rank}"
-            )
+            raise ValueError(f"Host interface array '{arr.name}' must define extent vector matching rank {arr.rank}")
         if len(arr.extent) != arr.rank:
-            raise ValueError(
-                f"Extent length {len(arr.extent)} does not match rank {arr.rank} for array '{arr.name}'"
-            )
+            raise ValueError(f"Extent length {len(arr.extent)} does not match rank {arr.rank} for array '{arr.name}'")
         if arr.ownership not in ("host", "device"):
             raise ValueError(f"Ownership must be 'host' or 'device', got {arr.ownership}")
         if not arr.unit or arr.unit == "unknown":
-            raise ValueError(
-                f"Host interface array '{arr.name}' must define a known physical unit for C-compatible translation"
-            )
+            raise ValueError(f"Host interface array '{arr.name}' must define a known physical unit for C-compatible translation")
     return True
 
 
@@ -80,9 +72,7 @@ def validate_terminator_safety(mech: MechanismDefinition) -> bool:
     """T028: Prevent abrupt photolysis changes from crashing explicit blocks."""
     for r in mech.reactions:
         if r.reaction_type.upper() == "PHOTOLYSIS" and not r.continuous_transition:
-            raise ValueError(
-                "PHOTOLYSIS reactions must be marked with continuous_transition to safely navigate the terminator"
-            )
+            raise ValueError("PHOTOLYSIS reactions must be marked with continuous_transition to safely navigate the terminator")
     return True
 
 
@@ -109,7 +99,8 @@ def validate_mass_conservation(mech: MechanismDefinition) -> bool:
         # Compare
         if lhs_elements != rhs_elements:
             raise ValueError(
-                f"Elemental mass imbalance detected in reaction {idx}: {r.reactants} -> {r.products} ({lhs_elements} != {rhs_elements})"
+                f"Elemental mass imbalance detected in reaction {idx}: "
+                f"{r.reactants} -> {r.products} ({lhs_elements} != {rhs_elements})"
             )
 
     return True

@@ -83,9 +83,7 @@ SOLVERS_WITH_NEWF_FALSE = [
     SOLVERS_WITH_NEWF_FALSE,
     ids=[s[0] for s in SOLVERS_WITH_NEWF_FALSE],
 )
-def test_property_5_newf_false_no_fresh_evaluation(
-    solver_name: str, reuse_stage: int, prior_f_stage: int
-):
+def test_property_5_newf_false_no_fresh_evaluation(solver_name: str, reuse_stage: int, prior_f_stage: int):
     """
     For solvers with NewF=false stages, the generated code should NOT emit
     a fresh F evaluation (F{reuse_stage}_0 = ...) for that stage.
@@ -109,9 +107,7 @@ def test_property_5_newf_false_no_fresh_evaluation(
     SOLVERS_WITH_NEWF_FALSE,
     ids=[s[0] for s in SOLVERS_WITH_NEWF_FALSE],
 )
-def test_property_5_newf_false_reuse_comment(
-    solver_name: str, reuse_stage: int, prior_f_stage: int
-):
+def test_property_5_newf_false_reuse_comment(solver_name: str, reuse_stage: int, prior_f_stage: int):
     """
     For solvers with NewF=false stages, the generated code should contain
     a comment indicating reuse of the prior F evaluation.
@@ -121,9 +117,7 @@ def test_property_5_newf_false_reuse_comment(
     code = _generate_code(solver_name)
 
     # The codegen emits: "// NewF=false: reuse F{prior_f_stage} for stage {reuse_stage}"
-    reuse_comment_pattern = re.compile(
-        rf"NewF=false:\s*reuse\s+F{prior_f_stage}\s+for\s+stage\s+{reuse_stage}"
-    )
+    reuse_comment_pattern = re.compile(rf"NewF=false:\s*reuse\s+F{prior_f_stage}\s+for\s+stage\s+{reuse_stage}")
     assert (
         reuse_comment_pattern.search(code) is not None
     ), f"{solver_name}: Missing 'NewF=false: reuse F{prior_f_stage} for stage {reuse_stage}' comment"
@@ -134,9 +128,7 @@ def test_property_5_newf_false_reuse_comment(
     SOLVERS_WITH_NEWF_FALSE,
     ids=[s[0] for s in SOLVERS_WITH_NEWF_FALSE],
 )
-def test_property_5_newf_false_rhs_references_prior_f(
-    solver_name: str, reuse_stage: int, prior_f_stage: int
-):
+def test_property_5_newf_false_rhs_references_prior_f(solver_name: str, reuse_stage: int, prior_f_stage: int):
     """
     For solvers with NewF=false stages, the RHS formation for that stage should
     reference the prior stage's F variable (F{prior_f_stage}_*), not F{reuse_stage}_*.
@@ -148,18 +140,13 @@ def test_property_5_newf_false_rhs_references_prior_f(
     # The RHS for the reuse stage should reference F{prior_f_stage}
     # Look for rhs{reuse_stage}_* lines that reference F{prior_f_stage}_*
     rhs_lines = [
-        line
-        for line in code.split("\n")
-        if f"rhs{reuse_stage}_" in line and "=" in line and "//" not in line.split("=")[0]
+        line for line in code.split("\n") if f"rhs{reuse_stage}_" in line and "=" in line and "//" not in line.split("=")[0]
     ]
     assert len(rhs_lines) > 0, f"{solver_name}: No rhs{reuse_stage} lines found in generated code"
 
     # At least one rhs line should reference the prior F variable
     has_prior_f_ref = any(f"F{prior_f_stage}_" in line for line in rhs_lines)
-    assert has_prior_f_ref, (
-        f"{solver_name}: rhs{reuse_stage} lines don't reference F{prior_f_stage}. "
-        f"Lines: {rhs_lines[:3]}"
-    )
+    assert has_prior_f_ref, f"{solver_name}: rhs{reuse_stage} lines don't reference F{prior_f_stage}. " f"Lines: {rhs_lines[:3]}"
 
     # Verify none of the rhs lines reference the non-existent F{reuse_stage}
     has_reuse_stage_f_ref = any(f"F{reuse_stage}_" in line for line in rhs_lines)

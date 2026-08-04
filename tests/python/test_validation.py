@@ -141,9 +141,7 @@ def test_host_interface_schema_shape_and_units():
         reactions=[],
     )
     mech.host_interface = HostInterfaceSchema(
-        arrays=[
-            ArrayDefinition(name="cloud_liquid_water", rank=3, layout="LayoutLeft", unit="kg/kg")
-        ]
+        arrays=[ArrayDefinition(name="cloud_liquid_water", rank=3, layout="LayoutLeft", unit="kg/kg")]
     )
     with pytest.raises(
         ValueError,
@@ -251,9 +249,7 @@ def test_sunrise_terminator_validation():
         ],
     )
 
-    with pytest.raises(
-        ValueError, match="PHOTOLYSIS reactions must be marked with continuous_transition"
-    ):
+    with pytest.raises(ValueError, match="PHOTOLYSIS reactions must be marked with continuous_transition"):
         validate_terminator_safety(mech)
 
     mech.reactions[0].continuous_transition = True

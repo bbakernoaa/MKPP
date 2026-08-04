@@ -97,9 +97,7 @@ def _extract_integrate_body(code: str) -> str:
         start = match.start()
         # Look backward for any preceding identifier characters
         preceding = code[max(0, start - 30) : start]
-        if any(
-            prefix in preceding for prefix in ["_fwd_checkpoint", "_adj", "_tlm", "_with_reduction"]
-        ):
+        if any(prefix in preceding for prefix in ["_fwd_checkpoint", "_adj", "_tlm", "_with_reduction"]):
             continue
         # This is the plain integrate() - extract its body
         pos = match.start()
@@ -141,8 +139,7 @@ class TestAdjointTLMGPUSafety:
 
         for pattern, description in FORBIDDEN_PATTERNS:
             assert pattern not in body, (
-                f"[{solver_name}] integrate_adj() contains forbidden pattern: "
-                f"{description} ('{pattern}')"
+                f"[{solver_name}] integrate_adj() contains forbidden pattern: " f"{description} ('{pattern}')"
             )
 
     def test_integrate_tlm_no_forbidden_patterns(self, solver_name: str, tmp_path):
@@ -157,8 +154,7 @@ class TestAdjointTLMGPUSafety:
 
         for pattern, description in FORBIDDEN_PATTERNS:
             assert pattern not in body, (
-                f"[{solver_name}] integrate_tlm() contains forbidden pattern: "
-                f"{description} ('{pattern}')"
+                f"[{solver_name}] integrate_tlm() contains forbidden pattern: " f"{description} ('{pattern}')"
             )
 
     def test_integrate_fwd_checkpoint_no_forbidden_patterns(self, solver_name: str, tmp_path):
@@ -173,8 +169,7 @@ class TestAdjointTLMGPUSafety:
 
         for pattern, description in FORBIDDEN_PATTERNS:
             assert pattern not in body, (
-                f"[{solver_name}] integrate_fwd_checkpoint() contains forbidden pattern: "
-                f"{description} ('{pattern}')"
+                f"[{solver_name}] integrate_fwd_checkpoint() contains forbidden pattern: " f"{description} ('{pattern}')"
             )
 
     def test_integrate_adj_kokkos_annotation(self, solver_name: str, tmp_path):
@@ -189,9 +184,7 @@ class TestAdjointTLMGPUSafety:
             r"KOKKOS_INLINE_FUNCTION[^;]*?\bvoid\s+integrate_adj\s*\(",
             re.DOTALL,
         )
-        assert pattern.search(
-            code
-        ), f"[{solver_name}] integrate_adj() missing KOKKOS_INLINE_FUNCTION annotation"
+        assert pattern.search(code), f"[{solver_name}] integrate_adj() missing KOKKOS_INLINE_FUNCTION annotation"
 
     def test_integrate_tlm_kokkos_annotation(self, solver_name: str, tmp_path):
         """integrate_tlm() has KOKKOS_INLINE_FUNCTION annotation.
@@ -205,9 +198,7 @@ class TestAdjointTLMGPUSafety:
             r"KOKKOS_INLINE_FUNCTION[^;]*?\bvoid\s+integrate_tlm\s*\(",
             re.DOTALL,
         )
-        assert pattern.search(
-            code
-        ), f"[{solver_name}] integrate_tlm() missing KOKKOS_INLINE_FUNCTION annotation"
+        assert pattern.search(code), f"[{solver_name}] integrate_tlm() missing KOKKOS_INLINE_FUNCTION annotation"
 
     def test_integrate_fwd_checkpoint_kokkos_annotation(self, solver_name: str, tmp_path):
         """integrate_fwd_checkpoint() has KOKKOS_INLINE_FUNCTION annotation.
@@ -221,9 +212,7 @@ class TestAdjointTLMGPUSafety:
             r"KOKKOS_INLINE_FUNCTION[^;]*?\b(?:int|void)\s+integrate_fwd_checkpoint\s*\(",
             re.DOTALL,
         )
-        assert pattern.search(
-            code
-        ), f"[{solver_name}] integrate_fwd_checkpoint() missing KOKKOS_INLINE_FUNCTION annotation"
+        assert pattern.search(code), f"[{solver_name}] integrate_fwd_checkpoint() missing KOKKOS_INLINE_FUNCTION annotation"
 
 
 # ---------------------------------------------------------------------------
@@ -290,12 +279,8 @@ class TestIntegrateUnchangedWithAdjoint:
         body_fwd = _extract_function_body(code_fwd, "integrate_with_reduction")
         body_adj = _extract_function_body(code_adj, "integrate_with_reduction")
 
-        assert (
-            body_fwd
-        ), f"[{solver_name}] integrate_with_reduction() not found in forward-only code"
-        assert (
-            body_adj
-        ), f"[{solver_name}] integrate_with_reduction() not found in adjoint-enabled code"
+        assert body_fwd, f"[{solver_name}] integrate_with_reduction() not found in forward-only code"
+        assert body_adj, f"[{solver_name}] integrate_with_reduction() not found in adjoint-enabled code"
 
         assert body_fwd == body_adj, (
             f"[{solver_name}] integrate_with_reduction() body differs between "

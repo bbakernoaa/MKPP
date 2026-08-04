@@ -21,7 +21,7 @@ package-dir = {"" = "src"}
 packages = ["mkpp"]
 
 [tool.ruff]
-line-length = 100
+line-length = 132
 target-version = "py311"
 exclude = [".git", "__pycache__", "build", "dist", "venv", ".venv"]
 
@@ -37,6 +37,24 @@ select = ["E", "F", "I", "UP", "N"]
 # e.g., We want to allow matrices to be uppercase (like `J_block`, `C`, `E_matrix`)
 # and constants to be uppercase.
 ignore = ["N806", "N803"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/mkpp/codegen.py" = ["E501"]
+"src/mkpp/symbolic_emit.py" = ["E501"]
+"src/mkpp/reporting.py" = ["E501"]
+"src/mkpp/rosenbrock.py" = ["N802"]
+"src/isorropialite/tests/property_variance_checker.py" = ["E501"]
+"src/Cloud-J/tests/tools/run_benchmarks.py" = ["E501"]
+"scripts/fix_report_and_amore.py" = ["E501"]
+"tests/python/test_emit_lu_solve_transpose.py" = ["E741"]
+"tests/python/test_property_lu_plan_independence.py" = ["E741"]
+"tests/python/test_property_structured_errors.py" = ["E741"]
+"tests/python/test_property_auto_reduction.py" = ["E501"]
+"tests/python/test_transposed_lu_chapman.py" = ["N802"]
+"tests/python/test_transposed_lu_plan.py" = ["N802"]
+"tests/python/test_codegen.py" = ["E402"]
+"tests/python/test_validation.py" = ["E402"]
+"utils/benchmark_saprc99_solvers.py" = ["E402", "E501"]
 
 [tool.pytest.ini_options]
 minversion = "7.0"

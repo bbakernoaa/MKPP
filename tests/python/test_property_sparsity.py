@@ -208,9 +208,7 @@ def test_property_11_rcm_bandwidth_reduction(data):
     perm = optimizer.compute_rcm_ordering()
 
     # Verify permutation is valid
-    assert sorted(perm) == list(
-        range(n)
-    ), f"RCM permutation is not a valid permutation of 0..{n-1}: {perm}"
+    assert sorted(perm) == list(range(n)), f"RCM permutation is not a valid permutation of 0..{n-1}: {perm}"
 
     # Build inverse permutation: inv_perm[old_idx] = new_idx
     inv_perm = [0] * n
@@ -368,16 +366,12 @@ def test_property_13_sparsity_optimizer_determinism(data):
     result2 = optimizer2.analyze()
 
     # Verify byte-identical results
-    assert (
-        result1.original_nnz == result2.original_nnz
-    ), f"original_nnz differs: {result1.original_nnz} vs {result2.original_nnz}"
+    assert result1.original_nnz == result2.original_nnz, f"original_nnz differs: {result1.original_nnz} vs {result2.original_nnz}"
     assert result1.fill_in_positions == result2.fill_in_positions, "fill_in_positions differs"
     assert (
         result1.total_nnz_after_fill == result2.total_nnz_after_fill
     ), f"total_nnz_after_fill differs: {result1.total_nnz_after_fill} vs {result2.total_nnz_after_fill}"
-    assert (
-        result1.permutation == result2.permutation
-    ), f"permutation differs: {result1.permutation} vs {result2.permutation}"
+    assert result1.permutation == result2.permutation, f"permutation differs: {result1.permutation} vs {result2.permutation}"
     assert result1.inverse_permutation == result2.inverse_permutation, "inverse_permutation differs"
     assert result1.blocks == result2.blocks, f"blocks differs: {result1.blocks} vs {result2.blocks}"
     assert (

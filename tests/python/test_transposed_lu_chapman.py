@@ -194,9 +194,7 @@ def _eval_expr(expr_str, ns):
     try:
         return float(eval(expr_str, {"__builtins__": {}}, safe_ns))
     except Exception as e:
-        raise ValueError(
-            f"Failed to evaluate expression '{expr_str}' with ns keys {list(ns.keys())[:20]}..."
-        ) from e
+        raise ValueError(f"Failed to evaluate expression '{expr_str}' with ns keys {list(ns.keys())[:20]}...") from e
 
 
 class TestTransposedSolveChapmanJacobian:
@@ -246,9 +244,7 @@ class TestTransposedSolveChapmanJacobian:
         W = inv_gamma_h * np.eye(N) - J_numeric
 
         # Verify W is non-symmetric (this is the point of using Chapman)
-        assert not np.allclose(
-            W, W.T, atol=1e-15
-        ), "W should be non-symmetric for this test to be meaningful"
+        assert not np.allclose(W, W.T, atol=1e-15), "W should be non-symmetric for this test to be meaningful"
 
         # 6. Execute numeric LU factorization using the symbolic plan
         L, U = _execute_lu_factorization(W, lu_plan)
@@ -331,7 +327,7 @@ class TestTransposedSolveChapmanJacobian:
         lowering_data = prepare_unified_jacobian(mech)
         J_sym = lowering_data["jacobian_matrix"]
         species_map = lowering_data["species_map"]
-        N = len(species_map)
+        len(species_map)
 
         concentrations = {"O": 1.0e6, "O3": 1.0e12, "O1D": 1.0e4}
         jvals = {"J_0": 5.0e-5}
@@ -340,9 +336,7 @@ class TestTransposedSolveChapmanJacobian:
 
         # The Jacobian of the Chapman mechanism should be non-symmetric
         # because the coupling between species is directional
-        assert not np.allclose(
-            J_numeric, J_numeric.T, atol=1e-20
-        ), "Chapman Jacobian should be non-symmetric"
+        assert not np.allclose(J_numeric, J_numeric.T, atol=1e-20), "Chapman Jacobian should be non-symmetric"
 
     def test_forward_and_transposed_solve_differ_for_nonsymmetric_W(self):
         """

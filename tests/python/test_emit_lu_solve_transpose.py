@@ -208,9 +208,7 @@ class TestEmitLuSolveTranspose:
 
         # The expressions should differ because the transposed solve uses
         # U^T for forward sub and L^T for backward sub (swapped roles)
-        assert (
-            transposed_output != forward_output
-        ), "Transposed and forward emission should differ for non-symmetric Jacobian"
+        assert transposed_output != forward_output, "Transposed and forward emission should differ for non-symmetric Jacobian"
 
     def test_numerical_correctness_of_emitted_code(self):
         """

@@ -141,9 +141,7 @@ class TestSAPRC99AdjointGeneration:
         # Required functions per Req 6.2
         assert "integrate_adj" in code, "integrate_adj not found in generated code"
         assert "integrate_tlm" in code, "integrate_tlm not found in generated code"
-        assert (
-            "integrate_fwd_checkpoint" in code
-        ), "integrate_fwd_checkpoint not found in generated code"
+        assert "integrate_fwd_checkpoint" in code, "integrate_fwd_checkpoint not found in generated code"
         assert "CheckpointBuffer" in code, "CheckpointBuffer struct not found in generated code"
 
     def test_num_species_is_82(self, tmp_path):
@@ -188,8 +186,7 @@ class TestSAPRC99AdjointGeneration:
         # Verify the actual value is approximately what we expect (~130 KB)
         expected_approx = 132_804
         assert abs(total_bytes - expected_approx) < 100, (
-            f"Checkpoint memory calculation unexpected: "
-            f"got {total_bytes}, expected ~{expected_approx}"
+            f"Checkpoint memory calculation unexpected: " f"got {total_bytes}, expected ~{expected_approx}"
         )
 
     def test_balanced_braces(self, tmp_path):
@@ -214,16 +211,12 @@ class TestSAPRC99AdjointGeneration:
         code = _generate_saprc99_adjoint(str(tmp_path))
 
         # Namespace must open
-        assert (
-            "namespace mkpp {" in code or "namespace mkpp{" in code
-        ), "Missing namespace mkpp opening"
+        assert "namespace mkpp {" in code or "namespace mkpp{" in code, "Missing namespace mkpp opening"
 
         # The last non-whitespace closing brace should close the namespace
         # Check that the code ends with a closing brace (after stripping trailing whitespace)
         stripped = code.rstrip()
-        assert stripped.endswith(
-            "}"
-        ), "Generated header does not end with closing brace (namespace closure)"
+        assert stripped.endswith("}"), "Generated header does not end with closing brace (namespace closure)"
 
     def test_pragma_once_present(self, tmp_path):
         """Generated header starts with #pragma once.
@@ -239,9 +232,7 @@ class TestSAPRC99AdjointGeneration:
         **Validates: Requirements 8.2**
         """
         code = _generate_saprc99_adjoint(str(tmp_path))
-        assert (
-            "#include <Kokkos_Core.hpp>" in code
-        ), "Generated header missing #include <Kokkos_Core.hpp>"
+        assert "#include <Kokkos_Core.hpp>" in code, "Generated header missing #include <Kokkos_Core.hpp>"
 
     def test_no_heap_allocation_in_checkpoint_buffer(self, tmp_path):
         """CheckpointBuffer struct uses no heap allocation.
@@ -271,9 +262,7 @@ class TestSAPRC99AdjointGeneration:
         checkpoint_struct = code[start : struct_end + 1]
 
         # No heap allocation in the struct
-        assert (
-            "std::vector" not in checkpoint_struct
-        ), "CheckpointBuffer uses std::vector (heap allocation)"
+        assert "std::vector" not in checkpoint_struct, "CheckpointBuffer uses std::vector (heap allocation)"
         assert "new " not in checkpoint_struct, "CheckpointBuffer uses 'new' (heap allocation)"
         assert "malloc" not in checkpoint_struct, "CheckpointBuffer uses malloc (heap allocation)"
 
@@ -360,7 +349,5 @@ namespace Kokkos {
         )
 
         assert result.returncode == 0, (
-            f"Compilation failed for SAPRC-99 adjoint header.\n"
-            f"Compiler: {compiler}\n"
-            f"stderr:\n{result.stderr[:2000]}"
+            f"Compilation failed for SAPRC-99 adjoint header.\n" f"Compiler: {compiler}\n" f"stderr:\n{result.stderr[:2000]}"
         )

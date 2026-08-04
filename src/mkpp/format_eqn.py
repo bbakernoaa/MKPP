@@ -68,12 +68,12 @@ def format_eqn(eqn_str, species_list, state_var="state", use_parentheses=True):
 
     # 3. Map the C_X species symbols from the SymPy AST directly into the state indices or variables.
     sorted_sp = sorted(list(enumerate(species_list)), key=lambda x: len(x[1].name), reverse=True)
-    for idx_s, sp in sorted_sp:
+    for idx_s, spec in sorted_sp:
         if use_parentheses:
             repl = f"{state_var}({idx_s})"
         else:
             repl = f"{state_var}_{idx_s}"
-        s = re.sub(r"\bC_" + sp.name + r"(?!\w)", repl, s)
+        s = re.sub(r"\bC_" + spec.name + r"(?!\w)", repl, s)
 
     # 4. Map J_<idx> photolysis symbols to the jvals array (Cloud-J runtime input)
     s = re.sub(r"\bJ_(\d+)\b", r"jvals[\1]", s)

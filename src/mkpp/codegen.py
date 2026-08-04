@@ -97,17 +97,13 @@ def generate_headers(
         if adjoint:
             N = len(mech.species)
             f.write("  // Checkpoint buffer for discrete adjoint/TLM integration\n")
-            f.write(
-                "  // Recompute-J strategy: only state is stored, Jacobian recomputed from saved state\n"
-            )
+            f.write("  // Recompute-J strategy: only state is stored, Jacobian recomputed from saved state\n")
             f.write("  struct CheckpointBuffer {\n")
             f.write("      static constexpr int MAX_STEPS = 200;\n")
             f.write(f"      static constexpr int NUM_SPECIES = {N};\n")
             f.write("      int num_steps = 0;\n")
             f.write("      double h[MAX_STEPS];\n")
-            f.write(
-                "      double state[MAX_STEPS][NUM_SPECIES];  // saved concentrations at step entry\n"
-            )
+            f.write("      double state[MAX_STEPS][NUM_SPECIES];  // saved concentrations at step entry\n")
             f.write("  };\n\n")
 
         f.write("  template<typename DeviceType>\n")
@@ -140,9 +136,7 @@ def generate_headers(
             for i in range(J.shape[0]):
                 for j in range(J.shape[1]):
                     if J[i, j] != 0:
-                        eqn = format_eqn(
-                            J[i, j], mech.species, state_var="state", use_parentheses=True
-                        )
+                        eqn = format_eqn(J[i, j], mech.species, state_var="state", use_parentheses=True)
                         f.write(f"          J_block({i}, {j}) = {eqn};\n")
         f.write("      }\n\n")
 
@@ -156,9 +150,7 @@ def generate_headers(
             for i in range(J_adj.shape[0]):
                 for j in range(J_adj.shape[1]):
                     if J_adj[i, j] != 0:
-                        eqn = format_eqn(
-                            J_adj[i, j], mech.species, state_var="state", use_parentheses=True
-                        )
+                        eqn = format_eqn(J_adj[i, j], mech.species, state_var="state", use_parentheses=True)
                         f.write(f"          J_adj_block({i}, {j}) = {eqn};\n")
         f.write("      }\n\n")
 
@@ -173,9 +165,7 @@ def generate_headers(
                 f.write(f"          dF_block({i}) = 0.0;\n")
                 for j in range(J.shape[1]):
                     if J[i, j] != 0:
-                        eqn = format_eqn(
-                            J[i, j], mech.species, state_var="state", use_parentheses=True
-                        )
+                        eqn = format_eqn(J[i, j], mech.species, state_var="state", use_parentheses=True)
                         f.write(f"          dF_block({i}) += ({eqn}) * delta_C({j});\n")
         f.write("      }\n\n")
 
@@ -240,20 +230,10 @@ def generate_headers(
             f.write("      // Photolysis reactions (Cloud-J input mapping):\n")
             for pr in photolysis_reactions_meta:
                 reactants_str = ", ".join(
-                    f"{k}"
-                    for k in (
-                        pr["reactants"].keys()
-                        if isinstance(pr["reactants"], dict)
-                        else pr["reactants"]
-                    )
+                    f"{k}" for k in (pr["reactants"].keys() if isinstance(pr["reactants"], dict) else pr["reactants"])
                 )
                 products_str = ", ".join(
-                    f"{k}"
-                    for k in (
-                        pr["products"].keys()
-                        if isinstance(pr["products"], dict)
-                        else pr["products"]
-                    )
+                    f"{k}" for k in (pr["products"].keys() if isinstance(pr["products"], dict) else pr["products"])
                 )
                 f.write(
                     f"      //   jvals[{pr['photo_idx']}] = {reactants_str} -> {products_str}  (original A: {pr['original_A']})\n"
@@ -262,22 +242,16 @@ def generate_headers(
 
         # 6. integrate (AOT Symbolic LU, generic Rosenbrock solver)
         f.write("      template <class StateView>\n")
-        f.write(
-            "      KOKKOS_INLINE_FUNCTION void integrate(double dt_total, StateView& state, const double* jvals) const {\n"
-        )
+        f.write("      KOKKOS_INLINE_FUNCTION void integrate(double dt_total, StateView& state, const double* jvals) const {\n")
         f.write(f"          const int NUM_SPECIES = {N};\n")
-        f.write(
-            f"          // {tableau.name} coefficients ({tableau.stages}-stage, order {tableau.ELO:.0f})\n"
-        )
+        f.write(f"          // {tableau.name} coefficients ({tableau.stages}-stage, order {tableau.ELO:.0f})\n")
         gamma = tableau.Gamma[0]
         f.write(f"          const double g = {gamma:.17g};\n")
         f.write("          const double safety = 0.9;\n")
         f.write("          const double max_growth = 6.0;\n")
         f.write("          const double min_shrink = 0.2;\n")
         f.write("          double t = 0.0;\n")
-        f.write(
-            "          double dt = Kokkos::fmin(dt_total, 1.0);  // conservative initial step\n\n"
-        )
+        f.write("          double dt = Kokkos::fmin(dt_total, 1.0);  // conservative initial step\n\n")
         f.write("          while (t < dt_total) {\n")
         f.write("          dt = Kokkos::min(dt, dt_total - t);\n")
         f.write("          const double inv_g_dt = 1.0 / (g * dt);\n\n")
@@ -294,9 +268,7 @@ def generate_headers(
         if not lu_plan and sympy_meta and "jacobian_matrix" in sympy_meta:
             from .lowering import compute_symbolic_lu_decomposition
 
-            lu_plan = compute_symbolic_lu_decomposition(
-                sympy_meta["jacobian_matrix"], [s.name for s in mech.species]
-            )
+            lu_plan = compute_symbolic_lu_decomposition(sympy_meta["jacobian_matrix"], [s.name for s in mech.species])
 
         # Pre-compute transposed LU plan when adjoint mode is enabled (task 5.3)
         # This must be done once, before emitting adjoint functions that need W^{-T} solves.
@@ -320,9 +292,7 @@ def generate_headers(
             import re as _re_w
 
             # Jacobian Non-Zeros
-            f.write(
-                "          // Analytical Jacobian & Iteration Matrix W = inv_g_dt*I - J (sparse)\n"
-            )
+            f.write("          // Analytical Jacobian & Iteration Matrix W = inv_g_dt*I - J (sparse)\n")
             non_zero_jac_set = set()
             for i, j, expr_str in lu_plan.non_zero_jacobian:
                 non_zero_jac_set.add((i, j))
@@ -360,12 +330,8 @@ def generate_headers(
                         if i in block_indices:
                             if block_num not in _emitted_block_header:
                                 _emitted_block_header.add(block_num)
-                                block_species_names = [
-                                    lu_plan.species_map[idx] for idx in block_indices
-                                ]
-                                f.write(
-                                    f"          // Block {block_num}: species [{', '.join(block_species_names)}]\n"
-                                )
+                                block_species_names = [lu_plan.species_map[idx] for idx in block_indices]
+                                f.write(f"          // Block {block_num}: species [{', '.join(block_species_names)}]\n")
                             break
                     f.write(f"          double {kind}_{i}_{j} = {expr_str};\n")
             else:
@@ -373,9 +339,7 @@ def generate_headers(
                     f.write(f"          double {kind}_{i}_{j} = {expr_str};\n")
 
             # Emit all stage computations using the generic Rosenbrock emitter
-            _emit_rosenbrock_stages(
-                f, tableau, N, lu_plan, sympy_meta, mech, _perm, is_reduction=False
-            )
+            _emit_rosenbrock_stages(f, tableau, N, lu_plan, sympy_meta, mech, _perm, is_reduction=False)
 
         # Close while loop
         f.write("          } // end while (t < dt_total)\n")
@@ -384,9 +348,7 @@ def generate_headers(
         # 7. integrate_with_reduction (Auto-Reduction Kernel)
         f.write("      template <class StateView>\n")
         f.write("      KOKKOS_INLINE_FUNCTION void integrate_with_reduction(\n")
-        f.write(
-            "          double dt_total, StateView& state, const double* jvals, double importance_threshold) const\n"
-        )
+        f.write("          double dt_total, StateView& state, const double* jvals, double importance_threshold) const\n")
         f.write("      {\n")
         f.write(f"          const int NUM_SPECIES = {N};\n")
         # Use the same tableau gamma as integrate()
@@ -397,9 +359,7 @@ def generate_headers(
         f.write("          const double min_shrink = 0.2;\n\n")
         f.write("          bool active[NUM_SPECIES];\n")
         f.write("          double t = 0.0;\n")
-        f.write(
-            "          double dt = Kokkos::fmin(dt_total, 1.0);  // conservative initial step\n\n"
-        )
+        f.write("          double dt = Kokkos::fmin(dt_total, 1.0);  // conservative initial step\n\n")
         f.write("          // Initialize all species as active\n")
         for i in range(N):
             f.write(f"          active[{i}] = true;\n")
@@ -442,9 +402,7 @@ def generate_headers(
                 )
 
             # Jacobian Non-Zeros with frozen species handling
-            f.write(
-                "\n          // 3. Analytical Jacobian & Iteration Matrix W (identity for frozen species)\n"
-            )
+            f.write("\n          // 3. Analytical Jacobian & Iteration Matrix W (identity for frozen species)\n")
             non_zero_jac_set = set()
             for i, j, expr_str in lu_plan.non_zero_jacobian:
                 non_zero_jac_set.add((i, j))
@@ -468,23 +426,17 @@ def generate_headers(
             for i, j in sorted(needed_w2):
                 if i == j:
                     if (i, i) in non_zero_jac_set:
-                        f.write(
-                            f"          double W_{i}_{i} = active[{i}] ? (inv_g_dt - J_{i}_{i}) : 1.0;\n"
-                        )
+                        f.write(f"          double W_{i}_{i} = active[{i}] ? (inv_g_dt - J_{i}_{i}) : 1.0;\n")
                     else:
                         f.write(f"          double W_{i}_{i} = active[{i}] ? inv_g_dt : 1.0;\n")
                 elif (i, j) in non_zero_jac_set:
-                    f.write(
-                        f"          double W_{i}_{j} = (active[{i}] && active[{j}]) ? (-J_{i}_{j}) : 0.0;\n"
-                    )
+                    f.write(f"          double W_{i}_{j} = (active[{i}] && active[{j}]) ? (-J_{i}_{j}) : 0.0;\n")
                 else:
                     # Fill-in dependency: W referenced by LU but no Jacobian entry
                     f.write(f"          double W_{i}_{j} = 0.0;\n")
 
             # Symbolic LU Factorization with conditional skip for frozen species
-            f.write(
-                "\n          // 4. Symbolic LU Factorization (conditional skip for frozen species)\n"
-            )
+            f.write("\n          // 4. Symbolic LU Factorization (conditional skip for frozen species)\n")
 
             # Use annotated expressions if available for conditional skipping
             if lu_plan.annotated_expressions:
@@ -493,18 +445,14 @@ def generate_headers(
                     if deps:
                         cond_parts = [f"active[{d}]" for d in sorted(deps)]
                         cond = " && ".join(cond_parts)
-                        f.write(
-                            f"          double {ann_expr.kind}_{ann_expr.row}_{ann_expr.col} = ({cond}) ? ({ann_expr.expr}) : "
-                        )
+                        f.write(f"          double {ann_expr.kind}_{ann_expr.row}_{ann_expr.col} = ({cond}) ? ({ann_expr.expr}) : ")
                         # For U diagonal, frozen → 1.0; for off-diag → 0.0
                         if ann_expr.row == ann_expr.col:
                             f.write("1.0;\n")
                         else:
                             f.write("0.0;\n")
                     else:
-                        f.write(
-                            f"          double {ann_expr.kind}_{ann_expr.row}_{ann_expr.col} = {ann_expr.expr};\n"
-                        )
+                        f.write(f"          double {ann_expr.kind}_{ann_expr.row}_{ann_expr.col} = {ann_expr.expr};\n")
             else:
                 # Fallback: emit without conditional skip (use normal LU)
                 for kind, i, j, expr_str in lu_plan.lu_expressions_ordered:
@@ -532,9 +480,7 @@ def generate_headers(
         # after each accepted step for use by adjoint/TLM integrators.
         if adjoint:
             f.write("\n      // Forward integration with checkpointing for adjoint/TLM\n")
-            f.write(
-                "      // Saves step size h and state at each accepted step into CheckpointBuffer.\n"
-            )
+            f.write("      // Saves step size h and state at each accepted step into CheckpointBuffer.\n")
             f.write("      // Returns number of accepted steps, or -1 if MAX_STEPS exceeded.\n")
             f.write("      template <class StateView>\n")
             f.write("      KOKKOS_INLINE_FUNCTION int integrate_fwd_checkpoint(\n")
@@ -542,9 +488,7 @@ def generate_headers(
             f.write("          CheckpointBuffer& chk) const\n")
             f.write("      {\n")
             f.write(f"          const int NUM_SPECIES = {N};\n")
-            f.write(
-                f"          // {tableau.name} coefficients ({tableau.stages}-stage, order {tableau.ELO:.0f})\n"
-            )
+            f.write(f"          // {tableau.name} coefficients ({tableau.stages}-stage, order {tableau.ELO:.0f})\n")
             gamma = tableau.Gamma[0]
             f.write(f"          const double g = {gamma:.17g};\n")
             f.write("          const double safety = 0.9;\n")
@@ -553,9 +497,7 @@ def generate_headers(
             f.write("          int ierr = 0;\n")
             f.write("          chk.num_steps = 0;\n")
             f.write("          double t = 0.0;\n")
-            f.write(
-                "          double dt = Kokkos::fmin(dt_total, 1.0);  // conservative initial step\n\n"
-            )
+            f.write("          double dt = Kokkos::fmin(dt_total, 1.0);  // conservative initial step\n\n")
             f.write("          while (t < dt_total) {\n")
             f.write("          dt = Kokkos::min(dt, dt_total - t);\n")
             f.write("          const double inv_g_dt = 1.0 / (g * dt);\n\n")
@@ -573,9 +515,7 @@ def generate_headers(
                 import re as _re_w
 
                 # Jacobian Non-Zeros
-                f.write(
-                    "          // Analytical Jacobian & Iteration Matrix W = inv_g_dt*I - J (sparse)\n"
-                )
+                f.write("          // Analytical Jacobian & Iteration Matrix W = inv_g_dt*I - J (sparse)\n")
                 non_zero_jac_set_chk = set()
                 for i, j, expr_str in lu_plan.non_zero_jacobian:
                     non_zero_jac_set_chk.add((i, j))
@@ -610,12 +550,8 @@ def generate_headers(
                             if i in block_indices:
                                 if block_num not in _emitted_block_header_chk:
                                     _emitted_block_header_chk.add(block_num)
-                                    block_species_names = [
-                                        lu_plan.species_map[idx] for idx in block_indices
-                                    ]
-                                    f.write(
-                                        f"          // Block {block_num}: species [{', '.join(block_species_names)}]\n"
-                                    )
+                                    block_species_names = [lu_plan.species_map[idx] for idx in block_indices]
+                                    f.write(f"          // Block {block_num}: species [{', '.join(block_species_names)}]\n")
                                 break
                         f.write(f"          double {kind}_{i}_{j} = {expr_str};\n")
                 else:
@@ -644,12 +580,8 @@ def generate_headers(
             # Walks backward through checkpoint buffer, accumulating adjoint variable λ.
             # Requirement 2.5: function signature with template params StateView, AdjView.
             # Requirement 6.2: emitted when --adjoint is enabled.
-            f.write(
-                "\n      // Discrete adjoint backward integration through checkpointed trajectory\n"
-            )
-            f.write(
-                "      // Walks backward through saved steps, accumulating adjoint variable lambda.\n"
-            )
+            f.write("\n      // Discrete adjoint backward integration through checkpointed trajectory\n")
+            f.write("      // Walks backward through saved steps, accumulating adjoint variable lambda.\n")
             f.write("      template <class StateView, class AdjView>\n")
             f.write("      KOKKOS_INLINE_FUNCTION void integrate_adj(\n")
             f.write("          double dt_total, const StateView& state_final,\n")
@@ -711,9 +643,7 @@ def generate_headers(
             arr.name: {
                 "rank": arr.rank,
                 "layout": arr.layout,
-                "lifetime": "unmanaged_borrowed_from_host"
-                if arr.ownership == "host"
-                else "device_owned",
+                "lifetime": "unmanaged_borrowed_from_host" if arr.ownership == "host" else "device_owned",
             }
             for arr in mech.host_interface.arrays
         }

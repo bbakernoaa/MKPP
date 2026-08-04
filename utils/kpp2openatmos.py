@@ -146,11 +146,7 @@ def parse_eqn(filepath):
                 elif rate_str.startswith("("):
                     rxn["A"] = rate_str.replace("(", "").replace(")", "").replace("e0", "")
                 else:
-                    rxn["A"] = (
-                        rate_str.replace("*(SUN/60.0e0)", "")
-                        .replace("e0", "")
-                        .replace("*(SUN/60.0)", "")
-                    )
+                    rxn["A"] = rate_str.replace("*(SUN/60.0e0)", "").replace("e0", "").replace("*(SUN/60.0)", "")
 
                 if rtype == "PHOTOLYSIS":
                     rxn["continuous_transition"] = True

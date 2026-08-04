@@ -83,9 +83,7 @@ def test_codegen_zero_thread_arrays_and_loops(tmp_path):
     """Verify generated header contains zero thread-local array declarations and zero loops."""
     mech = build_chapman_toy_mechanism()
     lowering_data = prepare_unified_jacobian(mech)
-    plan = compute_symbolic_lu_decomposition(
-        lowering_data["jacobian_matrix"], lowering_data["species_map"]
-    )
+    plan = compute_symbolic_lu_decomposition(lowering_data["jacobian_matrix"], lowering_data["species_map"])
 
     mech.metadata["sympy_metadata"] = lowering_data
     mech.metadata["symbolic_lu_plan"] = plan

@@ -21,6 +21,4 @@ def test_chapman_generation():
     )
 
     assert result.returncode == 0, f"MKPP generation failed: {result.stderr}"
-    assert os.path.exists(
-        os.path.join(output_dir, "ChapmanCycle.hpp")
-    ), "ChapmanCycle.hpp was not generated"
+    assert os.path.exists(os.path.join(output_dir, "ChapmanCycle.hpp")), "ChapmanCycle.hpp was not generated"

@@ -244,8 +244,6 @@ def ros3_adaptive_solve(f_func, jac_func, y0, t_span, atol, rtol):
     gamma = 0.43586652150845899941601945119356
 
     ros_A21 = 1.0
-    ros_A31 = 1.0
-    ros_A32 = 0.0
 
     ros_C21 = -1.0156171083877702091975600115545
     ros_C31 = 4.0759956452537699824805835358067
@@ -413,6 +411,5 @@ def test_ros3_adaptive_vs_radau_small_strato():
         y_ref,
         atol=1e-3,
         rtol=1e-4,
-        err_msg="ROS-3 adaptive solver disagrees with Radau reference "
-        "beyond atol=1e-3, rtol=1e-4 for small_strato mechanism",
+        err_msg="ROS-3 adaptive solver disagrees with Radau reference " "beyond atol=1e-3, rtol=1e-4 for small_strato mechanism",
     )

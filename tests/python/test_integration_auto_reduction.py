@@ -31,9 +31,7 @@ from test_integration_ros2_vs_radau import (
 # ---------------------------------------------------------------------------
 
 
-def ros2_adaptive_solve_with_reduction(
-    f_func, jac_func, y0, t_span, atol, rtol, importance_threshold
-):
+def ros2_adaptive_solve_with_reduction(f_func, jac_func, y0, t_span, atol, rtol, importance_threshold):
     """
     Pure-Python ROS-2 adaptive Rosenbrock solver with auto-reduction.
 

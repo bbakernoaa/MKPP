@@ -81,9 +81,7 @@ def run_compiler(
             num_species = len(getattr(mech, "species", []))
             num_reactions = len(getattr(mech, "reactions", []))
             print(
-                f"[dry-run] Validation passed. "
-                f"Species: {num_species}, Reactions: {num_reactions}. "
-                f"No code generated.",
+                f"[dry-run] Validation passed. " f"Species: {num_species}, Reactions: {num_reactions}. " f"No code generated.",
                 file=sys.stderr,
             )
             return
@@ -121,7 +119,7 @@ def run_compiler(
             # --- Lowering stage ---
             _verbose_log("lowering", "Computing symbolic Jacobian and LU decomposition", verbose)
 
-            adjoint_metadata = prepare_adjoint_and_tlm(mech)
+            prepare_adjoint_and_tlm(mech)
             mech.sympy_metadata = prepare_unified_jacobian(mech)
 
             # Store to cache for next time
@@ -153,7 +151,7 @@ def run_compiler(
 
             blocks_l = partition_reactions(mech_lumped)
             mech_lumped.partition_metadata = blocks_l.get("metadata")
-            adjoint_metadata_l = prepare_adjoint_and_tlm(mech_lumped)
+            prepare_adjoint_and_tlm(mech_lumped)
             mech_lumped.sympy_metadata = prepare_unified_jacobian(mech_lumped)
 
             generate_headers(
@@ -195,31 +193,17 @@ def main(args=None):
     if args is None:
         args = sys.argv[1:]
 
-    parser = argparse.ArgumentParser(
-        prog="mkpp", description="Multiphase KPP (MKPP) Engine Compiler"
-    )
+    parser = argparse.ArgumentParser(prog="mkpp", description="Multiphase KPP (MKPP) Engine Compiler")
 
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    compile_parser = subparsers.add_parser(
-        "compile", help="Compile a mechanism into Kokkos headers"
-    )
+    compile_parser = subparsers.add_parser("compile", help="Compile a mechanism into Kokkos headers")
     compile_parser.add_argument("mechanism", help="Path to the mechanism YAML/JSON file")
-    compile_parser.add_argument(
-        "--test-env", required=True, help="Path to the test environment YAML/JSON file"
-    )
-    compile_parser.add_argument(
-        "--out", default="mkpp-generated/", help="Output directory for generated artifacts"
-    )
-    compile_parser.add_argument(
-        "--strict", action="store_true", help="Enable strict schema validation"
-    )
-    compile_parser.add_argument(
-        "--emit-manifest", action="store_true", help="Emit metadata manifest alongside headers"
-    )
-    compile_parser.add_argument(
-        "--report", action="store_true", help="Generate full mechanism analysis report and graph"
-    )
+    compile_parser.add_argument("--test-env", required=True, help="Path to the test environment YAML/JSON file")
+    compile_parser.add_argument("--out", default="mkpp-generated/", help="Output directory for generated artifacts")
+    compile_parser.add_argument("--strict", action="store_true", help="Enable strict schema validation")
+    compile_parser.add_argument("--emit-manifest", action="store_true", help="Emit metadata manifest alongside headers")
+    compile_parser.add_argument("--report", action="store_true", help="Generate full mechanism analysis report and graph")
     compile_parser.add_argument("--lump", type=str, help="Path to AMORE lumping rules YAML file")
     compile_parser.add_argument(
         "--drgep",

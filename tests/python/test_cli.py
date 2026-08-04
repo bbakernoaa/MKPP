@@ -175,9 +175,7 @@ def test_cli_dry_run_no_output_files(tmp_path, capsys, monkeypatch):
 
     # Track whether generate_headers is called (it should NOT be for --dry-run)
     generate_called = []
-    monkeypatch.setattr(
-        "mkpp.cli.generate_headers", lambda *args, **kwargs: generate_called.append(True)
-    )
+    monkeypatch.setattr("mkpp.cli.generate_headers", lambda *args, **kwargs: generate_called.append(True))
 
     with pytest.raises(SystemExit) as e:
         main(

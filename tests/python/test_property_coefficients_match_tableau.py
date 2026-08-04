@@ -138,9 +138,7 @@ def test_property_6_gamma0_in_generated_code(solver_name: str):
     assert g_match is not None, f"{solver_name}: 'const double g = ...' not found in generated code"
     g_value = float(g_match.group(1))
     expected_g = tableau.Gamma[0]
-    assert _values_match(
-        expected_g, g_value
-    ), f"{solver_name}: Gamma[0] mismatch: expected {expected_g:.17g}, got {g_value:.17g}"
+    assert _values_match(expected_g, g_value), f"{solver_name}: Gamma[0] mismatch: expected {expected_g:.17g}, got {g_value:.17g}"
 
 
 @pytest.mark.parametrize("solver_name", list(SOLVER_COEFFICIENTS.keys()))
@@ -157,9 +155,7 @@ def test_property_6_m_coefficients_in_generated_code(solver_name: str):
     # M coefficients appear in the solution update:
     # state(X) += <M[0]> * K1_Y + <M[1]> * K2_Y + ...
     # Look for lines matching: state(...) +=
-    state_update_lines = [
-        line.strip() for line in code.split("\n") if "state(" in line and "+=" in line
-    ]
+    state_update_lines = [line.strip() for line in code.split("\n") if "state(" in line and "+=" in line]
     assert len(state_update_lines) > 0, f"{solver_name}: No state update lines found"
 
     # Extract the M coefficients from the first state update line (species 0)
@@ -170,15 +166,13 @@ def test_property_6_m_coefficients_in_generated_code(solver_name: str):
     # Verify each non-zero M coefficient
     non_zero_m = [(j, tableau.M[j]) for j in range(tableau.stages) if tableau.M[j] != 0.0]
     assert len(extracted_m) == len(non_zero_m), (
-        f"{solver_name}: Expected {len(non_zero_m)} M terms, found {len(extracted_m)} "
-        f"in line: {first_update}"
+        f"{solver_name}: Expected {len(non_zero_m)} M terms, found {len(extracted_m)} " f"in line: {first_update}"
     )
 
     for (j, expected_val), (stage_found, actual_val) in zip(non_zero_m, extracted_m):
         assert stage_found == j + 1, f"{solver_name}: Expected K{j+1} term, found K{stage_found}"
         assert _values_match(expected_val, actual_val), (
-            f"{solver_name}: M[{j}] mismatch: expected {expected_val:.17g}, "
-            f"got {actual_val:.17g}"
+            f"{solver_name}: M[{j}] mismatch: expected {expected_val:.17g}, " f"got {actual_val:.17g}"
         )
 
 
@@ -204,17 +198,13 @@ def test_property_6_e_coefficients_in_generated_code(solver_name: str):
     # Verify each non-zero E coefficient
     non_zero_e = [(j, tableau.E[j]) for j in range(tableau.stages) if tableau.E[j] != 0.0]
     assert len(extracted_e) == len(non_zero_e), (
-        f"{solver_name}: Expected {len(non_zero_e)} E terms, found {len(extracted_e)} "
-        f"in line: {first_yerr}"
+        f"{solver_name}: Expected {len(non_zero_e)} E terms, found {len(extracted_e)} " f"in line: {first_yerr}"
     )
 
     for (j, expected_val), (stage_found, actual_val) in zip(non_zero_e, extracted_e):
-        assert (
-            stage_found == j + 1
-        ), f"{solver_name}: Expected K{j+1} term in yerr, found K{stage_found}"
+        assert stage_found == j + 1, f"{solver_name}: Expected K{j+1} term in yerr, found K{stage_found}"
         assert _values_match(expected_val, actual_val), (
-            f"{solver_name}: E[{j}] mismatch: expected {expected_val:.17g}, "
-            f"got {actual_val:.17g}"
+            f"{solver_name}: E[{j}] mismatch: expected {expected_val:.17g}, " f"got {actual_val:.17g}"
         )
 
 
@@ -240,10 +230,7 @@ def test_property_6_a_coefficients_in_generated_code(solver_name: str):
             all_zero = all(get_A(tableau, stage, j) == 0.0 for j in range(1, stage))
             if all_zero:
                 continue
-            pytest.fail(
-                f"{solver_name}: Y{stage}_0 declaration not found, but A "
-                f"has non-zero entries for stage {stage}"
-            )
+            pytest.fail(f"{solver_name}: Y{stage}_0 declaration not found, but A " f"has non-zero entries for stage {stage}")
 
         y_expr = y_matches[0].group(1)
 
@@ -265,14 +252,10 @@ def test_property_6_a_coefficients_in_generated_code(solver_name: str):
                     # Could be "+ K<j>_0" meaning coeff = 1.0
                     actual_val = 1.0
                 else:
-                    pytest.fail(
-                        f"{solver_name}: A({stage},{j}) = {a_val:.17g} but K{j}_0 "
-                        f"not found in Y{stage}_0 = {y_expr}"
-                    )
+                    pytest.fail(f"{solver_name}: A({stage},{j}) = {a_val:.17g} but K{j}_0 " f"not found in Y{stage}_0 = {y_expr}")
 
             assert _values_match(a_val, actual_val), (
-                f"{solver_name}: A({stage},{j}) mismatch: "
-                f"expected {a_val:.17g}, got {actual_val:.17g}"
+                f"{solver_name}: A({stage},{j}) mismatch: " f"expected {a_val:.17g}, got {actual_val:.17g}"
             )
 
 
@@ -299,10 +282,7 @@ def test_property_6_c_coefficients_in_generated_code(solver_name: str):
             all_zero = all(get_C(tableau, stage, j) == 0.0 for j in range(1, stage))
             if all_zero:
                 continue
-            pytest.fail(
-                f"{solver_name}: rhs{stage}_0 declaration not found, but C "
-                f"has non-zero entries for stage {stage}"
-            )
+            pytest.fail(f"{solver_name}: rhs{stage}_0 declaration not found, but C " f"has non-zero entries for stage {stage}")
 
         rhs_expr = rhs_matches[0].group(1)
 
@@ -314,21 +294,17 @@ def test_property_6_c_coefficients_in_generated_code(solver_name: str):
 
             # Pattern: (<C> / dt) * K<j>_0
             # The format is: (C_VALUE / dt) * K<j>_0
-            c_pattern = re.compile(
-                rf"\(?([-+]?\d+\.?\d*(?:[eE][-+]?\d+)?)\s*/\s*dt\)?\s*\*\s*K{j}_0"
-            )
+            c_pattern = re.compile(rf"\(?([-+]?\d+\.?\d*(?:[eE][-+]?\d+)?)\s*/\s*dt\)?\s*\*\s*K{j}_0")
             c_match = c_pattern.search(rhs_expr)
             if c_match:
                 actual_val = float(c_match.group(1))
             else:
                 pytest.fail(
-                    f"{solver_name}: C({stage},{j}) = {c_val:.17g} but matching "
-                    f"pattern not found in rhs{stage}_0 = {rhs_expr}"
+                    f"{solver_name}: C({stage},{j}) = {c_val:.17g} but matching " f"pattern not found in rhs{stage}_0 = {rhs_expr}"
                 )
 
             assert _values_match(c_val, actual_val), (
-                f"{solver_name}: C({stage},{j}) mismatch: "
-                f"expected {c_val:.17g}, got {actual_val:.17g}"
+                f"{solver_name}: C({stage},{j}) mismatch: " f"expected {c_val:.17g}, got {actual_val:.17g}"
             )
 
 

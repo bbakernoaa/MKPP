@@ -148,22 +148,12 @@ def get_C(tableau: RosenbrockTableau, i: int, j: int) -> float:
 for _solver_name, _tableau in SOLVER_COEFFICIENTS.items():
     _s = _tableau.stages
     _expected_tri = _s * (_s - 1) // 2
-    assert (
-        len(_tableau.A) == _expected_tri
-    ), f"{_solver_name}: len(A)={len(_tableau.A)} != stages*(stages-1)//2={_expected_tri}"
-    assert (
-        len(_tableau.C) == _expected_tri
-    ), f"{_solver_name}: len(C)={len(_tableau.C)} != stages*(stages-1)//2={_expected_tri}"
+    assert len(_tableau.A) == _expected_tri, f"{_solver_name}: len(A)={len(_tableau.A)} != stages*(stages-1)//2={_expected_tri}"
+    assert len(_tableau.C) == _expected_tri, f"{_solver_name}: len(C)={len(_tableau.C)} != stages*(stages-1)//2={_expected_tri}"
     assert len(_tableau.M) == _s, f"{_solver_name}: len(M)={len(_tableau.M)} != stages={_s}"
     assert len(_tableau.E) == _s, f"{_solver_name}: len(E)={len(_tableau.E)} != stages={_s}"
-    assert (
-        len(_tableau.Alpha) == _s
-    ), f"{_solver_name}: len(Alpha)={len(_tableau.Alpha)} != stages={_s}"
-    assert (
-        len(_tableau.Gamma) == _s
-    ), f"{_solver_name}: len(Gamma)={len(_tableau.Gamma)} != stages={_s}"
-    assert (
-        len(_tableau.NewF) == _s
-    ), f"{_solver_name}: len(NewF)={len(_tableau.NewF)} != stages={_s}"
+    assert len(_tableau.Alpha) == _s, f"{_solver_name}: len(Alpha)={len(_tableau.Alpha)} != stages={_s}"
+    assert len(_tableau.Gamma) == _s, f"{_solver_name}: len(Gamma)={len(_tableau.Gamma)} != stages={_s}"
+    assert len(_tableau.NewF) == _s, f"{_solver_name}: len(NewF)={len(_tableau.NewF)} != stages={_s}"
 # Clean up loop variables from module namespace
 del _solver_name, _tableau, _s, _expected_tri

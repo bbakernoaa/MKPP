@@ -19,7 +19,7 @@ def _merge_param_values(values: list[Any], N: int) -> Any:
         return merged_dict
 
     # If all items are numeric floats/ints
-    if all(isinstance(v, (int, float)) for v in values):
+    if all(isinstance(v, int | float) for v in values):
         return sum(values) / float(N)
 
     # Fallback to string expressions for dynamic SymPy symbols
@@ -27,9 +27,7 @@ def _merge_param_values(values: list[Any], N: int) -> Any:
     return f"({' + '.join(exprs)}) / {N}.0"
 
 
-def apply_amore_lumping(
-    mech: MechanismDefinition, rules: dict[str, list[str]]
-) -> MechanismDefinition:
+def apply_amore_lumping(mech: MechanismDefinition, rules: dict[str, list[str]]) -> MechanismDefinition:
     """
     Applies AMORE-style structural lumping to the abstract syntax tree.
     `rules` is expected to be a dict mapping: { "SURROGATE": ["Explicit1", "Explicit2"] }
@@ -209,9 +207,7 @@ def apply_amore_lumping(
         for sp in mech.species:
             if sp.name in explicit_to_surrogate:
                 surr = explicit_to_surrogate[sp.name]
-                c_explicit = sp.elements.get(
-                    "C", 1.0
-                )  # assume 1 if not declared to avoid math errors in testing
+                c_explicit = sp.elements.get("C", 1.0)  # assume 1 if not declared to avoid math errors in testing
                 surr_obj = next((s for s in new_species if s.name == surr), None)
                 if surr_obj:
                     c_surr = surr_obj.elements.get("C", 1.0)

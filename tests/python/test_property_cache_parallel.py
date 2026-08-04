@@ -44,11 +44,7 @@ def random_symbolic_lu_plan(draw):
         for j in range(n):
             if i != j and draw(st.booleans().filter(lambda _: True)):
                 if draw(st.integers(min_value=0, max_value=9)) < 3:
-                    coeff = draw(
-                        st.floats(
-                            min_value=-10.0, max_value=10.0, allow_nan=False, allow_infinity=False
-                        )
-                    )
+                    coeff = draw(st.floats(min_value=-10.0, max_value=10.0, allow_nan=False, allow_infinity=False))
                     if abs(coeff) > 1e-10:
                         non_zero_jacobian.append((i, j, f"{coeff} * C_species_{j}"))
 
@@ -85,27 +81,15 @@ def random_cache_entry(draw):
     n = lu_plan.num_species
 
     # Use simple SymPy matrices for testing serialization
-    species_syms = [sp.Symbol(f"C_{s}", real=True) for s in lu_plan.species_map]
+    [sp.Symbol(f"C_{s}", real=True) for s in lu_plan.species_map]
     jacobian = sp.Matrix(
         [
-            [
-                sp.Float(
-                    draw(
-                        st.floats(min_value=-5, max_value=5, allow_nan=False, allow_infinity=False)
-                    )
-                )
-                for _ in range(n)
-            ]
+            [sp.Float(draw(st.floats(min_value=-5, max_value=5, allow_nan=False, allow_infinity=False))) for _ in range(n)]
             for _ in range(n)
         ]
     )
     f_implicit = sp.Matrix(
-        [
-            sp.Float(
-                draw(st.floats(min_value=-1, max_value=1, allow_nan=False, allow_infinity=False))
-            )
-            for _ in range(n)
-        ]
+        [sp.Float(draw(st.floats(min_value=-1, max_value=1, allow_nan=False, allow_infinity=False))) for _ in range(n)]
     )
     f_explicit = sp.Matrix([sp.Float(0.0) for _ in range(n)])
 
@@ -133,9 +117,7 @@ def random_sympy_expression(draw, max_depth=3):
             if choice < 4:
                 return symbols[choice]
             else:
-                val = draw(
-                    st.floats(min_value=0.1, max_value=5.0, allow_nan=False, allow_infinity=False)
-                )
+                val = draw(st.floats(min_value=0.1, max_value=5.0, allow_nan=False, allow_infinity=False))
                 return sp.Float(val)
         else:
             op = draw(st.sampled_from(["add", "mul", "pow"]))
@@ -278,19 +260,14 @@ def test_property_7_parallel_jacobian_equivalence(mech_file):
     J_par = result_par["jacobian_matrix"]
 
     # Verify dimensions match
-    assert (
-        J_seq.shape == J_par.shape
-    ), f"Shape mismatch: sequential={J_seq.shape}, parallel={J_par.shape}"
+    assert J_seq.shape == J_par.shape, f"Shape mismatch: sequential={J_seq.shape}, parallel={J_par.shape}"
 
     N = J_seq.shape[0]
     # Element-wise comparison using sympy.simplify on the difference
     for i in range(N):
         for j in range(N):
             diff = sp.simplify(J_seq[i, j] - J_par[i, j])
-            assert diff == 0, (
-                f"Jacobian mismatch at ({i},{j}): "
-                f"sequential={J_seq[i,j]}, parallel={J_par[i,j]}, diff={diff}"
-            )
+            assert diff == 0, f"Jacobian mismatch at ({i},{j}): " f"sequential={J_seq[i,j]}, parallel={J_par[i,j]}, diff={diff}"
 
 
 # ---------------------------------------------------------------------------
@@ -329,9 +306,7 @@ def test_property_8_cse_semantic_preservation(exprs):
         # Use simplify on the difference for symbolic comparison
         diff = sp.simplify(orig_val - rest_val)
         # Allow tiny floating-point rounding differences from expression rearrangement
-        assert (
-            abs(complex(diff)) < 1e-12
-        ), f"CSE restoration failed: original={orig}, restored={rest}, diff={diff}"
+        assert abs(complex(diff)) < 1e-12, f"CSE restoration failed: original={orig}, restored={rest}, diff={diff}"
 
 
 # ---------------------------------------------------------------------------
@@ -359,7 +334,7 @@ def test_property_9_cse_declaration_ordering(exprs):
     for sym, expr in replacements:
         # Check that the expression only references previously declared CSE symbols
         expr_free = expr.free_symbols
-        cse_syms_in_expr = {s for s in expr_free if str(s).startswith("x")}
+        {s for s in expr_free if str(s).startswith("x")}
 
         # Filter to only CSE-generated symbols (they have form x0, x1, ...)
         cse_defined_syms = {s for s, _ in replacements}
@@ -380,6 +355,4 @@ def test_property_9_cse_declaration_ordering(exprs):
         reduced_free = reduced_expr.free_symbols if hasattr(reduced_expr, "free_symbols") else set()
         referenced_cse = reduced_free & cse_defined_syms
         for ref_sym in referenced_cse:
-            assert (
-                ref_sym in declared
-            ), f"Reduced expression references undeclared CSE symbol {ref_sym}"
+            assert ref_sym in declared, f"Reduced expression references undeclared CSE symbol {ref_sym}"

@@ -62,9 +62,7 @@ def _prepare_mechanism():
     """Build and prepare the mechanism with lowering data for code generation."""
     mech = _build_toy_mechanism()
     lowering_data = prepare_unified_jacobian(mech)
-    plan = compute_symbolic_lu_decomposition(
-        lowering_data["jacobian_matrix"], lowering_data["species_map"]
-    )
+    plan = compute_symbolic_lu_decomposition(lowering_data["jacobian_matrix"], lowering_data["species_map"])
     mech.metadata = {
         "sympy_metadata": lowering_data,
         "symbolic_lu_plan": plan,
@@ -119,9 +117,7 @@ class TestRos3DefaultRegression:
         # Count stage comments in the entire file (integrate + integrate_with_reduction)
         stage_comments = re.findall(r"// --- Stage \d+ ---", code)
         # 3 stages x 2 functions = 6 total stage markers
-        assert (
-            len(stage_comments) == 6
-        ), f"Expected 6 stage markers (3 stages x 2 functions), found {len(stage_comments)}"
+        assert len(stage_comments) == 6, f"Expected 6 stage markers (3 stages x 2 functions), found {len(stage_comments)}"
 
         # Verify stages are numbered 1, 2, 3 in each function
         stage_numbers = [int(re.search(r"Stage (\d+)", c).group(1)) for c in stage_comments]
@@ -149,8 +145,7 @@ class TestRos3DefaultRegression:
         ros3_gamma = SOLVER_COEFFICIENTS["ros3"].Gamma[0]
         gamma_str = f"{ros3_gamma:.17g}"
         assert gamma_str in code, (
-            f"Expected Ros3 gamma value '{gamma_str}' not found in generated code. "
-            "The default solver output may have changed."
+            f"Expected Ros3 gamma value '{gamma_str}' not found in generated code. " "The default solver output may have changed."
         )
 
     def test_ros3_cbrt_step_control(self):
@@ -164,15 +159,13 @@ class TestRos3DefaultRegression:
 
         # ELO=3 means exponent = 1/3, implemented as cbrt
         assert "Kokkos::cbrt(err_norm)" in code, (
-            "Expected 'Kokkos::cbrt(err_norm)' in step control for Ros3 (ELO=3). "
-            "The default solver output may have changed."
+            "Expected 'Kokkos::cbrt(err_norm)' in step control for Ros3 (ELO=3). " "The default solver output may have changed."
         )
 
         # Verify the complete factor computation line
         factor_pattern = re.compile(r"double factor = safety / Kokkos::cbrt\(err_norm\)")
         assert factor_pattern.search(code) is not None, (
-            "Expected 'double factor = safety / Kokkos::cbrt(err_norm)' "
-            "in step control for Ros3 (ELO=3)."
+            "Expected 'double factor = safety / Kokkos::cbrt(err_norm)' " "in step control for Ros3 (ELO=3)."
         )
 
     def test_ros3_three_stage_substitution_blocks(self):
@@ -198,8 +191,7 @@ class TestRos3DefaultRegression:
 
         # Verify no K4 variables exist (would indicate a different solver)
         assert "K4_0" not in code, (
-            "Found K4_0 in default output — this suggests a 4+ stage solver, "
-            "not the expected Ros3 (3 stages)."
+            "Found K4_0 in default output — this suggests a 4+ stage solver, " "not the expected Ros3 (3 stages)."
         )
 
     def test_ros3_solver_comment(self):

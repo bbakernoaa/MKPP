@@ -60,9 +60,7 @@ def test_reference_ros3_fixture():
         y_ros3 = reference_rosenbrock3_step(y_ros3, dt, f_func, jac_func)
 
     t_end = dt * num_steps
-    sol = integrate.solve_ivp(
-        lambda t, y: f_func(y), (0, t_end), y0, method="Radau", rtol=1e-10, atol=1e-12
-    )
+    sol = integrate.solve_ivp(lambda t, y: f_func(y), (0, t_end), y0, method="Radau", rtol=1e-10, atol=1e-12)
     y_ref = sol.y[:, -1]
 
     # ROS-3 is 3rd order, so with dt=0.001 on a stiff system it should

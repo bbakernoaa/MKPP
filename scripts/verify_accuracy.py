@@ -203,9 +203,7 @@ def main():
     # --- Load KPP reference ---
     # Prefer the real Fortran output if it exists
     kpp_fortran_path = os.path.join(REPO_ROOT, "kpp_legacy/saprc99_fortran_output.csv")
-    baseline_csv_path = os.path.join(
-        REPO_ROOT, "tests/integration/e2e_validation/data/kpp_baseline_saprc99.csv"
-    )
+    baseline_csv_path = os.path.join(REPO_ROOT, "tests/integration/e2e_validation/data/kpp_baseline_saprc99.csv")
 
     kpp_conc_by_name = {}
     kpp_source = None
@@ -215,9 +213,7 @@ def main():
         nonzero = sum(1 for v in kpp_conc_by_name.values() if abs(v) > 1e-30)
         if nonzero > 5:
             kpp_source = kpp_fortran_path
-            print(
-                f"  Loaded {len(kpp_conc_by_name)} species from KPP Fortran output ({nonzero} non-zero)"
-            )
+            print(f"  Loaded {len(kpp_conc_by_name)} species from KPP Fortran output ({nonzero} non-zero)")
 
     if kpp_source is None and os.path.exists(baseline_csv_path):
         baseline_conc = load_kpp_baseline_csv(baseline_csv_path)
@@ -294,9 +290,7 @@ def main():
             print("  Differences likely due to photolysis rate handling (continuous vs discrete).")
         else:
             print(f"  CONCLUSION: SIGNIFICANT DIFFERENCES ({mean_diff:.1f}% mean).")
-            print(
-                "  Investigate solver tolerances, rate constant formulations, or initial conditions."
-            )
+            print("  Investigate solver tolerances, rate constant formulations, or initial conditions.")
 
     return 0
 

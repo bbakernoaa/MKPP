@@ -402,9 +402,7 @@ def _rosenbrock_adjoint(lam, checkpoints, jac_func, tableau):
 # ---------------------------------------------------------------------------
 
 
-def _run_taylor_test_saprc99(
-    f_func, jac_func, y0, dt_total, delta_C, tableau, num_steps=5, epsilons=None
-):
+def _run_taylor_test_saprc99(f_func, jac_func, y0, dt_total, delta_C, tableau, num_steps=5, epsilons=None):
     """Run Taylor test for SAPRC-99 using fixed-step integration.
 
     Returns list of ratios: ||F(C+ε·δC) - F(C)|| / (ε * ||TLM(δC)||)
@@ -413,9 +411,7 @@ def _run_taylor_test_saprc99(
         epsilons = [1e-3, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8]
 
     # Reference forward integration
-    y_final, checkpoints = _rosenbrock_forward_fixed_steps(
-        y0, dt_total, f_func, jac_func, tableau, num_steps=num_steps
-    )
+    y_final, checkpoints = _rosenbrock_forward_fixed_steps(y0, dt_total, f_func, jac_func, tableau, num_steps=num_steps)
 
     # TLM propagation
     tlm_result = _rosenbrock_tlm(delta_C, checkpoints, jac_func, tableau)
@@ -427,9 +423,7 @@ def _run_taylor_test_saprc99(
     ratios = []
     for eps in epsilons:
         y0_perturbed = y0 + eps * delta_C
-        y_perturbed, _ = _rosenbrock_forward_fixed_steps(
-            y0_perturbed, dt_total, f_func, jac_func, tableau, num_steps=num_steps
-        )
+        y_perturbed, _ = _rosenbrock_forward_fixed_steps(y0_perturbed, dt_total, f_func, jac_func, tableau, num_steps=num_steps)
         diff = y_perturbed - y_final
         diff_norm = np.linalg.norm(diff)
 
@@ -493,9 +487,7 @@ class TestSAPRC99AdjointIdentity:
         dt_total = 1e-2
         num_steps = 3
 
-        _, checkpoints = _rosenbrock_forward_fixed_steps(
-            y0, dt_total, self.f_func, self.jac_func, tableau, num_steps=num_steps
-        )
+        _, checkpoints = _rosenbrock_forward_fixed_steps(y0, dt_total, self.f_func, self.jac_func, tableau, num_steps=num_steps)
 
         # Random perturbation and adjoint vectors
         rng = np.random.default_rng(seed=42)
@@ -530,9 +522,7 @@ class TestSAPRC99AdjointIdentity:
         dt_total = 1e-2
         num_steps = 3
 
-        _, checkpoints = _rosenbrock_forward_fixed_steps(
-            y0, dt_total, self.f_func, self.jac_func, tableau, num_steps=num_steps
-        )
+        _, checkpoints = _rosenbrock_forward_fixed_steps(y0, dt_total, self.f_func, self.jac_func, tableau, num_steps=num_steps)
 
         rng = np.random.default_rng(seed=12345)
 
@@ -549,10 +539,7 @@ class TestSAPRC99AdjointIdentity:
             denom = max(abs(lhs), abs(rhs), 1e-30)
             rel_err = abs(lhs - rhs) / denom
 
-            assert rel_err < 5e-4, (
-                f"[{solver_name}] SAPRC-99 adjoint identity trial {trial}: "
-                f"relative error = {rel_err:.3e}"
-            )
+            assert rel_err < 5e-4, f"[{solver_name}] SAPRC-99 adjoint identity trial {trial}: " f"relative error = {rel_err:.3e}"
 
     @pytest.mark.parametrize("solver_name", [PRIMARY_SOLVER, OPTIONAL_SOLVER])
     def test_adjoint_identity_longer_integration(self, solver_name):
@@ -567,9 +554,7 @@ class TestSAPRC99AdjointIdentity:
         dt_total = 1e-3
         num_steps = 5
 
-        _, checkpoints = _rosenbrock_forward_fixed_steps(
-            y0, dt_total, self.f_func, self.jac_func, tableau, num_steps=num_steps
-        )
+        _, checkpoints = _rosenbrock_forward_fixed_steps(y0, dt_total, self.f_func, self.jac_func, tableau, num_steps=num_steps)
 
         rng = np.random.default_rng(seed=9999)
         delta_C = rng.standard_normal(self.N) * 1.0e5
@@ -584,10 +569,7 @@ class TestSAPRC99AdjointIdentity:
         denom = max(abs(lhs), abs(rhs), 1e-30)
         rel_err = abs(lhs - rhs) / denom
 
-        assert rel_err < 5e-4, (
-            f"[{solver_name}] SAPRC-99 adjoint identity (5 steps): "
-            f"relative error = {rel_err:.3e}"
-        )
+        assert rel_err < 5e-4, f"[{solver_name}] SAPRC-99 adjoint identity (5 steps): " f"relative error = {rel_err:.3e}"
 
 
 @pytest.mark.slow
@@ -649,9 +631,7 @@ class TestSAPRC99TaylorTest:
         )
 
         valid_ratios = [r for r in ratios if not np.isnan(r) and r > 0]
-        assert (
-            len(valid_ratios) >= 3
-        ), f"[{solver_name}] SAPRC-99 Taylor test: too few valid ratios: {ratios}"
+        assert len(valid_ratios) >= 3, f"[{solver_name}] SAPRC-99 Taylor test: too few valid ratios: {ratios}"
 
         # Relaxed tolerance: within 0.1 of 1.0 (vs 0.05 for Chapman)
         best_ratio = min(valid_ratios, key=lambda r: abs(r - 1.0))
@@ -693,9 +673,7 @@ class TestSAPRC99TaylorTest:
         )
 
         valid_ratios = [r for r in ratios if not np.isnan(r) and r > 0]
-        assert (
-            len(valid_ratios) >= 3
-        ), f"[{solver_name}] SAPRC-99 Taylor convergence: too few valid ratios"
+        assert len(valid_ratios) >= 3, f"[{solver_name}] SAPRC-99 Taylor convergence: too few valid ratios"
 
         # Verify convergence: distances from 1.0 should decrease initially
         distances = [abs(r - 1.0) for r in valid_ratios]
@@ -703,14 +681,9 @@ class TestSAPRC99TaylorTest:
 
         # At least some convergence before the optimal epsilon
         if best_idx >= 2:
-            converging = sum(
-                1
-                for i in range(min(best_idx, len(distances) - 1))
-                if distances[i + 1] < distances[i]
-            )
+            converging = sum(1 for i in range(min(best_idx, len(distances) - 1)) if distances[i + 1] < distances[i])
             assert converging >= 1, (
-                f"[{solver_name}] SAPRC-99 Taylor ratios not converging: "
-                f"distances = {[f'{d:.6e}' for d in distances]}"
+                f"[{solver_name}] SAPRC-99 Taylor ratios not converging: " f"distances = {[f'{d:.6e}' for d in distances]}"
             )
 
 
@@ -747,9 +720,7 @@ class TestSAPRC99PerformanceCharacteristics:
 
         # Time a 5-step integration
         t0 = time.time()
-        y_final, checkpoints = _rosenbrock_forward_fixed_steps(
-            y0, 60.0, self.f_func, self.jac_func, tableau, num_steps=5
-        )
+        y_final, checkpoints = _rosenbrock_forward_fixed_steps(y0, 60.0, self.f_func, self.jac_func, tableau, num_steps=5)
         elapsed = time.time() - t0
 
         print("\n  SAPRC-99 forward integration (Ros3, 5 steps, 60s):")

@@ -67,9 +67,7 @@ def test_property_4_stage_count_matches_generated_code(solver_name: str):
     # Build toy mechanism and prepare lowering data
     mech = _build_toy_mechanism()
     lowering_data = prepare_unified_jacobian(mech)
-    plan = compute_symbolic_lu_decomposition(
-        lowering_data["jacobian_matrix"], lowering_data["species_map"]
-    )
+    plan = compute_symbolic_lu_decomposition(lowering_data["jacobian_matrix"], lowering_data["species_map"])
     mech.metadata = {
         "sympy_metadata": lowering_data,
         "symbolic_lu_plan": plan,
@@ -100,13 +98,10 @@ def test_property_4_stage_count_matches_generated_code(solver_name: str):
     stage_numbers = [int(re.search(r"Stage (\d+)", c).group(1)) for c in stage_comments]
     expected_sequence = list(range(1, tableau.stages + 1)) * 2
     assert stage_numbers == expected_sequence, (
-        f"Solver '{solver_name}': stage numbering mismatch. "
-        f"Expected {expected_sequence}, got {stage_numbers}"
+        f"Solver '{solver_name}': stage numbering mismatch. " f"Expected {expected_sequence}, got {stage_numbers}"
     )
 
     # Verify each stage has K{stage}_0 variable declarations (backward substitution output)
     for stage_num in range(1, tableau.stages + 1):
         k_var = f"K{stage_num}_0"
-        assert (
-            k_var in code
-        ), f"Solver '{solver_name}': missing stage variable '{k_var}' in generated code"
+        assert k_var in code, f"Solver '{solver_name}': missing stage variable '{k_var}' in generated code"

@@ -1,17 +1,20 @@
 import multiprocessing
 import warnings
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import networkx as nx
 import sympy as sp
 
 from .model import MechanismDefinition, ReactionDefinition, SymbolicLUPlan
 
+if TYPE_CHECKING:
+    from .model import AnnotatedLUExpression, SparsityAnalysis
+
 
 def parse_sym_or_val(val, default=0.0):
     if val is None:
         return sp.Float(default)
-    if isinstance(val, (int, float)):
+    if isinstance(val, int | float):
         return sp.Float(val)
     s = str(val).strip().replace(" ", "")
     try:
@@ -84,9 +87,7 @@ def prepare_adjoint_and_tlm(mech: MechanismDefinition) -> dict[str, bool]:
             "condensation",
             "phase_change",
         ):
-            raise ValueError(
-                f"Reaction {r.rate_expression} lacks continuous transition for analytical differentiation."
-            )
+            raise ValueError(f"Reaction {r.rate_expression} lacks continuous transition for analytical differentiation.")
 
     return {"adjoint_ready": True, "tlm_ready": True}
 
@@ -96,11 +97,9 @@ def _evaluate_reaction_fluxes(mech: MechanismDefinition) -> dict[str, Any]:
     Evaluates reaction rate expressions and builds symbolic implicit/explicit ODE vectors (f_implicit, f_explicit, f_total)
     and photolysis metadata from a mechanism definition.
     """
-    species_symbols = {
-        s.name: sp.Symbol(f"C_{s.name}", real=True, nonnegative=True) for s in mech.species
-    }
+    species_symbols = {s.name: sp.Symbol(f"C_{s.name}", real=True, nonnegative=True) for s in mech.species}
     Temp = sp.Symbol("Temp", real=True, nonnegative=True)
-    Press = sp.Symbol("Press", real=True, nonnegative=True)
+    sp.Symbol("Press", real=True, nonnegative=True)
     M_density = sp.Symbol("M_density", real=True, nonnegative=True)
     v_gas = sp.Symbol("v_gas", real=True, nonnegative=True)
     S_a = sp.Symbol("S_a", real=True, nonnegative=True)
@@ -147,14 +146,14 @@ def _evaluate_reaction_fluxes(mech: MechanismDefinition) -> dict[str, Any]:
             k0_A = parse_sym_or_val(p["k0"]["A"])
             k0_B = parse_sym_or_val(p["k0"].get("B", 0.0))
             k0_C = parse_sym_or_val(p["k0"].get("C", 0.0))
-            k0_val = k0_A * (Temp / 300) ** k0_B * sp.exp(-k0_C / Temp)
+            k0_A * (Temp / 300) ** k0_B * sp.exp(-k0_C / Temp)
 
             kinf_A = parse_sym_or_val(p["kinf"]["A"])
             kinf_B = parse_sym_or_val(p["kinf"].get("B", 0.0))
             kinf_C = parse_sym_or_val(p["kinf"].get("C", 0.0))
-            kinf_val = kinf_A * (Temp / 300) ** kinf_B * sp.exp(-kinf_C / Temp)
+            kinf_A * (Temp / 300) ** kinf_B * sp.exp(-kinf_C / Temp)
 
-            Fc_val = parse_sym_or_val(p.get("Fc", 0.6))
+            parse_sym_or_val(p.get("Fc", 0.6))
 
         elif rtype == "TROE" or rtype == "FALLOFF":
 
@@ -240,14 +239,8 @@ def _evaluate_reaction_fluxes(mech: MechanismDefinition) -> dict[str, Any]:
             else:
                 flux = sp.Symbol(f"Rate_{idx}", real=True)
 
-        reactants_dict = (
-            r.reactants
-            if isinstance(r.reactants, dict)
-            else {sp_name: 1.0 for sp_name in r.reactants}
-        )
-        products_dict = (
-            r.products if isinstance(r.products, dict) else {sp_name: 1.0 for sp_name in r.products}
-        )
+        reactants_dict = r.reactants if isinstance(r.reactants, dict) else {sp_name: 1.0 for sp_name in r.reactants}
+        products_dict = r.products if isinstance(r.products, dict) else {sp_name: 1.0 for sp_name in r.products}
 
         for reactant, stoich in reactants_dict.items():
             if reactant in species_symbols:
@@ -391,7 +384,7 @@ def prepare_unified_jacobian_parallel(mech: MechanismDefinition) -> dict[str, An
     f_explicit = built["f_explicit"]
     f_total = built["f_total"]
     c_vector = built["c_vector"]
-    species_symbols = built["species_symbols"]
+    built["species_symbols"]
 
     N = len(ordered_species)
 
@@ -611,9 +604,7 @@ def _remap_lu_expr(expr_str: str, block_indices: list[int]) -> str:
     return re.sub(r"([LUW])_(\d+)_(\d+)", replacer, expr_str)
 
 
-def _remap_solve_expr(
-    expr_str: str, block_indices: list[int], rhs_prefix: str, sol_prefix: str, mat_prefix: str
-) -> str:
+def _remap_solve_expr(expr_str: str, block_indices: list[int], rhs_prefix: str, sol_prefix: str, mat_prefix: str) -> str:
     """Remap forward/backward sub expressions from block-local to global indices."""
     import re
 

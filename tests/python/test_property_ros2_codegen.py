@@ -45,14 +45,10 @@ def sparse_sympy_matrix_strategy(draw, min_n=2, max_n=12):
                 val = sp.Symbol(f"C_{i}", real=True, positive=True) + sp.Float(1.0)
             else:
                 # Off-diagonal: sparse with ~30% density
-                is_nonzero = draw(st.booleans().filter(lambda b: True))
+                draw(st.booleans().filter(lambda b: True))
                 # Use about 30% chance of being non-zero
                 if draw(st.integers(min_value=0, max_value=9)) < 3:
-                    coeff = draw(
-                        st.floats(
-                            min_value=-5.0, max_value=5.0, allow_nan=False, allow_infinity=False
-                        )
-                    )
+                    coeff = draw(st.floats(min_value=-5.0, max_value=5.0, allow_nan=False, allow_infinity=False))
                     if abs(coeff) < 1e-10:
                         coeff = 0.0
                     if coeff != 0.0:
@@ -110,9 +106,7 @@ def test_property_2_backward_substitution_variable_init(data):
         has_U = "U_" in code_line
         has_K1 = "K1_" in code_line
         has_numeric = bool(re.search(r"\d", code_line))
-        assert (
-            has_y1 or has_U or has_K1 or has_numeric
-        ), f"K1_{i} line doesn't reference expected variables: {code_line}"
+        assert has_y1 or has_U or has_K1 or has_numeric, f"K1_{i} line doesn't reference expected variables: {code_line}"
 
 
 # ---------------------------------------------------------------------------
@@ -179,7 +173,7 @@ def test_property_3_stage2_completeness(data):
     f2_lines = [line for line in code.split("\n") if "double F2_" in line]
     assert len(f2_lines) >= n, f"Expected at least {n} F2 lines, got {len(f2_lines)}"
     # At least one F2 line should reference Ynew_ since we use Ynew as state_var
-    has_ynew_ref = any("Ynew_" in line for line in f2_lines)
+    any("Ynew_" in line for line in f2_lines)
     # Also accept that for trivial expressions (C_i -> sp_i mapping), the format may differ
     # The key check is F2 lines exist
 
@@ -246,6 +240,4 @@ def test_property_4_tolerance_array_sizing(n):
     # Verify NUM_SPECIES constant matches
     num_species_match = re.search(r"static constexpr int NUM_SPECIES = (\d+);", code)
     assert num_species_match is not None, "NUM_SPECIES declaration not found"
-    assert (
-        int(num_species_match.group(1)) == n
-    ), f"NUM_SPECIES is {num_species_match.group(1)}, expected {n}"
+    assert int(num_species_match.group(1)) == n, f"NUM_SPECIES is {num_species_match.group(1)}, expected {n}"

@@ -283,9 +283,8 @@ def _rosenbrock_integrate(y0, dt_total, f_func, jac_func, tableau, max_steps=200
     Returns (y_final, checkpoint_data) where checkpoint_data is a list of
     (h, state_at_step_start) tuples for each accepted step.
     """
-    N = len(y0)
-    S = tableau.stages
-    gamma = tableau.Gamma[0]
+    len(y0)
+    tableau.Gamma[0]
     elo = tableau.ELO
 
     y = y0.copy()
@@ -397,9 +396,7 @@ def _rosenbrock_tlm_propagate(delta_C, checkpoint_data, jac_func, tableau):
 # ---------------------------------------------------------------------------
 
 
-def _run_taylor_test(
-    f_func, jac_func, y0, dt_total, delta_C, tableau, epsilons=None, max_steps=200
-):
+def _run_taylor_test(f_func, jac_func, y0, dt_total, delta_C, tableau, epsilons=None, max_steps=200):
     """Run the Taylor test and return convergence ratios.
 
     For each ε in epsilons:
@@ -414,9 +411,7 @@ def _run_taylor_test(
         epsilons = [1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7]
 
     # Step 1: Compute reference forward integration F(C) and get checkpoint data
-    y_final, checkpoint_data = _rosenbrock_integrate(
-        y0, dt_total, f_func, jac_func, tableau, max_steps=max_steps
-    )
+    y_final, checkpoint_data = _rosenbrock_integrate(y0, dt_total, f_func, jac_func, tableau, max_steps=max_steps)
 
     # Step 2: Compute TLM(δC) using the checkpoint from the reference integration
     tlm_result = _rosenbrock_tlm_propagate(delta_C, checkpoint_data, jac_func, tableau)
@@ -429,9 +424,7 @@ def _run_taylor_test(
     for eps in epsilons:
         # Step 3: Compute perturbed forward integration F(C + ε*δC)
         y0_perturbed = y0 + eps * delta_C
-        y_perturbed, _ = _rosenbrock_integrate(
-            y0_perturbed, dt_total, f_func, jac_func, tableau, max_steps=max_steps
-        )
+        y_perturbed, _ = _rosenbrock_integrate(y0_perturbed, dt_total, f_func, jac_func, tableau, max_steps=max_steps)
 
         # Step 4: Compute difference and ratio
         diff = y_perturbed - y_final
@@ -595,13 +588,10 @@ class TestTaylorTestSmallMultispecies:
 
         # Verify that up to the optimal point, distances are generally decreasing
         # (allowing for one "hiccup" due to step-size adaptation differences)
-        converging_pairs = sum(
-            1 for i in range(min(best_idx, len(distances) - 1)) if distances[i + 1] < distances[i]
-        )
+        converging_pairs = sum(1 for i in range(min(best_idx, len(distances) - 1)) if distances[i + 1] < distances[i])
         total_pairs = min(best_idx, len(distances) - 1)
 
         if total_pairs >= 2:
             assert converging_pairs >= total_pairs // 2, (
-                f"[{solver_name}] Ratios not converging toward 1.0: "
-                f"distances = {[f'{d:.6e}' for d in distances]}"
+                f"[{solver_name}] Ratios not converging toward 1.0: " f"distances = {[f'{d:.6e}' for d in distances]}"
             )

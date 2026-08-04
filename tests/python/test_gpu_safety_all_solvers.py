@@ -67,9 +67,7 @@ def _generate_code_for_solver(solver_name: str) -> str:
     """Generate the C++ header for the given solver and return the code as a string."""
     mech = _build_test_mechanism()
     lowering_data = prepare_unified_jacobian(mech)
-    plan = compute_symbolic_lu_decomposition(
-        lowering_data["jacobian_matrix"], lowering_data["species_map"]
-    )
+    plan = compute_symbolic_lu_decomposition(lowering_data["jacobian_matrix"], lowering_data["species_map"])
     mech.metadata["sympy_metadata"] = lowering_data
     mech.metadata["symbolic_lu_plan"] = plan
 
@@ -94,15 +92,9 @@ class TestGPUSafetyInvariants:
         """
         code = _generate_code_for_solver(solver_name)
 
-        assert (
-            "new " not in code
-        ), f"[{solver_name}] Generated code contains 'new ' (dynamic allocation)"
-        assert (
-            "malloc(" not in code
-        ), f"[{solver_name}] Generated code contains 'malloc(' (dynamic allocation)"
-        assert (
-            "std::vector" not in code
-        ), f"[{solver_name}] Generated code contains 'std::vector' (dynamic allocation)"
+        assert "new " not in code, f"[{solver_name}] Generated code contains 'new ' (dynamic allocation)"
+        assert "malloc(" not in code, f"[{solver_name}] Generated code contains 'malloc(' (dynamic allocation)"
+        assert "std::vector" not in code, f"[{solver_name}] Generated code contains 'std::vector' (dynamic allocation)"
 
     def test_no_runtime_indexed_stage_arrays(self, solver_name: str):
         """
@@ -116,18 +108,10 @@ class TestGPUSafetyInvariants:
         code = _generate_code_for_solver(solver_name)
 
         # No array-indexed patterns for stage variables
-        assert not re.search(
-            r"\bK\[\s*\w+\s*\]", code
-        ), f"[{solver_name}] Generated code contains runtime-indexed K[i] array"
-        assert not re.search(
-            r"\bstage_vec\[", code
-        ), f"[{solver_name}] Generated code contains runtime-indexed stage_vec["
-        assert not re.search(
-            r"\bF\[\s*\w+\s*\]", code
-        ), f"[{solver_name}] Generated code contains runtime-indexed F[i] array"
-        assert not re.search(
-            r"\bY\[\s*\w+\s*\]", code
-        ), f"[{solver_name}] Generated code contains runtime-indexed Y[i] array"
+        assert not re.search(r"\bK\[\s*\w+\s*\]", code), f"[{solver_name}] Generated code contains runtime-indexed K[i] array"
+        assert not re.search(r"\bstage_vec\[", code), f"[{solver_name}] Generated code contains runtime-indexed stage_vec["
+        assert not re.search(r"\bF\[\s*\w+\s*\]", code), f"[{solver_name}] Generated code contains runtime-indexed F[i] array"
+        assert not re.search(r"\bY\[\s*\w+\s*\]", code), f"[{solver_name}] Generated code contains runtime-indexed Y[i] array"
 
     def test_no_runtime_loops_over_stages(self, solver_name: str):
         """
@@ -145,12 +129,8 @@ class TestGPUSafetyInvariants:
         assert "for(" not in code, f"[{solver_name}] Generated code contains 'for(' loop"
         # No while loops over stages (the outer while(t < dt_total) is the time-stepping
         # loop which is acceptable, but there should be no stage-related while loops)
-        assert not re.search(
-            r"\bwhile\s*\(\s*stage", code
-        ), f"[{solver_name}] Generated code contains 'while (stage...' loop"
-        assert not re.search(
-            r"\bfor\s*\(\s*int\s+stage", code
-        ), f"[{solver_name}] Generated code contains 'for (int stage...' loop"
+        assert not re.search(r"\bwhile\s*\(\s*stage", code), f"[{solver_name}] Generated code contains 'while (stage...' loop"
+        assert not re.search(r"\bfor\s*\(\s*int\s+stage", code), f"[{solver_name}] Generated code contains 'for (int stage...' loop"
 
     def test_kokkos_inline_function_annotation(self, solver_name: str):
         """
@@ -171,8 +151,7 @@ class TestGPUSafetyInvariants:
             re.DOTALL,
         )
         assert integrate_pattern.search(code), (
-            f"[{solver_name}] Generated code missing KOKKOS_INLINE_FUNCTION "
-            f"annotation before integrate() function"
+            f"[{solver_name}] Generated code missing KOKKOS_INLINE_FUNCTION " f"annotation before integrate() function"
         )
 
         # Check KOKKOS_INLINE_FUNCTION appears before integrate_with_reduction()
@@ -199,23 +178,17 @@ class TestGPUSafetyInvariants:
         for stage in range(1, tableau.stages + 1):
             pattern = rf"\bdouble K{stage}_\d+\b"
             matches = re.findall(pattern, code)
-            assert (
-                len(matches) > 0
-            ), f"[{solver_name}] No K{stage}_* variables found for stage {stage}"
+            assert len(matches) > 0, f"[{solver_name}] No K{stage}_* variables found for stage {stage}"
 
         # Verify F variables exist for stages where NewF is True
         for stage in range(1, tableau.stages + 1):
             if tableau.NewF[stage - 1]:
                 pattern = rf"\bdouble F{stage}_\d+\b"
                 matches = re.findall(pattern, code)
-                assert (
-                    len(matches) > 0
-                ), f"[{solver_name}] No F{stage}_* variables found for stage {stage} (NewF=True)"
+                assert len(matches) > 0, f"[{solver_name}] No F{stage}_* variables found for stage {stage} (NewF=True)"
 
         # Verify Y variables exist for stages > 1
         for stage in range(2, tableau.stages + 1):
             pattern = rf"\bdouble Y{stage}_\d+\b"
             matches = re.findall(pattern, code)
-            assert (
-                len(matches) > 0
-            ), f"[{solver_name}] No Y{stage}_* variables found for stage {stage}"
+            assert len(matches) > 0, f"[{solver_name}] No Y{stage}_* variables found for stage {stage}"

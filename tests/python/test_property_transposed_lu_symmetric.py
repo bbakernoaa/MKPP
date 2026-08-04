@@ -34,9 +34,7 @@ def symmetric_diagonally_dominant_system(draw, min_n=2, max_n=8):
     entries = []
     for i in range(n):
         for j in range(i, n):
-            val = draw(
-                st.floats(min_value=-2.0, max_value=2.0, allow_nan=False, allow_infinity=False)
-            )
+            val = draw(st.floats(min_value=-2.0, max_value=2.0, allow_nan=False, allow_infinity=False))
             entries.append((i, j, val))
 
     A = np.zeros((n, n))
@@ -47,18 +45,11 @@ def symmetric_diagonally_dominant_system(draw, min_n=2, max_n=8):
     # Make strictly diagonally dominant to ensure non-singularity
     for i in range(n):
         row_sum = np.sum(np.abs(A[i, :])) - np.abs(A[i, i])
-        dominance = draw(
-            st.floats(min_value=1.0, max_value=5.0, allow_nan=False, allow_infinity=False)
-        )
+        dominance = draw(st.floats(min_value=1.0, max_value=5.0, allow_nan=False, allow_infinity=False))
         A[i, i] = row_sum + dominance
 
     # Random RHS vector
-    b = np.array(
-        [
-            draw(st.floats(min_value=-10.0, max_value=10.0, allow_nan=False, allow_infinity=False))
-            for _ in range(n)
-        ]
-    )
+    b = np.array([draw(st.floats(min_value=-10.0, max_value=10.0, allow_nan=False, allow_infinity=False)) for _ in range(n)])
 
     return n, A, b
 

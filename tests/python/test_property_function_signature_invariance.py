@@ -57,9 +57,7 @@ def _generate_code_for_solver(solver_name: str) -> str:
     """Generate C++ header for the given solver and return the code as a string."""
     mech = _build_toy_mechanism()
     lowering_data = prepare_unified_jacobian(mech)
-    plan = compute_symbolic_lu_decomposition(
-        lowering_data["jacobian_matrix"], lowering_data["species_map"]
-    )
+    plan = compute_symbolic_lu_decomposition(lowering_data["jacobian_matrix"], lowering_data["species_map"])
     mech.metadata = {
         "sympy_metadata": lowering_data,
         "symbolic_lu_plan": plan,
@@ -90,10 +88,7 @@ def _extract_integrate_signature(code: str) -> str:
     template <class StateView>
     KOKKOS_INLINE_FUNCTION void integrate(double dt_total, StateView& state, const double* jvals) const
     """
-    pattern = (
-        r"(template\s*<\s*class\s+StateView\s*>\s*\n\s*"
-        r"KOKKOS_INLINE_FUNCTION\s+void\s+integrate\s*\([^)]*\)\s*const)"
-    )
+    pattern = r"(template\s*<\s*class\s+StateView\s*>\s*\n\s*" r"KOKKOS_INLINE_FUNCTION\s+void\s+integrate\s*\([^)]*\)\s*const)"
     match = re.search(pattern, code)
     assert match is not None, "Could not find integrate() signature in generated code"
     return _normalize_signature(match.group(1))
@@ -112,9 +107,7 @@ def _extract_integrate_with_reduction_signature(code: str) -> str:
         r"KOKKOS_INLINE_FUNCTION\s+void\s+integrate_with_reduction\s*\([^)]*\)\s*const)"
     )
     match = re.search(pattern, code)
-    assert (
-        match is not None
-    ), "Could not find integrate_with_reduction() signature in generated code"
+    assert match is not None, "Could not find integrate_with_reduction() signature in generated code"
     return _normalize_signature(match.group(1))
 
 
