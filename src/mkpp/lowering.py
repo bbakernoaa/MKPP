@@ -793,6 +793,16 @@ class SparsityOptimizer:
         # Reverse for RCM (Reverse Cuthill-McKee)
         rcm_order = list(reversed(cm_order))
 
+        def _bw(order):
+            inv = [0] * self.n
+            for new_idx, old_idx in enumerate(order):
+                inv[old_idx] = new_idx
+            return max(abs(inv[i] - inv[j]) for i, j in self.structure) if self.structure else 0
+
+        orig_order = list(range(self.n))
+        if _bw(rcm_order) > _bw(orig_order):
+            return orig_order
+
         return rcm_order
 
     def detect_blocks(self) -> 'List[List[int]]':
