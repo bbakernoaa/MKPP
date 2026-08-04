@@ -85,7 +85,11 @@ def prepare_adjoint_and_tlm(mech: MechanismDefinition) -> Dict[str, bool]:
 
     return {"adjoint_ready": True, "tlm_ready": True}
 
-def prepare_unified_jacobian(mech: MechanismDefinition) -> Dict[str, Any]:
+def _evaluate_reaction_fluxes(mech: MechanismDefinition) -> Dict[str, Any]:
+    """
+    Evaluates reaction rate expressions and builds symbolic implicit/explicit ODE vectors (f_implicit, f_explicit, f_total)
+    and photolysis metadata from a mechanism definition.
+    """
     species_symbols = {s.name: sp.Symbol(f"C_{s.name}", real=True, nonnegative=True) for s in mech.species}
     Temp = sp.Symbol("Temp", real=True, nonnegative=True)
     Press = sp.Symbol("Press", real=True, nonnegative=True)
@@ -99,7 +103,6 @@ def prepare_unified_jacobian(mech: MechanismDefinition) -> Dict[str, Any]:
 
     blocks = partition_reactions(mech)
 
-    # Track photolysis reactions for Cloud-J integration
     photo_idx = 0
     photolysis_reactions = []
 
@@ -109,9 +112,8 @@ def prepare_unified_jacobian(mech: MechanismDefinition) -> Dict[str, Any]:
         flux = sp.Integer(0)
 
         if rtype == "PHOTOLYSIS":
-            if "A" not in p: raise ValueError(f"PHOTOLYSIS reaction {idx} missing 'A' parameter (J-rate).")
-            # Create a runtime symbol for this photolysis rate.
-            # The actual value comes from Cloud-J at runtime via jvals[photo_idx].
+            if "A" not in p:
+                raise ValueError(f"PHOTOLYSIS reaction {idx} missing 'A' parameter (J-rate).")
             flux = sp.Symbol(f"J_{photo_idx}", real=True, nonnegative=True)
             photolysis_reactions.append({
                 "photo_idx": photo_idx,
@@ -120,250 +122,6 @@ def prepare_unified_jacobian(mech: MechanismDefinition) -> Dict[str, Any]:
                 "products": r.products,
                 "original_A": str(p["A"]),
             })
-            photo_idx += 1
-
-        elif rtype == "ARRHENIUS":
-            if "A" not in p: raise ValueError(f"ARRHENIUS reaction {idx} missing 'A' coefficient.")
-            A = parse_sym_or_val(p["A"])
-            B = parse_sym_or_val(p.get("B", 0.0))
-            C = parse_sym_or_val(p.get("C", 0.0))
-            k_arr = A * (Temp / 300)**B * sp.exp(-C / Temp)
-            flux = k_arr
-
-        elif rtype == "DUMMYTROE":
-            # Low pressure limit
-            k0_A = parse_sym_or_val(p["k0"]["A"])
-            k0_B = parse_sym_or_val(p["k0"].get("B", 0.0))
-            k0_C = parse_sym_or_val(p["k0"].get("C", 0.0))
-            k0_val = k0_A * (Temp / 300)**k0_B * sp.exp(-k0_C / Temp)
-
-            # High pressure limit
-            kinf_A = parse_sym_or_val(p["kinf"]["A"])
-            kinf_B = parse_sym_or_val(p["kinf"].get("B", 0.0))
-            kinf_C = parse_sym_or_val(p["kinf"].get("C", 0.0))
-            kinf_val = kinf_A * (Temp / 300)**kinf_B * sp.exp(-kinf_C / Temp)
-
-            Fc_val = parse_sym_or_val(p.get("Fc", 0.6))
-
-        elif rtype == "TROE" or rtype == "FALLOFF":
-            # YAML stores TROE sub-params in KPP positional order:
-            #   B = KPP's b0 (exponential coefficient: exp(-b0/T))
-            #   C = KPP's c0 (temperature power exponent: (T/300)^c0)
-            # MKPP internal formula: K = A * (T/300)^B_int * exp(-C_int/T)
-            # So mapping is: B_internal=YAML_C, C_internal=YAML_B (always swap)
-            def get_troe_sub_params(sub_p):
-                a = parse_sym_or_val(sub_p.get("A", 0.0))
-                b = parse_sym_or_val(sub_p.get("B", 0.0))  # KPP b0: exp coeff
-                c = parse_sym_or_val(sub_p.get("C", 0.0))  # KPP c0: temp power
-                # Always swap: return (A, temp_power, exp_coeff)
-                return a, c, b
-
-            if "k0" in p and isinstance(p["k0"], dict):
-                A0, B0, C0 = get_troe_sub_params(p["k0"])
-            else:
-                flat_k0 = {"A": p.get("k0_A", 0.0), "B": p.get("k0_B", 0.0), "C": p.get("k0_C", 0.0)}
-                A0, B0, C0 = get_troe_sub_params(flat_k0)
-
-            if "kinf" in p and isinstance(p["kinf"], dict):
-                A1, B1, C1 = get_troe_sub_params(p["kinf"])
-            else:
-                flat_kinf = {"A": p.get("kinf_A", 0.0), "B": p.get("kinf_B", 0.0), "C": p.get("kinf_C", 0.0)}
-                A1, B1, C1 = get_troe_sub_params(flat_kinf)
-
-            CF = parse_sym_or_val(p.get("Fc", 0.6))
-
-            K0 = A0 * sp.exp(-C0/Temp) * (Temp/300)**B0
-            K1 = A1 * sp.exp(-C1/Temp) * (Temp/300)**B1
-            # KPP FALL: k0 = k0 * CFACTOR * 1.0E6 where CFACTOR*1e6 = [AIR] (number density)
-            # Use the AIR species concentration symbol directly
-            K0 = K0 * species_symbols.get("AIR", M_density)
-            K_ratio = K0 / K1
-            F_broadening = CF ** (1.0 / (1.0 + (sp.log(K_ratio, 10))**2))
-            flux = (K0 / (1.0 + K_ratio)) * F_broadening
-
-        elif rtype == "EP2":
-            A0 = parse_sym_or_val(p.get("A0", 0.0))
-            C0 = parse_sym_or_val(p.get("C0", 0.0))
-            A2 = parse_sym_or_val(p.get("A2", 0.0))
-            C2 = parse_sym_or_val(p.get("C2", 0.0))
-            A3 = parse_sym_or_val(p.get("A3", 0.0))
-            C3 = parse_sym_or_val(p.get("C3", 0.0))
-            K0 = A0 * sp.exp(-C0/Temp)
-            K2 = A2 * sp.exp(-C2/Temp)
-            # KPP EP2: k3 = k3 * CFACTOR * 1.0E6 where CFACTOR*1e6 = [AIR]
-            K3 = A3 * sp.exp(-C3/Temp) * species_symbols.get("AIR", M_density)
-            flux = K0 + K3 / (1.0 + K3/K2)
-
-        elif rtype == "EP3":
-            A1 = parse_sym_or_val(p.get("A1", 0.0))
-            C1 = parse_sym_or_val(p.get("C1", 0.0))
-            A2 = parse_sym_or_val(p.get("A2", 0.0))
-            C2 = parse_sym_or_val(p.get("C2", 0.0))
-            K1 = A1 * sp.exp(-C1/Temp)
-            K2 = A2 * sp.exp(-C2/Temp)
-            # KPP EP3: k = k1 + k2*(1.0E6 * CFACTOR) where CFACTOR*1e6 = [AIR]
-            flux = K1 + K2 * species_symbols.get("AIR", M_density)
-
-        elif rtype == "HETEROGENEOUS":
-            gamma = parse_sym_or_val(p["gamma"])
-            k_het = 0.25 * gamma * v_gas * S_a
-            flux = k_het
-
-        elif rtype == "PHASE_CHANGE":
-            flux = sp.Symbol(f"Rate_{idx}", real=True)
-
-        elif rtype == "TUNNELING":
-            if "Y_spline" in p:
-                flux = parse_sym_or_val(p["Y_spline"])
-            elif "A" in p:
-                A = parse_sym_or_val(p["A"])
-                C = parse_sym_or_val(p.get("C", 0.0))
-                flux = A * sp.exp(-C / Temp)
-            else:
-                flux = sp.Symbol(f"Rate_{idx}", real=True)
-
-        else:
-            if "A" in p:
-                flux = parse_sym_or_val(p["A"])
-            elif "Y_spline" in p:
-                flux = parse_sym_or_val(p["Y_spline"])
-            else:
-                flux = sp.Symbol(f"Rate_{idx}", real=True)
-
-        reactants_dict = r.reactants if isinstance(r.reactants, dict) else {sp: 1.0 for sp in r.reactants}
-        products_dict = r.products if isinstance(r.products, dict) else {sp: 1.0 for sp in r.products}
-
-        for reactant, stoich in reactants_dict.items():
-            if reactant in species_symbols:
-                flux *= (species_symbols[reactant] ** sp.Integer(int(stoich)))
-
-        is_implicit = r in blocks["implicit"]
-
-        for reactant, stoich in reactants_dict.items():
-            if reactant in df_dt_implicit and reactant not in fixed_species:
-                if is_implicit:
-                    df_dt_implicit[reactant] -= flux * sp.Float(stoich)
-                else:
-                    df_dt_explicit[reactant] -= flux * sp.Float(stoich)
-
-        for product, stoich in products_dict.items():
-            if product in df_dt_implicit and product not in fixed_species:
-                if is_implicit:
-                    df_dt_implicit[product] += flux * sp.Float(stoich)
-                else:
-                    df_dt_explicit[product] += flux * sp.Float(stoich)
-
-    ordered_species = [s.name for s in mech.species]
-    f_implicit = sp.Matrix([df_dt_implicit[s] for s in ordered_species])
-    f_explicit = sp.Matrix([df_dt_explicit[s] for s in ordered_species])
-    f_total = f_implicit + f_explicit
-    c_vector = sp.Matrix([species_symbols[s] for s in ordered_species])
-
-    jacobian_matrix = f_total.jacobian(c_vector)
-    adjoint_matrix = jacobian_matrix.transpose()
-
-    unique_elements = sorted(list(set(elem for s in mech.species for elem in s.elements.keys())))
-    if unique_elements:
-        E_matrix = sp.zeros(len(unique_elements), len(ordered_species))
-        for j, sp_name in enumerate(ordered_species):
-            species_def = next(s for s in mech.species if s.name == sp_name)
-            for i, elem in enumerate(unique_elements):
-                E_matrix[i, j] = species_def.elements.get(elem, 0)
-        try:
-            E_E_T = E_matrix * E_matrix.transpose()
-            mass_projector = E_matrix.transpose() * E_E_T.pinv()
-        except Exception:
-            mass_projector = sp.zeros(len(ordered_species), len(unique_elements))
-    else:
-        E_matrix = sp.zeros(1, len(ordered_species))
-        mass_projector = sp.zeros(len(ordered_species), 1)
-
-    result = {
-        "species_map": ordered_species,
-        "f_implicit": f_implicit,
-        "f_explicit": f_explicit,
-        "jacobian_matrix": jacobian_matrix,
-        "adjoint_matrix": adjoint_matrix,
-        "mass_projector": mass_projector,
-        "element_map": unique_elements,
-        "photolysis_count": photo_idx,
-        "photolysis_reactions": photolysis_reactions,
-    }
-
-    try:
-        # Run sparsity analysis: fill-in prediction, RCM reordering, block detection
-        N = jacobian_matrix.shape[0]
-        jacobian_structure = set()
-        for i in range(N):
-            for j in range(N):
-                if jacobian_matrix[i, j] != 0:
-                    jacobian_structure.add((i, j))
-
-        sparsity = SparsityOptimizer(jacobian_structure, N)
-        analysis = sparsity.analyze()
-
-        lu_plan = compute_symbolic_lu_decomposition(
-            jacobian_matrix,
-            ordered_species,
-            permutation=analysis.permutation,
-            blocks=analysis.blocks,
-            is_block_diagonal=analysis.is_block_diagonal,
-        )
-
-        result["symbolic_lu_plan"] = lu_plan
-        result["sparsity_analysis"] = analysis
-    except Exception as e:
-        # Fallback: compute LU without sparsity optimization
-        try:
-            lu_plan = compute_symbolic_lu_decomposition(jacobian_matrix, ordered_species)
-            result["symbolic_lu_plan"] = lu_plan
-        except Exception:
-            pass
-
-    return result
-
-
-def _compute_jacobian_column(args: Tuple[int, List[str], str]) -> Tuple[int, List[str]]:
-    """Worker function for multiprocessing — computes one Jacobian column."""
-    j, f_total_serialized, c_j_srepr = args
-    import sympy as _sp
-    f_total = _sp.Matrix([_sp.sympify(expr) for expr in f_total_serialized])
-    c_j = _sp.sympify(c_j_srepr)
-    column = f_total.diff(c_j)
-    return j, [_sp.srepr(expr) for expr in column]
-
-
-def _build_f_total(mech: MechanismDefinition) -> Dict[str, Any]:
-    """
-    Shared helper that builds f_total, c_vector, and auxiliary data from a mechanism.
-    Used by both sequential and parallel Jacobian builders.
-    """
-    species_symbols = {s.name: sp.Symbol(f"C_{s.name}", real=True, nonnegative=True) for s in mech.species}
-    Temp = sp.Symbol("Temp", real=True, nonnegative=True)
-    Press = sp.Symbol("Press", real=True, nonnegative=True)
-    M_density = sp.Symbol("M_density", real=True, nonnegative=True)
-    v_gas = sp.Symbol("v_gas", real=True, nonnegative=True)
-    S_a = sp.Symbol("S_a", real=True, nonnegative=True)
-
-    df_dt_implicit = {s.name: sp.Integer(0) for s in mech.species}
-    df_dt_explicit = {s.name: sp.Integer(0) for s in mech.species}
-    fixed_species = set(s.name for s in mech.species if getattr(s, "role", None) == "fixed")
-
-    blocks = partition_reactions(mech)
-
-    # Track photolysis reactions for Cloud-J integration (same as prepare_unified_jacobian)
-    photo_idx = 0
-
-    for idx, r in enumerate(mech.reactions):
-        rtype = r.reaction_type.upper()
-        p = r.parameters
-        flux = sp.Integer(0)
-
-        if rtype == "PHOTOLYSIS":
-            if "A" not in p:
-                raise ValueError(f"PHOTOLYSIS reaction {idx} missing 'A' parameter (J-rate).")
-            # Create a runtime symbol for this photolysis rate (Cloud-J provides at runtime)
-            flux = sp.Symbol(f"J_{photo_idx}", real=True, nonnegative=True)
             photo_idx += 1
 
         elif rtype == "ARRHENIUS":
@@ -389,16 +147,10 @@ def _build_f_total(mech: MechanismDefinition) -> Dict[str, Any]:
             Fc_val = parse_sym_or_val(p.get("Fc", 0.6))
 
         elif rtype == "TROE" or rtype == "FALLOFF":
-            # YAML stores TROE sub-params in KPP positional order:
-            #   B = KPP's b0 (exponential coefficient: exp(-b0/T))
-            #   C = KPP's c0 (temperature power exponent: (T/300)^c0)
-            # MKPP internal formula: K = A * (T/300)^B_int * exp(-C_int/T)
-            # So mapping is: B_internal=YAML_C, C_internal=YAML_B (always swap)
             def get_troe_sub_params(sub_p):
                 a = parse_sym_or_val(sub_p.get("A", 0.0))
-                b = parse_sym_or_val(sub_p.get("B", 0.0))  # KPP b0: exp coeff
-                c = parse_sym_or_val(sub_p.get("C", 0.0))  # KPP c0: temp power
-                # Always swap: return (A, temp_power, exp_coeff)
+                b = parse_sym_or_val(sub_p.get("B", 0.0))
+                c = parse_sym_or_val(sub_p.get("C", 0.0))
                 return a, c, b
 
             if "k0" in p and isinstance(p["k0"], dict):
@@ -417,7 +169,6 @@ def _build_f_total(mech: MechanismDefinition) -> Dict[str, Any]:
 
             K0 = A0 * sp.exp(-C0/Temp) * (Temp/300)**B0
             K1 = A1 * sp.exp(-C1/Temp) * (Temp/300)**B1
-            # KPP FALL: k0 = k0 * CFACTOR * 1.0E6 where CFACTOR*1e6 = [AIR]
             K0 = K0 * species_symbols.get("AIR", M_density)
             K_ratio = K0 / K1
             F_broadening = CF ** (1.0 / (1.0 + (sp.log(K_ratio, 10))**2))
@@ -432,7 +183,6 @@ def _build_f_total(mech: MechanismDefinition) -> Dict[str, Any]:
             C3 = parse_sym_or_val(p.get("C3", 0.0))
             K0 = A0 * sp.exp(-C0/Temp)
             K2 = A2 * sp.exp(-C2/Temp)
-            # KPP EP2: k3 = k3 * CFACTOR * 1.0E6 where CFACTOR*1e6 = [AIR]
             K3 = A3 * sp.exp(-C3/Temp) * species_symbols.get("AIR", M_density)
             flux = K0 + K3 / (1.0 + K3/K2)
 
@@ -443,7 +193,6 @@ def _build_f_total(mech: MechanismDefinition) -> Dict[str, Any]:
             C2 = parse_sym_or_val(p.get("C2", 0.0))
             K1 = A1 * sp.exp(-C1/Temp)
             K2 = A2 * sp.exp(-C2/Temp)
-            # KPP EP3: k = k1 + k2*(1.0E6 * CFACTOR) where CFACTOR*1e6 = [AIR]
             flux = K1 + K2 * species_symbols.get("AIR", M_density)
 
         elif rtype == "HETEROGENEOUS":
@@ -508,7 +257,99 @@ def _build_f_total(mech: MechanismDefinition) -> Dict[str, Any]:
         "f_explicit": f_explicit,
         "f_total": f_total,
         "c_vector": c_vector,
+        "photolysis_count": photo_idx,
+        "photolysis_reactions": photolysis_reactions,
     }
+
+
+def prepare_unified_jacobian(mech: MechanismDefinition) -> Dict[str, Any]:
+    built = _evaluate_reaction_fluxes(mech)
+    ordered_species = built["ordered_species"]
+    f_implicit = built["f_implicit"]
+    f_explicit = built["f_explicit"]
+    f_total = built["f_total"]
+    c_vector = built["c_vector"]
+
+    jacobian_matrix = f_total.jacobian(c_vector)
+    adjoint_matrix = jacobian_matrix.transpose()
+
+    unique_elements = sorted(list(set(elem for s in mech.species for elem in s.elements.keys())))
+    if unique_elements:
+        E_matrix = sp.zeros(len(unique_elements), len(ordered_species))
+        for j, sp_name in enumerate(ordered_species):
+            species_def = next(s for s in mech.species if s.name == sp_name)
+            for i, elem in enumerate(unique_elements):
+                E_matrix[i, j] = species_def.elements.get(elem, 0)
+        try:
+            E_E_T = E_matrix * E_matrix.transpose()
+            mass_projector = E_matrix.transpose() * E_E_T.pinv()
+        except Exception:
+            mass_projector = sp.zeros(len(ordered_species), len(unique_elements))
+    else:
+        E_matrix = sp.zeros(1, len(ordered_species))
+        mass_projector = sp.zeros(len(ordered_species), 1)
+
+    result = {
+        "species_map": ordered_species,
+        "f_implicit": f_implicit,
+        "f_explicit": f_explicit,
+        "jacobian_matrix": jacobian_matrix,
+        "adjoint_matrix": adjoint_matrix,
+        "mass_projector": mass_projector,
+        "element_map": unique_elements,
+        "photolysis_count": built["photolysis_count"],
+        "photolysis_reactions": built["photolysis_reactions"],
+    }
+
+    try:
+        # Run sparsity analysis: fill-in prediction, RCM reordering, block detection
+        N = jacobian_matrix.shape[0]
+        jacobian_structure = set()
+        for i in range(N):
+            for j in range(N):
+                if jacobian_matrix[i, j] != 0:
+                    jacobian_structure.add((i, j))
+
+        sparsity = SparsityOptimizer(jacobian_structure, N)
+        analysis = sparsity.analyze()
+
+        lu_plan = compute_symbolic_lu_decomposition(
+            jacobian_matrix,
+            ordered_species,
+            permutation=analysis.permutation,
+            blocks=analysis.blocks,
+            is_block_diagonal=analysis.is_block_diagonal,
+        )
+
+        result["symbolic_lu_plan"] = lu_plan
+        result["sparsity_analysis"] = analysis
+    except Exception as e:
+        # Fallback: compute LU without sparsity optimization
+        try:
+            lu_plan = compute_symbolic_lu_decomposition(jacobian_matrix, ordered_species)
+            result["symbolic_lu_plan"] = lu_plan
+        except Exception:
+            pass
+
+    return result
+
+
+def _compute_jacobian_column(args: Tuple[int, List[str], str]) -> Tuple[int, List[str]]:
+    """Worker function for multiprocessing — computes one Jacobian column."""
+    j, f_total_serialized, c_j_srepr = args
+    import sympy as _sp
+    f_total = _sp.Matrix([_sp.sympify(expr) for expr in f_total_serialized])
+    c_j = _sp.sympify(c_j_srepr)
+    column = f_total.diff(c_j)
+    return j, [_sp.srepr(expr) for expr in column]
+
+
+def _build_f_total(mech: MechanismDefinition) -> Dict[str, Any]:
+    """
+    Shared helper that builds f_total, c_vector, and auxiliary data from a mechanism.
+    Used by both sequential and parallel Jacobian builders.
+    """
+    return _evaluate_reaction_fluxes(mech)
 
 
 def prepare_unified_jacobian_parallel(mech: MechanismDefinition) -> Dict[str, Any]:
