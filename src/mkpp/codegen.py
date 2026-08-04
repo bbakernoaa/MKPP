@@ -539,6 +539,9 @@ def generate_headers(
         sympy_meta = mech.metadata.get("sympy_metadata")
     if sympy_meta is None:
         sympy_meta = getattr(mech, "sympy_metadata", None)
+    if sympy_meta is None and mech.species:
+        from .lowering import prepare_unified_jacobian
+        sympy_meta = prepare_unified_jacobian(mech)
 
     # 1. Deterministic header emission
     header_path = out_path / f"{mech.name}{suffix}.hpp"

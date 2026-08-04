@@ -190,3 +190,41 @@ def test_codegen_emits_sympy_jacobian(tmp_path):
     # Therefore, J_block(1, 0) should be assigned 2*jvals[0].
     assert "J_block(" in content
     assert "jvals[0]" in content
+
+
+def test_all_rosenbrock_tableaus_codegen(tmp_path):
+    from pathlib import Path
+    from mkpp.codegen import generate_headers, SOLVER_COEFFICIENTS
+    from mkpp.model import MechanismDefinition, SpeciesDefinition, ReactionDefinition, PhaseMode
+
+    from mkpp.model import MechanismDefinition, SpeciesDefinition, ReactionDefinition, PhaseMode, AerosolRepresentation
+
+    mech = MechanismDefinition(
+        name="test_mech",
+        description="Test",
+        aerosol_representation=AerosolRepresentation.BULK,
+        phases=[],
+        species=[SpeciesDefinition(name="A", phase=PhaseMode.GAS), SpeciesDefinition(name="B", phase=PhaseMode.GAS)],
+        reactions=[
+            ReactionDefinition(
+                reaction_type="ARRHENIUS",
+                reactants={"A": 1},
+                products={"B": 1},
+                rate_expression="k*A",
+                parameters={"A": 1e-2, "B": 0.0, "C": 0.0}
+            )
+        ]
+    )
+
+    for solver_name in ["ros2", "ros3", "ros4", "rodas3", "rodas4"]:
+        results = generate_headers(mech, out_dir=str(tmp_path), solver_name=solver_name, suffix=f"_{solver_name}")
+        header_file = Path(results["header"])
+        assert header_file.exists()
+        with open(header_file, "r") as f:
+            content = f.read()
+
+        tableau = SOLVER_COEFFICIENTS[solver_name]
+        assert f"// Generated solver for test_mech" in content
+        assert f"// {tableau.name} coefficients ({tableau.stages}-stage, order {tableau.ELO:.0f})" in content
+        assert f"// --- Stage {tableau.stages} ---" in content
+        assert f"K{tableau.stages}_0" in content
