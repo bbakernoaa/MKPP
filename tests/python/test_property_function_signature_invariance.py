@@ -7,19 +7,18 @@ Property 11: Function signature invariance
 For any solver, the template signature of integrate() and integrate_with_reduction()
 in the generated header is identical (same parameter types and annotations).
 """
+
 import re
 import tempfile
 
-import pytest
-
 from mkpp.codegen import SOLVER_COEFFICIENTS, generate_headers
-from mkpp.lowering import prepare_unified_jacobian, compute_symbolic_lu_decomposition
+from mkpp.lowering import compute_symbolic_lu_decomposition, prepare_unified_jacobian
 from mkpp.model import (
-    MechanismDefinition,
-    SpeciesDefinition,
-    ReactionDefinition,
-    PhaseMode,
     AerosolRepresentation,
+    MechanismDefinition,
+    PhaseMode,
+    ReactionDefinition,
+    SpeciesDefinition,
 )
 
 
@@ -68,7 +67,7 @@ def _generate_code_for_solver(solver_name: str) -> str:
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         artifacts = generate_headers(mech, out_dir=tmp_dir, solver_name=solver_name)
-        with open(artifacts["header"], "r") as f:
+        with open(artifacts["header"]) as f:
             return f.read()
 
 
@@ -113,9 +112,9 @@ def _extract_integrate_with_reduction_signature(code: str) -> str:
         r"KOKKOS_INLINE_FUNCTION\s+void\s+integrate_with_reduction\s*\([^)]*\)\s*const)"
     )
     match = re.search(pattern, code)
-    assert match is not None, (
-        "Could not find integrate_with_reduction() signature in generated code"
-    )
+    assert (
+        match is not None
+    ), "Could not find integrate_with_reduction() signature in generated code"
     return _normalize_signature(match.group(1))
 
 

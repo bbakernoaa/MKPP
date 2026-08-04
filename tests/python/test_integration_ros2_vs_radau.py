@@ -13,10 +13,9 @@ ROS-3 is a 3-stage, 3rd order, L-stable Rosenbrock method from KPP
 Validates: Requirements 2.7
 """
 
-import pytest
 import numpy as np
+import pytest
 from scipy.integrate import solve_ivp
-
 
 # ---------------------------------------------------------------------------
 # small_strato mechanism: 7 species, 10 reactions
@@ -39,16 +38,16 @@ NUM_SPECIES = 7
 SUN = 1.0
 
 # Rate constants from small_strato.yaml (evaluated with SUN=1.0):
-K1 = 2.643e-10 * SUN**3   # R1: photolysis of O2
-K2 = 8.018e-17             # R2: O + O2 -> O3
-K3 = 6.120e-04 * SUN       # R3: photolysis of O3
-K4 = 1.576e-15             # R4: O + O3 -> 2O2
-K5 = 1.070e-03 * SUN**2   # R5: photolysis of O3 (O1D channel)
-K6 = 7.110e-11             # R6: O1D + M -> O + M
-K7 = 1.200e-10             # R7: O1D + O3 -> 2O2
-K8 = 6.062e-15             # R8: NO + O3 -> NO2 + O2
-K9 = 1.069e-11             # R9: NO2 + O -> NO + O2
-K10 = 1.289e-02 * SUN     # R10: photolysis of NO2
+K1 = 2.643e-10 * SUN**3  # R1: photolysis of O2
+K2 = 8.018e-17  # R2: O + O2 -> O3
+K3 = 6.120e-04 * SUN  # R3: photolysis of O3
+K4 = 1.576e-15  # R4: O + O3 -> 2O2
+K5 = 1.070e-03 * SUN**2  # R5: photolysis of O3 (O1D channel)
+K6 = 7.110e-11  # R6: O1D + M -> O + M
+K7 = 1.200e-10  # R7: O1D + O3 -> 2O2
+K8 = 6.062e-15  # R8: NO + O3 -> NO2 + O2
+K9 = 1.069e-11  # R9: NO2 + O -> NO + O2
+K10 = 1.289e-02 * SUN  # R10: photolysis of NO2
 
 
 def small_strato_rhs(t, y):
@@ -160,6 +159,7 @@ small_strato_rhs_correct = small_strato_rhs
 # Pure-Python ROS-2 adaptive solver (kept for auto-reduction test compatibility)
 # ---------------------------------------------------------------------------
 
+
 def ros2_adaptive_solve(f_func, jac_func, y0, t_span, atol, rtol):
     """
     Pure-Python implementation of the ROS-2 adaptive Rosenbrock solver.
@@ -208,11 +208,11 @@ def ros2_adaptive_solve(f_func, jac_func, y0, t_span, atol, rtol):
             Ynew_i = state[i] + ros_M0 * K1[i] + ros_M1 * K2[i]
             ymax = max(abs(state[i]), abs(Ynew_i))
             sci = atol[i] + rtol[i] * ymax
-            yerr_i = (1.0/(2.0*g)) * K1[i] + (1.0/(2.0*g)) * K2[i]
+            yerr_i = (1.0 / (2.0 * g)) * K1[i] + (1.0 / (2.0 * g)) * K2[i]
             err_norm_sq += (yerr_i / sci) ** 2
         err_norm = max(np.sqrt(err_norm_sq / N), 1e-10)
 
-        factor = safety / err_norm ** 0.5
+        factor = safety / err_norm**0.5
         factor = max(min_shrink, min(factor, max_growth))
 
         if err_norm <= 1.0:
@@ -228,6 +228,7 @@ def ros2_adaptive_solve(f_func, jac_func, y0, t_span, atol, rtol):
 # ---------------------------------------------------------------------------
 # Pure-Python ROS-3 adaptive solver (matching generated C++ logic)
 # ---------------------------------------------------------------------------
+
 
 def ros3_adaptive_solve(f_func, jac_func, y0, t_span, atol, rtol):
     """
@@ -336,6 +337,7 @@ def ros3_adaptive_solve(f_func, jac_func, y0, t_span, atol, rtol):
 # Test
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.slow
 def test_ros3_adaptive_vs_radau_small_strato():
     """
@@ -350,15 +352,17 @@ def test_ros3_adaptive_vs_radau_small_strato():
     with fewer steps.
     """
     # Initial conditions (molecules/cm^3, typical stratospheric ~25km values)
-    y0 = np.array([
-        1.0e6,    # O: atomic oxygen, short-lived radical
-        1.0e4,    # O1D: excited oxygen, very short-lived
-        5.0e12,   # O3: ozone, ~5 ppmv at 25 km
-        1.0e9,    # NO: ~1 ppbv
-        5.0e9,    # NO2: ~5 ppbv
-        8.0e17,   # M: third body (air density at ~25 km)
-        4.0e17,   # O2: molecular oxygen at ~25 km
-    ])
+    y0 = np.array(
+        [
+            1.0e6,  # O: atomic oxygen, short-lived radical
+            1.0e4,  # O1D: excited oxygen, very short-lived
+            5.0e12,  # O3: ozone, ~5 ppmv at 25 km
+            1.0e9,  # NO: ~1 ppbv
+            5.0e9,  # NO2: ~5 ppbv
+            8.0e17,  # M: third body (air density at ~25 km)
+            4.0e17,  # O2: molecular oxygen at ~25 km
+        ]
+    )
 
     t_end = 3600.0  # 1 hour integration
 
@@ -371,7 +375,7 @@ def test_ros3_adaptive_vs_radau_small_strato():
         small_strato_rhs,
         (0.0, t_end),
         y0,
-        method='Radau',
+        method="Radau",
         jac=small_strato_jacobian,
         rtol=1e-10,
         atol=1e-12,
@@ -405,9 +409,10 @@ def test_ros3_adaptive_vs_radau_small_strato():
 
     # Also verify with numpy's assert_allclose at the specified tolerances
     np.testing.assert_allclose(
-        y_ros3, y_ref,
+        y_ros3,
+        y_ref,
         atol=1e-3,
         rtol=1e-4,
         err_msg="ROS-3 adaptive solver disagrees with Radau reference "
-                "beyond atol=1e-3, rtol=1e-4 for small_strato mechanism",
+        "beyond atol=1e-3, rtol=1e-4 for small_strato mechanism",
     )

@@ -15,19 +15,19 @@ Validates that generated C++ code contains:
 - Stage variables follow naming convention: K{n}_{i}, Y{n}_{i}, F{n}_{i}
 - KOKKOS_INLINE_FUNCTION annotation before integrate() and integrate_with_reduction()
 """
+
 import re
 import tempfile
 
 import pytest
-
-from mkpp.codegen import generate_headers, SOLVER_COEFFICIENTS
-from mkpp.lowering import prepare_unified_jacobian, compute_symbolic_lu_decomposition
+from mkpp.codegen import SOLVER_COEFFICIENTS, generate_headers
+from mkpp.lowering import compute_symbolic_lu_decomposition, prepare_unified_jacobian
 from mkpp.model import (
-    MechanismDefinition,
-    SpeciesDefinition,
-    ReactionDefinition,
-    PhaseMode,
     AerosolRepresentation,
+    MechanismDefinition,
+    PhaseMode,
+    ReactionDefinition,
+    SpeciesDefinition,
 )
 
 
@@ -75,7 +75,7 @@ def _generate_code_for_solver(solver_name: str) -> str:
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         artifacts = generate_headers(mech, out_dir=tmp_dir, solver_name=solver_name)
-        with open(artifacts["header"], "r") as f:
+        with open(artifacts["header"]) as f:
             return f.read()
 
 
@@ -94,15 +94,15 @@ class TestGPUSafetyInvariants:
         """
         code = _generate_code_for_solver(solver_name)
 
-        assert "new " not in code, (
-            f"[{solver_name}] Generated code contains 'new ' (dynamic allocation)"
-        )
-        assert "malloc(" not in code, (
-            f"[{solver_name}] Generated code contains 'malloc(' (dynamic allocation)"
-        )
-        assert "std::vector" not in code, (
-            f"[{solver_name}] Generated code contains 'std::vector' (dynamic allocation)"
-        )
+        assert (
+            "new " not in code
+        ), f"[{solver_name}] Generated code contains 'new ' (dynamic allocation)"
+        assert (
+            "malloc(" not in code
+        ), f"[{solver_name}] Generated code contains 'malloc(' (dynamic allocation)"
+        assert (
+            "std::vector" not in code
+        ), f"[{solver_name}] Generated code contains 'std::vector' (dynamic allocation)"
 
     def test_no_runtime_indexed_stage_arrays(self, solver_name: str):
         """
@@ -116,18 +116,18 @@ class TestGPUSafetyInvariants:
         code = _generate_code_for_solver(solver_name)
 
         # No array-indexed patterns for stage variables
-        assert not re.search(r"\bK\[\s*\w+\s*\]", code), (
-            f"[{solver_name}] Generated code contains runtime-indexed K[i] array"
-        )
-        assert not re.search(r"\bstage_vec\[", code), (
-            f"[{solver_name}] Generated code contains runtime-indexed stage_vec["
-        )
-        assert not re.search(r"\bF\[\s*\w+\s*\]", code), (
-            f"[{solver_name}] Generated code contains runtime-indexed F[i] array"
-        )
-        assert not re.search(r"\bY\[\s*\w+\s*\]", code), (
-            f"[{solver_name}] Generated code contains runtime-indexed Y[i] array"
-        )
+        assert not re.search(
+            r"\bK\[\s*\w+\s*\]", code
+        ), f"[{solver_name}] Generated code contains runtime-indexed K[i] array"
+        assert not re.search(
+            r"\bstage_vec\[", code
+        ), f"[{solver_name}] Generated code contains runtime-indexed stage_vec["
+        assert not re.search(
+            r"\bF\[\s*\w+\s*\]", code
+        ), f"[{solver_name}] Generated code contains runtime-indexed F[i] array"
+        assert not re.search(
+            r"\bY\[\s*\w+\s*\]", code
+        ), f"[{solver_name}] Generated code contains runtime-indexed Y[i] array"
 
     def test_no_runtime_loops_over_stages(self, solver_name: str):
         """
@@ -141,20 +141,16 @@ class TestGPUSafetyInvariants:
         code = _generate_code_for_solver(solver_name)
 
         # No for loops at all (all iteration is unrolled at generation time)
-        assert "for (" not in code, (
-            f"[{solver_name}] Generated code contains 'for (' loop"
-        )
-        assert "for(" not in code, (
-            f"[{solver_name}] Generated code contains 'for(' loop"
-        )
+        assert "for (" not in code, f"[{solver_name}] Generated code contains 'for (' loop"
+        assert "for(" not in code, f"[{solver_name}] Generated code contains 'for(' loop"
         # No while loops over stages (the outer while(t < dt_total) is the time-stepping
         # loop which is acceptable, but there should be no stage-related while loops)
-        assert not re.search(r"\bwhile\s*\(\s*stage", code), (
-            f"[{solver_name}] Generated code contains 'while (stage...' loop"
-        )
-        assert not re.search(r"\bfor\s*\(\s*int\s+stage", code), (
-            f"[{solver_name}] Generated code contains 'for (int stage...' loop"
-        )
+        assert not re.search(
+            r"\bwhile\s*\(\s*stage", code
+        ), f"[{solver_name}] Generated code contains 'while (stage...' loop"
+        assert not re.search(
+            r"\bfor\s*\(\s*int\s+stage", code
+        ), f"[{solver_name}] Generated code contains 'for (int stage...' loop"
 
     def test_kokkos_inline_function_annotation(self, solver_name: str):
         """
@@ -203,23 +199,23 @@ class TestGPUSafetyInvariants:
         for stage in range(1, tableau.stages + 1):
             pattern = rf"\bdouble K{stage}_\d+\b"
             matches = re.findall(pattern, code)
-            assert len(matches) > 0, (
-                f"[{solver_name}] No K{stage}_* variables found for stage {stage}"
-            )
+            assert (
+                len(matches) > 0
+            ), f"[{solver_name}] No K{stage}_* variables found for stage {stage}"
 
         # Verify F variables exist for stages where NewF is True
         for stage in range(1, tableau.stages + 1):
             if tableau.NewF[stage - 1]:
                 pattern = rf"\bdouble F{stage}_\d+\b"
                 matches = re.findall(pattern, code)
-                assert len(matches) > 0, (
-                    f"[{solver_name}] No F{stage}_* variables found for stage {stage} (NewF=True)"
-                )
+                assert (
+                    len(matches) > 0
+                ), f"[{solver_name}] No F{stage}_* variables found for stage {stage} (NewF=True)"
 
         # Verify Y variables exist for stages > 1
         for stage in range(2, tableau.stages + 1):
             pattern = rf"\bdouble Y{stage}_\d+\b"
             matches = re.findall(pattern, code)
-            assert len(matches) > 0, (
-                f"[{solver_name}] No Y{stage}_* variables found for stage {stage}"
-            )
+            assert (
+                len(matches) > 0
+            ), f"[{solver_name}] No Y{stage}_* variables found for stage {stage}"

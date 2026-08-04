@@ -7,21 +7,19 @@ Property 10: LU plan independence from solver choice
 For any two solvers applied to the same mechanism, the symbolic LU factorization
 expressions (L and U entries) in the generated code are identical.
 """
-import re
+
 import tempfile
 
 import pytest
-
 from mkpp.codegen import SOLVER_COEFFICIENTS, generate_headers
-from mkpp.lowering import prepare_unified_jacobian, compute_symbolic_lu_decomposition
+from mkpp.lowering import compute_symbolic_lu_decomposition, prepare_unified_jacobian
 from mkpp.model import (
-    MechanismDefinition,
-    SpeciesDefinition,
-    ReactionDefinition,
-    PhaseMode,
     AerosolRepresentation,
+    MechanismDefinition,
+    PhaseMode,
+    ReactionDefinition,
+    SpeciesDefinition,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -159,7 +157,7 @@ def _generate_for_all_solvers(mech: MechanismDefinition) -> dict:
     for solver_name in ALL_SOLVERS:
         with tempfile.TemporaryDirectory() as tmp_dir:
             artifacts = generate_headers(mech, out_dir=tmp_dir, solver_name=solver_name)
-            with open(artifacts["header"], "r") as f:
+            with open(artifacts["header"]) as f:
                 results[solver_name] = f.read()
 
     return results
@@ -192,9 +190,9 @@ class TestLUPlanIndependenceFromSolverChoice:
         lu_sections = {}
         for solver_name, code in solver_codes.items():
             lu_section = _extract_lu_section(code)
-            assert lu_section, (
-                f"[{solver_name}] No LU factorization section found in generated code"
-            )
+            assert (
+                lu_section
+            ), f"[{solver_name}] No LU factorization section found in generated code"
             lu_sections[solver_name] = lu_section
 
         # Compare all solvers against the first (ros2)
@@ -221,9 +219,9 @@ class TestLUPlanIndependenceFromSolverChoice:
         lu_sections = {}
         for solver_name, code in solver_codes.items():
             lu_section = _extract_lu_section(code)
-            assert lu_section, (
-                f"[{solver_name}] No LU factorization section found in generated code"
-            )
+            assert (
+                lu_section
+            ), f"[{solver_name}] No LU factorization section found in generated code"
             lu_sections[solver_name] = lu_section
 
         # Compare all solvers against the first
@@ -251,16 +249,14 @@ class TestLUPlanIndependenceFromSolverChoice:
 
             # Must contain at least U expressions (diagonal is always present)
             u_lines = [l for l in lu_section.split("\n") if l.startswith("double U_")]
-            assert len(u_lines) > 0, (
-                f"[{solver_name}] No U expressions found in LU section"
-            )
+            assert len(u_lines) > 0, f"[{solver_name}] No U expressions found in LU section"
 
     @pytest.mark.parametrize(
         "solver_a,solver_b",
         [
-            ("ros2", "rodas4"),   # Minimum vs maximum stages
-            ("ros3", "rodas3"),   # Same stage count, different method family
-            ("ros4", "rodas4"),   # Both 4th-order but different formulations
+            ("ros2", "rodas4"),  # Minimum vs maximum stages
+            ("ros3", "rodas3"),  # Same stage count, different method family
+            ("ros4", "rodas4"),  # Both 4th-order but different formulations
         ],
     )
     def test_lu_pairwise_independence(self, solver_a: str, solver_b: str):
@@ -279,10 +275,8 @@ class TestLUPlanIndependenceFromSolverChoice:
         codes = {}
         for solver_name in (solver_a, solver_b):
             with tempfile.TemporaryDirectory() as tmp_dir:
-                artifacts = generate_headers(
-                    mech, out_dir=tmp_dir, solver_name=solver_name
-                )
-                with open(artifacts["header"], "r") as f:
+                artifacts = generate_headers(mech, out_dir=tmp_dir, solver_name=solver_name)
+                with open(artifacts["header"]) as f:
                     codes[solver_name] = f.read()
 
         lu_a = _extract_lu_section(codes[solver_a])

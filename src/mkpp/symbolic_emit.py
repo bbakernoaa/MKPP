@@ -7,8 +7,8 @@ loops over stages exist in the emitted C++.
 
 import re
 
-from .rosenbrock import RosenbrockTableau, get_A, get_C
 from .format_eqn import format_eqn
+from .rosenbrock import RosenbrockTableau, get_A, get_C
 
 
 def _emit_rosenbrock_adjoint_stages(f, tableau, N, lu_plan, sympy_meta, mech, perm):
@@ -49,7 +49,9 @@ def _emit_rosenbrock_adjoint_stages(f, tableau, N, lu_plan, sympy_meta, mech, pe
     S = tableau.stages
 
     # --- Runtime backward loop over checkpointed steps ---
-    f.write("\n          // --- Discrete Adjoint: backward integration over checkpointed steps ---\n")
+    f.write(
+        "\n          // --- Discrete Adjoint: backward integration over checkpointed steps ---\n"
+    )
     f.write("          for (int step = chk.num_steps - 1; step >= 0; step--) {\n")
 
     # Load step size from checkpoint
@@ -64,7 +66,9 @@ def _emit_rosenbrock_adjoint_stages(f, tableau, N, lu_plan, sympy_meta, mech, pe
 
     # Compute Jacobian at saved state using the analytical expressions
     # We emit the Jacobian entries inline (same as forward, but operating on saved state)
-    f.write("              // Recompute Jacobian at checkpointed state (recompute-J strategy, D1)\n")
+    f.write(
+        "              // Recompute Jacobian at checkpointed state (recompute-J strategy, D1)\n"
+    )
     non_zero_jac_set = set()
     for i, j, expr_str in lu_plan.non_zero_jacobian:
         non_zero_jac_set.add((i, j))
@@ -77,7 +81,7 @@ def _emit_rosenbrock_adjoint_stages(f, tableau, N, lu_plan, sympy_meta, mech, pe
     for _i in range(N):
         needed_w.add((_i, _i))  # Diagonal always needed
     for _kind, _i, _j, _expr_str in lu_plan.lu_expressions_ordered:
-        for _m in re.finditer(r'W_(\d+)_(\d+)', _expr_str):
+        for _m in re.finditer(r"W_(\d+)_(\d+)", _expr_str):
             needed_w.add((int(_m.group(1)), int(_m.group(2))))
 
     for i, j in sorted(needed_w):
@@ -101,7 +105,9 @@ def _emit_rosenbrock_adjoint_stages(f, tableau, N, lu_plan, sympy_meta, mech, pe
                     if block_num not in _emitted_block_header:
                         _emitted_block_header.add(block_num)
                         block_species_names = [lu_plan.species_map[idx] for idx in block_indices]
-                        f.write(f"              // Block {block_num}: species [{', '.join(block_species_names)}]\n")
+                        f.write(
+                            f"              // Block {block_num}: species [{', '.join(block_species_names)}]\n"
+                        )
                     break
             f.write(f"              double {kind}_{i}_{j} = {expr_str};\n")
     else:
@@ -179,7 +185,8 @@ def _emit_rosenbrock_adjoint_stages(f, tableau, N, lu_plan, sympy_meta, mech, pe
         # Solve W^{-T} * u_stage = v_stage using transposed LU
         f.write(f"              // W^{{-T}} solve for u{stage}\n")
         _emit_lu_solve_transpose(
-            f, lu_plan,
+            f,
+            lu_plan,
             rhs_prefix=f"v{stage}",
             y_prefix=f"yt{stage}",
             k_prefix=f"u{stage}",
@@ -188,7 +195,7 @@ def _emit_rosenbrock_adjoint_stages(f, tableau, N, lu_plan, sympy_meta, mech, pe
 
     # --- After all stages: accumulate lambda update ---
     # λ_n = λ_{n+1} + Σ_{i=1}^{s} u_i_k
-    f.write(f"\n              // --- Lambda update: lambda_n = lambda_{{n+1}} + Σ u_i ---\n")
+    f.write("\n              // --- Lambda update: lambda_n = lambda_{n+1} + Σ u_i ---\n")
     for k in range(N):
         u_terms = [f"u{i}_{k}" for i in range(1, S + 1)]
         u_sum = " + ".join(u_terms)
@@ -246,10 +253,12 @@ def _emit_lu_solve_transpose(
                     if block_num not in _emitted_fwd_block:
                         _emitted_fwd_block.add(block_num)
                         block_species_names = [lu_plan.species_map[idx] for idx in block_indices]
-                        f.write(f"{indent}// Block {block_num}: {k_prefix} transpose forward sub [{', '.join(block_species_names)}]\n")
+                        f.write(
+                            f"{indent}// Block {block_num}: {k_prefix} transpose forward sub [{', '.join(block_species_names)}]\n"
+                        )
                     break
-            s = re.sub(r'\bb_(\d+)\b', rf'{rhs_prefix}_\1', expr_str)
-            s = re.sub(r'\by_(\d+)\b', rf'{y_prefix}_\1', s)
+            s = re.sub(r"\bb_(\d+)\b", rf"{rhs_prefix}_\1", expr_str)
+            s = re.sub(r"\by_(\d+)\b", rf"{y_prefix}_\1", s)
             if is_reduction:
                 f.write(f"{indent}double {y_prefix}_{i} = active[{i}] ? ({s}) : 0.0;\n")
             else:
@@ -262,11 +271,13 @@ def _emit_lu_solve_transpose(
                     if block_num not in _emitted_bwd_block:
                         _emitted_bwd_block.add(block_num)
                         block_species_names = [lu_plan.species_map[idx] for idx in block_indices]
-                        f.write(f"{indent}// Block {block_num}: {k_prefix} transpose backward sub [{', '.join(block_species_names)}]\n")
+                        f.write(
+                            f"{indent}// Block {block_num}: {k_prefix} transpose backward sub [{', '.join(block_species_names)}]\n"
+                        )
                     break
             s = expr_str
-            s = re.sub(r'\by_(\d+)\b', rf'{y_prefix}_\1', s)
-            s = re.sub(r'\bx_(\d+)\b', rf'{k_prefix}_\1', s)
+            s = re.sub(r"\by_(\d+)\b", rf"{y_prefix}_\1", s)
+            s = re.sub(r"\bx_(\d+)\b", rf"{k_prefix}_\1", s)
             if is_reduction:
                 f.write(f"{indent}double {k_prefix}_{i} = active[{i}] ? ({s}) : 0.0;\n")
             else:
@@ -274,8 +285,8 @@ def _emit_lu_solve_transpose(
     else:
         # Forward substitution (U^T * y = b) — no block comments
         for i, expr_str in lu_plan.transpose_forward_sub_steps:
-            s = re.sub(r'\bb_(\d+)\b', rf'{rhs_prefix}_\1', expr_str)
-            s = re.sub(r'\by_(\d+)\b', rf'{y_prefix}_\1', s)
+            s = re.sub(r"\bb_(\d+)\b", rf"{rhs_prefix}_\1", expr_str)
+            s = re.sub(r"\by_(\d+)\b", rf"{y_prefix}_\1", s)
             if is_reduction:
                 f.write(f"{indent}double {y_prefix}_{i} = active[{i}] ? ({s}) : 0.0;\n")
             else:
@@ -283,8 +294,8 @@ def _emit_lu_solve_transpose(
         # Backward substitution (L^T * x = y) — no block comments
         for i, expr_str in lu_plan.transpose_backward_sub_steps:
             s = expr_str
-            s = re.sub(r'\by_(\d+)\b', rf'{y_prefix}_\1', s)
-            s = re.sub(r'\bx_(\d+)\b', rf'{k_prefix}_\1', s)
+            s = re.sub(r"\by_(\d+)\b", rf"{y_prefix}_\1", s)
+            s = re.sub(r"\bx_(\d+)\b", rf"{k_prefix}_\1", s)
             if is_reduction:
                 f.write(f"{indent}double {k_prefix}_{i} = active[{i}] ? ({s}) : 0.0;\n")
             else:
@@ -368,11 +379,15 @@ def _emit_rosenbrock_stages(
                     if i in block_indices:
                         if block_num not in _emitted_fwd_block:
                             _emitted_fwd_block.add(block_num)
-                            block_species_names = [lu_plan.species_map[idx] for idx in block_indices]
-                            f.write(f"          // Block {block_num}: {k_prefix} forward sub [{', '.join(block_species_names)}]\n")
+                            block_species_names = [
+                                lu_plan.species_map[idx] for idx in block_indices
+                            ]
+                            f.write(
+                                f"          // Block {block_num}: {k_prefix} forward sub [{', '.join(block_species_names)}]\n"
+                            )
                         break
-                s = re.sub(r'\bb_(\d+)\b', rf'{rhs_prefix}_\1', expr_str)
-                s = re.sub(r'\by_(\d+)\b', rf'{y_prefix}_\1', s)
+                s = re.sub(r"\bb_(\d+)\b", rf"{rhs_prefix}_\1", expr_str)
+                s = re.sub(r"\by_(\d+)\b", rf"{y_prefix}_\1", s)
                 if is_reduction:
                     f.write(f"          double {y_prefix}_{i} = active[{i}] ? ({s}) : 0.0;\n")
                 else:
@@ -384,12 +399,16 @@ def _emit_rosenbrock_stages(
                     if i in block_indices:
                         if block_num not in _emitted_bwd_block:
                             _emitted_bwd_block.add(block_num)
-                            block_species_names = [lu_plan.species_map[idx] for idx in block_indices]
-                            f.write(f"          // Block {block_num}: {k_prefix} backward sub [{', '.join(block_species_names)}]\n")
+                            block_species_names = [
+                                lu_plan.species_map[idx] for idx in block_indices
+                            ]
+                            f.write(
+                                f"          // Block {block_num}: {k_prefix} backward sub [{', '.join(block_species_names)}]\n"
+                            )
                         break
                 s = expr_str
-                s = re.sub(r'\by_(\d+)\b', rf'{y_prefix}_\1', s)
-                s = re.sub(r'\bx_(\d+)\b', rf'{k_prefix}_\1', s)
+                s = re.sub(r"\by_(\d+)\b", rf"{y_prefix}_\1", s)
+                s = re.sub(r"\bx_(\d+)\b", rf"{k_prefix}_\1", s)
                 if is_reduction:
                     f.write(f"          double {k_prefix}_{i} = active[{i}] ? ({s}) : 0.0;\n")
                 else:
@@ -397,8 +416,8 @@ def _emit_rosenbrock_stages(
         else:
             # Forward substitution (no block comments)
             for i, expr_str in lu_plan.forward_sub_steps:
-                s = re.sub(r'\bb_(\d+)\b', rf'{rhs_prefix}_\1', expr_str)
-                s = re.sub(r'\by_(\d+)\b', rf'{y_prefix}_\1', s)
+                s = re.sub(r"\bb_(\d+)\b", rf"{rhs_prefix}_\1", expr_str)
+                s = re.sub(r"\by_(\d+)\b", rf"{y_prefix}_\1", s)
                 if is_reduction:
                     f.write(f"          double {y_prefix}_{i} = active[{i}] ? ({s}) : 0.0;\n")
                 else:
@@ -406,8 +425,8 @@ def _emit_rosenbrock_stages(
             # Backward substitution (no block comments)
             for i, expr_str in lu_plan.backward_sub_steps:
                 s = expr_str
-                s = re.sub(r'\by_(\d+)\b', rf'{y_prefix}_\1', s)
-                s = re.sub(r'\bx_(\d+)\b', rf'{k_prefix}_\1', s)
+                s = re.sub(r"\by_(\d+)\b", rf"{y_prefix}_\1", s)
+                s = re.sub(r"\bx_(\d+)\b", rf"{k_prefix}_\1", s)
                 if is_reduction:
                     f.write(f"          double {k_prefix}_{i} = active[{i}] ? ({s}) : 0.0;\n")
                 else:
@@ -437,8 +456,7 @@ def _emit_rosenbrock_stages(
                     f.write(f"          double Y{stage}_{i} = S_{i} + {terms[0][1]};\n")
                 else:
                     sum_expr = " + ".join(
-                        f"{a:.17g} * {kvar}" if a != 1.0 else kvar
-                        for a, kvar in terms
+                        f"{a:.17g} * {kvar}" if a != 1.0 else kvar for a, kvar in terms
                     )
                     f.write(f"          double Y{stage}_{i} = S_{i} + {sum_expr};\n")
 
@@ -447,19 +465,23 @@ def _emit_rosenbrock_stages(
             F_prefix = f"F{stage}"
             if stage == 1 and skip_first_f_eval:
                 # F1 already declared in the preamble (e.g. for importance evaluation)
-                f.write(f"          // F1 already computed above (used for importance evaluation)\n")
+                f.write("          // F1 already computed above (used for importance evaluation)\n")
             elif stage == 1:
                 # For stage 1, evaluate at the initial state S
                 state_var = "S"
                 f.write(f"          // Rate evaluation F{stage} at {state_var}\n")
                 for i in range(N):
-                    eqn = format_eqn(F_exprs[i], mech.species, state_var=state_var, use_parentheses=False)
+                    eqn = format_eqn(
+                        F_exprs[i], mech.species, state_var=state_var, use_parentheses=False
+                    )
                     f.write(f"          double F{stage}_{i} = {eqn};\n")
             else:
                 state_var = f"Y{stage}"
                 f.write(f"          // Rate evaluation F{stage} at {state_var}\n")
                 for i in range(N):
-                    eqn = format_eqn(F_exprs[i], mech.species, state_var=state_var, use_parentheses=False)
+                    eqn = format_eqn(
+                        F_exprs[i], mech.species, state_var=state_var, use_parentheses=False
+                    )
                     f.write(f"          double F{stage}_{i} = {eqn};\n")
             current_F_prefix = F_prefix
         else:
@@ -484,10 +506,10 @@ def _emit_rosenbrock_stages(
                 if not c_terms:
                     f.write(f"          double rhs{stage}_{i} = {current_F_prefix}_{i};\n")
                 else:
-                    sum_expr = " + ".join(
-                        f"({c:.17g} / dt) * {kvar}" for c, kvar in c_terms
+                    sum_expr = " + ".join(f"({c:.17g} / dt) * {kvar}" for c, kvar in c_terms)
+                    f.write(
+                        f"          double rhs{stage}_{i} = {current_F_prefix}_{i} + {sum_expr};\n"
                     )
-                    f.write(f"          double rhs{stage}_{i} = {current_F_prefix}_{i} + {sum_expr};\n")
 
         # 4. Solve W * K_stage = rhs_stage using pre-computed LU plan
         y_prefix = f"y{stage}"
@@ -495,7 +517,7 @@ def _emit_rosenbrock_stages(
         _emit_lu_solve(stage, rhs_prefix, y_prefix, k_prefix)
 
     # --- After all stages: Solution update and error estimation ---
-    f.write(f"\n          // --- Solution update and error estimation ---\n")
+    f.write("\n          // --- Solution update and error estimation ---\n")
 
     # Compute error norm (fused with solution update for cache efficiency)
     f.write("          double err_norm_sq = 0.0;\n")
@@ -507,10 +529,7 @@ def _emit_rosenbrock_stages(
             if tableau.M[j] != 0.0:
                 m_terms.append((tableau.M[j], f"K{j+1}_{i}"))
         if m_terms:
-            m_expr = " + ".join(
-                f"{m:.17g} * {kvar}" if m != 1.0 else kvar
-                for m, kvar in m_terms
-            )
+            m_expr = " + ".join(f"{m:.17g} * {kvar}" if m != 1.0 else kvar for m, kvar in m_terms)
         else:
             m_expr = "0.0"
 
@@ -520,34 +539,37 @@ def _emit_rosenbrock_stages(
             if tableau.E[j] != 0.0:
                 e_terms.append((tableau.E[j], f"K{j+1}_{i}"))
         if e_terms:
-            e_expr = " + ".join(
-                f"{e:.17g} * {kvar}" if e != 1.0 else kvar
-                for e, kvar in e_terms
-            )
+            e_expr = " + ".join(f"{e:.17g} * {kvar}" if e != 1.0 else kvar for e, kvar in e_terms)
         else:
             e_expr = "0.0"
 
-        f.write(f"          {{\n")
+        f.write("          {\n")
         f.write(f"              double Ynew_i = S_{i} + {m_expr};\n")
-        f.write(f"              double ymax = Kokkos::fmax(Kokkos::fabs(state({state_idx})), Kokkos::fabs(Ynew_i));\n")
+        f.write(
+            f"              double ymax = Kokkos::fmax(Kokkos::fabs(state({state_idx})), Kokkos::fabs(Ynew_i));\n"
+        )
         f.write(f"              double sci = atol[{i}] + rtol[{i}] * ymax;\n")
         f.write(f"              double yerr_i = {e_expr};\n")
-        f.write(f"              err_norm_sq += (yerr_i / sci) * (yerr_i / sci);\n")
-        f.write(f"          }}\n")
+        f.write("              err_norm_sq += (yerr_i / sci) * (yerr_i / sci);\n")
+        f.write("          }\n")
 
     f.write(f"          double err_norm = Kokkos::sqrt(err_norm_sq / {N});\n")
     f.write("          err_norm = Kokkos::fmax(err_norm, 1.0e-10);\n")
 
     # Step-size control with 1/ELO exponent as a literal
     elo_exponent = 1.0 / tableau.ELO
-    f.write(f"\n          // Step Size Control (order {tableau.ELO:.0f}: exponent = 1/{tableau.ELO:.0f} = {elo_exponent:.17g})\n")
+    f.write(
+        f"\n          // Step Size Control (order {tableau.ELO:.0f}: exponent = 1/{tableau.ELO:.0f} = {elo_exponent:.17g})\n"
+    )
     # Use specialized functions for common exponents
     if tableau.ELO == 2.0:
         f.write("          double factor = safety / Kokkos::sqrt(err_norm);\n")
     elif tableau.ELO == 3.0:
         f.write("          double factor = safety / Kokkos::cbrt(err_norm);\n")
     else:
-        f.write(f"          double factor = safety * Kokkos::pow(err_norm, -{elo_exponent:.17g});\n")
+        f.write(
+            f"          double factor = safety * Kokkos::pow(err_norm, -{elo_exponent:.17g});\n"
+        )
     f.write("          factor = Kokkos::fmax(min_shrink, Kokkos::fmin(factor, max_growth));\n\n")
 
     # Accept/reject logic
@@ -560,10 +582,7 @@ def _emit_rosenbrock_stages(
             if tableau.M[j] != 0.0:
                 m_terms.append((tableau.M[j], f"K{j+1}_{i}"))
         if m_terms:
-            m_expr = " + ".join(
-                f"{m:.17g} * {kvar}" if m != 1.0 else kvar
-                for m, kvar in m_terms
-            )
+            m_expr = " + ".join(f"{m:.17g} * {kvar}" if m != 1.0 else kvar for m, kvar in m_terms)
         else:
             m_expr = "0.0"
 
@@ -645,14 +664,14 @@ def _emit_rosenbrock_tlm_stages(
     for _i in range(N):
         needed_w.add((_i, _i))  # Diagonal always needed
     for _kind, _i, _j, _expr_str in lu_plan.lu_expressions_ordered:
-        for _m in re.finditer(r'W_(\d+)_(\d+)', _expr_str):
+        for _m in re.finditer(r"W_(\d+)_(\d+)", _expr_str):
             needed_w.add((int(_m.group(1)), int(_m.group(2))))
 
     # --- Runtime loop over checkpointed steps (forward direction) ---
     f.write("\n          // === TLM Forward Propagation ===\n")
     f.write("          for (int step = 0; step < chk.num_steps; step++) {\n")
     f.write("              const double h = chk.h[step];\n")
-    f.write("              const double inv_g_h = 1.0 / ({:.17g} * h);\n".format(gamma))
+    f.write(f"              const double inv_g_h = 1.0 / ({gamma:.17g} * h);\n")
     f.write("\n")
 
     # Load saved state into local scalars (same S_k naming as forward solver)
@@ -663,9 +682,11 @@ def _emit_rosenbrock_tlm_stages(
 
     # Compute Jacobian at the checkpointed state inline using format_eqn.
     # Uses the same pattern as the adjoint function: evaluate J from saved state S_k.
-    f.write("              // Recompute Jacobian at checkpointed state (recompute-J strategy, D1)\n")
+    f.write(
+        "              // Recompute Jacobian at checkpointed state (recompute-J strategy, D1)\n"
+    )
     for i, j, expr_str in lu_plan.non_zero_jacobian:
-        if mech is not None and hasattr(mech, 'species') and mech.species:
+        if mech is not None and hasattr(mech, "species") and mech.species:
             jac_expr = format_eqn(expr_str, mech.species, state_var="S", use_parentheses=False)
         else:
             # Fallback for testing: expressions are already in S_k format
@@ -698,7 +719,9 @@ def _emit_rosenbrock_tlm_stages(
                     if block_num not in _emitted_block_header:
                         _emitted_block_header.add(block_num)
                         block_species_names = [lu_plan.species_map[idx] for idx in block_indices]
-                        f.write(f"              // Block {block_num}: [{', '.join(block_species_names)}]\n")
+                        f.write(
+                            f"              // Block {block_num}: [{', '.join(block_species_names)}]\n"
+                        )
                     break
             f.write(f"              double {kind}_{i}_{j} = {expr_str};\n")
     else:
@@ -715,7 +738,7 @@ def _emit_rosenbrock_tlm_stages(
 
         # Build the argument to J*(...): arg_k = δC_k + Σ_{j<i} A_{i,j} * δK_j_k
         # Then form RHS_k = Σ_col J_{k,col} * arg_col + Σ_{j<i} C_{i,j}/h * δK_j_k
-        f.write(f"              // RHS: J*(δC + Σ A_{{i,j}}*δK_j) + Σ C_{{i,j}}/h*δK_j\n")
+        f.write("              // RHS: J*(δC + Σ A_{i,j}*δK_j) + Σ C_{i,j}/h*δK_j\n")
 
         if stage == 1:
             # No previous stages: arg = δC, no C-sum
@@ -783,11 +806,15 @@ def _emit_rosenbrock_tlm_stages(
                     if i in block_indices:
                         if block_num not in _emitted_fwd_block:
                             _emitted_fwd_block.add(block_num)
-                            block_species_names = [lu_plan.species_map[idx] for idx in block_indices]
-                            f.write(f"              // Block {block_num}: {k_prefix} forward sub [{', '.join(block_species_names)}]\n")
+                            block_species_names = [
+                                lu_plan.species_map[idx] for idx in block_indices
+                            ]
+                            f.write(
+                                f"              // Block {block_num}: {k_prefix} forward sub [{', '.join(block_species_names)}]\n"
+                            )
                         break
-                s = re.sub(r'\bb_(\d+)\b', rf'{rhs_prefix}_\1', expr_str)
-                s = re.sub(r'\by_(\d+)\b', rf'{y_prefix}_\1', s)
+                s = re.sub(r"\bb_(\d+)\b", rf"{rhs_prefix}_\1", expr_str)
+                s = re.sub(r"\by_(\d+)\b", rf"{y_prefix}_\1", s)
                 f.write(f"              double {y_prefix}_{i} = {s};\n")
             # Backward substitution with block comments
             _emitted_bwd_block = set()
@@ -796,24 +823,28 @@ def _emit_rosenbrock_tlm_stages(
                     if i in block_indices:
                         if block_num not in _emitted_bwd_block:
                             _emitted_bwd_block.add(block_num)
-                            block_species_names = [lu_plan.species_map[idx] for idx in block_indices]
-                            f.write(f"              // Block {block_num}: {k_prefix} backward sub [{', '.join(block_species_names)}]\n")
+                            block_species_names = [
+                                lu_plan.species_map[idx] for idx in block_indices
+                            ]
+                            f.write(
+                                f"              // Block {block_num}: {k_prefix} backward sub [{', '.join(block_species_names)}]\n"
+                            )
                         break
                 s = expr_str
-                s = re.sub(r'\by_(\d+)\b', rf'{y_prefix}_\1', s)
-                s = re.sub(r'\bx_(\d+)\b', rf'{k_prefix}_\1', s)
+                s = re.sub(r"\by_(\d+)\b", rf"{y_prefix}_\1", s)
+                s = re.sub(r"\bx_(\d+)\b", rf"{k_prefix}_\1", s)
                 f.write(f"              double {k_prefix}_{i} = {s};\n")
         else:
             # Forward substitution (no block comments)
             for i, expr_str in lu_plan.forward_sub_steps:
-                s = re.sub(r'\bb_(\d+)\b', rf'{rhs_prefix}_\1', expr_str)
-                s = re.sub(r'\by_(\d+)\b', rf'{y_prefix}_\1', s)
+                s = re.sub(r"\bb_(\d+)\b", rf"{rhs_prefix}_\1", expr_str)
+                s = re.sub(r"\by_(\d+)\b", rf"{y_prefix}_\1", s)
                 f.write(f"              double {y_prefix}_{i} = {s};\n")
             # Backward substitution (no block comments)
             for i, expr_str in lu_plan.backward_sub_steps:
                 s = expr_str
-                s = re.sub(r'\by_(\d+)\b', rf'{y_prefix}_\1', s)
-                s = re.sub(r'\bx_(\d+)\b', rf'{k_prefix}_\1', s)
+                s = re.sub(r"\by_(\d+)\b", rf"{y_prefix}_\1", s)
+                s = re.sub(r"\bx_(\d+)\b", rf"{k_prefix}_\1", s)
                 f.write(f"              double {k_prefix}_{i} = {s};\n")
 
     # --- After all stages: Update δC ---

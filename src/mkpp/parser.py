@@ -1,14 +1,21 @@
 import json
-import yaml
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any
+
+import yaml
 
 from .model import (
-    MechanismDefinition, SpeciesDefinition, PhaseDefinition,
-    ReactionDefinition, PhaseMode, SolverMode, AerosolRepresentation
+    AerosolRepresentation,
+    MechanismDefinition,
+    PhaseDefinition,
+    PhaseMode,
+    ReactionDefinition,
+    SolverMode,
+    SpeciesDefinition,
 )
 
-def parse_mechanism_micm(name: str, data: Dict[str, Any]) -> MechanismDefinition:
+
+def parse_mechanism_micm(name: str, data: dict[str, Any]) -> MechanismDefinition:
     """Parse MICM/OpenAtmos standard dictionary into internal model."""
     if "species" not in data or not data["species"]:
         raise ValueError("MICM data must define at least one species")
@@ -22,7 +29,11 @@ def parse_mechanism_micm(name: str, data: Dict[str, Any]) -> MechanismDefinition
         phase = PhaseMode.GAS
         sp_type = str(s.get("type", "")).lower()
         sp_role = str(s.get("role", "")).lower()
-        if sp_name in ("AIR", "O2", "H2O", "H2", "CH4", "M", "N2", "RO2") or sp_type == "fixed" or sp_role == "fixed":
+        if (
+            sp_name in ("AIR", "O2", "H2O", "H2", "CH4", "M", "N2", "RO2")
+            or sp_type == "fixed"
+            or sp_role == "fixed"
+        ):
             role = "fixed"
         else:
             role = "variable"
@@ -30,10 +41,7 @@ def parse_mechanism_micm(name: str, data: Dict[str, Any]) -> MechanismDefinition
 
     phases = []
     for p in data.get("phases", []):
-        phases.append(PhaseDefinition(
-            name=p.get("name"),
-            solver_mode=SolverMode.IMPLICIT
-        ))
+        phases.append(PhaseDefinition(name=p.get("name"), solver_mode=SolverMode.IMPLICIT))
 
     reactions = []
     for r in data.get("reactions", []):
@@ -51,29 +59,34 @@ def parse_mechanism_micm(name: str, data: Dict[str, Any]) -> MechanismDefinition
         # Maintain backwards compat for the simple tests
         base_rate = str(r.get("A", ""))
 
-        reactions.append(ReactionDefinition(
-            reaction_type=rtype,
-            reactants=reactants,
-            products=products,
-            rate_expression=base_rate,
-            parameters=parameters,
-            stiff=r.get("stiff", False),
-            continuous_transition=r.get("continuous_transition", False)
-        ))
+        reactions.append(
+            ReactionDefinition(
+                reaction_type=rtype,
+                reactants=reactants,
+                products=products,
+                rate_expression=base_rate,
+                parameters=parameters,
+                stiff=r.get("stiff", False),
+                continuous_transition=r.get("continuous_transition", False),
+            )
+        )
 
-    from .model import HostInterfaceSchema, ArrayDefinition
+    from .model import ArrayDefinition, HostInterfaceSchema
+
     host_interface = None
     if "host_interface" in data and "arrays" in data["host_interface"]:
         arrays = []
         for arr_data in data["host_interface"]["arrays"]:
-            arrays.append(ArrayDefinition(
-                name=arr_data.get("name", "unknown"),
-                rank=arr_data.get("rank", 0),
-                layout=arr_data.get("layout", "LayoutLeft"),
-                extent=arr_data.get("extent"),
-                unit=arr_data.get("unit", "unknown"),
-                ownership=arr_data.get("ownership", "host")
-            ))
+            arrays.append(
+                ArrayDefinition(
+                    name=arr_data.get("name", "unknown"),
+                    rank=arr_data.get("rank", 0),
+                    layout=arr_data.get("layout", "LayoutLeft"),
+                    extent=arr_data.get("extent"),
+                    unit=arr_data.get("unit", "unknown"),
+                    ownership=arr_data.get("ownership", "host"),
+                )
+            )
         host_interface = HostInterfaceSchema(arrays=arrays)
 
     return MechanismDefinition(
@@ -83,13 +96,14 @@ def parse_mechanism_micm(name: str, data: Dict[str, Any]) -> MechanismDefinition
         species=species,
         phases=phases,
         reactions=reactions,
-        host_interface=host_interface
+        host_interface=host_interface,
     )
+
 
 def load_mechanism(path: str) -> MechanismDefinition:
     p = Path(path)
-    with open(p, 'r') as f:
-        if p.suffix in ['.yaml', '.yml']:
+    with open(p) as f:
+        if p.suffix in [".yaml", ".yml"]:
             data = yaml.safe_load(f)
         else:
             data = json.load(f)

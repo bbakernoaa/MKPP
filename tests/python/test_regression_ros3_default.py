@@ -12,19 +12,18 @@ Ensures that:
    - 3-stage forward/backward substitution blocks
    - Kokkos::cbrt in step control (ELO=3)
 """
+
 import re
 import tempfile
 
-import pytest
-
 from mkpp.codegen import SOLVER_COEFFICIENTS, generate_headers
-from mkpp.lowering import prepare_unified_jacobian, compute_symbolic_lu_decomposition
+from mkpp.lowering import compute_symbolic_lu_decomposition, prepare_unified_jacobian
 from mkpp.model import (
-    MechanismDefinition,
-    SpeciesDefinition,
-    ReactionDefinition,
-    PhaseMode,
     AerosolRepresentation,
+    MechanismDefinition,
+    PhaseMode,
+    ReactionDefinition,
+    SpeciesDefinition,
 )
 
 
@@ -80,7 +79,7 @@ def _generate_header_content(mech, solver_name=None):
             artifacts = generate_headers(mech, out_dir=tmp_dir, solver_name=solver_name)
         else:
             artifacts = generate_headers(mech, out_dir=tmp_dir)
-        with open(artifacts["header"], "r") as f:
+        with open(artifacts["header"]) as f:
             return f.read()
 
 
@@ -120,15 +119,20 @@ class TestRos3DefaultRegression:
         # Count stage comments in the entire file (integrate + integrate_with_reduction)
         stage_comments = re.findall(r"// --- Stage \d+ ---", code)
         # 3 stages x 2 functions = 6 total stage markers
-        assert len(stage_comments) == 6, (
-            f"Expected 6 stage markers (3 stages x 2 functions), found {len(stage_comments)}"
-        )
+        assert (
+            len(stage_comments) == 6
+        ), f"Expected 6 stage markers (3 stages x 2 functions), found {len(stage_comments)}"
 
         # Verify stages are numbered 1, 2, 3 in each function
         stage_numbers = [int(re.search(r"Stage (\d+)", c).group(1)) for c in stage_comments]
-        assert stage_numbers == [1, 2, 3, 1, 2, 3], (
-            f"Stage numbering mismatch. Expected [1, 2, 3, 1, 2, 3], got {stage_numbers}"
-        )
+        assert stage_numbers == [
+            1,
+            2,
+            3,
+            1,
+            2,
+            3,
+        ], f"Stage numbering mismatch. Expected [1, 2, 3, 1, 2, 3], got {stage_numbers}"
 
     def test_ros3_gamma_value(self):
         """
@@ -208,9 +212,5 @@ class TestRos3DefaultRegression:
         code = _generate_header_content(mech)
 
         # The code emits a comment with the solver name and characteristics
-        assert "ROS-3" in code, (
-            "Expected 'ROS-3' identifier in generated code comment."
-        )
-        assert "3-stage" in code, (
-            "Expected '3-stage' descriptor in generated code comment."
-        )
+        assert "ROS-3" in code, "Expected 'ROS-3' identifier in generated code comment."
+        assert "3-stage" in code, "Expected '3-stage' descriptor in generated code comment."

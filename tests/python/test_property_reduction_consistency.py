@@ -7,21 +7,20 @@ Property 9: Reduction integrator consistency
 For any solver, the coefficient literals, stage count, and error exponent in
 integrate_with_reduction() are identical to those in integrate().
 """
+
 import re
 import tempfile
 
 import pytest
-
 from mkpp.codegen import SOLVER_COEFFICIENTS, generate_headers
-from mkpp.lowering import prepare_unified_jacobian, compute_symbolic_lu_decomposition
+from mkpp.lowering import compute_symbolic_lu_decomposition, prepare_unified_jacobian
 from mkpp.model import (
-    MechanismDefinition,
-    SpeciesDefinition,
-    ReactionDefinition,
-    PhaseMode,
     AerosolRepresentation,
+    MechanismDefinition,
+    PhaseMode,
+    ReactionDefinition,
+    SpeciesDefinition,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -75,7 +74,7 @@ def _generate_code_for_solver(solver_name: str) -> str:
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         artifacts = generate_headers(mech, out_dir=tmp_dir, solver_name=solver_name)
-        with open(artifacts["header"], "r") as f:
+        with open(artifacts["header"]) as f:
             return f.read()
 
 
@@ -90,9 +89,7 @@ def _split_integrate_functions(code: str) -> tuple:
 
     # Find the integrate_with_reduction() function start
     reduction_start = code.find("KOKKOS_INLINE_FUNCTION void integrate_with_reduction(")
-    assert reduction_start != -1, (
-        "integrate_with_reduction() function not found in generated code"
-    )
+    assert reduction_start != -1, "integrate_with_reduction() function not found in generated code"
 
     # integrate() body is between its start and the start of integrate_with_reduction()
     integrate_code = code[integrate_start:reduction_start]
@@ -139,20 +136,12 @@ def _extract_step_control_exponent_line(code_section: str) -> str:
 
 def _extract_m_coefficient_lines(code_section: str) -> list:
     """Extract state update lines (state(...) += ...) to verify M coefficients."""
-    return [
-        line.strip()
-        for line in code_section.split("\n")
-        if "state(" in line and "+=" in line
-    ]
+    return [line.strip() for line in code_section.split("\n") if "state(" in line and "+=" in line]
 
 
 def _extract_yerr_lines(code_section: str) -> list:
     """Extract error estimate lines (double yerr_i = ...) to verify E coefficients."""
-    return [
-        line.strip()
-        for line in code_section.split("\n")
-        if "double yerr_i" in line
-    ]
+    return [line.strip() for line in code_section.split("\n") if "double yerr_i" in line]
 
 
 def _extract_float_literals_from_lines(lines: list) -> list:
@@ -206,8 +195,7 @@ def test_property_9_same_stage_count(solver_name: str):
     stages_reduction = _count_stage_comments(reduction_code)
 
     assert stages_integrate == tableau.stages, (
-        f"[{solver_name}] integrate() has {stages_integrate} stages, "
-        f"expected {tableau.stages}"
+        f"[{solver_name}] integrate() has {stages_integrate} stages, " f"expected {tableau.stages}"
     )
     assert stages_reduction == tableau.stages, (
         f"[{solver_name}] integrate_with_reduction() has {stages_reduction} stages, "
@@ -254,12 +242,12 @@ def test_property_9_same_step_size_exponent(solver_name: str):
     exponent_integrate = _extract_step_control_exponent_line(integrate_code)
     exponent_reduction = _extract_step_control_exponent_line(reduction_code)
 
-    assert exponent_integrate != "", (
-        f"[{solver_name}] Step control exponent not found in integrate()"
-    )
-    assert exponent_reduction != "", (
-        f"[{solver_name}] Step control exponent not found in integrate_with_reduction()"
-    )
+    assert (
+        exponent_integrate != ""
+    ), f"[{solver_name}] Step control exponent not found in integrate()"
+    assert (
+        exponent_reduction != ""
+    ), f"[{solver_name}] Step control exponent not found in integrate_with_reduction()"
     assert exponent_integrate == exponent_reduction, (
         f"[{solver_name}] Step-size exponent mismatch:\n"
         f"  integrate():                {exponent_integrate}\n"
@@ -281,12 +269,12 @@ def test_property_9_same_m_coefficients(solver_name: str):
     m_lines_integrate = _extract_m_coefficient_lines(integrate_code)
     m_lines_reduction = _extract_m_coefficient_lines(reduction_code)
 
-    assert len(m_lines_integrate) > 0, (
-        f"[{solver_name}] No M coefficient lines found in integrate()"
-    )
-    assert len(m_lines_reduction) > 0, (
-        f"[{solver_name}] No M coefficient lines found in integrate_with_reduction()"
-    )
+    assert (
+        len(m_lines_integrate) > 0
+    ), f"[{solver_name}] No M coefficient lines found in integrate()"
+    assert (
+        len(m_lines_reduction) > 0
+    ), f"[{solver_name}] No M coefficient lines found in integrate_with_reduction()"
 
     # Extract floating-point literals from M coefficient lines
     m_floats_integrate = _extract_float_literals_from_lines(m_lines_integrate)
@@ -313,12 +301,12 @@ def test_property_9_same_e_coefficients(solver_name: str):
     e_lines_integrate = _extract_yerr_lines(integrate_code)
     e_lines_reduction = _extract_yerr_lines(reduction_code)
 
-    assert len(e_lines_integrate) > 0, (
-        f"[{solver_name}] No E coefficient (yerr_i) lines found in integrate()"
-    )
-    assert len(e_lines_reduction) > 0, (
-        f"[{solver_name}] No E coefficient (yerr_i) lines found in integrate_with_reduction()"
-    )
+    assert (
+        len(e_lines_integrate) > 0
+    ), f"[{solver_name}] No E coefficient (yerr_i) lines found in integrate()"
+    assert (
+        len(e_lines_reduction) > 0
+    ), f"[{solver_name}] No E coefficient (yerr_i) lines found in integrate_with_reduction()"
 
     # Extract floating-point literals from E coefficient lines
     e_floats_integrate = _extract_float_literals_from_lines(e_lines_integrate)

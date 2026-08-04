@@ -1,6 +1,7 @@
 import pytest
 from mkpp.cli import main
 
+
 def test_cli_help(capsys):
     with pytest.raises(SystemExit) as e:
         main(["--help"])
@@ -8,12 +9,14 @@ def test_cli_help(capsys):
     captured = capsys.readouterr()
     assert "Compile a mechanism into Kokkos headers" in captured.out
 
+
 def test_cli_compile_missing_args(capsys):
     with pytest.raises(SystemExit) as e:
         main(["compile"])
     assert e.value.code != 0
     captured = capsys.readouterr()
     assert "error: the following arguments are required: mechanism" in captured.err.lower()
+
 
 def test_cli_compile_success(tmp_path, capsys, monkeypatch):
     mech_file = tmp_path / "mech.yaml"
@@ -29,8 +32,19 @@ def test_cli_compile_success(tmp_path, capsys, monkeypatch):
     monkeypatch.setattr("mkpp.cli.run_compiler", lambda *args, **kwargs: None)
 
     with pytest.raises(SystemExit) as e:
-        main(["compile", str(mech_file), "--test-env", str(test_env_file), "--out", str(out_dir), "--emit-manifest"])
+        main(
+            [
+                "compile",
+                str(mech_file),
+                "--test-env",
+                str(test_env_file),
+                "--out",
+                str(out_dir),
+                "--emit-manifest",
+            ]
+        )
     assert e.value.code == 0
+
 
 def test_cli_compile_fatal_error(capsys, monkeypatch, tmp_path):
     # Simulate a deep failure in the pipeline
@@ -47,6 +61,7 @@ def test_cli_compile_fatal_error(capsys, monkeypatch, tmp_path):
 
     # We must patch os.getcwd to trick sanitize_path into allowing tmp_path absolute paths
     import os
+
     monkeypatch.setattr(os, "getcwd", lambda: "/")
 
     with pytest.raises(SystemExit) as e:
@@ -58,7 +73,8 @@ def test_cli_compile_fatal_error(capsys, monkeypatch, tmp_path):
     error_data = json.loads(captured.err)
     assert error_data["stage"] == "unknown"
     assert "Simulated pipeline crash" in error_data["message"]
-    assert captured.out == "" # Ensure stdout is clean on crash
+    assert captured.out == ""  # Ensure stdout is clean on crash
+
 
 def test_cli_compile_strict_flag(capsys, monkeypatch, tmp_path):
     # Verify that the --strict flag is successfully parsed and passed down to validation
@@ -69,6 +85,7 @@ def test_cli_compile_strict_flag(capsys, monkeypatch, tmp_path):
     mech_file.write_text("species: [{name: O3}]\nreactions: []")
 
     import os
+
     monkeypatch.setattr(os, "getcwd", lambda: "/")
 
     with pytest.raises(SystemExit) as e:
@@ -85,6 +102,7 @@ def test_cli_compile_strict_flag(capsys, monkeypatch, tmp_path):
 def test_cli_import_succeeds():
     """Test: import of mkpp.cli succeeds without errors (Req 1.1)."""
     import mkpp.cli
+
     assert hasattr(mkpp.cli, "main")
     assert hasattr(mkpp.cli, "run_compiler")
 
@@ -133,6 +151,7 @@ def test_cli_dry_run_no_output_files(tmp_path, capsys, monkeypatch):
     """Test: --dry-run does not produce output files (Req 1.5)."""
     import os
     from types import SimpleNamespace
+
     import mkpp.validation
 
     mech_file = tmp_path / "mech.yaml"
@@ -156,10 +175,22 @@ def test_cli_dry_run_no_output_files(tmp_path, capsys, monkeypatch):
 
     # Track whether generate_headers is called (it should NOT be for --dry-run)
     generate_called = []
-    monkeypatch.setattr("mkpp.cli.generate_headers", lambda *args, **kwargs: generate_called.append(True))
+    monkeypatch.setattr(
+        "mkpp.cli.generate_headers", lambda *args, **kwargs: generate_called.append(True)
+    )
 
     with pytest.raises(SystemExit) as e:
-        main(["compile", str(mech_file), "--test-env", str(env_file), "--out", str(out_dir), "--dry-run"])
+        main(
+            [
+                "compile",
+                str(mech_file),
+                "--test-env",
+                str(env_file),
+                "--out",
+                str(out_dir),
+                "--dry-run",
+            ]
+        )
 
     assert e.value.code == 0
     # generate_headers must not have been called
@@ -203,12 +234,23 @@ def test_cli_verbose_emits_stage_markers(tmp_path, capsys, monkeypatch):
 
     # Mock validation sub-functions imported inside run_compiler
     import mkpp.validation
+
     monkeypatch.setattr(mkpp.validation, "validate_fuzzer_stiffness", lambda *args, **kwargs: None)
     monkeypatch.setattr(mkpp.validation, "validate_terminator_safety", lambda *args, **kwargs: None)
     monkeypatch.setattr(mkpp.validation, "validate_mass_conservation", lambda *args, **kwargs: None)
 
     with pytest.raises(SystemExit) as e:
-        main(["compile", str(mech_file), "--test-env", str(env_file), "--out", str(out_dir), "--verbose"])
+        main(
+            [
+                "compile",
+                str(mech_file),
+                "--test-env",
+                str(env_file),
+                "--out",
+                str(out_dir),
+                "--verbose",
+            ]
+        )
 
     assert e.value.code == 0
     captured = capsys.readouterr()
@@ -218,3 +260,106 @@ def test_cli_verbose_emits_stage_markers(tmp_path, capsys, monkeypatch):
     assert "[partitioning]" in captured.err
     assert "[lowering]" in captured.err
     assert "[codegen]" in captured.err
+
+
+def test_cli_adjoint_flag_threads_to_generate_headers(tmp_path, capsys, monkeypatch):
+    """Test: --adjoint flag is parsed and passed to generate_headers (Req 6.1)."""
+    import os
+    from types import SimpleNamespace
+
+    import mkpp.validation
+
+    mech_file = tmp_path / "mech.yaml"
+    mech_file.write_text("species: [{name: O3}]\nreactions: []")
+    env_file = tmp_path / "env.yaml"
+    env_file.write_text("mpi: {gather_to_root: false}")
+    out_dir = tmp_path / "output"
+
+    monkeypatch.setattr(os, "getcwd", lambda: "/")
+
+    dummy_mech = SimpleNamespace(
+        species=[{"name": "O3"}],
+        reactions=[],
+        partition_metadata=None,
+        sympy_metadata=None,
+    )
+    monkeypatch.setattr("mkpp.cli.load_mechanism", lambda *args, **kwargs: dummy_mech)
+    monkeypatch.setattr("mkpp.cli.validate_mechanism", lambda *args, **kwargs: None)
+    monkeypatch.setattr("mkpp.cli.validate_mpi_safety", lambda *args, **kwargs: None)
+    monkeypatch.setattr("mkpp.cli.partition_reactions", lambda *args, **kwargs: {"metadata": None})
+    monkeypatch.setattr("mkpp.lowering.prepare_adjoint_and_tlm", lambda *args, **kwargs: None)
+    monkeypatch.setattr("mkpp.lowering.prepare_unified_jacobian", lambda *args, **kwargs: None)
+    monkeypatch.setattr(mkpp.validation, "validate_fuzzer_stiffness", lambda *args, **kwargs: None)
+    monkeypatch.setattr(mkpp.validation, "validate_terminator_safety", lambda *args, **kwargs: None)
+    monkeypatch.setattr(mkpp.validation, "validate_mass_conservation", lambda *args, **kwargs: None)
+
+    # Capture the kwargs passed to generate_headers
+    captured_kwargs = []
+
+    def mock_generate_headers(*args, **kwargs):
+        captured_kwargs.append(kwargs)
+
+    monkeypatch.setattr("mkpp.cli.generate_headers", mock_generate_headers)
+
+    with pytest.raises(SystemExit) as e:
+        main(
+            [
+                "compile",
+                str(mech_file),
+                "--test-env",
+                str(env_file),
+                "--out",
+                str(out_dir),
+                "--adjoint",
+            ]
+        )
+
+    assert e.value.code == 0
+    assert len(captured_kwargs) == 1
+    assert captured_kwargs[0]["adjoint"] is True
+
+
+def test_cli_adjoint_flag_defaults_to_false(tmp_path, capsys, monkeypatch):
+    """Test: without --adjoint flag, adjoint defaults to False (Req 6.1)."""
+    import os
+    from types import SimpleNamespace
+
+    import mkpp.validation
+
+    mech_file = tmp_path / "mech.yaml"
+    mech_file.write_text("species: [{name: O3}]\nreactions: []")
+    env_file = tmp_path / "env.yaml"
+    env_file.write_text("mpi: {gather_to_root: false}")
+    out_dir = tmp_path / "output"
+
+    monkeypatch.setattr(os, "getcwd", lambda: "/")
+
+    dummy_mech = SimpleNamespace(
+        species=[{"name": "O3"}],
+        reactions=[],
+        partition_metadata=None,
+        sympy_metadata=None,
+    )
+    monkeypatch.setattr("mkpp.cli.load_mechanism", lambda *args, **kwargs: dummy_mech)
+    monkeypatch.setattr("mkpp.cli.validate_mechanism", lambda *args, **kwargs: None)
+    monkeypatch.setattr("mkpp.cli.validate_mpi_safety", lambda *args, **kwargs: None)
+    monkeypatch.setattr("mkpp.cli.partition_reactions", lambda *args, **kwargs: {"metadata": None})
+    monkeypatch.setattr("mkpp.lowering.prepare_adjoint_and_tlm", lambda *args, **kwargs: None)
+    monkeypatch.setattr("mkpp.lowering.prepare_unified_jacobian", lambda *args, **kwargs: None)
+    monkeypatch.setattr(mkpp.validation, "validate_fuzzer_stiffness", lambda *args, **kwargs: None)
+    monkeypatch.setattr(mkpp.validation, "validate_terminator_safety", lambda *args, **kwargs: None)
+    monkeypatch.setattr(mkpp.validation, "validate_mass_conservation", lambda *args, **kwargs: None)
+
+    captured_kwargs = []
+
+    def mock_generate_headers(*args, **kwargs):
+        captured_kwargs.append(kwargs)
+
+    monkeypatch.setattr("mkpp.cli.generate_headers", mock_generate_headers)
+
+    with pytest.raises(SystemExit) as e:
+        main(["compile", str(mech_file), "--test-env", str(env_file), "--out", str(out_dir)])
+
+    assert e.value.code == 0
+    assert len(captured_kwargs) == 1
+    assert captured_kwargs[0]["adjoint"] is False

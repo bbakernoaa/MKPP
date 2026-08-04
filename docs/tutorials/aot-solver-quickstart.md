@@ -25,19 +25,25 @@ By the end of this tutorial, you will be able to:
 
 MKPP provides AOT code generation scripts to convert mechanism declarations into header-only Kokkos ODE solvers.
 
-To generate a solver header for a supported mechanism (e.g., SAPRC99, Chapman, GOCART):
+To generate a solver header for a supported mechanism (e.g., SAPRC-99, Chapman, GOCART) with your choice of Rosenbrock solver tableau (`ros2`, `ros3`, `ros4`, `rodas3`, `rodas4`):
 
 ```bash
-# Generate SAPRC99 Kokkos header
-python utils/generate_aot_solver.py --mechanism mechanisms/saprc99.yaml --output mkpp-generated/saprc99.hpp
+# Compile SAPRC-99 mechanism with ROS-3 (default 3-stage order 3) solver
+mkpp compile mechanisms/saprc99.yaml --test-env example_env.yaml --out mkpp-generated --solver ros3
+
+# Compile high-throughput ROS-2 (2-stage order 2) solver for 3D ESM runs
+mkpp compile mechanisms/saprc99.yaml --test-env example_env.yaml --out mkpp-generated --solver ros2
+
+# Compile high-accuracy ROS-4 (4-stage order 4) solver
+mkpp compile mechanisms/saprc99.yaml --test-env example_env.yaml --out mkpp-generated --solver ros4
 ```
 
 The generated header (`mkpp-generated/saprc99.hpp`) contains:
 - Flat scalar rate evaluations (`compute_rates`).
 - Symbolic, unrolled Jacobian computation (`compute_jacobian`).
-- Zero-loop symbolic sparse LU decomposition (`lu_decompose`).
-- Zero-loop forward and backward substitution (`lu_solve`).
-- Rosenbrock-2 (ROS-2) integration functor (`integrate`).
+- RCM-permuted and block-sparse symbolic LU decomposition (`lu_decompose`).
+- Straight-line forward and backward substitution (`lu_solve`).
+- Rosenbrock integration kernels (`integrate` and `integrate_with_reduction`).
 
 ---
 

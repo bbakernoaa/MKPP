@@ -1,12 +1,11 @@
 """Content-addressable cache for MKPP lowering results."""
 
 import hashlib
+import importlib.metadata
 import pickle
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, List, Optional, Tuple
-
-import importlib.metadata
+from typing import Any
 
 
 @dataclass
@@ -22,13 +21,13 @@ class CacheEntry:
     """Stores all expensive lowering results for a given input."""
 
     key: CacheKey
-    species_map: List[str]
+    species_map: list[str]
     jacobian_matrix: Any  # sp.Matrix (pickled)
     lu_plan: Any  # SymbolicLUPlan
     f_implicit: Any  # sp.Matrix
     f_explicit: Any  # sp.Matrix
-    cse_replacements: Optional[List[Tuple[Any, Any]]] = None
-    cse_reduced: Optional[List[Any]] = None
+    cse_replacements: list[tuple[Any, Any]] | None = None
+    cse_reduced: list[Any] | None = None
 
 
 class CacheManager:
@@ -53,7 +52,7 @@ class CacheManager:
         yaml_hash = hashlib.sha256(hash_input).hexdigest()
         return CacheKey(yaml_hash=yaml_hash, mkpp_version=version)
 
-    def lookup(self, key: CacheKey) -> Optional[CacheEntry]:
+    def lookup(self, key: CacheKey) -> CacheEntry | None:
         """Return deserialized entry or None. Handle corruption gracefully."""
         path = self._key_to_path(key)
         if not path.exists():

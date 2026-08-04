@@ -1,5 +1,5 @@
-import pytest
 from mkpp.parser import parse_mechanism_micm
+
 
 def test_parse_complex_troe_parameters():
     data = {
@@ -11,9 +11,10 @@ def test_parse_complex_troe_parameters():
                 "products": {"O3": {}},
                 "k0": {"A": 1.0, "B": 2.0, "C": 3.0},
                 "kinf": {"A": 4.0, "B": 5.0, "C": 6.0},
-                "Fc": 0.6, "N": 1.0
+                "Fc": 0.6,
+                "N": 1.0,
             }
-        ]
+        ],
     }
 
     mech = parse_mechanism_micm("test", data)

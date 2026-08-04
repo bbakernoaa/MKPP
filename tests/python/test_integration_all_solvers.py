@@ -11,25 +11,24 @@ ros4, rodas3, rodas4), verifying:
 
 **Validates: Requirements 3.1, 7.1, 7.2, 7.3**
 """
+
 import re
-import tempfile
 
 import pytest
-
 from mkpp.codegen import SOLVER_COEFFICIENTS, generate_headers
-from mkpp.lowering import prepare_unified_jacobian, compute_symbolic_lu_decomposition
+from mkpp.lowering import compute_symbolic_lu_decomposition, prepare_unified_jacobian
 from mkpp.model import (
-    MechanismDefinition,
-    SpeciesDefinition,
-    ReactionDefinition,
-    PhaseMode,
     AerosolRepresentation,
+    MechanismDefinition,
+    PhaseMode,
+    ReactionDefinition,
+    SpeciesDefinition,
 )
-
 
 # ---------------------------------------------------------------------------
 # Test mechanism builder
 # ---------------------------------------------------------------------------
+
 
 def _build_test_mechanism():
     """Build a 3-species mechanism with a non-trivial Jacobian for integration testing."""
@@ -75,7 +74,7 @@ def _generate_for_solver(solver_name: str, tmp_dir: str) -> str:
     }
 
     artifacts = generate_headers(mech, out_dir=tmp_dir, solver_name=solver_name)
-    with open(artifacts["header"], "r") as f:
+    with open(artifacts["header"]) as f:
         return f.read()
 
 
@@ -98,31 +97,27 @@ class TestSolverIntegration:
     def test_has_pragma_once(self, solver_name: str, tmp_path):
         """Generated header starts with #pragma once."""
         code = _generate_for_solver(solver_name, str(tmp_path))
-        assert "#pragma once" in code, (
-            f"[{solver_name}] Missing #pragma once include guard"
-        )
+        assert "#pragma once" in code, f"[{solver_name}] Missing #pragma once include guard"
 
     def test_has_kokkos_include(self, solver_name: str, tmp_path):
         """Generated header includes Kokkos_Core.hpp."""
         code = _generate_for_solver(solver_name, str(tmp_path))
-        assert "#include <Kokkos_Core.hpp>" in code, (
-            f"[{solver_name}] Missing Kokkos_Core.hpp include"
-        )
+        assert (
+            "#include <Kokkos_Core.hpp>" in code
+        ), f"[{solver_name}] Missing Kokkos_Core.hpp include"
 
     def test_has_class_structure(self, solver_name: str, tmp_path):
         """Generated header contains a class definition."""
         code = _generate_for_solver(solver_name, str(tmp_path))
         # Look for class or struct definition
-        assert re.search(r"\b(class|struct)\s+\w+", code), (
-            f"[{solver_name}] No class/struct definition found in generated header"
-        )
+        assert re.search(
+            r"\b(class|struct)\s+\w+", code
+        ), f"[{solver_name}] No class/struct definition found in generated header"
 
     def test_has_template_declarations(self, solver_name: str, tmp_path):
         """Generated header contains template declarations for integrate functions."""
         code = _generate_for_solver(solver_name, str(tmp_path))
-        assert "template" in code, (
-            f"[{solver_name}] No template declarations found"
-        )
+        assert "template" in code, f"[{solver_name}] No template declarations found"
 
     def test_stage_count_matches_tableau(self, solver_name: str, tmp_path):
         """
@@ -155,9 +150,9 @@ class TestSolverIntegration:
 
         # Gamma[0] appears as: const double g = <value>;
         g_match = re.search(r"const double g = ([^;]+);", code)
-        assert g_match is not None, (
-            f"[{solver_name}] 'const double g = ...' not found in generated code"
-        )
+        assert (
+            g_match is not None
+        ), f"[{solver_name}] 'const double g = ...' not found in generated code"
         g_value = float(g_match.group(1))
         expected_g = tableau.Gamma[0]
         rel_err = abs(g_value - expected_g) / abs(expected_g) if expected_g != 0 else abs(g_value)
@@ -182,17 +177,15 @@ class TestSolverIntegration:
             r"// Step Size Control \(order (\d+): exponent = 1/(\d+) = ([\d.e+-]+)\)"
         )
         matches = comment_pattern.findall(code)
-        assert len(matches) >= 1, (
-            f"[{solver_name}] No step-size control comment found"
-        )
+        assert len(matches) >= 1, f"[{solver_name}] No step-size control comment found"
 
         order_str, divisor_str, exponent_str = matches[0]
-        assert int(order_str) == expected_elo, (
-            f"[{solver_name}] ELO order mismatch: expected {expected_elo}, got {order_str}"
-        )
-        assert int(divisor_str) == expected_elo, (
-            f"[{solver_name}] ELO divisor mismatch: expected {expected_elo}, got {divisor_str}"
-        )
+        assert (
+            int(order_str) == expected_elo
+        ), f"[{solver_name}] ELO order mismatch: expected {expected_elo}, got {order_str}"
+        assert (
+            int(divisor_str) == expected_elo
+        ), f"[{solver_name}] ELO divisor mismatch: expected {expected_elo}, got {divisor_str}"
         actual_exponent = float(exponent_str)
         assert abs(actual_exponent - expected_exponent) < 1e-10, (
             f"[{solver_name}] Exponent value mismatch: "
@@ -208,9 +201,9 @@ class TestSolverIntegration:
         code = _generate_for_solver(solver_name, str(tmp_path))
         open_braces = code.count("{")
         close_braces = code.count("}")
-        assert open_braces == close_braces, (
-            f"[{solver_name}] Unbalanced braces: {open_braces} open vs {close_braces} close"
-        )
+        assert (
+            open_braces == close_braces
+        ), f"[{solver_name}] Unbalanced braces: {open_braces} open vs {close_braces} close"
 
     def test_no_unclosed_strings(self, solver_name: str, tmp_path):
         """
@@ -246,36 +239,32 @@ class TestSolverIntegration:
                 # Check if previous line ends with ')' (e.g., while(...)\n;) which is valid
                 prev = lines[i - 1].strip() if i > 0 else ""
                 if not prev.endswith(")"):
-                    pytest.fail(
-                        f"[{solver_name}] Suspicious bare semicolon on line {i+1}"
-                    )
+                    pytest.fail(f"[{solver_name}] Suspicious bare semicolon on line {i+1}")
 
         # No consecutive closing braces without content in between
         # (this catches accidental empty blocks from bad generation)
-        assert "{{" not in code.replace("{ {", ""), (
-            f"[{solver_name}] Found '{{{{' pattern suggesting malformed block structure"
-        )
+        assert "{{" not in code.replace(
+            "{ {", ""
+        ), f"[{solver_name}] Found '{{{{' pattern suggesting malformed block structure"
 
     def test_integrate_function_present(self, solver_name: str, tmp_path):
         """Generated code contains both integrate() and integrate_with_reduction()."""
         code = _generate_for_solver(solver_name, str(tmp_path))
 
         integrate_pattern = re.compile(r"\bvoid\s+integrate\s*\(")
-        assert integrate_pattern.search(code), (
-            f"[{solver_name}] integrate() function not found"
-        )
+        assert integrate_pattern.search(code), f"[{solver_name}] integrate() function not found"
 
         reduction_pattern = re.compile(r"\bvoid\s+integrate_with_reduction\s*\(")
-        assert reduction_pattern.search(code), (
-            f"[{solver_name}] integrate_with_reduction() function not found"
-        )
+        assert reduction_pattern.search(
+            code
+        ), f"[{solver_name}] integrate_with_reduction() function not found"
 
     def test_kokkos_inline_function_present(self, solver_name: str, tmp_path):
         """Generated code uses KOKKOS_INLINE_FUNCTION annotation."""
         code = _generate_for_solver(solver_name, str(tmp_path))
-        assert "KOKKOS_INLINE_FUNCTION" in code, (
-            f"[{solver_name}] KOKKOS_INLINE_FUNCTION annotation not found"
-        )
+        assert (
+            "KOKKOS_INLINE_FUNCTION" in code
+        ), f"[{solver_name}] KOKKOS_INLINE_FUNCTION annotation not found"
 
     def test_stage_variables_declared(self, solver_name: str, tmp_path):
         """
@@ -288,9 +277,9 @@ class TestSolverIntegration:
 
         for stage in range(1, tableau.stages + 1):
             k_var = f"K{stage}_0"
-            assert k_var in code, (
-                f"[{solver_name}] Stage variable '{k_var}' not found in generated code"
-            )
+            assert (
+                k_var in code
+            ), f"[{solver_name}] Stage variable '{k_var}' not found in generated code"
 
     def test_no_dynamic_allocations(self, solver_name: str, tmp_path):
         """
@@ -314,12 +303,9 @@ class TestSolverIntegration:
 
         # Find state update lines
         state_update_lines = [
-            line.strip() for line in code.split("\n")
-            if "state(" in line and "+=" in line
+            line.strip() for line in code.split("\n") if "state(" in line and "+=" in line
         ]
-        assert len(state_update_lines) > 0, (
-            f"[{solver_name}] No state update lines found"
-        )
+        assert len(state_update_lines) > 0, f"[{solver_name}] No state update lines found"
 
         # Count how many non-zero M coefficients there are
         non_zero_m = sum(1 for m in tableau.M if m != 0.0)
@@ -335,6 +321,6 @@ class TestSolverIntegration:
     def test_error_estimate_present(self, solver_name: str, tmp_path):
         """Generated code computes error estimate (yerr variables)."""
         code = _generate_for_solver(solver_name, str(tmp_path))
-        assert "yerr_i" in code or "double yerr" in code, (
-            f"[{solver_name}] No error estimate computation found"
-        )
+        assert (
+            "yerr_i" in code or "double yerr" in code
+        ), f"[{solver_name}] No error estimate computation found"

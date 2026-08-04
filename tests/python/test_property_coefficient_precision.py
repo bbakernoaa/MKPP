@@ -7,8 +7,8 @@ Property 3: Coefficient precision preservation
 For any floating-point coefficient value in any stored tableau, its string
 representation contains at least 16 significant decimal digits.
 """
-import pytest
 
+import pytest
 from mkpp.codegen import SOLVER_COEFFICIENTS
 
 
@@ -122,9 +122,7 @@ def test_property_3_coefficient_precision_preservation(solver_name: str):
     coefficients = _get_float_coefficients(tableau)
 
     # There must be coefficients to check
-    assert len(coefficients) > 0, (
-        f"{solver_name}: no float coefficients found in tableau"
-    )
+    assert len(coefficients) > 0, f"{solver_name}: no float coefficients found in tableau"
 
     for array_name, idx, value in coefficients:
         # Skip exact short decimals — they have full precision inherently

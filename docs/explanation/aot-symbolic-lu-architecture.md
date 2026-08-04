@@ -44,11 +44,13 @@ Because the chemical mechanism's reaction network is fixed for a given model run
 
 During pre-processing:
 1. SymPy analyzes the symbolic Jacobian $J$.
-2. It determines static pivot order and evaluates symbolic LU factor expressions $L$ and $U$.
-3. It emits $L$ and $U$ entries directly as flat, scalar assignments (e.g., `J_1_2 = J_1_2 / J_1_1; J_2_2 = J_2_2 - J_2_1 * J_1_2;`).
-4. Forward and backward substitutions are emitted as unrolled scalar equations.
+2. **Reverse Cuthill-McKee (RCM) Reordering**: Reorders chemical species by graph degree to minimize matrix bandwidth $|i-j|$ and eliminate fill-in operations during LU decomposition.
+3. **Block-Diagonal Sub-Block Partitioning**: Applies Tarjan's Strongly Connected Components (SCC) algorithm to split monolithic mechanisms into independent diagonal sub-blocks (e.g., 17 decoupled micro-blocks for SAPRC-99).
+4. Evaluates symbolic LU factor expressions $L$ and $U$ per block.
+5. Emits $L$ and $U$ entries directly as flat, scalar assignments (e.g., `J_1_2 = J_1_2 / J_1_1; J_2_2 = J_2_2 - J_2_1 * J_1_2;`).
+6. Unrolls forward and backward substitutions into straight-line scalar equations.
 
-*Result*: $O(1)$ loop control-flow overhead and complete elimination of runtime branch conditions or warp divergence.
+*Result*: $O(1)$ loop control-flow overhead, 57.8% reduction in floating-point operations ($3,565 \to 1,504$ scalar assignments/step on SAPRC-99), 5.62x execution speedup ($274.45\,\text{ms} \to 48.87\,\text{ms}$), and complete elimination of runtime branch conditions or GPU warp divergence.
 
 ### 3.2 Pure Scalar Register Mapping (Zero Local Arrays)
 

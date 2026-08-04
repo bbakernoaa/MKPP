@@ -7,19 +7,19 @@ Property 4: Stage count matches generated code
 For any solver and any mechanism, the generated integrate() function contains
 exactly tableau.stages forward/backward substitution blocks (one per stage solve).
 """
+
 import re
 import tempfile
 
 import pytest
-
 from mkpp.codegen import SOLVER_COEFFICIENTS, generate_headers
-from mkpp.lowering import prepare_unified_jacobian, compute_symbolic_lu_decomposition
+from mkpp.lowering import compute_symbolic_lu_decomposition, prepare_unified_jacobian
 from mkpp.model import (
-    MechanismDefinition,
-    SpeciesDefinition,
-    ReactionDefinition,
-    PhaseMode,
     AerosolRepresentation,
+    MechanismDefinition,
+    PhaseMode,
+    ReactionDefinition,
+    SpeciesDefinition,
 )
 
 
@@ -79,7 +79,7 @@ def test_property_4_stage_count_matches_generated_code(solver_name: str):
     with tempfile.TemporaryDirectory() as tmp_dir:
         artifacts = generate_headers(mech, out_dir=tmp_dir, solver_name=solver_name)
         header_path = artifacts["header"]
-        with open(header_path, "r") as f:
+        with open(header_path) as f:
             code = f.read()
 
     # Count stage comments "// --- Stage N ---" in generated code
@@ -107,6 +107,6 @@ def test_property_4_stage_count_matches_generated_code(solver_name: str):
     # Verify each stage has K{stage}_0 variable declarations (backward substitution output)
     for stage_num in range(1, tableau.stages + 1):
         k_var = f"K{stage_num}_0"
-        assert k_var in code, (
-            f"Solver '{solver_name}': missing stage variable '{k_var}' in generated code"
-        )
+        assert (
+            k_var in code
+        ), f"Solver '{solver_name}': missing stage variable '{k_var}' in generated code"

@@ -4,34 +4,103 @@ Accuracy verification: MKPP C++ solver vs KPP Fortran baseline.
 Runs the MKPP solver for 1440 steps (24-hour diurnal cycle) and compares
 final concentrations against the KPP Fortran reference.
 """
+
 import csv
-import numpy as np
 import os
 import subprocess
 import sys
+
+import numpy as np
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 # SAPRC-99 species names in MKPP index order (0-indexed, from mechanisms/saprc99.yaml)
 MKPP_SPECIES = [
-    "O3", "H2O2", "NO", "NO2", "NO3", "N2O5", "HONO", "HNO3", "HNO4",
-    "SO2", "H2SO4", "CO", "HCHO", "CCHO", "RCHO", "ACET", "MEK", "HCOOH",
-    "MEOH", "CCO_OH", "RCO_OH", "GLY", "MGLY", "BACL", "CRES", "BALD",
-    "ISOPROD", "METHACRO", "MVK", "PROD2", "DCB1", "DCB2", "DCB3",
-    "ETHENE", "ISOPRENE", "ALK1", "ALK2", "ALK3", "ALK4", "ALK5",
-    "ARO1", "ARO2", "OLE1", "OLE2", "TERP", "RNO3", "NPHE", "PHEN",
-    "PAN", "PAN2", "PBZN", "MA_PAN", "CCO_OOH", "RCO_O2", "RCO_OOH",
-    "XN", "XC", "O3P", "O1D", "OH", "HO2", "C_O2", "COOH", "ROOH",
-    "RO2_R", "R2O2", "RO2_N", "HOCOO", "CCO_O2", "BZCO_O2", "BZNO2_O",
-    "BZ_O", "MA_RCO3", "TBU_O", "AIR", "O2", "H2O", "H2", "CH4",
+    "O3",
+    "H2O2",
+    "NO",
+    "NO2",
+    "NO3",
+    "N2O5",
+    "HONO",
+    "HNO3",
+    "HNO4",
+    "SO2",
+    "H2SO4",
+    "CO",
+    "HCHO",
+    "CCHO",
+    "RCHO",
+    "ACET",
+    "MEK",
+    "HCOOH",
+    "MEOH",
+    "CCO_OH",
+    "RCO_OH",
+    "GLY",
+    "MGLY",
+    "BACL",
+    "CRES",
+    "BALD",
+    "ISOPROD",
+    "METHACRO",
+    "MVK",
+    "PROD2",
+    "DCB1",
+    "DCB2",
+    "DCB3",
+    "ETHENE",
+    "ISOPRENE",
+    "ALK1",
+    "ALK2",
+    "ALK3",
+    "ALK4",
+    "ALK5",
+    "ARO1",
+    "ARO2",
+    "OLE1",
+    "OLE2",
+    "TERP",
+    "RNO3",
+    "NPHE",
+    "PHEN",
+    "PAN",
+    "PAN2",
+    "PBZN",
+    "MA_PAN",
+    "CCO_OOH",
+    "RCO_O2",
+    "RCO_OOH",
+    "XN",
+    "XC",
+    "O3P",
+    "O1D",
+    "OH",
+    "HO2",
+    "C_O2",
+    "COOH",
+    "ROOH",
+    "RO2_R",
+    "R2O2",
+    "RO2_N",
+    "HOCOO",
+    "CCO_O2",
+    "BZCO_O2",
+    "BZNO2_O",
+    "BZ_O",
+    "MA_RCO3",
+    "TBU_O",
+    "AIR",
+    "O2",
+    "H2O",
+    "H2",
+    "CH4",
 ]
 
 
 def run_mkpp_runner():
     """Run MKPP e2e_saprc99_runner with 1440 diurnal steps."""
-    runner = os.path.join(
-        REPO_ROOT, "build/tests/integration/e2e_validation/e2e_saprc99_runner"
-    )
+    runner = os.path.join(REPO_ROOT, "build/tests/integration/e2e_validation/e2e_saprc99_runner")
     if not os.path.exists(runner):
         print(f"ERROR: Runner not found at {runner}")
         print("Build with: cd build && cmake --build . --target e2e_saprc99_runner")
@@ -45,9 +114,7 @@ def run_mkpp_runner():
     env["MKPP_EXECUTION_MODE"] = "serial"
 
     print("Running MKPP C++ solver (1 cell x 1440 steps = 24-hour diurnal)...")
-    result = subprocess.run(
-        [runner], env=env, cwd=cwd, capture_output=True, text=True, timeout=120
-    )
+    result = subprocess.run([runner], env=env, cwd=cwd, capture_output=True, text=True, timeout=120)
 
     if result.returncode != 0:
         print(f"ERROR: Runner failed with code {result.returncode}")
@@ -69,7 +136,7 @@ def run_mkpp_runner():
 def load_mkpp_output(path):
     """Load MKPP output concentrations from CSV. Returns dict {int_index: concentration}."""
     conc = {}
-    with open(path, "r") as f:
+    with open(path) as f:
         reader = csv.DictReader(f)
         for row in reader:
             ts = row.get("time_step", "").strip()
@@ -86,7 +153,7 @@ def load_mkpp_output(path):
 def load_kpp_fortran_output(path):
     """Load KPP Fortran output. Returns dict {species_name: concentration}."""
     conc = {}
-    with open(path, "r") as f:
+    with open(path) as f:
         reader = csv.DictReader(f)
         for row in reader:
             name = row.get("species_name", "").strip()
@@ -103,7 +170,7 @@ def load_kpp_baseline_csv(path):
     """Load KPP baseline from the mixed-format CSV (Jacobian + concentrations).
     Returns dict {int_index: concentration}."""
     conc = {}
-    with open(path, "r") as f:
+    with open(path) as f:
         reader = csv.DictReader(f)
         for row in reader:
             ts = row.get("time_step", "").strip()
@@ -148,7 +215,9 @@ def main():
         nonzero = sum(1 for v in kpp_conc_by_name.values() if abs(v) > 1e-30)
         if nonzero > 5:
             kpp_source = kpp_fortran_path
-            print(f"  Loaded {len(kpp_conc_by_name)} species from KPP Fortran output ({nonzero} non-zero)")
+            print(
+                f"  Loaded {len(kpp_conc_by_name)} species from KPP Fortran output ({nonzero} non-zero)"
+            )
 
     if kpp_source is None and os.path.exists(baseline_csv_path):
         baseline_conc = load_kpp_baseline_csv(baseline_csv_path)
@@ -169,9 +238,7 @@ def main():
 
     # --- Print results ---
     print()
-    print(
-        f"{'Idx':>4} {'Species':<12} {'KPP Fortran':>18} {'MKPP C++':>18} {'Rel Diff':>14}"
-    )
+    print(f"{'Idx':>4} {'Species':<12} {'KPP Fortran':>18} {'MKPP C++':>18} {'Rel Diff':>14}")
     print("-" * 78)
 
     diffs = []
@@ -183,9 +250,7 @@ def main():
         kpp_val = kpp_conc_by_name.get(name, 0.0)
 
         if abs(kpp_val) > 1e-30 and abs(mkpp_val) > 1e-30:
-            rel_diff = (
-                abs(mkpp_val - kpp_val) / max(abs(kpp_val), abs(mkpp_val)) * 100.0
-            )
+            rel_diff = abs(mkpp_val - kpp_val) / max(abs(kpp_val), abs(mkpp_val)) * 100.0
             diffs.append((name, rel_diff))
             diff_str = f"{rel_diff:12.6f}%"
         elif abs(kpp_val) < 1e-30 and abs(mkpp_val) < 1e-30:
@@ -197,9 +262,7 @@ def main():
 
         # Print all rows with at least one non-zero value
         if abs(kpp_val) > 1e-30 or abs(mkpp_val) > 1e-10:
-            print(
-                f"{i:4d} {name:<12} {kpp_val:18.8e} {mkpp_val:18.8e} {diff_str}"
-            )
+            print(f"{i:4d} {name:<12} {kpp_val:18.8e} {mkpp_val:18.8e} {diff_str}")
 
     print("-" * 78)
 
@@ -217,9 +280,7 @@ def main():
         for name, d in worst:
             print(f"    {name:<12} {d:.6f}%")
     else:
-        print(
-            "  No species with non-zero values in both files - cannot compute differences"
-        )
+        print("  No species with non-zero values in both files - cannot compute differences")
 
     print()
 
@@ -227,20 +288,12 @@ def main():
     if diffs:
         mean_diff = np.mean(rel_diffs)
         if mean_diff < 1.0:
-            print(
-                "  CONCLUSION: EXCELLENT AGREEMENT (< 1% mean relative difference)."
-            )
+            print("  CONCLUSION: EXCELLENT AGREEMENT (< 1% mean relative difference).")
         elif mean_diff < 10.0:
-            print(
-                "  CONCLUSION: GOOD AGREEMENT (< 10% mean relative difference)."
-            )
-            print(
-                "  Differences likely due to photolysis rate handling (continuous vs discrete)."
-            )
+            print("  CONCLUSION: GOOD AGREEMENT (< 10% mean relative difference).")
+            print("  Differences likely due to photolysis rate handling (continuous vs discrete).")
         else:
-            print(
-                f"  CONCLUSION: SIGNIFICANT DIFFERENCES ({mean_diff:.1f}% mean)."
-            )
+            print(f"  CONCLUSION: SIGNIFICANT DIFFERENCES ({mean_diff:.1f}% mean).")
             print(
                 "  Investigate solver tolerances, rate constant formulations, or initial conditions."
             )

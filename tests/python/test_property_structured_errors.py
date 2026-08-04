@@ -6,12 +6,9 @@ Tests that CompilationError instances always contain the required fields
 and that serialization methods preserve them correctly.
 """
 
-import pytest
-from hypothesis import given, settings, assume
+from hypothesis import given, settings
 from hypothesis import strategies as st
-
 from mkpp.model import CompilationError
-
 
 # --- Strategies ---
 
@@ -21,13 +18,19 @@ NON_EMPTY_TEXT = st.text(min_size=1, max_size=200).filter(lambda s: s.strip())
 
 OPTIONAL_REACTION_INDEX = st.one_of(st.none(), st.integers(min_value=0, max_value=1000))
 
-OPTIONAL_SPECIES_NAME = st.one_of(st.none(), st.text(min_size=1, max_size=50).filter(lambda s: s.strip()))
+OPTIONAL_SPECIES_NAME = st.one_of(
+    st.none(), st.text(min_size=1, max_size=50).filter(lambda s: s.strip())
+)
 
 OPTIONAL_YAML_LOCATION = st.one_of(
     st.none(),
     st.builds(
         lambda f, l, c: f"{f}:{l}:{c}",
-        st.text(min_size=1, max_size=30, alphabet=st.characters(whitelist_categories=("L", "N"), whitelist_characters="._-/")),
+        st.text(
+            min_size=1,
+            max_size=30,
+            alphabet=st.characters(whitelist_categories=("L", "N"), whitelist_characters="._-/"),
+        ),
         st.integers(min_value=1, max_value=10000),
         st.integers(min_value=1, max_value=500),
     ),
@@ -105,7 +108,7 @@ def test_str_always_includes_stage_and_message(
     s = str(err)
 
     assert stage in s, f"__str__() must include stage '{stage}'"
-    assert message in s, f"__str__() must include message"
+    assert message in s, "__str__() must include message"
 
 
 @given(
@@ -115,9 +118,7 @@ def test_str_always_includes_stage_and_message(
     yaml_location=OPTIONAL_YAML_LOCATION,
 )
 @settings(max_examples=100)
-def test_at_least_one_identifying_field_present(
-    stage, message, identifiers, yaml_location
-):
+def test_at_least_one_identifying_field_present(stage, message, identifiers, yaml_location):
     """Property 1: When constructed with at least one identifier, to_dict()
     reflects at least one of reaction_index or species_name.
 
@@ -136,9 +137,9 @@ def test_at_least_one_identifying_field_present(
     has_reaction = "reaction_index" in d
     has_species = "species_name" in d
 
-    assert has_reaction or has_species, (
-        "At least one identifying field (reaction_index or species_name) must be present in to_dict()"
-    )
+    assert (
+        has_reaction or has_species
+    ), "At least one identifying field (reaction_index or species_name) must be present in to_dict()"
 
 
 @given(

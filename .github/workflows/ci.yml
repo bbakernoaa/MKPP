@@ -23,14 +23,12 @@ jobs:
         run: pip install pre-commit
 
       - name: Run Pre-commit Hooks
-        # This will execute ruff, clang-format, cmake-format, and shellcheck
         run: pre-commit run --all-files --show-diff-on-failure
 
   build-and-test:
     name: 2. Build & Test Gates
     needs: static-gates
     runs-on: ubuntu-latest
-    # Utilizing an explicit environment variable check block as defined in EE2
     defaults:
       run:
         shell: bash -el {0}
@@ -53,15 +51,17 @@ jobs:
           cmake --version
           ninja --version
 
+      - name: Install MKPP Package
+        run: pip install -e .
+
       - name: Configure CMake
         run: cmake --preset default
 
       - name: Build C++ / Fortran Core
         run: cmake --build --preset default
 
-      # The exact testing commands will be fleshed out as tests are added
       - name: Run C++ / Fortran CTests
-        run: ctest --preset default || echo "No CTests configured yet, bypassing..."
+        run: ctest --preset default --output-on-failure
 
       - name: Run Python AOT Tests
-        run: pytest || echo "No pytest tests configured yet, bypassing..."
+        run: pytest tests/python/ -ra -q --strict-markers

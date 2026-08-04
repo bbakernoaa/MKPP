@@ -7,19 +7,19 @@ Property 7: Step-size exponent matches ELO
 For any solver, the step-size control exponent emitted in the generated code
 equals 1.0 / tableau.ELO.
 """
+
 import re
 import tempfile
 
 import pytest
-
 from mkpp.codegen import SOLVER_COEFFICIENTS, generate_headers
-from mkpp.lowering import prepare_unified_jacobian, compute_symbolic_lu_decomposition
+from mkpp.lowering import compute_symbolic_lu_decomposition, prepare_unified_jacobian
 from mkpp.model import (
-    MechanismDefinition,
-    SpeciesDefinition,
-    ReactionDefinition,
-    PhaseMode,
     AerosolRepresentation,
+    MechanismDefinition,
+    PhaseMode,
+    ReactionDefinition,
+    SpeciesDefinition,
 )
 
 
@@ -69,7 +69,7 @@ def _generate_code_for_solver(solver_name: str) -> str:
     with tempfile.TemporaryDirectory() as tmp_dir:
         artifacts = generate_headers(mech, out_dir=tmp_dir, solver_name=solver_name)
         header_path = artifacts["header"]
-        with open(header_path, "r") as f:
+        with open(header_path) as f:
             return f.read()
 
 
@@ -91,9 +91,9 @@ def test_property_7_step_size_comment_mentions_correct_order(solver_name: str):
         r"// Step Size Control \(order (\d+): exponent = 1/(\d+) = ([\d.e+-]+)\)"
     )
     matches = comment_pattern.findall(code)
-    assert len(matches) >= 1, (
-        f"Solver '{solver_name}': No step-size control comment found in generated code"
-    )
+    assert (
+        len(matches) >= 1
+    ), f"Solver '{solver_name}': No step-size control comment found in generated code"
 
     for order_str, divisor_str, exponent_str in matches:
         # Verify the order matches ELO
@@ -160,9 +160,7 @@ def test_property_7_step_size_exponent_matches_elo(solver_name: str):
     else:
         # For ELO=4, the code uses: safety * Kokkos::pow(err_norm, -0.25...)
         # The exponent literal should be 1/ELO = 0.25
-        pow_pattern = re.compile(
-            r"double factor = safety \* Kokkos::pow\(err_norm, -([\d.e+-]+)\)"
-        )
+        pow_pattern = re.compile(r"double factor = safety \* Kokkos::pow\(err_norm, -([\d.e+-]+)\)")
         pow_match = pow_pattern.search(code)
         assert pow_match is not None, (
             f"Solver '{solver_name}' (ELO={tableau.ELO}): Expected "
@@ -212,6 +210,5 @@ def test_property_7_both_functions_use_same_exponent(solver_name: str):
         f"{divisor_1} vs {divisor_2}"
     )
     assert exp_1 == exp_2, (
-        f"Solver '{solver_name}': Mismatched exponents between functions: "
-        f"{exp_1} vs {exp_2}"
+        f"Solver '{solver_name}': Mismatched exponents between functions: " f"{exp_1} vs {exp_2}"
     )

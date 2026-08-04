@@ -8,26 +8,25 @@ For any solver, the M, E, A, C, and Gamma[0] coefficient literals emitted in the
 generated C++ code are numerically equal (within floating-point representation)
 to the values stored in SOLVER_COEFFICIENTS[solver_name].
 """
+
 import re
 import tempfile
-from pathlib import Path
 
 import pytest
 import sympy as sp
-
-from mkpp.codegen import SOLVER_COEFFICIENTS, RosenbrockTableau, generate_headers, get_A, get_C
+from mkpp.codegen import SOLVER_COEFFICIENTS, generate_headers, get_A, get_C
 from mkpp.lowering import compute_symbolic_lu_decomposition
 from mkpp.model import (
-    MechanismDefinition,
-    SpeciesDefinition,
-    PhaseMode,
     AerosolRepresentation,
+    MechanismDefinition,
+    PhaseMode,
+    SpeciesDefinition,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _build_test_mechanism(n_species: int = 3):
     """Build a minimal mechanism with n_species species and a non-trivial Jacobian."""
@@ -94,7 +93,7 @@ def _generate_code_for_solver(solver_name: str) -> str:
     with tempfile.TemporaryDirectory() as tmp_dir:
         artifacts = generate_headers(mech, out_dir=tmp_dir, solver_name=solver_name)
         header_path = artifacts["header"]
-        with open(header_path, "r") as f:
+        with open(header_path) as f:
             return f.read()
 
 
@@ -122,6 +121,7 @@ def _values_match(expected: float, actual: float, rel_tol: float = 1e-14) -> boo
 # **Validates: Requirements 3.3, 3.4, 3.5, 3.6, 3.7**
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.parametrize("solver_name", list(SOLVER_COEFFICIENTS.keys()))
 def test_property_6_gamma0_in_generated_code(solver_name: str):
     """
@@ -135,14 +135,12 @@ def test_property_6_gamma0_in_generated_code(solver_name: str):
 
     # Gamma[0] appears as: const double g = <value>;
     g_match = re.search(r"const double g = ([^;]+);", code)
-    assert g_match is not None, (
-        f"{solver_name}: 'const double g = ...' not found in generated code"
-    )
+    assert g_match is not None, f"{solver_name}: 'const double g = ...' not found in generated code"
     g_value = float(g_match.group(1))
     expected_g = tableau.Gamma[0]
-    assert _values_match(expected_g, g_value), (
-        f"{solver_name}: Gamma[0] mismatch: expected {expected_g:.17g}, got {g_value:.17g}"
-    )
+    assert _values_match(
+        expected_g, g_value
+    ), f"{solver_name}: Gamma[0] mismatch: expected {expected_g:.17g}, got {g_value:.17g}"
 
 
 @pytest.mark.parametrize("solver_name", list(SOLVER_COEFFICIENTS.keys()))
@@ -160,12 +158,9 @@ def test_property_6_m_coefficients_in_generated_code(solver_name: str):
     # state(X) += <M[0]> * K1_Y + <M[1]> * K2_Y + ...
     # Look for lines matching: state(...) +=
     state_update_lines = [
-        line.strip() for line in code.split("\n")
-        if "state(" in line and "+=" in line
+        line.strip() for line in code.split("\n") if "state(" in line and "+=" in line
     ]
-    assert len(state_update_lines) > 0, (
-        f"{solver_name}: No state update lines found"
-    )
+    assert len(state_update_lines) > 0, f"{solver_name}: No state update lines found"
 
     # Extract the M coefficients from the first state update line (species 0)
     # Pattern: <coeff> * K<stage>_0
@@ -180,9 +175,7 @@ def test_property_6_m_coefficients_in_generated_code(solver_name: str):
     )
 
     for (j, expected_val), (stage_found, actual_val) in zip(non_zero_m, extracted_m):
-        assert stage_found == j + 1, (
-            f"{solver_name}: Expected K{j+1} term, found K{stage_found}"
-        )
+        assert stage_found == j + 1, f"{solver_name}: Expected K{j+1} term, found K{stage_found}"
         assert _values_match(expected_val, actual_val), (
             f"{solver_name}: M[{j}] mismatch: expected {expected_val:.17g}, "
             f"got {actual_val:.17g}"
@@ -201,13 +194,8 @@ def test_property_6_e_coefficients_in_generated_code(solver_name: str):
     code = _generate_code_for_solver(solver_name)
 
     # E coefficients appear in: double yerr_i = <E[0]> * K1_0 + <E[1]> * K2_0 + ...
-    yerr_lines = [
-        line.strip() for line in code.split("\n")
-        if "double yerr_i" in line
-    ]
-    assert len(yerr_lines) > 0, (
-        f"{solver_name}: No yerr_i lines found"
-    )
+    yerr_lines = [line.strip() for line in code.split("\n") if "double yerr_i" in line]
+    assert len(yerr_lines) > 0, f"{solver_name}: No yerr_i lines found"
 
     # Use the first yerr line (species 0)
     first_yerr = yerr_lines[0]
@@ -221,9 +209,9 @@ def test_property_6_e_coefficients_in_generated_code(solver_name: str):
     )
 
     for (j, expected_val), (stage_found, actual_val) in zip(non_zero_e, extracted_e):
-        assert stage_found == j + 1, (
-            f"{solver_name}: Expected K{j+1} term in yerr, found K{stage_found}"
-        )
+        assert (
+            stage_found == j + 1
+        ), f"{solver_name}: Expected K{j+1} term in yerr, found K{stage_found}"
         assert _values_match(expected_val, actual_val), (
             f"{solver_name}: E[{j}] mismatch: expected {expected_val:.17g}, "
             f"got {actual_val:.17g}"
@@ -249,9 +237,7 @@ def test_property_6_a_coefficients_in_generated_code(solver_name: str):
         y_matches = [m for m in y_pattern.finditer(code)]
         if not y_matches:
             # If A coefficients for this stage are all zero, Y may just be S_0
-            all_zero = all(
-                get_A(tableau, stage, j) == 0.0 for j in range(1, stage)
-            )
+            all_zero = all(get_A(tableau, stage, j) == 0.0 for j in range(1, stage))
             if all_zero:
                 continue
             pytest.fail(
@@ -269,9 +255,7 @@ def test_property_6_a_coefficients_in_generated_code(solver_name: str):
 
             # Look for the K<j>_0 term in this expression
             # Pattern: <coeff> * K<j>_0, or just K<j>_0 if coeff is 1.0
-            k_pattern = re.compile(
-                rf"([-+]?\d+\.?\d*(?:[eE][-+]?\d+)?)\s*\*\s*K{j}_0"
-            )
+            k_pattern = re.compile(rf"([-+]?\d+\.?\d*(?:[eE][-+]?\d+)?)\s*\*\s*K{j}_0")
             k_match = k_pattern.search(y_expr)
             if k_match:
                 actual_val = float(k_match.group(1))
@@ -312,9 +296,7 @@ def test_property_6_c_coefficients_in_generated_code(solver_name: str):
         rhs_matches = [m for m in rhs_pattern.finditer(code)]
         if not rhs_matches:
             # If all C for this stage are zero, rhs just equals F
-            all_zero = all(
-                get_C(tableau, stage, j) == 0.0 for j in range(1, stage)
-            )
+            all_zero = all(get_C(tableau, stage, j) == 0.0 for j in range(1, stage))
             if all_zero:
                 continue
             pytest.fail(
@@ -354,6 +336,7 @@ def test_property_6_c_coefficients_in_generated_code(solver_name: str):
 # Extraction helpers
 # ---------------------------------------------------------------------------
 
+
 def _extract_m_coefficients(line: str, stages: int) -> list:
     """Extract (stage_num, coefficient_value) pairs from a state update line.
 
@@ -364,9 +347,7 @@ def _extract_m_coefficients(line: str, stages: int) -> list:
     results = []
     for stage in range(1, stages + 1):
         # Try to find: <coeff> * K<stage>_<species>
-        pattern = re.compile(
-            rf"([-+]?\s*\d+\.?\d*(?:[eE][-+]?\d+)?)\s*\*\s*K{stage}_\d+"
-        )
+        pattern = re.compile(rf"([-+]?\s*\d+\.?\d*(?:[eE][-+]?\d+)?)\s*\*\s*K{stage}_\d+")
         match = pattern.search(line)
         if match:
             coeff_str = match.group(1).replace(" ", "")
@@ -389,18 +370,14 @@ def _extract_stage_coefficients(line: str, stages: int, species_idx: int = 0) ->
     results = []
     for stage in range(1, stages + 1):
         # Try to find: <coeff> * K<stage>_<species>
-        pattern = re.compile(
-            rf"([-+]?\s*\d+\.?\d*(?:[eE][-+]?\d+)?)\s*\*\s*K{stage}_{species_idx}"
-        )
+        pattern = re.compile(rf"([-+]?\s*\d+\.?\d*(?:[eE][-+]?\d+)?)\s*\*\s*K{stage}_{species_idx}")
         match = pattern.search(line)
         if match:
             coeff_str = match.group(1).replace(" ", "")
             results.append((stage, float(coeff_str)))
         else:
             # Check for bare K<stage>_<species> (implies coeff=1.0)
-            bare_pattern = re.compile(
-                rf"(?:^|[+=\s])\s*K{stage}_{species_idx}(?:\s|$|[+;])"
-            )
+            bare_pattern = re.compile(rf"(?:^|[+=\s])\s*K{stage}_{species_idx}(?:\s|$|[+;])")
             if bare_pattern.search(line):
                 results.append((stage, 1.0))
     return results

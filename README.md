@@ -39,5 +39,5 @@ See the Constitution and `.github/copilot-instructions.md` for complete guidelin
 
 ## License
 
-This project is part of NOAA-EMC Ecosystem. 
+This project is part of NOAA-EMC Ecosystem.
 See LICENSE and DISCLAIMER for details.

@@ -1,6 +1,13 @@
 import pytest
-from mkpp.model import MechanismDefinition, SpeciesDefinition, ReactionDefinition, PhaseMode, AerosolRepresentation
 from mkpp.amore import apply_amore_lumping
+from mkpp.model import (
+    AerosolRepresentation,
+    MechanismDefinition,
+    PhaseMode,
+    ReactionDefinition,
+    SpeciesDefinition,
+)
+
 
 def test_amore_non_arrhenius_troe_lumping():
     # Mechanism with 2 explicit species mapping to 1 surrogate SURR
@@ -25,8 +32,8 @@ def test_amore_non_arrhenius_troe_lumping():
                 parameters={
                     "k0": {"A": 1.0e-28, "B": 0.0, "C": 0.0},
                     "kinf": {"A": 1.0e-11, "B": 0.0, "C": 0.0},
-                    "Fc": 0.6
-                }
+                    "Fc": 0.6,
+                },
             ),
             ReactionDefinition(
                 reaction_type="TROE",
@@ -36,10 +43,10 @@ def test_amore_non_arrhenius_troe_lumping():
                 parameters={
                     "k0": {"A": 3.0e-28, "B": 0.0, "C": 0.0},
                     "kinf": {"A": 3.0e-11, "B": 0.0, "C": 0.0},
-                    "Fc": 0.6
-                }
-            )
-        ]
+                    "Fc": 0.6,
+                },
+            ),
+        ],
     )
 
     rules = {"SURR": ["EX1", "EX2"]}

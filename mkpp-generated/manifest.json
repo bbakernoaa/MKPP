@@ -18,13 +18,5 @@
       "layout": "LayoutLeft",
       "lifetime": "unmanaged_borrowed_from_host"
     }
-  },
-  "solver_partition": {
-    "sza_sorted": true,
-    "micro_blocks": {
-      "implicit": 210,
-      "explicit": 1
-    },
-    "scc_count": 1
   }
 }

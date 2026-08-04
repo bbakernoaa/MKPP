@@ -1,10 +1,13 @@
-import pytest
-import sympy as sp
-from mkpp.model import (
-    MechanismDefinition, SpeciesDefinition, ReactionDefinition, PhaseMode, AerosolRepresentation, SymbolicLUPlan
-)
-from mkpp.lowering import prepare_unified_jacobian, compute_symbolic_lu_decomposition
 from mkpp.codegen import format_eqn, generate_headers
+from mkpp.lowering import compute_symbolic_lu_decomposition, prepare_unified_jacobian
+from mkpp.model import (
+    AerosolRepresentation,
+    MechanismDefinition,
+    PhaseMode,
+    ReactionDefinition,
+    SpeciesDefinition,
+    SymbolicLUPlan,
+)
 
 
 def build_simple_2sp_mechanism():
@@ -17,7 +20,7 @@ def build_simple_2sp_mechanism():
         products={"B": 1.0},
         rate_expression="k*A",
         parameters={"A": 1e-2, "B": 0.0, "C": 0.0},
-        stiff=True
+        stiff=True,
     )
     return MechanismDefinition(
         name="test_2sp",
@@ -25,7 +28,7 @@ def build_simple_2sp_mechanism():
         aerosol_representation=AerosolRepresentation.BULK,
         species=[sp_a, sp_b],
         phases=[],
-        reactions=[rxn]
+        reactions=[rxn],
     )
 
 
@@ -41,7 +44,7 @@ def build_chapman_toy_mechanism():
         products={"O1D": 1.0, "O": 1.0},
         rate_expression="J1*O3",
         parameters={"A": "J1"},
-        stiff=True
+        stiff=True,
     )
     r2 = ReactionDefinition(
         reaction_type="ARRHENIUS",
@@ -49,7 +52,7 @@ def build_chapman_toy_mechanism():
         products={"O": 2.0},
         rate_expression="k2*O*O3",
         parameters={"A": 1e-15, "B": 0.0, "C": 0.0},
-        stiff=True
+        stiff=True,
     )
     return MechanismDefinition(
         name="chapman_toy",
@@ -57,7 +60,7 @@ def build_chapman_toy_mechanism():
         aerosol_representation=AerosolRepresentation.BULK,
         species=[sp_o, sp_o3, sp_o1d],
         phases=[],
-        reactions=[r1, r2]
+        reactions=[r1, r2],
     )
 
 
@@ -80,7 +83,9 @@ def test_codegen_zero_thread_arrays_and_loops(tmp_path):
     """Verify generated header contains zero thread-local array declarations and zero loops."""
     mech = build_chapman_toy_mechanism()
     lowering_data = prepare_unified_jacobian(mech)
-    plan = compute_symbolic_lu_decomposition(lowering_data["jacobian_matrix"], lowering_data["species_map"])
+    plan = compute_symbolic_lu_decomposition(
+        lowering_data["jacobian_matrix"], lowering_data["species_map"]
+    )
 
     mech.metadata["sympy_metadata"] = lowering_data
     mech.metadata["symbolic_lu_plan"] = plan
@@ -88,7 +93,7 @@ def test_codegen_zero_thread_arrays_and_loops(tmp_path):
     artifacts = generate_headers(mech, out_dir=str(tmp_path))
     header_path = artifacts["header"]
 
-    with open(header_path, 'r') as f:
+    with open(header_path) as f:
         code = f.read()
 
     # Check zero thread local arrays
@@ -118,7 +123,7 @@ def test_view_interface_contract_signatures(tmp_path):
     artifacts = generate_headers(mech, out_dir=str(tmp_path))
     header_path = artifacts["header"]
 
-    with open(header_path, 'r') as f:
+    with open(header_path) as f:
         code = f.read()
 
     assert "template <class StateView, class RateView>" in code
@@ -139,7 +144,7 @@ def test_stage_loop_fusion_and_scalar_vars(tmp_path):
     artifacts = generate_headers(mech, out_dir=str(tmp_path))
     header_path = artifacts["header"]
 
-    with open(header_path, 'r') as f:
+    with open(header_path) as f:
         code = f.read()
 
     assert "const double S_0 = state(0);" in code
@@ -182,7 +187,7 @@ def test_stage_two_backward_solve_preserves_planner_indices(tmp_path):
     artifacts = generate_headers(mech, out_dir=str(tmp_path))
     header_path = artifacts["header"]
 
-    with open(header_path, 'r') as f:
+    with open(header_path) as f:
         code = f.read()
 
     assert "double K2_2 = y2_2 / U_2_2;" in code
@@ -214,7 +219,6 @@ def test_format_eqn_strength_reduces_state_squares():
     scalar_code = format_eqn("C_A**2", species, state_var="S", use_parentheses=False)
     assert "pow(" not in scalar_code
     assert "S_0 * S_0" in scalar_code
-
 
 
 def test_block_diagonal_emits_block_comments(tmp_path):
@@ -251,7 +255,7 @@ def test_block_diagonal_emits_block_comments(tmp_path):
     artifacts = generate_headers(mech, out_dir=str(tmp_path))
     header_path = artifacts["header"]
 
-    with open(header_path, 'r') as f:
+    with open(header_path) as f:
         code = f.read()
 
     # Check block boundary comments appear in LU factorization section
@@ -292,7 +296,7 @@ def test_permuted_state_access(tmp_path):
     artifacts = generate_headers(mech, out_dir=str(tmp_path))
     header_path = artifacts["header"]
 
-    with open(header_path, 'r') as f:
+    with open(header_path) as f:
         code = f.read()
 
     # With perm=[2, 0, 1]: S_0 = state(2), S_1 = state(0), S_2 = state(1)
@@ -337,7 +341,7 @@ def test_no_permutation_uses_identity_access(tmp_path):
     artifacts = generate_headers(mech, out_dir=str(tmp_path))
     header_path = artifacts["header"]
 
-    with open(header_path, 'r') as f:
+    with open(header_path) as f:
         code = f.read()
 
     # Without permutation: S_0 = state(0), S_1 = state(1) (identity)
