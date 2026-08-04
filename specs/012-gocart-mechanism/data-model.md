@@ -11,7 +11,7 @@ A structured definition of the GOCART chemical and aerosol processes suitable fo
 
 #### Species
 - **Gases**: `OH`, `NO3`, `H2O2`, `DMS`, `SO2`, `HNO3`, `NH3`
-- **Aerosols**: 
+- **Aerosols**:
   - `SO4`
   - `BC1` (Hydrophobic Black Carbon), `BC2` (Hydrophilic Black Carbon)
   - `OC1` (Hydrophobic Organic Carbon), `OC2` (Hydrophilic Organic Carbon)

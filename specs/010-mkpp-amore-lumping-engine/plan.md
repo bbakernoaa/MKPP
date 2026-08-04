@@ -86,4 +86,3 @@ tests/
 
 - [x] Lumping rule parsing and validation logic: Review before integrating into the main compilation pipeline.
 - [x] AST Collapsing & Rate Averaging: Review by an atmospheric physicist/developer to ensure scientific validity of $A_{eff}$.
-

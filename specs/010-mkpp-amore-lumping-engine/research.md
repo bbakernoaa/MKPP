@@ -14,6 +14,6 @@
 
 ## 3. CLI Integration of `--lump` Flag
 - **Context**: User Story 3 requires `--lump rules.yaml` to trigger AMORE instead of DRGEP.
-- **Decision**: Modify the compiler entry point (e.g., `src/mkpp/__main__.py` or CLI module) to accept `--lump <filepath>`. When this is present, it will initialize the AMORE engine and bypass the DRGEP auto-reduction module. 
+- **Decision**: Modify the compiler entry point (e.g., `src/mkpp/__main__.py` or CLI module) to accept `--lump <filepath>`. When this is present, it will initialize the AMORE engine and bypass the DRGEP auto-reduction module.
 - **Rationale**: Clean separation of concerns; provides an explicit opt-in for graph lumping.
 - **Alternatives considered**: Implicit lumping if the file exists (rejected due to "Fail Fast, Fail Loudly" and explicitness principles).

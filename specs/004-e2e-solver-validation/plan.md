@@ -16,7 +16,7 @@ Build a validation test suite that runs the Exaero C++ box-model with MKPP gener
 **Target Platform**: Linux HPC clusters / CPUs / GPUs
 **Project Type**: Testing/Validation fixture
 **Performance Goals**: Zero-byte overhead (CON-001, CON-002) in solver execution.
-**Constraints**: 
+**Constraints**:
 - **CON-001**: TeamPolicy divergence (must use Kokkos hierarchical parallelism)
 - **CON-002**: LayoutLeft interoperability (zero-copy handshakes)
 
@@ -60,7 +60,7 @@ tests/
 │   │       └── kpp_baseline_chapman.csv  # Pre-generated legacy KPP output
 ```
 
-**Structure Decision**: Keep integration validation completely isolated in `tests/integration/e2e_validation` to avoid polluting the core `exaero` and `mkpp` source code. 
+**Structure Decision**: Keep integration validation completely isolated in `tests/integration/e2e_validation` to avoid polluting the core `exaero` and `mkpp` source code.
 
 ## Execution Strategy
 

@@ -33,7 +33,7 @@ This guide validates that the MKPP AMORE Lumping Engine correctly parses lumping
    - Ensure `ETHANE` and `PROPANE` are not present.
    - Ensure `ALK_SURR` is present.
    - Look for the merged reaction and verify the product multipliers account for the carbon ratio.
-   
+
 3. **C++ End-to-End Test**:
    ```bash
    cd build

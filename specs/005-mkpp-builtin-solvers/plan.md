@@ -11,7 +11,7 @@ Inject numerical solvers directly into MKPP's generated Kokkos C++ headers. This
 **Language/Version**: Python 3.14 (Code Generator), C++23 / Kokkos (Generated Output)
 **Primary Dependencies**: SymPy
 **Project Type**: Built-in AST Code Generation
-**Constraints**: 
+**Constraints**:
 - **CON-001**: Must execute sequentially within a single Kokkos thread via `TeamThreadRange` (no device-wide kernels launched from inside).
 
 ## Constitution Check

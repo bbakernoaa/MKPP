@@ -311,7 +311,7 @@ CLI --solver arg
 argparse validation (choices enum)
        │
        ▼
-run_compiler(solver=...) 
+run_compiler(solver=...)
        │
        ▼
 generate_headers(solver_name=...)

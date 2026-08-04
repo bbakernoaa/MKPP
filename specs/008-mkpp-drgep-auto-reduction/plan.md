@@ -7,7 +7,7 @@ Implement the Direct Relation Graph with Error Propagation (DRGEP) auto-reductio
 
 ## Technical Context
 **Language/Version**: Python 3.14 (MKPP core), NetworkX (Graph Analysis)
-**Constraints**: 
+**Constraints**:
 - **Constitution**: The reduced mechanism must be mathematically sound (will not break the `KOKKOS_INLINE_FUNCTION` syntax or the Mass Conservation projections).
 
 ## Project Structure

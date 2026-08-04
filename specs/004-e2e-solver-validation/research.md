@@ -9,7 +9,7 @@
 
 **2. Handling Near-Zero Limits (Subnormals)**
 - **Decision**: The validation fixture will enforce an absolute tolerance (ATOL) of $1 \times 10^{-12}$ for values that approach zero, alongside the relative tolerance of $1 \times 10^{-6}$.
-- **Rationale**: Atmospheric chemistry can push minor species to infinitesimal concentrations, triggering meaningless relative errors. 
+- **Rationale**: Atmospheric chemistry can push minor species to infinitesimal concentrations, triggering meaningless relative errors.
 - **Alternatives considered**: Clamping strictly to zero. (Rejected because analytical solvers shouldn't artificially lose conservation).
 
 **3. Memory Profiling (Zero Overhead)**
