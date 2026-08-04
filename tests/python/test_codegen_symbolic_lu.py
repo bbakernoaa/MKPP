@@ -131,7 +131,7 @@ def test_view_interface_contract_signatures(tmp_path):
 
 
 def test_stage_loop_fusion_and_scalar_vars(tmp_path):
-    """Verify ROS-2 stage equations and state updates are unrolled into fused scalar variables."""
+    """Verify stage equations and state updates are unrolled into fused scalar variables."""
     mech = build_chapman_toy_mechanism()
     lowering_data = prepare_unified_jacobian(mech)
     mech.metadata["sympy_metadata"] = lowering_data
@@ -145,10 +145,12 @@ def test_stage_loop_fusion_and_scalar_vars(tmp_path):
     assert "const double S_0 = state(0);" in code
     assert "double F1_0 =" in code
     assert "double K1_0 =" in code
-    assert "double Y2_0 = S_0 + ros_A21 * K1_0;" in code
+    # Generic emitter: A(2,1)=1.0, so Y2_0 = S_0 + K1_0 (no coefficient for 1.0)
+    assert "double Y2_0 = S_0 + K1_0;" in code
     assert "double F2_0 =" in code
     assert "double K2_0 =" in code
-    assert "state(0) += ros_M1 * K1_0 + ros_M2 * K2_0 + ros_M3 * K3_0;" in code
+    # Generic emitter: M[0]=1.0 (no coeff), M[1] and M[2] are numeric literals
+    assert "state(0) += K1_0 + 6.1697947043828245 * K2_0 + -0.42772256543218573 * K3_0;" in code
 
 
 def test_stage_two_backward_solve_preserves_planner_indices(tmp_path):
@@ -299,9 +301,9 @@ def test_permuted_state_access(tmp_path):
     assert "const double S_2 = state(1);" in code
 
     # state updates should also use permuted indices
-    assert "state(2) += ros_M1 * K1_0 + ros_M2 * K2_0 + ros_M3 * K3_0;" in code
-    assert "state(0) += ros_M1 * K1_1 + ros_M2 * K2_1 + ros_M3 * K3_1;" in code
-    assert "state(1) += ros_M1 * K1_2 + ros_M2 * K2_2 + ros_M3 * K3_2;" in code
+    assert "state(2) += K1_0 + 6.1697947043828245 * K2_0 + -0.42772256543218573 * K3_0;" in code
+    assert "state(0) += K1_1 + 6.1697947043828245 * K2_1 + -0.42772256543218573 * K3_1;" in code
+    assert "state(1) += K1_2 + 6.1697947043828245 * K2_2 + -0.42772256543218573 * K3_2;" in code
 
     # Permutation note in generated header
     assert "// NOTE: State access uses permuted species ordering" in code
@@ -341,8 +343,8 @@ def test_no_permutation_uses_identity_access(tmp_path):
     # Without permutation: S_0 = state(0), S_1 = state(1) (identity)
     assert "const double S_0 = state(0);" in code
     assert "const double S_1 = state(1);" in code
-    assert "state(0) += ros_M1 * K1_0 + ros_M2 * K2_0 + ros_M3 * K3_0;" in code
-    assert "state(1) += ros_M1 * K1_1 + ros_M2 * K2_1 + ros_M3 * K3_1;" in code
+    assert "state(0) += K1_0 + 6.1697947043828245 * K2_0 + -0.42772256543218573 * K3_0;" in code
+    assert "state(1) += K1_1 + 6.1697947043828245 * K2_1 + -0.42772256543218573 * K3_1;" in code
 
     # No permutation note
     assert "// NOTE: State access uses permuted species ordering" not in code

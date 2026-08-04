@@ -43,7 +43,7 @@ Extend MKPP's code generation pipeline to support five Rosenbrock solvers (Ros2,
 - [x] 3. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 4. Implement generic Rosenbrock stage emission
+- [x] 4. Implement generic Rosenbrock stage emission
   - [x] 4.1 Implement `_emit_rosenbrock_stages()` function in `codegen.py`
     - Create the function with signature: `_emit_rosenbrock_stages(f, tableau, N, lu_plan, sympy_meta, mech, perm, is_reduction=False)`
     - Implement Python-time loop that unrolls S stages into named C++ scalar variables (e.g., `K2_0`, `Y3_5`)
@@ -53,72 +53,72 @@ Extend MKPP's code generation pipeline to support five Rosenbrock solvers (Ros2,
     - Use `Gamma[0]` for W matrix construction: `W = (1/(gamma*dt)) * I - J`
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 4.1, 4.2, 4.3, 5.1, 5.2, 5.3, 5.4_
 
-  - [-] 4.2 Refactor existing `integrate()` emission to use `_emit_rosenbrock_stages()`
+  - [x] 4.2 Refactor existing `integrate()` emission to use `_emit_rosenbrock_stages()`
     - Replace current hardcoded 3-stage Ros3 logic with a call to `_emit_rosenbrock_stages(tableau, ...)`
     - Ensure generated output for `ros3` is identical to previous output (backward compatibility)
     - Retain `KOKKOS_INLINE_FUNCTION` annotation on generated function
     - _Requirements: 5.4, 8.1, 8.3_
 
-  - [-] 4.3 Refactor `integrate_with_reduction()` emission to use `_emit_rosenbrock_stages()`
+  - [x] 4.3 Refactor `integrate_with_reduction()` emission to use `_emit_rosenbrock_stages()`
     - Replace current hardcoded logic with a call to `_emit_rosenbrock_stages(tableau, ..., is_reduction=True)`
     - Ensure same tableau, stage count, and ELO exponent are used as in `integrate()`
     - _Requirements: 6.1, 6.2_
 
-  - [~] 4.4 Write property test for stage count matches generated code
+  - [x] 4.4 Write property test for stage count matches generated code
     - **Property 4: Stage count matches generated code**
     - **Validates: Requirements 3.1, 5.3**
 
-  - [~] 4.5 Write property test for NewF=false reuse behavior
+  - [x] 4.5 Write property test for NewF=false reuse behavior
     - **Property 5: NewF=false reuses prior function evaluation**
     - **Validates: Requirements 3.2**
 
-  - [~] 4.6 Write property test for generated coefficients match tableau
+  - [x] 4.6 Write property test for generated coefficients match tableau
     - **Property 6: Generated coefficients match tableau**
     - **Validates: Requirements 3.3, 3.4, 3.5, 3.6, 3.7**
 
-- [~] 5. Checkpoint - Ensure all tests pass
+- [x] 5. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 6. Validate GPU safety and cross-solver invariants
-  - [~] 6.1 Add assertions/checks confirming GPU safety of generated code across all solvers
+- [x] 6. Validate GPU safety and cross-solver invariants
+  - [x] 6.1 Add assertions/checks confirming GPU safety of generated code across all solvers
     - Verify generated code contains no `new`, `malloc`, `std::vector` for any solver
     - Verify no runtime-indexed stage arrays (all stage variables are named scalars)
     - Verify all stage logic is fully unrolled (no loops over stage count in generated C++)
     - _Requirements: 5.1, 5.2, 5.3_
 
-  - [~] 6.2 Write property test for GPU safety invariants
+  - [x] 6.2 Write property test for GPU safety invariants
     - **Property 8: GPU safety invariants**
     - **Validates: Requirements 5.1, 5.2, 5.3, 5.4**
 
-  - [~] 6.3 Write property test for reduction integrator consistency
+  - [x] 6.3 Write property test for reduction integrator consistency
     - **Property 9: Reduction integrator consistency**
     - **Validates: Requirements 6.1, 6.2**
 
-  - [~] 6.4 Write property test for LU plan independence from solver choice
+  - [x] 6.4 Write property test for LU plan independence from solver choice
     - **Property 10: LU plan independence from solver choice**
     - **Validates: Requirements 7.2, 7.3**
 
-  - [~] 6.5 Write property test for function signature invariance
+  - [x] 6.5 Write property test for function signature invariance
     - **Property 11: Function signature invariance**
     - **Validates: Requirements 8.3**
 
-  - [~] 6.6 Write property test for step-size exponent matches ELO
+  - [x] 6.6 Write property test for step-size exponent matches ELO
     - **Property 7: Step-size exponent matches ELO**
     - **Validates: Requirements 4.1, 4.2, 4.3**
 
-- [ ] 7. Backward compatibility and integration verification
-  - [~] 7.1 Add regression test verifying default `ros3` output is unchanged
+- [x] 7. Backward compatibility and integration verification
+  - [x] 7.1 Add regression test verifying default `ros3` output is unchanged
     - Generate headers with no `--solver` flag and compare against known-good Ros3 output
     - Ensure existing test suite passes without modification
     - _Requirements: 8.1, 8.2_
 
-  - [~] 7.2 Add integration tests for each solver variant
+  - [x] 7.2 Add integration tests for each solver variant
     - Generate headers for each of the 5 solvers with a test mechanism
     - Verify each generated file compiles (syntactic correctness)
     - Verify stage counts and coefficient values in generated output match tableaux
     - _Requirements: 3.1, 7.1, 7.2, 7.3_
 
-- [~] 8. Final checkpoint - Ensure all tests pass
+- [x] 8. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

@@ -686,24 +686,13 @@ def generate_headers(
                 f.write(f"      //   jvals[{pr['photo_idx']}] = {reactants_str} -> {products_str}  (original A: {pr['original_A']})\n")
             f.write(f"      static constexpr int NUM_PHOTOLYSIS = {num_photolysis};\n\n")
 
-        # 6. integrate (AOT Symbolic LU, ROS-3: 3-stage, 3rd order, L-stable, Sandu & Sander 2006)
+        # 6. integrate (AOT Symbolic LU, generic Rosenbrock solver)
         f.write("      template <class StateView>\n")
         f.write("      KOKKOS_INLINE_FUNCTION void integrate(double dt_total, StateView& state, const double* jvals) const {\n")
         f.write(f"          const int NUM_SPECIES = {N};\n")
-        f.write("          // ROS-3 coefficients (Sandu & Sander 2006, KPP Ros3 subroutine)\n")
-        f.write("          const double g = 0.43586652150845899941601945119356;\n")
-        f.write("          const double ros_A21 = 1.0;\n")
-        f.write("          const double ros_A31 = 1.0;\n")
-        f.write("          const double ros_A32 = 0.0;\n")
-        f.write("          const double ros_C21 = -1.0156171083877702091975600115545;\n")
-        f.write("          const double ros_C31 =  4.0759956452537699824805835358067;\n")
-        f.write("          const double ros_C32 =  9.2076794298330791242156818474003;\n")
-        f.write("          const double ros_M1 = 1.0;\n")
-        f.write("          const double ros_M2 = 6.1697947043828245592553615689730;\n")
-        f.write("          const double ros_M3 = -0.42772256543218573326238373806514;\n")
-        f.write("          const double ros_E1 = 0.5;\n")
-        f.write("          const double ros_E2 = -2.9079558716805469821718236208017;\n")
-        f.write("          const double ros_E3 = 0.22354069897811569627360909276199;\n")
+        f.write(f"          // {tableau.name} coefficients ({tableau.stages}-stage, order {tableau.ELO:.0f})\n")
+        gamma = tableau.Gamma[0]
+        f.write(f"          const double g = {gamma:.17g};\n")
         f.write("          const double safety = 0.9;\n")
         f.write("          const double max_growth = 6.0;\n")
         f.write("          const double min_shrink = 0.2;\n")
@@ -738,21 +727,8 @@ def generate_headers(
         f.write("\n")
 
         if lu_plan:
-            # Stage 1 Rates F1
-            f.write("          // 1. Stage 1 Rates (F1)\n")
-            if sympy_meta:
-                if "f_implicit" in sympy_meta and "f_explicit" in sympy_meta:
-                    F = sympy_meta["f_implicit"] + sympy_meta["f_explicit"]
-                elif "f_vector" in sympy_meta:
-                    F = sympy_meta["f_vector"]
-                else:
-                    F = [0] * N
-                for i in range(len(F)):
-                    eqn = format_eqn(F[i], mech.species, state_var="S", use_parentheses=False)
-                    f.write(f"          double F1_{i} = {eqn};\n")
-
             # Jacobian Non-Zeros
-            f.write("\n          // 2. Analytical Jacobian & Iteration Matrix W = inv_g_dt*I - J (sparse)\n")
+            f.write("          // Analytical Jacobian & Iteration Matrix W = inv_g_dt*I - J (sparse)\n")
             non_zero_jac_set = set()
             for i, j, expr_str in lu_plan.non_zero_jacobian:
                 non_zero_jac_set.add((i, j))
@@ -781,7 +757,7 @@ def generate_headers(
                     f.write(f"          double W_{i}_{j} = 0.0;\n")
 
             # Symbolic LU Factorization
-            f.write("\n          // 3. Symbolic Doolittle Sparse LU Factorization\n")
+            f.write("\n          // Symbolic Doolittle Sparse LU Factorization\n")
             # Emit block boundary comments if block structure is present
             if lu_plan.blocks and len(lu_plan.blocks) > 1:
                 _emitted_block_header = set()
@@ -799,170 +775,8 @@ def generate_headers(
                 for kind, i, j, expr_str in lu_plan.lu_expressions_ordered:
                     f.write(f"          double {kind}_{i}_{j} = {expr_str};\n")
 
-            # Stage 1 Forward & Backward Substitution
-            f.write("\n          // 4. Forward & Backward Substitution for Stage K1\n")
-            import re
-            if lu_plan.blocks and len(lu_plan.blocks) > 1:
-                _emitted_fwd_block = set()
-                for i, expr_str in lu_plan.forward_sub_steps:
-                    for block_num, block_indices in enumerate(lu_plan.blocks):
-                        if i in block_indices:
-                            if block_num not in _emitted_fwd_block:
-                                _emitted_fwd_block.add(block_num)
-                                block_species_names = [lu_plan.species_map[idx] for idx in block_indices]
-                                f.write(f"          // Block {block_num}: forward sub [{', '.join(block_species_names)}]\n")
-                            break
-                    s = re.sub(r'\bb_(\d+)\b', r'F1_\1', expr_str)
-                    s = re.sub(r'\by_(\d+)\b', r'y1_\1', s)
-                    f.write(f"          double y1_{i} = {s};\n")
-                _emitted_bwd_block = set()
-                for i, expr_str in lu_plan.backward_sub_steps:
-                    for block_num, block_indices in enumerate(lu_plan.blocks):
-                        if i in block_indices:
-                            if block_num not in _emitted_bwd_block:
-                                _emitted_bwd_block.add(block_num)
-                                block_species_names = [lu_plan.species_map[idx] for idx in block_indices]
-                                f.write(f"          // Block {block_num}: backward sub [{', '.join(block_species_names)}]\n")
-                            break
-                    s = expr_str
-                    s = re.sub(r'\by_(\d+)\b', r'y1_\1', s)
-                    s = re.sub(r'\bx_(\d+)\b', r'K1_\1', s)
-                    f.write(f"          double K1_{i} = {s};\n")
-            else:
-                for i, expr_str in lu_plan.forward_sub_steps:
-                    s = re.sub(r'\bb_(\d+)\b', r'F1_\1', expr_str)
-                    s = re.sub(r'\by_(\d+)\b', r'y1_\1', s)
-                    f.write(f"          double y1_{i} = {s};\n")
-                for i, expr_str in lu_plan.backward_sub_steps:
-                    s = expr_str  # FIX: initialize from current step's expression
-                    s = re.sub(r'\by_(\d+)\b', r'y1_\1', s)
-                    s = re.sub(r'\bx_(\d+)\b', r'K1_\1', s)
-                    f.write(f"          double K1_{i} = {s};\n")
-
-            # Intermediate State Y2 = Y + A(2,1)*K1 = Y + K1
-            f.write("\n          // 5. Intermediate State Y2 = Y + K1\n")
-            for i in range(N):
-                f.write(f"          double Y2_{i} = S_{i} + ros_A21 * K1_{i};\n")
-
-            # Stage 2 Rates F2 & Substitution for K2
-            f.write("\n          // 6. Stage 2 Rates (F2) at Y2, and solve for K2\n")
-            if sympy_meta:
-                for i in range(len(F)):
-                    eqn = format_eqn(F[i], mech.species, state_var="Y2", use_parentheses=False)
-                    f.write(f"          double F2_{i} = {eqn};\n")
-                f.write("\n")
-                for i in range(len(F)):
-                    f.write(f"          double rhs2_{i} = F2_{i} + (ros_C21 / dt) * K1_{i};\n")
-
-            if lu_plan.blocks and len(lu_plan.blocks) > 1:
-                _emitted_fwd2_block = set()
-                for i, expr_str in lu_plan.forward_sub_steps:
-                    for block_num, block_indices in enumerate(lu_plan.blocks):
-                        if i in block_indices:
-                            if block_num not in _emitted_fwd2_block:
-                                _emitted_fwd2_block.add(block_num)
-                                block_species_names = [lu_plan.species_map[idx] for idx in block_indices]
-                                f.write(f"          // Block {block_num}: K2 forward sub [{', '.join(block_species_names)}]\n")
-                            break
-                    s = re.sub(r'\bb_(\d+)\b', r'rhs2_\1', expr_str)
-                    s = re.sub(r'\by_(\d+)\b', r'y2_\1', s)
-                    f.write(f"          double y2_{i} = {s};\n")
-                _emitted_bwd2_block = set()
-                for i, expr_str in lu_plan.backward_sub_steps:
-                    for block_num, block_indices in enumerate(lu_plan.blocks):
-                        if i in block_indices:
-                            if block_num not in _emitted_bwd2_block:
-                                _emitted_bwd2_block.add(block_num)
-                                block_species_names = [lu_plan.species_map[idx] for idx in block_indices]
-                                f.write(f"          // Block {block_num}: K2 backward sub [{', '.join(block_species_names)}]\n")
-                            break
-                    s = expr_str
-                    s = re.sub(r'\by_(\d+)\b', r'y2_\1', s)
-                    s = re.sub(r'\bx_(\d+)\b', r'K2_\1', s)
-                    f.write(f"          double K2_{i} = {s};\n")
-            else:
-                for i, expr_str in lu_plan.forward_sub_steps:
-                    s = re.sub(r'\bb_(\d+)\b', r'rhs2_\1', expr_str)
-                    s = re.sub(r'\by_(\d+)\b', r'y2_\1', s)
-                    f.write(f"          double y2_{i} = {s};\n")
-                for i, expr_str in lu_plan.backward_sub_steps:
-                    s = expr_str  # FIX: initialize from current step's expression
-                    s = re.sub(r'\by_(\d+)\b', r'y2_\1', s)
-                    s = re.sub(r'\bx_(\d+)\b', r'K2_\1', s)
-                    f.write(f"          double K2_{i} = {s};\n")
-
-            # Stage 3: RHS3 = F2 + C31/dt*K1 + C32/dt*K2, solve W*K3 = RHS3
-            # (NewF(3)=false: reuse F2 from Stage 2)
-            f.write("\n          // 7. Stage 3: RHS3 = F2 + C31/dt*K1 + C32/dt*K2 (NewF=false, reuse F2)\n")
-            for i in range(N):
-                f.write(f"          double rhs3_{i} = F2_{i} + (ros_C31 / dt) * K1_{i} + (ros_C32 / dt) * K2_{i};\n")
-
-            # Stage 3 forward/backward substitution
-            if lu_plan.blocks and len(lu_plan.blocks) > 1:
-                _emitted_fwd3_block = set()
-                for i, expr_str in lu_plan.forward_sub_steps:
-                    for block_num, block_indices in enumerate(lu_plan.blocks):
-                        if i in block_indices:
-                            if block_num not in _emitted_fwd3_block:
-                                _emitted_fwd3_block.add(block_num)
-                                block_species_names = [lu_plan.species_map[idx] for idx in block_indices]
-                                f.write(f"          // Block {block_num}: K3 forward sub [{', '.join(block_species_names)}]\n")
-                            break
-                    s = re.sub(r'\bb_(\d+)\b', r'rhs3_\1', expr_str)
-                    s = re.sub(r'\by_(\d+)\b', r'y3_\1', s)
-                    f.write(f"          double y3_{i} = {s};\n")
-                _emitted_bwd3_block = set()
-                for i, expr_str in lu_plan.backward_sub_steps:
-                    for block_num, block_indices in enumerate(lu_plan.blocks):
-                        if i in block_indices:
-                            if block_num not in _emitted_bwd3_block:
-                                _emitted_bwd3_block.add(block_num)
-                                block_species_names = [lu_plan.species_map[idx] for idx in block_indices]
-                                f.write(f"          // Block {block_num}: K3 backward sub [{', '.join(block_species_names)}]\n")
-                            break
-                    s = expr_str
-                    s = re.sub(r'\by_(\d+)\b', r'y3_\1', s)
-                    s = re.sub(r'\bx_(\d+)\b', r'K3_\1', s)
-                    f.write(f"          double K3_{i} = {s};\n")
-            else:
-                for i, expr_str in lu_plan.forward_sub_steps:
-                    s = re.sub(r'\bb_(\d+)\b', r'rhs3_\1', expr_str)
-                    s = re.sub(r'\by_(\d+)\b', r'y3_\1', s)
-                    f.write(f"          double y3_{i} = {s};\n")
-                for i, expr_str in lu_plan.backward_sub_steps:
-                    s = expr_str
-                    s = re.sub(r'\by_(\d+)\b', r'y3_\1', s)
-                    s = re.sub(r'\bx_(\d+)\b', r'K3_\1', s)
-                    f.write(f"          double K3_{i} = {s};\n")
-
-            # Error Estimation (ROS-3: Yerr = E1*K1 + E2*K2 + E3*K3, L2 norm)
-            f.write("\n          // 8. Error Estimation (ROS-3 embedded method, L2 norm)\n")
-            f.write("          double err_norm_sq = 0.0;\n")
-            for i in range(N):
-                state_idx = _perm[i] if _perm else i
-                f.write(f"          {{\n")
-                f.write(f"              double Ynew_i = S_{i} + ros_M1 * K1_{i} + ros_M2 * K2_{i} + ros_M3 * K3_{i};\n")
-                f.write(f"              double ymax = Kokkos::fmax(Kokkos::fabs(state({state_idx})), Kokkos::fabs(Ynew_i));\n")
-                f.write(f"              double sci = atol[{i}] + rtol[{i}] * ymax;\n")
-                f.write(f"              double yerr_i = ros_E1 * K1_{i} + ros_E2 * K2_{i} + ros_E3 * K3_{i};\n")
-                f.write(f"              err_norm_sq += (yerr_i / sci) * (yerr_i / sci);\n")
-                f.write(f"          }}\n")
-            f.write(f"          double err_norm = Kokkos::sqrt(err_norm_sq / {N});\n")
-            f.write("          err_norm = Kokkos::fmax(err_norm, 1.0e-10);\n")
-
-            # Step Size Control (1/ELO = 1/3 for 3rd order)
-            f.write("\n          // 9. Step Size Control (3rd order: exponent = 1/3)\n")
-            f.write("          double factor = safety / Kokkos::cbrt(err_norm);\n")
-            f.write("          factor = Kokkos::fmax(min_shrink, Kokkos::fmin(factor, max_growth));\n\n")
-            f.write("          if (err_norm <= 1.0) {\n")
-            for i in range(N):
-                state_idx = _perm[i] if _perm else i
-                f.write(f"              state({state_idx}) += ros_M1 * K1_{i} + ros_M2 * K2_{i} + ros_M3 * K3_{i};\n")
-            f.write("              t += dt;\n")
-            f.write("              dt *= factor;\n")
-            f.write("          } else {\n")
-            f.write("              dt *= factor;\n")
-            f.write("          }\n")
+            # Emit all stage computations using the generic Rosenbrock emitter
+            _emit_rosenbrock_stages(f, tableau, N, lu_plan, sympy_meta, mech, _perm, is_reduction=False)
 
         # Close while loop
         f.write("          } // end while (t < dt_total)\n")
