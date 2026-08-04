@@ -18,15 +18,15 @@ Performance notes:
 
 **Validates: Requirements 7.1, 7.2, 7.3, 8.2**
 """
-import pytest
-import numpy as np
-import sympy as sp
+
 import time
 
-from mkpp.parser import load_mechanism
+import numpy as np
+import pytest
+import sympy as sp
 from mkpp.lowering import prepare_unified_jacobian
-from mkpp.rosenbrock import SOLVER_COEFFICIENTS, RosenbrockTableau, get_A, get_C
-
+from mkpp.parser import load_mechanism
+from mkpp.rosenbrock import SOLVER_COEFFICIENTS, get_A, get_C
 
 # ---------------------------------------------------------------------------
 # Module-level fixture: SAPRC-99 lowering data + lambdified evaluators
@@ -82,9 +82,14 @@ def _get_saprc99_evaluators():
 
     # Fixed species concentrations (realistic atmospheric values)
     fixed_species = {
-        "AIR": 2.5e19, "O2": 5.3e18, "H2O": 1.0e17,
-        "H2": 1.3e13, "CH4": 4.5e13, "M": 2.5e19,
-        "N2": 1.9e19, "RO2": 0.0,
+        "AIR": 2.5e19,
+        "O2": 5.3e18,
+        "H2O": 1.0e17,
+        "H2": 1.3e13,
+        "CH4": 4.5e13,
+        "M": 2.5e19,
+        "N2": 1.9e19,
+        "RO2": 0.0,
     }
 
     # Photolysis J-values (realistic mid-day values)
@@ -137,19 +142,22 @@ def _get_saprc99_evaluators():
             J[i, j] = float(vals[k])
         return J
 
-    _SAPRC99_CACHE.update({
-        "species_map": species_map,
-        "N": N,
-        "f_func": f_func,
-        "jac_func": jac_func,
-        "fixed_species": fixed_species,
-    })
+    _SAPRC99_CACHE.update(
+        {
+            "species_map": species_map,
+            "N": N,
+            "f_func": f_func,
+            "jac_func": jac_func,
+            "fixed_species": fixed_species,
+        }
+    )
     return _SAPRC99_CACHE
 
 
 # ---------------------------------------------------------------------------
 # Realistic SAPRC-99 initial concentrations (molecules/cm³)
 # ---------------------------------------------------------------------------
+
 
 def _saprc99_initial_state(species_map, fixed_species):
     """Return realistic atmospheric concentrations for SAPRC-99 species.
@@ -162,24 +170,24 @@ def _saprc99_initial_state(species_map, fixed_species):
     # Default: small background for all species
     concentrations = {
         # Major species
-        "O3": 1.0e12,       # ~40 ppb
-        "NO": 5.0e10,       # ~2 ppb
-        "NO2": 2.5e11,      # ~10 ppb
-        "NO3": 1.0e7,       # trace at daytime
-        "N2O5": 1.0e7,      # trace at daytime
-        "HONO": 5.0e9,      # ~0.2 ppb
-        "HNO3": 5.0e10,     # ~2 ppb
-        "HNO4": 1.0e9,      # trace
-        "H2O2": 2.5e10,     # ~1 ppb
-        "SO2": 5.0e10,      # ~2 ppb
-        "H2SO4": 1.0e7,     # trace
-        "CO": 5.0e12,       # ~200 ppb
+        "O3": 1.0e12,  # ~40 ppb
+        "NO": 5.0e10,  # ~2 ppb
+        "NO2": 2.5e11,  # ~10 ppb
+        "NO3": 1.0e7,  # trace at daytime
+        "N2O5": 1.0e7,  # trace at daytime
+        "HONO": 5.0e9,  # ~0.2 ppb
+        "HNO3": 5.0e10,  # ~2 ppb
+        "HNO4": 1.0e9,  # trace
+        "H2O2": 2.5e10,  # ~1 ppb
+        "SO2": 5.0e10,  # ~2 ppb
+        "H2SO4": 1.0e7,  # trace
+        "CO": 5.0e12,  # ~200 ppb
         # Aldehydes and organics
-        "HCHO": 2.5e10,     # ~1 ppb
-        "CCHO": 1.0e10,     # ~0.4 ppb
-        "RCHO": 5.0e9,      # ~0.2 ppb
-        "ACET": 2.5e10,     # ~1 ppb
-        "MEK": 1.0e10,      # ~0.4 ppb
+        "HCHO": 2.5e10,  # ~1 ppb
+        "CCHO": 1.0e10,  # ~0.4 ppb
+        "RCHO": 5.0e9,  # ~0.2 ppb
+        "ACET": 2.5e10,  # ~1 ppb
+        "MEK": 1.0e10,  # ~0.4 ppb
         "HCOOH": 5.0e9,
         "MEOH": 5.0e10,
         "CCO_OH": 5.0e9,
@@ -213,7 +221,7 @@ def _saprc99_initial_state(species_map, fixed_species):
         "RNO3": 1.0e9,
         "NPHE": 1.0e8,
         "PHEN": 5.0e8,
-        "PAN": 5.0e10,      # ~2 ppb
+        "PAN": 5.0e10,  # ~2 ppb
         "PAN2": 1.0e9,
         "PBZN": 1.0e8,
         "MA_PAN": 1.0e8,
@@ -226,8 +234,8 @@ def _saprc99_initial_state(species_map, fixed_species):
         # Radical species (very short-lived, low concentrations)
         "O3P": 1.0e5,
         "O1D": 1.0e2,
-        "OH": 5.0e6,        # ~2e5 per cm³ typical
-        "HO2": 5.0e8,       # ~20 ppt
+        "OH": 5.0e6,  # ~2e5 per cm³ typical
+        "HO2": 5.0e8,  # ~20 ppt
         "C_O2": 5.0e8,
         "COOH": 1.0e9,
         "ROOH": 5.0e8,
@@ -258,8 +266,8 @@ def _saprc99_initial_state(species_map, fixed_species):
 # Rosenbrock integrators (same patterns as test_taylor_test_tlm.py)
 # ---------------------------------------------------------------------------
 
-def _rosenbrock_forward_fixed_steps(y0, dt_total, f_func, jac_func, tableau,
-                                     num_steps=5):
+
+def _rosenbrock_forward_fixed_steps(y0, dt_total, f_func, jac_func, tableau, num_steps=5):
     """Rosenbrock forward integration with fixed equal step sizes.
 
     Returns (y_final, checkpoints) where checkpoints is a list of
@@ -393,8 +401,10 @@ def _rosenbrock_adjoint(lam, checkpoints, jac_func, tableau):
 # Taylor test implementation
 # ---------------------------------------------------------------------------
 
-def _run_taylor_test_saprc99(f_func, jac_func, y0, dt_total, delta_C, tableau,
-                              num_steps=5, epsilons=None):
+
+def _run_taylor_test_saprc99(
+    f_func, jac_func, y0, dt_total, delta_C, tableau, num_steps=5, epsilons=None
+):
     """Run Taylor test for SAPRC-99 using fixed-step integration.
 
     Returns list of ratios: ||F(C+ε·δC) - F(C)|| / (ε * ||TLM(δC)||)
@@ -530,12 +540,8 @@ class TestSAPRC99AdjointIdentity:
             delta_C = rng.standard_normal(self.N) * 1.0e8
             lam = rng.standard_normal(self.N) * 1.0e8
 
-            tlm_result = _rosenbrock_tlm(
-                delta_C, checkpoints, self.jac_func, tableau
-            )
-            adj_result = _rosenbrock_adjoint(
-                lam, checkpoints, self.jac_func, tableau
-            )
+            tlm_result = _rosenbrock_tlm(delta_C, checkpoints, self.jac_func, tableau)
+            adj_result = _rosenbrock_adjoint(lam, checkpoints, self.jac_func, tableau)
 
             lhs = np.dot(tlm_result, lam)
             rhs = np.dot(delta_C, adj_result)
@@ -632,14 +638,20 @@ class TestSAPRC99TaylorTest:
 
         epsilons = [1e-3, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8]
         ratios = _run_taylor_test_saprc99(
-            self.f_func, self.jac_func, y0, dt_total, delta_C, tableau,
-            num_steps=num_steps, epsilons=epsilons,
+            self.f_func,
+            self.jac_func,
+            y0,
+            dt_total,
+            delta_C,
+            tableau,
+            num_steps=num_steps,
+            epsilons=epsilons,
         )
 
         valid_ratios = [r for r in ratios if not np.isnan(r) and r > 0]
-        assert len(valid_ratios) >= 3, (
-            f"[{solver_name}] SAPRC-99 Taylor test: too few valid ratios: {ratios}"
-        )
+        assert (
+            len(valid_ratios) >= 3
+        ), f"[{solver_name}] SAPRC-99 Taylor test: too few valid ratios: {ratios}"
 
         # Relaxed tolerance: within 0.1 of 1.0 (vs 0.05 for Chapman)
         best_ratio = min(valid_ratios, key=lambda r: abs(r - 1.0))
@@ -670,14 +682,20 @@ class TestSAPRC99TaylorTest:
 
         epsilons = [1e-3, 1e-4, 1e-5, 1e-6, 1e-7]
         ratios = _run_taylor_test_saprc99(
-            self.f_func, self.jac_func, y0, dt_total, delta_C, tableau,
-            num_steps=num_steps, epsilons=epsilons,
+            self.f_func,
+            self.jac_func,
+            y0,
+            dt_total,
+            delta_C,
+            tableau,
+            num_steps=num_steps,
+            epsilons=epsilons,
         )
 
         valid_ratios = [r for r in ratios if not np.isnan(r) and r > 0]
-        assert len(valid_ratios) >= 3, (
-            f"[{solver_name}] SAPRC-99 Taylor convergence: too few valid ratios"
-        )
+        assert (
+            len(valid_ratios) >= 3
+        ), f"[{solver_name}] SAPRC-99 Taylor convergence: too few valid ratios"
 
         # Verify convergence: distances from 1.0 should decrease initially
         distances = [abs(r - 1.0) for r in valid_ratios]
@@ -686,7 +704,8 @@ class TestSAPRC99TaylorTest:
         # At least some convergence before the optimal epsilon
         if best_idx >= 2:
             converging = sum(
-                1 for i in range(min(best_idx, len(distances) - 1))
+                1
+                for i in range(min(best_idx, len(distances) - 1))
                 if distances[i + 1] < distances[i]
             )
             assert converging >= 1, (
@@ -733,7 +752,7 @@ class TestSAPRC99PerformanceCharacteristics:
         )
         elapsed = time.time() - t0
 
-        print(f"\n  SAPRC-99 forward integration (Ros3, 5 steps, 60s):")
+        print("\n  SAPRC-99 forward integration (Ros3, 5 steps, 60s):")
         print(f"    Wall time: {elapsed:.3f}s")
         print(f"    Per step: {elapsed/5:.4f}s")
         print(f"    Species: {self.N}")
@@ -756,7 +775,7 @@ class TestSAPRC99PerformanceCharacteristics:
         spectral_radius = max(abs(np.linalg.eigvals(J).real))
         cond_est = np.linalg.cond(J + np.eye(self.N))  # avoid singular
 
-        print(f"\n  SAPRC-99 Jacobian characteristics:")
+        print("\n  SAPRC-99 Jacobian characteristics:")
         print(f"    Shape: {J.shape}")
         print(f"    Non-zeros: {nnz}/{total} ({100*nnz/total:.1f}%)")
         print(f"    Eval time: {eval_time:.4f}s")
@@ -787,11 +806,17 @@ class TestSAPRC99PerformanceCharacteristics:
 
         epsilons = [1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8, 1e-9]
         ratios = _run_taylor_test_saprc99(
-            self.f_func, self.jac_func, y0, dt_total, delta_C, tableau,
-            num_steps=num_steps, epsilons=epsilons,
+            self.f_func,
+            self.jac_func,
+            y0,
+            dt_total,
+            delta_C,
+            tableau,
+            num_steps=num_steps,
+            epsilons=epsilons,
         )
 
-        print(f"\n  SAPRC-99 Taylor convergence profile (Ros3, 3 steps, 10s):")
+        print("\n  SAPRC-99 Taylor convergence profile (Ros3, 3 steps, 10s):")
         print(f"    {'epsilon':<12} {'ratio':<15} {'|ratio - 1|':<15}")
         print(f"    {'-'*42}")
         for eps, ratio in zip(epsilons, ratios):
@@ -805,7 +830,7 @@ class TestSAPRC99PerformanceCharacteristics:
             best = min(valid_ratios, key=lambda r: abs(r - 1.0))
             best_eps = epsilons[ratios.index(best)]
             print(f"\n    Best ratio: {best:.8f} at ε = {best_eps:.0e}")
-            print(f"    Convergence regime: ε ∈ [1e-4, 1e-7] (typical for stiff systems)")
+            print("    Convergence regime: ε ∈ [1e-4, 1e-7] (typical for stiff systems)")
 
         # This test always passes — it's for documentation
         assert True
@@ -823,12 +848,10 @@ class TestSAPRC99PerformanceCharacteristics:
         memory_bytes = MAX_STEPS * (1 + NUM_SPECIES) * 8
         memory_kb = memory_bytes / 1024
 
-        print(f"\n  SAPRC-99 checkpoint memory estimate:")
+        print("\n  SAPRC-99 checkpoint memory estimate:")
         print(f"    Species: {NUM_SPECIES}")
         print(f"    MAX_STEPS: {MAX_STEPS}")
         print(f"    Memory: {memory_bytes} bytes = {memory_kb:.1f} KB")
-        print(f"    Bound: 256 KB")
+        print("    Bound: 256 KB")
 
-        assert memory_kb < 256, (
-            f"Checkpoint memory {memory_kb:.1f} KB exceeds 256 KB bound"
-        )
+        assert memory_kb < 256, f"Checkpoint memory {memory_kb:.1f} KB exceeds 256 KB bound"

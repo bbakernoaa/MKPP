@@ -17,17 +17,14 @@ For SAPRC-99 with 82 species:
     200 * 82 * 8 + 200 * 8 + 4 = 131,200 + 1,600 + 4 = 132,804 bytes (~130 KB)
     Well within 256 KB limit.
 """
+
 import os
-import re
 import shutil
 import subprocess
-import tempfile
 
 import pytest
-
 from mkpp.codegen import generate_headers
 from mkpp.parser import load_mechanism
-
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -52,7 +49,7 @@ def _generate_saprc99_adjoint(tmp_dir: str) -> str:
     """Generate the SAPRC-99 adjoint-enabled header and return the code."""
     mech = _load_saprc99()
     results = generate_headers(mech, out_dir=tmp_dir, solver_name="ros3", adjoint=True)
-    with open(results["header"], "r") as f:
+    with open(results["header"]) as f:
         return f.read()
 
 
@@ -128,9 +125,7 @@ class TestSAPRC99AdjointGeneration:
         **Validates: Requirements 8.2**
         """
         mech = _load_saprc99()
-        results = generate_headers(
-            mech, out_dir=str(tmp_path), solver_name="ros3", adjoint=True
-        )
+        results = generate_headers(mech, out_dir=str(tmp_path), solver_name="ros3", adjoint=True)
         assert os.path.exists(results["header"])
         # Verify the file is non-empty
         size = os.path.getsize(results["header"])
@@ -146,12 +141,10 @@ class TestSAPRC99AdjointGeneration:
         # Required functions per Req 6.2
         assert "integrate_adj" in code, "integrate_adj not found in generated code"
         assert "integrate_tlm" in code, "integrate_tlm not found in generated code"
-        assert "integrate_fwd_checkpoint" in code, (
-            "integrate_fwd_checkpoint not found in generated code"
-        )
-        assert "CheckpointBuffer" in code, (
-            "CheckpointBuffer struct not found in generated code"
-        )
+        assert (
+            "integrate_fwd_checkpoint" in code
+        ), "integrate_fwd_checkpoint not found in generated code"
+        assert "CheckpointBuffer" in code, "CheckpointBuffer struct not found in generated code"
 
     def test_num_species_is_82(self, tmp_path):
         """The generated CheckpointBuffer has NUM_SPECIES = 82 for SAPRC-99.
@@ -221,16 +214,16 @@ class TestSAPRC99AdjointGeneration:
         code = _generate_saprc99_adjoint(str(tmp_path))
 
         # Namespace must open
-        assert "namespace mkpp {" in code or "namespace mkpp{" in code, (
-            "Missing namespace mkpp opening"
-        )
+        assert (
+            "namespace mkpp {" in code or "namespace mkpp{" in code
+        ), "Missing namespace mkpp opening"
 
         # The last non-whitespace closing brace should close the namespace
         # Check that the code ends with a closing brace (after stripping trailing whitespace)
         stripped = code.rstrip()
-        assert stripped.endswith("}"), (
-            "Generated header does not end with closing brace (namespace closure)"
-        )
+        assert stripped.endswith(
+            "}"
+        ), "Generated header does not end with closing brace (namespace closure)"
 
     def test_pragma_once_present(self, tmp_path):
         """Generated header starts with #pragma once.
@@ -238,9 +231,7 @@ class TestSAPRC99AdjointGeneration:
         **Validates: Requirements 8.2**
         """
         code = _generate_saprc99_adjoint(str(tmp_path))
-        assert code.startswith("#pragma once"), (
-            "Generated header does not start with #pragma once"
-        )
+        assert code.startswith("#pragma once"), "Generated header does not start with #pragma once"
 
     def test_kokkos_include_present(self, tmp_path):
         """Generated header includes Kokkos_Core.hpp.
@@ -248,9 +239,9 @@ class TestSAPRC99AdjointGeneration:
         **Validates: Requirements 8.2**
         """
         code = _generate_saprc99_adjoint(str(tmp_path))
-        assert "#include <Kokkos_Core.hpp>" in code, (
-            "Generated header missing #include <Kokkos_Core.hpp>"
-        )
+        assert (
+            "#include <Kokkos_Core.hpp>" in code
+        ), "Generated header missing #include <Kokkos_Core.hpp>"
 
     def test_no_heap_allocation_in_checkpoint_buffer(self, tmp_path):
         """CheckpointBuffer struct uses no heap allocation.
@@ -280,15 +271,11 @@ class TestSAPRC99AdjointGeneration:
         checkpoint_struct = code[start : struct_end + 1]
 
         # No heap allocation in the struct
-        assert "std::vector" not in checkpoint_struct, (
-            "CheckpointBuffer uses std::vector (heap allocation)"
-        )
-        assert "new " not in checkpoint_struct, (
-            "CheckpointBuffer uses 'new' (heap allocation)"
-        )
-        assert "malloc" not in checkpoint_struct, (
-            "CheckpointBuffer uses malloc (heap allocation)"
-        )
+        assert (
+            "std::vector" not in checkpoint_struct
+        ), "CheckpointBuffer uses std::vector (heap allocation)"
+        assert "new " not in checkpoint_struct, "CheckpointBuffer uses 'new' (heap allocation)"
+        assert "malloc" not in checkpoint_struct, "CheckpointBuffer uses malloc (heap allocation)"
 
     @pytest.mark.skipif(
         not shutil.which("g++") and not shutil.which("clang++"),
@@ -363,7 +350,8 @@ namespace Kokkos {
                 compiler,
                 "-std=c++17",
                 "-fsyntax-only",
-                "-I", str(tmp_path),
+                "-I",
+                str(tmp_path),
                 str(test_cpp),
             ],
             capture_output=True,

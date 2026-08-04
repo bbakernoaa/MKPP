@@ -13,22 +13,20 @@ This exercises the full pipeline:
   5. Execute transposed forward/backward substitution
   6. Compare against numpy dense reference to machine precision
 """
-import pytest
-import re
+
 import numpy as np
 import sympy as sp
-from mkpp.model import (
-    MechanismDefinition,
-    SpeciesDefinition,
-    ReactionDefinition,
-    PhaseMode,
-    AerosolRepresentation,
-    SymbolicLUPlan,
-)
 from mkpp.lowering import (
-    prepare_unified_jacobian,
     compute_symbolic_lu_decomposition,
     compute_transposed_lu_plan,
+    prepare_unified_jacobian,
+)
+from mkpp.model import (
+    AerosolRepresentation,
+    MechanismDefinition,
+    PhaseMode,
+    ReactionDefinition,
+    SpeciesDefinition,
 )
 
 
@@ -196,7 +194,9 @@ def _eval_expr(expr_str, ns):
     try:
         return float(eval(expr_str, {"__builtins__": {}}, safe_ns))
     except Exception as e:
-        raise ValueError(f"Failed to evaluate expression '{expr_str}' with ns keys {list(ns.keys())[:20]}...") from e
+        raise ValueError(
+            f"Failed to evaluate expression '{expr_str}' with ns keys {list(ns.keys())[:20]}..."
+        ) from e
 
 
 class TestTransposedSolveChapmanJacobian:
@@ -246,9 +246,9 @@ class TestTransposedSolveChapmanJacobian:
         W = inv_gamma_h * np.eye(N) - J_numeric
 
         # Verify W is non-symmetric (this is the point of using Chapman)
-        assert not np.allclose(W, W.T, atol=1e-15), (
-            "W should be non-symmetric for this test to be meaningful"
-        )
+        assert not np.allclose(
+            W, W.T, atol=1e-15
+        ), "W should be non-symmetric for this test to be meaningful"
 
         # 6. Execute numeric LU factorization using the symbolic plan
         L, U = _execute_lu_factorization(W, lu_plan)
@@ -340,9 +340,9 @@ class TestTransposedSolveChapmanJacobian:
 
         # The Jacobian of the Chapman mechanism should be non-symmetric
         # because the coupling between species is directional
-        assert not np.allclose(J_numeric, J_numeric.T, atol=1e-20), (
-            "Chapman Jacobian should be non-symmetric"
-        )
+        assert not np.allclose(
+            J_numeric, J_numeric.T, atol=1e-20
+        ), "Chapman Jacobian should be non-symmetric"
 
     def test_forward_and_transposed_solve_differ_for_nonsymmetric_W(self):
         """
@@ -380,9 +380,9 @@ class TestTransposedSolveChapmanJacobian:
         x_transposed = _execute_transposed_solve(b, lu_plan, L, U)
 
         # These should NOT be equal (W is non-symmetric)
-        assert not np.allclose(x_forward, x_transposed, atol=1e-10), (
-            "Forward and transposed solves should differ for non-symmetric W"
-        )
+        assert not np.allclose(
+            x_forward, x_transposed, atol=1e-10
+        ), "Forward and transposed solves should differ for non-symmetric W"
 
         # But the transposed solve should match numpy's reference
         x_ref = np.linalg.solve(W.T, b)

@@ -30,28 +30,26 @@ The exact adjoint (transpose of the linearized TLM map):
 
 **Validates: Requirements 7.2, 7.3**
 """
-import pytest
-import numpy as np
-import sympy as sp
 
-from mkpp.model import (
-    MechanismDefinition,
-    SpeciesDefinition,
-    ReactionDefinition,
-    PhaseMode,
-    AerosolRepresentation,
-)
+import numpy as np
+import pytest
+import sympy as sp
 from mkpp.lowering import (
     prepare_unified_jacobian,
-    compute_symbolic_lu_decomposition,
-    compute_transposed_lu_plan,
 )
-from mkpp.rosenbrock import SOLVER_COEFFICIENTS, RosenbrockTableau, get_A, get_C
-
+from mkpp.model import (
+    AerosolRepresentation,
+    MechanismDefinition,
+    PhaseMode,
+    ReactionDefinition,
+    SpeciesDefinition,
+)
+from mkpp.rosenbrock import SOLVER_COEFFICIENTS, get_A, get_C
 
 # ---------------------------------------------------------------------------
 # Mechanism builder
 # ---------------------------------------------------------------------------
+
 
 def _build_chapman_mechanism():
     """Build Chapman mechanism (O, O3, O1D) with non-trivial coupling for testing."""
@@ -88,6 +86,7 @@ def _build_chapman_mechanism():
 # ---------------------------------------------------------------------------
 # Numerical Jacobian evaluator
 # ---------------------------------------------------------------------------
+
 
 def _evaluate_jacobian_at_state(jacobian_matrix, species_map, state, jvals):
     """
@@ -166,8 +165,10 @@ def _evaluate_rates_at_state(f_total, species_map, state, jvals):
 # Numerical Rosenbrock integrators (Python reference)
 # ---------------------------------------------------------------------------
 
-def _rosenbrock_forward_checkpoint(state_0, dt_total, tableau, J_sym, f_total,
-                                   species_map, jvals, num_steps=5):
+
+def _rosenbrock_forward_checkpoint(
+    state_0, dt_total, tableau, J_sym, f_total, species_map, jvals, num_steps=5
+):
     """
     Rosenbrock forward integration with fixed step sizes, saving checkpoints.
 
@@ -198,7 +199,7 @@ def _rosenbrock_forward_checkpoint(state_0, dt_total, tableau, J_sym, f_total,
 
     for step in range(num_steps):
         # Save checkpoint BEFORE the step (state at entry)
-        checkpoints.append({'h': h, 'state': state.copy()})
+        checkpoints.append({"h": h, "state": state.copy()})
 
         # Evaluate Jacobian at current state
         J = _evaluate_jacobian_at_state(J_sym, species_map, state, jvals)
@@ -265,8 +266,8 @@ def _rosenbrock_tlm(delta_C, checkpoints, tableau, J_sym, species_map, jvals):
     dC = delta_C.copy()
 
     for chk in checkpoints:
-        h = chk['h']
-        state = chk['state']
+        h = chk["h"]
+        state = chk["state"]
 
         # Evaluate Jacobian at checkpointed state
         J = _evaluate_jacobian_at_state(J_sym, species_map, state, jvals)
@@ -335,8 +336,8 @@ def _rosenbrock_adjoint(lam, checkpoints, tableau, J_sym, species_map, jvals):
 
     # Walk backward through checkpoints
     for chk in reversed(checkpoints):
-        h = chk['h']
-        state = chk['state']
+        h = chk["h"]
+        state = chk["state"]
 
         # Evaluate Jacobian at checkpointed state
         J = _evaluate_jacobian_at_state(J_sym, species_map, state, jvals)
@@ -434,7 +435,7 @@ class TestAdjointIdentity:
         adj_result = _rosenbrock_adjoint(lam, checkpoints, tableau, J_sym, species_map, jvals)
 
         # Compute inner products
-        lhs = np.dot(tlm_result, lam)     # <TLM(δC), λ>
+        lhs = np.dot(tlm_result, lam)  # <TLM(δC), λ>
         rhs = np.dot(delta_C, adj_result)  # <δC, ADJ(λ)>
 
         # Verify identity to relative tolerance 1e-12
@@ -524,8 +525,12 @@ class TestAdjointIdentity:
                 lam = np.zeros(N)
                 lam[j] = 1.0
 
-                tlm_result = _rosenbrock_tlm(delta_C, checkpoints, tableau, J_sym, species_map, jvals)
-                adj_result = _rosenbrock_adjoint(lam, checkpoints, tableau, J_sym, species_map, jvals)
+                tlm_result = _rosenbrock_tlm(
+                    delta_C, checkpoints, tableau, J_sym, species_map, jvals
+                )
+                adj_result = _rosenbrock_adjoint(
+                    lam, checkpoints, tableau, J_sym, species_map, jvals
+                )
 
                 lhs = np.dot(tlm_result, lam)
                 rhs = np.dot(delta_C, adj_result)

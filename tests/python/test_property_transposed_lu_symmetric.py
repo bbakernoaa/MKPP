@@ -8,17 +8,17 @@ forward LU solve when the matrix is symmetric.
 
 **Validates: Requirements 5.3**
 """
+
 import numpy as np
-from hypothesis import given, settings, assume
+from hypothesis import assume, given, settings
 from hypothesis import strategies as st
-
-from mkpp.model import SymbolicLUPlan
 from mkpp.lowering import compute_transposed_lu_plan
-
+from mkpp.model import SymbolicLUPlan
 
 # ---------------------------------------------------------------------------
 # Strategies
 # ---------------------------------------------------------------------------
+
 
 @st.composite
 def symmetric_diagonally_dominant_system(draw, min_n=2, max_n=8):
@@ -34,8 +34,9 @@ def symmetric_diagonally_dominant_system(draw, min_n=2, max_n=8):
     entries = []
     for i in range(n):
         for j in range(i, n):
-            val = draw(st.floats(min_value=-2.0, max_value=2.0,
-                                 allow_nan=False, allow_infinity=False))
+            val = draw(
+                st.floats(min_value=-2.0, max_value=2.0, allow_nan=False, allow_infinity=False)
+            )
             entries.append((i, j, val))
 
     A = np.zeros((n, n))
@@ -46,16 +47,18 @@ def symmetric_diagonally_dominant_system(draw, min_n=2, max_n=8):
     # Make strictly diagonally dominant to ensure non-singularity
     for i in range(n):
         row_sum = np.sum(np.abs(A[i, :])) - np.abs(A[i, i])
-        dominance = draw(st.floats(min_value=1.0, max_value=5.0,
-                                   allow_nan=False, allow_infinity=False))
+        dominance = draw(
+            st.floats(min_value=1.0, max_value=5.0, allow_nan=False, allow_infinity=False)
+        )
         A[i, i] = row_sum + dominance
 
     # Random RHS vector
-    b = np.array([
-        draw(st.floats(min_value=-10.0, max_value=10.0,
-                       allow_nan=False, allow_infinity=False))
-        for _ in range(n)
-    ])
+    b = np.array(
+        [
+            draw(st.floats(min_value=-10.0, max_value=10.0, allow_nan=False, allow_infinity=False))
+            for _ in range(n)
+        ]
+    )
 
     return n, A, b
 
@@ -63,6 +66,7 @@ def symmetric_diagonally_dominant_system(draw, min_n=2, max_n=8):
 # ---------------------------------------------------------------------------
 # Helper: execute symbolic LU solve numerically
 # ---------------------------------------------------------------------------
+
 
 def _doolittle_lu(W, n):
     """Compute Doolittle LU factorization (L unit lower-triangular, U upper-triangular)."""
@@ -181,6 +185,7 @@ def _build_plan_from_numeric(L, U, n):
 # **Validates: Requirements 5.3**
 # ---------------------------------------------------------------------------
 
+
 @given(data=symmetric_diagonally_dominant_system(min_n=2, max_n=8))
 @settings(max_examples=200, deadline=None)
 def test_property_transposed_solve_matches_forward_for_symmetric(data):
@@ -222,7 +227,10 @@ def test_property_transposed_solve_matches_forward_for_symmetric(data):
 
     # For symmetric W, both solves must produce the same result
     np.testing.assert_allclose(
-        x_transposed, x_forward, atol=1e-10, rtol=1e-10,
+        x_transposed,
+        x_forward,
+        atol=1e-10,
+        rtol=1e-10,
         err_msg=(
             f"Transposed solve differs from forward solve for symmetric matrix.\n"
             f"N={n}\n"
@@ -231,15 +239,11 @@ def test_property_transposed_solve_matches_forward_for_symmetric(data):
             f"x_forward={x_forward}\n"
             f"x_transposed={x_transposed}\n"
             f"max_diff={np.max(np.abs(x_forward - x_transposed))}"
-        )
+        ),
     )
 
     # Also verify both solutions actually solve the system
     residual_forward = np.max(np.abs(W @ x_forward - b))
     residual_transposed = np.max(np.abs(W.T @ x_transposed - b))
-    assert residual_forward < 1e-8, (
-        f"Forward solve residual too large: {residual_forward}"
-    )
-    assert residual_transposed < 1e-8, (
-        f"Transposed solve residual too large: {residual_transposed}"
-    )
+    assert residual_forward < 1e-8, f"Forward solve residual too large: {residual_forward}"
+    assert residual_transposed < 1e-8, f"Transposed solve residual too large: {residual_transposed}"

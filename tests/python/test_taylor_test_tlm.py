@@ -17,24 +17,24 @@ Tested on:
 
 **Validates: Requirements 7.1, 7.3**
 """
-import pytest
+
 import numpy as np
+import pytest
 import sympy as sp
-
-from mkpp.rosenbrock import SOLVER_COEFFICIENTS, RosenbrockTableau, get_A, get_C
-from mkpp.model import (
-    MechanismDefinition,
-    SpeciesDefinition,
-    ReactionDefinition,
-    PhaseMode,
-    AerosolRepresentation,
-)
 from mkpp.lowering import prepare_unified_jacobian
-
+from mkpp.model import (
+    AerosolRepresentation,
+    MechanismDefinition,
+    PhaseMode,
+    ReactionDefinition,
+    SpeciesDefinition,
+)
+from mkpp.rosenbrock import SOLVER_COEFFICIENTS, get_A, get_C
 
 # ---------------------------------------------------------------------------
 # Mechanism builders
 # ---------------------------------------------------------------------------
+
 
 def _build_chapman_mechanism():
     """Build the Chapman mechanism (4 species: O, O2, O3, M).
@@ -142,6 +142,7 @@ def _build_small_multispecies_mechanism():
 # Numerical evaluation utilities
 # ---------------------------------------------------------------------------
 
+
 def _build_numeric_evaluators(mech):
     """Build numeric evaluator functions for f(C) and J(C) from the mechanism.
 
@@ -203,6 +204,7 @@ def _build_numeric_evaluators(mech):
 # ---------------------------------------------------------------------------
 # Python-level Rosenbrock integrator (mirrors generated C++ logic)
 # ---------------------------------------------------------------------------
+
 
 def _rosenbrock_step(y, dt, f_func, jac_func, tableau):
     """Execute one Rosenbrock step with given tableau.
@@ -394,8 +396,10 @@ def _rosenbrock_tlm_propagate(delta_C, checkpoint_data, jac_func, tableau):
 # Taylor test implementation
 # ---------------------------------------------------------------------------
 
-def _run_taylor_test(f_func, jac_func, y0, dt_total, delta_C, tableau,
-                     epsilons=None, max_steps=200):
+
+def _run_taylor_test(
+    f_func, jac_func, y0, dt_total, delta_C, tableau, epsilons=None, max_steps=200
+):
     """Run the Taylor test and return convergence ratios.
 
     For each ε in epsilons:
@@ -437,7 +441,7 @@ def _run_taylor_test(f_func, jac_func, y0, dt_total, delta_C, tableau,
             ratio = diff_norm / (eps * tlm_norm)
             ratios.append(ratio)
         else:
-            ratios.append(float('nan'))
+            ratios.append(float("nan"))
 
     return ratios
 
@@ -480,9 +484,7 @@ class TestTaylorTestChapman:
 
         # Run Taylor test with decreasing epsilon
         epsilons = [1e-3, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8]
-        ratios = _run_taylor_test(
-            f_func, jac_func, y0, dt_total, delta_C, tableau, epsilons
-        )
+        ratios = _run_taylor_test(f_func, jac_func, y0, dt_total, delta_C, tableau, epsilons)
 
         # Verify convergence toward 1.0
         # For a correct TLM, the ratio should approach 1.0 as ε → 0
@@ -490,9 +492,7 @@ class TestTaylorTestChapman:
         # (very small ε might suffer from roundoff, very large ε from nonlinearity)
         valid_ratios = [r for r in ratios if not np.isnan(r) and r > 0]
 
-        assert len(valid_ratios) >= 3, (
-            f"[{solver_name}] Too few valid ratios: {ratios}"
-        )
+        assert len(valid_ratios) >= 3, f"[{solver_name}] Too few valid ratios: {ratios}"
 
         # Find the ratio closest to 1.0 (should be in the "sweet spot" range)
         best_ratio = min(valid_ratios, key=lambda r: abs(r - 1.0))
@@ -510,9 +510,9 @@ class TestTaylorTestChapman:
         # At least the first few ratios should be converging toward 1.0
         # (i.e., distance from 1.0 should generally decrease)
         if best_idx >= 2:
-            assert distances[1] < distances[0] or distances[1] < 0.1, (
-                f"[{solver_name}] Ratios not converging: {[f'{r:.6f}' for r in valid_ratios]}"
-            )
+            assert (
+                distances[1] < distances[0] or distances[1] < 0.1
+            ), f"[{solver_name}] Ratios not converging: {[f'{r:.6f}' for r in valid_ratios]}"
 
 
 @pytest.mark.parametrize("solver_name", ALL_SOLVERS)
@@ -543,16 +543,12 @@ class TestTaylorTestSmallMultispecies:
 
         # Run Taylor test
         epsilons = [1e-3, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8]
-        ratios = _run_taylor_test(
-            f_func, jac_func, y0, dt_total, delta_C, tableau, epsilons
-        )
+        ratios = _run_taylor_test(f_func, jac_func, y0, dt_total, delta_C, tableau, epsilons)
 
         # Verify convergence toward 1.0
         valid_ratios = [r for r in ratios if not np.isnan(r) and r > 0]
 
-        assert len(valid_ratios) >= 3, (
-            f"[{solver_name}] Too few valid ratios: {ratios}"
-        )
+        assert len(valid_ratios) >= 3, f"[{solver_name}] Too few valid ratios: {ratios}"
 
         best_ratio = min(valid_ratios, key=lambda r: abs(r - 1.0))
         assert abs(best_ratio - 1.0) < 0.05, (
@@ -586,14 +582,10 @@ class TestTaylorTestSmallMultispecies:
 
         # Run Taylor test with a geometric sequence of epsilons
         epsilons = [1e-3, 1e-4, 1e-5, 1e-6, 1e-7]
-        ratios = _run_taylor_test(
-            f_func, jac_func, y0, dt_total, delta_C, tableau, epsilons
-        )
+        ratios = _run_taylor_test(f_func, jac_func, y0, dt_total, delta_C, tableau, epsilons)
 
         valid_ratios = [r for r in ratios if not np.isnan(r) and r > 0]
-        assert len(valid_ratios) >= 3, (
-            f"[{solver_name}] Too few valid ratios: {ratios}"
-        )
+        assert len(valid_ratios) >= 3, f"[{solver_name}] Too few valid ratios: {ratios}"
 
         # Compute distances from 1.0
         distances = [abs(r - 1.0) for r in valid_ratios]
@@ -604,8 +596,7 @@ class TestTaylorTestSmallMultispecies:
         # Verify that up to the optimal point, distances are generally decreasing
         # (allowing for one "hiccup" due to step-size adaptation differences)
         converging_pairs = sum(
-            1 for i in range(min(best_idx, len(distances) - 1))
-            if distances[i + 1] < distances[i]
+            1 for i in range(min(best_idx, len(distances) - 1)) if distances[i + 1] < distances[i]
         )
         total_pairs = min(best_idx, len(distances) - 1)
 

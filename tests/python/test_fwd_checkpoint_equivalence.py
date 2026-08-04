@@ -13,24 +13,17 @@ integrate().
 
 **Validates: Requirements 1.4, 6.2, 6.3**
 """
+
 import re
+
 import pytest
-
 from mkpp.codegen import SOLVER_COEFFICIENTS, generate_headers
-from mkpp.lowering import prepare_unified_jacobian, compute_symbolic_lu_decomposition
-from mkpp.model import (
-    MechanismDefinition,
-    SpeciesDefinition,
-    ReactionDefinition,
-    PhaseMode,
-    AerosolRepresentation,
-)
 from mkpp.parser import load_mechanism
-
 
 # ---------------------------------------------------------------------------
 # Mechanism builders
 # ---------------------------------------------------------------------------
+
 
 def _build_chapman_mechanism():
     """Build a Chapman-like mechanism (4 species) for testing."""
@@ -45,13 +38,14 @@ def _build_saprc99_mechanism():
 def _generate_with_adjoint(mech, solver_name: str, tmp_dir: str) -> str:
     """Generate the C++ header with adjoint=True for the given solver."""
     results = generate_headers(mech, out_dir=tmp_dir, solver_name=solver_name, adjoint=True)
-    with open(results["header"], "r") as f:
+    with open(results["header"]) as f:
         return f.read()
 
 
 # ---------------------------------------------------------------------------
 # Helper: extract function bodies from generated code
 # ---------------------------------------------------------------------------
+
 
 def _extract_function_body(code: str, func_name: str) -> str:
     """Extract the body of a function from generated C++ code.
@@ -60,9 +54,7 @@ def _extract_function_body(code: str, func_name: str) -> str:
     from the opening brace of the function body to its matching closing brace.
     """
     # Find the function signature
-    pattern = re.compile(
-        rf'\b(?:int|void)\s+{re.escape(func_name)}\s*\(', re.DOTALL
-    )
+    pattern = re.compile(rf"\b(?:int|void)\s+{re.escape(func_name)}\s*\(", re.DOTALL)
     match = pattern.search(code)
     if not match:
         return ""
@@ -110,10 +102,18 @@ def _extract_stage_lines(body: str) -> list:
         if stripped.startswith("//"):
             continue
         # Skip checkpoint-related lines
-        if any(kw in stripped for kw in [
-            "chk.", "CheckpointBuffer", "num_steps", "ierr",
-            "// Save checkpoint", "return -1", "return chk"
-        ]):
+        if any(
+            kw in stripped
+            for kw in [
+                "chk.",
+                "CheckpointBuffer",
+                "num_steps",
+                "ierr",
+                "// Save checkpoint",
+                "return -1",
+                "return chk",
+            ]
+        ):
             continue
         lines.append(stripped)
     return lines
@@ -133,11 +133,19 @@ def _extract_core_arithmetic(body: str) -> list:
         if stripped.startswith("//"):
             continue
         # Skip checkpoint-specific lines
-        if any(kw in stripped for kw in [
-            "chk.", "CheckpointBuffer", "ierr",
-            "// Save checkpoint", "return -1", "return chk",
-            "int ierr", "chk.num_steps"
-        ]):
+        if any(
+            kw in stripped
+            for kw in [
+                "chk.",
+                "CheckpointBuffer",
+                "ierr",
+                "// Save checkpoint",
+                "return -1",
+                "return chk",
+                "int ierr",
+                "chk.num_steps",
+            ]
+        ):
             continue
         lines.append(stripped)
     return lines
@@ -171,10 +179,13 @@ def _normalize_function_body(body: str) -> list:
                 lines.append(stripped)
             continue
         # Detect start of checkpoint bounds-check block
-        if any(kw in stripped for kw in [
-            "chk.num_steps >= CheckpointBuffer::MAX_STEPS",
-            "if (chk.num_steps >= ",
-        ]):
+        if any(
+            kw in stripped
+            for kw in [
+                "chk.num_steps >= CheckpointBuffer::MAX_STEPS",
+                "if (chk.num_steps >= ",
+            ]
+        ):
             in_checkpoint_block = True
             checkpoint_brace_depth = 0
             # Count braces on this line
@@ -187,12 +198,20 @@ def _normalize_function_body(body: str) -> list:
                 in_checkpoint_block = False
             continue
         # Skip other checkpoint-specific lines
-        if any(kw in stripped for kw in [
-            "chk.", "CheckpointBuffer", "num_steps >= ",
-            "ierr", "// Save checkpoint", "return -1;",
-            "return chk.num_steps;", "int ierr = 0;",
-            "chk.num_steps = 0;"
-        ]):
+        if any(
+            kw in stripped
+            for kw in [
+                "chk.",
+                "CheckpointBuffer",
+                "num_steps >= ",
+                "ierr",
+                "// Save checkpoint",
+                "return -1;",
+                "return chk.num_steps;",
+                "int ierr = 0;",
+                "chk.num_steps = 0;",
+            ]
+        ):
             continue
         lines.append(stripped)
     return lines
@@ -214,18 +233,18 @@ class TestForwardCheckpointEquivalenceChapman:
         """integrate_fwd_checkpoint function is emitted when adjoint=True."""
         mech = _build_chapman_mechanism()
         code = _generate_with_adjoint(mech, solver_name, str(tmp_path))
-        assert "integrate_fwd_checkpoint" in code, (
-            f"[{solver_name}] integrate_fwd_checkpoint not found in generated code"
-        )
+        assert (
+            "integrate_fwd_checkpoint" in code
+        ), f"[{solver_name}] integrate_fwd_checkpoint not found in generated code"
 
     def test_integrate_still_present(self, solver_name: str, tmp_path):
         """Original integrate() is unchanged when adjoint=True (Req 6.3)."""
         mech = _build_chapman_mechanism()
         code = _generate_with_adjoint(mech, solver_name, str(tmp_path))
         # integrate() must still be present
-        assert re.search(r"\bvoid\s+integrate\s*\(", code), (
-            f"[{solver_name}] Original integrate() missing when adjoint=True"
-        )
+        assert re.search(
+            r"\bvoid\s+integrate\s*\(", code
+        ), f"[{solver_name}] Original integrate() missing when adjoint=True"
 
     def test_same_stage_count(self, solver_name: str, tmp_path):
         """Both functions have the same number of stage computations."""
@@ -282,9 +301,7 @@ class TestForwardCheckpointEquivalenceChapman:
         integrate_updates = update_pattern.findall(integrate_body)
         checkpoint_updates = update_pattern.findall(checkpoint_body)
 
-        assert len(integrate_updates) > 0, (
-            f"[{solver_name}] No state updates found in integrate()"
-        )
+        assert len(integrate_updates) > 0, f"[{solver_name}] No state updates found in integrate()"
         assert integrate_updates == checkpoint_updates, (
             f"[{solver_name}] State update expressions differ between "
             f"integrate() and integrate_fwd_checkpoint().\n"
@@ -305,9 +322,7 @@ class TestForwardCheckpointEquivalenceChapman:
         integrate_k = k_pattern.findall(integrate_body)
         checkpoint_k = k_pattern.findall(checkpoint_body)
 
-        assert len(integrate_k) > 0, (
-            f"[{solver_name}] No K variables found in integrate()"
-        )
+        assert len(integrate_k) > 0, f"[{solver_name}] No K variables found in integrate()"
         assert integrate_k == checkpoint_k, (
             f"[{solver_name}] K variable computations differ.\n"
             f"  integrate count:  {len(integrate_k)}\n"
@@ -329,9 +344,7 @@ class TestForwardCheckpointEquivalenceChapman:
         integrate_err = err_pattern.findall(integrate_body)
         checkpoint_err = err_pattern.findall(checkpoint_body)
 
-        assert integrate_err == checkpoint_err, (
-            f"[{solver_name}] Error estimation differs"
-        )
+        assert integrate_err == checkpoint_err, f"[{solver_name}] Error estimation differs"
 
     def test_identical_step_size_control(self, solver_name: str, tmp_path):
         """Step size control factor computation is identical."""
@@ -360,17 +373,17 @@ class TestForwardCheckpointEquivalenceChapman:
         checkpoint_body = _extract_function_body(code, "integrate_fwd_checkpoint")
 
         # Must save step size
-        assert "chk.h[chk.num_steps] = dt;" in checkpoint_body, (
-            f"[{solver_name}] Checkpoint does not save step size h"
-        )
+        assert (
+            "chk.h[chk.num_steps] = dt;" in checkpoint_body
+        ), f"[{solver_name}] Checkpoint does not save step size h"
         # Must save state
-        assert "chk.state[chk.num_steps]" in checkpoint_body, (
-            f"[{solver_name}] Checkpoint does not save state"
-        )
+        assert (
+            "chk.state[chk.num_steps]" in checkpoint_body
+        ), f"[{solver_name}] Checkpoint does not save state"
         # Must increment step counter
-        assert "chk.num_steps++" in checkpoint_body, (
-            f"[{solver_name}] Checkpoint does not increment num_steps"
-        )
+        assert (
+            "chk.num_steps++" in checkpoint_body
+        ), f"[{solver_name}] Checkpoint does not increment num_steps"
 
     def test_checkpoint_bounds_check(self, solver_name: str, tmp_path):
         """integrate_fwd_checkpoint() checks MAX_STEPS bounds (Req 1.3)."""
@@ -380,13 +393,13 @@ class TestForwardCheckpointEquivalenceChapman:
         checkpoint_body = _extract_function_body(code, "integrate_fwd_checkpoint")
 
         # Must check against MAX_STEPS
-        assert "MAX_STEPS" in checkpoint_body, (
-            f"[{solver_name}] Checkpoint does not check MAX_STEPS bound"
-        )
+        assert (
+            "MAX_STEPS" in checkpoint_body
+        ), f"[{solver_name}] Checkpoint does not check MAX_STEPS bound"
         # Must fail loudly (return -1 or assert)
-        assert "return -1" in checkpoint_body, (
-            f"[{solver_name}] Checkpoint does not fail loudly on overflow"
-        )
+        assert (
+            "return -1" in checkpoint_body
+        ), f"[{solver_name}] Checkpoint does not fail loudly on overflow"
 
     def test_only_difference_is_checkpoint_logic(self, solver_name: str, tmp_path):
         """The ONLY difference between the two functions is checkpoint save logic.
@@ -426,8 +439,7 @@ class TestForwardCheckpointEquivalenceChapman:
             f"[{solver_name}] Core computation differs between integrate() and "
             f"integrate_fwd_checkpoint() (showing up to 5 mismatches):\n"
             + "\n".join(
-                f"  Line {i}: integrate='{a}' vs checkpoint='{b}'"
-                for i, a, b in mismatches
+                f"  Line {i}: integrate='{a}' vs checkpoint='{b}'" for i, a, b in mismatches
             )
         )
 
@@ -445,9 +457,9 @@ class TestForwardCheckpointEquivalenceSAPRC99:
         """integrate_fwd_checkpoint function is emitted for SAPRC-99."""
         mech = _build_saprc99_mechanism()
         code = _generate_with_adjoint(mech, solver_name, str(tmp_path))
-        assert "integrate_fwd_checkpoint" in code, (
-            f"[{solver_name}] integrate_fwd_checkpoint not found for SAPRC-99"
-        )
+        assert (
+            "integrate_fwd_checkpoint" in code
+        ), f"[{solver_name}] integrate_fwd_checkpoint not found for SAPRC-99"
 
     def test_identical_state_update_expressions(self, solver_name: str, tmp_path):
         """State update lines are identical for SAPRC-99."""
@@ -462,9 +474,9 @@ class TestForwardCheckpointEquivalenceSAPRC99:
         integrate_updates = update_pattern.findall(integrate_body)
         checkpoint_updates = update_pattern.findall(checkpoint_body)
 
-        assert len(integrate_updates) > 0, (
-            f"[{solver_name}] No state updates found in integrate() for SAPRC-99"
-        )
+        assert (
+            len(integrate_updates) > 0
+        ), f"[{solver_name}] No state updates found in integrate() for SAPRC-99"
         assert integrate_updates == checkpoint_updates, (
             f"[{solver_name}] State update expressions differ for SAPRC-99.\n"
             f"  integrate count:  {len(integrate_updates)}\n"
@@ -489,12 +501,12 @@ class TestForwardCheckpointEquivalenceSAPRC99:
         )
         # Spot-check first and last K variables match
         if integrate_k:
-            assert integrate_k[0] == checkpoint_k[0], (
-                f"[{solver_name}] First K variable differs for SAPRC-99"
-            )
-            assert integrate_k[-1] == checkpoint_k[-1], (
-                f"[{solver_name}] Last K variable differs for SAPRC-99"
-            )
+            assert (
+                integrate_k[0] == checkpoint_k[0]
+            ), f"[{solver_name}] First K variable differs for SAPRC-99"
+            assert (
+                integrate_k[-1] == checkpoint_k[-1]
+            ), f"[{solver_name}] Last K variable differs for SAPRC-99"
 
     def test_checkpoint_saves_correct_species_count(self, solver_name: str, tmp_path):
         """Checkpoint saves the correct number of species for SAPRC-99.

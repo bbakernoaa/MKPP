@@ -13,24 +13,23 @@ Tests cover:
 
 Requirements: 2.3, 5.2
 """
+
 import io
 import re
-import pytest
+
 import numpy as np
 import sympy as sp
-
-from mkpp.model import (
-    MechanismDefinition,
-    SpeciesDefinition,
-    ReactionDefinition,
-    PhaseMode,
-    AerosolRepresentation,
-    SymbolicLUPlan,
-)
 from mkpp.lowering import (
-    prepare_unified_jacobian,
     compute_symbolic_lu_decomposition,
     compute_transposed_lu_plan,
+    prepare_unified_jacobian,
+)
+from mkpp.model import (
+    AerosolRepresentation,
+    MechanismDefinition,
+    PhaseMode,
+    ReactionDefinition,
+    SpeciesDefinition,
 )
 from mkpp.symbolic_emit import _emit_lu_solve_transpose
 
@@ -110,8 +109,7 @@ class TestEmitLuSolveTranspose:
             # Should not have bare b_N, y_N, x_N on the RHS (as variables, not in prefix names)
             # The LHS can have yt3_0 etc, but RHS should not have raw b_0 etc
             rhs_part = line.split("=", 1)[1] if "=" in line else ""
-            assert not re.search(r'\bb_\d+\b', rhs_part), \
-                f"Un-substituted b_i found in: {line}"
+            assert not re.search(r"\bb_\d+\b", rhs_part), f"Un-substituted b_i found in: {line}"
 
     def test_emits_all_species_indices(self):
         """Verify output covers all N species for both forward and backward steps."""
@@ -155,10 +153,8 @@ class TestEmitLuSolveTranspose:
         lines = [l for l in output.split("\n") if l.strip() and not l.strip().startswith("//")]
         for line in lines:
             stripped = line.strip()
-            assert stripped.startswith("double "), \
-                f"Expected 'double' declaration, got: {stripped}"
-            assert stripped.endswith(";"), \
-                f"Expected semicolon at end of: {stripped}"
+            assert stripped.startswith("double "), f"Expected 'double' declaration, got: {stripped}"
+            assert stripped.endswith(";"), f"Expected semicolon at end of: {stripped}"
 
     def test_indent_is_applied(self):
         """Verify the indent parameter is respected."""
@@ -178,8 +174,7 @@ class TestEmitLuSolveTranspose:
 
         lines = [l for l in output.split("\n") if l.strip()]
         for line in lines:
-            assert line.startswith(indent), \
-                f"Line doesn't start with expected indent: '{line}'"
+            assert line.startswith(indent), f"Line doesn't start with expected indent: '{line}'"
 
     def test_transposed_differs_from_forward(self):
         """Verify transposed emission differs from forward emission (non-symmetric case)."""
@@ -201,20 +196,21 @@ class TestEmitLuSolveTranspose:
         # Build forward output manually using the same variable pattern
         buf_f = io.StringIO()
         for i, expr_str in lu_plan.forward_sub_steps:
-            s = re.sub(r'\bb_(\d+)\b', r'rhs_\1', expr_str)
-            s = re.sub(r'\by_(\d+)\b', r'y_\1', s)
+            s = re.sub(r"\bb_(\d+)\b", r"rhs_\1", expr_str)
+            s = re.sub(r"\by_(\d+)\b", r"y_\1", s)
             buf_f.write(f"double y_{i} = {s};\n")
         for i, expr_str in lu_plan.backward_sub_steps:
             s = expr_str
-            s = re.sub(r'\by_(\d+)\b', r'y_\1', s)
-            s = re.sub(r'\bx_(\d+)\b', r'k_\1', s)
+            s = re.sub(r"\by_(\d+)\b", r"y_\1", s)
+            s = re.sub(r"\bx_(\d+)\b", r"k_\1", s)
             buf_f.write(f"double k_{i} = {s};\n")
         forward_output = buf_f.getvalue()
 
         # The expressions should differ because the transposed solve uses
         # U^T for forward sub and L^T for backward sub (swapped roles)
-        assert transposed_output != forward_output, \
-            "Transposed and forward emission should differ for non-symmetric Jacobian"
+        assert (
+            transposed_output != forward_output
+        ), "Transposed and forward emission should differ for non-symmetric Jacobian"
 
     def test_numerical_correctness_of_emitted_code(self):
         """
@@ -270,13 +266,13 @@ class TestEmitLuSolveTranspose:
             ns[f"rhs_{i}"] = b[i]
 
         for i, expr_str in lu_plan.transpose_forward_sub_steps:
-            s = re.sub(r'\bb_(\d+)\b', r'rhs_\1', expr_str)
+            s = re.sub(r"\bb_(\d+)\b", r"rhs_\1", expr_str)
             val = eval(s, {"__builtins__": {}}, ns)
             ns[f"y_{i}"] = val
 
         # Execute transposed backward sub
         for i, expr_str in lu_plan.transpose_backward_sub_steps:
-            s = re.sub(r'\bx_(\d+)\b', r'k_\1', expr_str)
+            s = re.sub(r"\bx_(\d+)\b", r"k_\1", expr_str)
             val = eval(s, {"__builtins__": {}}, ns)
             ns[f"k_{i}"] = val
 
@@ -303,9 +299,6 @@ class TestEmitLuSolveTranspose:
 
         lines = [l for l in output.split("\n") if l.strip() and not l.strip().startswith("//")]
         for line in lines:
-            assert "active[" in line, \
-                f"Expected active[] conditional in reduction mode: {line}"
-            assert "? (" in line, \
-                f"Expected ternary operator in reduction mode: {line}"
-            assert ") : 0.0" in line, \
-                f"Expected ': 0.0' fallback in reduction mode: {line}"
+            assert "active[" in line, f"Expected active[] conditional in reduction mode: {line}"
+            assert "? (" in line, f"Expected ternary operator in reduction mode: {line}"
+            assert ") : 0.0" in line, f"Expected ': 0.0' fallback in reduction mode: {line}"

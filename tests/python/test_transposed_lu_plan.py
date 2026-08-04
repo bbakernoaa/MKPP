@@ -6,10 +6,10 @@ forward sub uses U^T (lower-tri), backward sub uses L^T (upper-tri).
 
 Requirements: 5.1, 5.2
 """
-import pytest
+
 import numpy as np
-from mkpp.model import SymbolicLUPlan
 from mkpp.lowering import compute_transposed_lu_plan
+from mkpp.model import SymbolicLUPlan
 
 
 def _build_full_3x3_plan():
@@ -94,7 +94,10 @@ class TestComputeTransposedLUPlan:
         assert result.transpose_forward_sub_steps[1] == (1, "(b_1 - U_0_1 * y_0) / U_1_1")
 
         # Step 2: y_2 = (b_2 - U_0_2 * y_0 - U_1_2 * y_1) / U_2_2
-        assert result.transpose_forward_sub_steps[2] == (2, "(b_2 - U_0_2 * y_0 - U_1_2 * y_1) / U_2_2")
+        assert result.transpose_forward_sub_steps[2] == (
+            2,
+            "(b_2 - U_0_2 * y_0 - U_1_2 * y_1) / U_2_2",
+        )
 
     def test_transpose_backward_uses_L_entries(self):
         """L^T backward sub references L[k,i] (transposed L entries), no division (unit diag)."""
@@ -207,7 +210,9 @@ class TestComputeTransposedLUPlan:
         # Backward sub with L^T: x_i = y_i - sum_{k>i} L[k,i]*x_k
         x = np.zeros(N)
         for i in range(N - 1, -1, -1):
-            s = sum(L[k, i] * x[k] for k in range(i + 1, N) if (k, i) in {(r, c) for r, c, _ in l_exprs})
+            s = sum(
+                L[k, i] * x[k] for k in range(i + 1, N) if (k, i) in {(r, c) for r, c, _ in l_exprs}
+            )
             x[i] = y[i] - s
 
         # Compare with numpy: solve(W.T, b)

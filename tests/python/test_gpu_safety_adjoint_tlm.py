@@ -13,15 +13,12 @@ Verifies:
 These are static code analysis tests (not runtime). They exercise the code generator
 for all 5 Rosenbrock solver variants.
 """
+
 import re
-import tempfile
 
 import pytest
-
 from mkpp.codegen import SOLVER_COEFFICIENTS, generate_headers
-from mkpp.lowering import prepare_unified_jacobian, compute_symbolic_lu_decomposition
 from mkpp.parser import load_mechanism
-
 
 ALL_SOLVERS = list(SOLVER_COEFFICIENTS.keys())
 
@@ -50,14 +47,14 @@ def _load_chapman():
 def _generate_adjoint_code(mech, solver_name: str, tmp_dir: str) -> str:
     """Generate the C++ header with adjoint=True."""
     results = generate_headers(mech, out_dir=tmp_dir, solver_name=solver_name, adjoint=True)
-    with open(results["header"], "r") as f:
+    with open(results["header"]) as f:
         return f.read()
 
 
 def _generate_forward_only_code(mech, solver_name: str, tmp_dir: str) -> str:
     """Generate the C++ header with adjoint=False (forward-only)."""
     results = generate_headers(mech, out_dir=tmp_dir, solver_name=solver_name, adjoint=False)
-    with open(results["header"], "r") as f:
+    with open(results["header"]) as f:
         return f.read()
 
 
@@ -67,9 +64,7 @@ def _extract_function_body(code: str, func_name: str) -> str:
     Finds the function by matching 'void|int <func_name>(' and returns everything
     from the opening brace of the function body to its matching closing brace.
     """
-    pattern = re.compile(
-        rf'\b(?:int|void)\s+{re.escape(func_name)}\s*\(', re.DOTALL
-    )
+    pattern = re.compile(rf"\b(?:int|void)\s+{re.escape(func_name)}\s*\(", re.DOTALL)
     match = pattern.search(code)
     if not match:
         return ""
@@ -96,15 +91,15 @@ def _extract_integrate_body(code: str) -> str:
     integrate_fwd_checkpoint, integrate_adj, integrate_tlm, or integrate_with_reduction.
     """
     # Find all 'void integrate(' occurrences and pick the one that is plain integrate()
-    pattern = re.compile(
-        r'KOKKOS_INLINE_FUNCTION\s+void\s+integrate\s*\(', re.DOTALL
-    )
+    pattern = re.compile(r"KOKKOS_INLINE_FUNCTION\s+void\s+integrate\s*\(", re.DOTALL)
     for match in pattern.finditer(code):
         # Verify this isn't part of a longer name by checking what comes before
         start = match.start()
         # Look backward for any preceding identifier characters
-        preceding = code[max(0, start - 30):start]
-        if any(prefix in preceding for prefix in ["_fwd_checkpoint", "_adj", "_tlm", "_with_reduction"]):
+        preceding = code[max(0, start - 30) : start]
+        if any(
+            prefix in preceding for prefix in ["_fwd_checkpoint", "_adj", "_tlm", "_with_reduction"]
+        ):
             continue
         # This is the plain integrate() - extract its body
         pos = match.start()
@@ -194,9 +189,9 @@ class TestAdjointTLMGPUSafety:
             r"KOKKOS_INLINE_FUNCTION[^;]*?\bvoid\s+integrate_adj\s*\(",
             re.DOTALL,
         )
-        assert pattern.search(code), (
-            f"[{solver_name}] integrate_adj() missing KOKKOS_INLINE_FUNCTION annotation"
-        )
+        assert pattern.search(
+            code
+        ), f"[{solver_name}] integrate_adj() missing KOKKOS_INLINE_FUNCTION annotation"
 
     def test_integrate_tlm_kokkos_annotation(self, solver_name: str, tmp_path):
         """integrate_tlm() has KOKKOS_INLINE_FUNCTION annotation.
@@ -210,9 +205,9 @@ class TestAdjointTLMGPUSafety:
             r"KOKKOS_INLINE_FUNCTION[^;]*?\bvoid\s+integrate_tlm\s*\(",
             re.DOTALL,
         )
-        assert pattern.search(code), (
-            f"[{solver_name}] integrate_tlm() missing KOKKOS_INLINE_FUNCTION annotation"
-        )
+        assert pattern.search(
+            code
+        ), f"[{solver_name}] integrate_tlm() missing KOKKOS_INLINE_FUNCTION annotation"
 
     def test_integrate_fwd_checkpoint_kokkos_annotation(self, solver_name: str, tmp_path):
         """integrate_fwd_checkpoint() has KOKKOS_INLINE_FUNCTION annotation.
@@ -226,9 +221,9 @@ class TestAdjointTLMGPUSafety:
             r"KOKKOS_INLINE_FUNCTION[^;]*?\b(?:int|void)\s+integrate_fwd_checkpoint\s*\(",
             re.DOTALL,
         )
-        assert pattern.search(code), (
-            f"[{solver_name}] integrate_fwd_checkpoint() missing KOKKOS_INLINE_FUNCTION annotation"
-        )
+        assert pattern.search(
+            code
+        ), f"[{solver_name}] integrate_fwd_checkpoint() missing KOKKOS_INLINE_FUNCTION annotation"
 
 
 # ---------------------------------------------------------------------------
@@ -265,12 +260,8 @@ class TestIntegrateUnchangedWithAdjoint:
         body_fwd = _extract_integrate_body(code_fwd)
         body_adj = _extract_integrate_body(code_adj)
 
-        assert body_fwd, (
-            f"[{solver_name}] integrate() not found in forward-only code"
-        )
-        assert body_adj, (
-            f"[{solver_name}] integrate() not found in adjoint-enabled code"
-        )
+        assert body_fwd, f"[{solver_name}] integrate() not found in forward-only code"
+        assert body_adj, f"[{solver_name}] integrate() not found in adjoint-enabled code"
 
         # The bodies must be identical
         assert body_fwd == body_adj, (
@@ -299,12 +290,12 @@ class TestIntegrateUnchangedWithAdjoint:
         body_fwd = _extract_function_body(code_fwd, "integrate_with_reduction")
         body_adj = _extract_function_body(code_adj, "integrate_with_reduction")
 
-        assert body_fwd, (
-            f"[{solver_name}] integrate_with_reduction() not found in forward-only code"
-        )
-        assert body_adj, (
-            f"[{solver_name}] integrate_with_reduction() not found in adjoint-enabled code"
-        )
+        assert (
+            body_fwd
+        ), f"[{solver_name}] integrate_with_reduction() not found in forward-only code"
+        assert (
+            body_adj
+        ), f"[{solver_name}] integrate_with_reduction() not found in adjoint-enabled code"
 
         assert body_fwd == body_adj, (
             f"[{solver_name}] integrate_with_reduction() body differs between "
