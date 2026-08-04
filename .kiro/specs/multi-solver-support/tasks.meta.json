@@ -1,0 +1,283 @@
+{
+  "pbtResults": {
+    "1.2 Write property test for tableau structural consistency": {
+      "status": "passed",
+      "lastRunTimestamp": 1785799924124
+    },
+    "1.3 Write property test for coefficient precision preservation": {
+      "status": "passed",
+      "lastRunTimestamp": 1785800675193
+    },
+    "2.3 Write property test for solver name validation": {
+      "status": "passed",
+      "lastRunTimestamp": 1785800803994
+    }
+  },
+  "executionHistory": {
+    "1.1 Define `RosenbrockTableau` dataclass and `SOLVER_COEFFICIENTS` dictionary in `codegen.py`": [
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785799578674
+      },
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785799586197
+      },
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785799852213
+      }
+    ],
+    "1.2 Write property test for tableau structural consistency": [
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785799578706
+      },
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785799856056
+      },
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785800688491
+      }
+    ],
+    "1.3 Write property test for coefficient precision preservation": [
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785799578739
+      },
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785799856788
+      },
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785800689253
+      }
+    ],
+    "2.1 Add `--solver` argument to the `compile` subparser in `cli.py`": [
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785799578764
+      },
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785799857623
+      },
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785800690111
+      }
+    ],
+    "2.2 Update `generate_headers()` signature to accept `solver_name` parameter": [
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785799578794
+      },
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785800693639
+      },
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785802624443
+      }
+    ],
+    "2.3 Write property test for solver name validation": [
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785799578829
+      },
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785800694344
+      },
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785802623675
+      }
+    ],
+    "3. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785799578873
+      },
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785802636358
+      },
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785803231425
+      }
+    ],
+    "4.1 Implement `_emit_rosenbrock_stages()` function in `codegen.py`": [
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785799578899
+      },
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785802637166
+      },
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785803232458
+      }
+    ],
+    "4.2 Refactor existing `integrate()` emission to use `_emit_rosenbrock_stages()`": [
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785799578927
+      },
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785803236839
+      }
+    ],
+    "4.3 Refactor `integrate_with_reduction()` emission to use `_emit_rosenbrock_stages()`": [
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785799578952
+      },
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785803237680
+      }
+    ],
+    "4.4 Write property test for stage count matches generated code": [
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785799578975
+      }
+    ],
+    "4.5 Write property test for NewF=false reuse behavior": [
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785799579002
+      }
+    ],
+    "4.6 Write property test for generated coefficients match tableau": [
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785799579028
+      }
+    ],
+    "5. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785799579054
+      }
+    ],
+    "6.1 Add assertions/checks confirming GPU safety of generated code across all solvers": [
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785799579079
+      }
+    ],
+    "6.2 Write property test for GPU safety invariants": [
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785799579106
+      }
+    ],
+    "6.3 Write property test for reduction integrator consistency": [
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785799579138
+      }
+    ],
+    "6.4 Write property test for LU plan independence from solver choice": [
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785799579164
+      }
+    ],
+    "6.5 Write property test for function signature invariance": [
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785799579188
+      }
+    ],
+    "6.6 Write property test for step-size exponent matches ELO": [
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785799579215
+      }
+    ],
+    "7.1 Add regression test verifying default `ros3` output is unchanged": [
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785799579240
+      }
+    ],
+    "7.2 Add integration tests for each solver variant": [
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785799579268
+      }
+    ],
+    "8. Final checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785799579293
+      }
+    ],
+    "1. Add coefficient tableau data structure and storage": [
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785800689290
+      }
+    ],
+    "2. Add CLI `--solver` flag and thread through compiler pipeline": [
+      {
+        "executionId": "0705e890-5b86-47f3-8623-4d6d772c9b34",
+        "chatSessionId": "sess_1e84c72b-d162-4148-bc3b-8372be191c0b",
+        "timestamp": 1785802624480
+      }
+    ]
+  }
+}
