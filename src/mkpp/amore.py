@@ -1,6 +1,29 @@
 import copy
-from typing import Dict, List
+from typing import Dict, List, Any
 from .model import MechanismDefinition, ReactionDefinition, SpeciesDefinition
+
+def _merge_param_values(values: List[Any], N: int) -> Any:
+    """Helper to merge parameter values (numeric, dict, or string) across N reactions."""
+    if not values:
+        return 0.0
+
+    # If first item is a dict (like TROE's k0 or kinf parameter dicts)
+    if isinstance(values[0], dict):
+        merged_dict = {}
+        all_sub_keys = set().union(*(v.keys() for v in values if isinstance(v, dict)))
+        for sub_k in all_sub_keys:
+            sub_vals = [v.get(sub_k, 0.0) for v in values if isinstance(v, dict)]
+            merged_dict[sub_k] = _merge_param_values(sub_vals, N)
+        return merged_dict
+
+    # If all items are numeric floats/ints
+    if all(isinstance(v, (int, float)) for v in values):
+        return sum(values) / float(N)
+
+    # Fallback to string expressions for dynamic SymPy symbols
+    exprs = [str(v) for v in values]
+    return f"({' + '.join(exprs)}) / {N}.0"
+
 
 def apply_amore_lumping(mech: MechanismDefinition, rules: Dict[str, List[str]]) -> MechanismDefinition:
     """
@@ -149,14 +172,18 @@ def apply_amore_lumping(mech: MechanismDefinition, rules: Dict[str, List[str]]) 
             base_r.products = new_prods
             
         else:
-            # For non-Arrhenius reactions (TROE, EP2, EP3), the rate expression is complex.
-            # We construct a composite average for EVERY numeric parameter in the AST node.
-            # Product yields are just evenly averaged because extracting the flux requires pressure/temp profiles.
-            for param in base_r.parameters.keys():
-                if param in ('stiff',): continue
-                exprs = [str(r.parameters.get(param, '0.0')) for r in rxns]
-                base_r.parameters[param] = f"({' + '.join(exprs)}) / {N}.0"
-                
+            # For non-Arrhenius reactions (TROE, FALLOFF, EP2, EP3, TUNNELING, HETEROGENEOUS),
+            # recursively merge parameter values (supporting nested dicts and numeric floats)
+            all_param_keys = set().union(*(r.parameters.keys() for r in rxns))
+            merged_params = {}
+            for param in all_param_keys:
+                if param in ('stiff',):
+                    merged_params[param] = base_r.parameters.get(param, False)
+                    continue
+                vals = [r.parameters.get(param, 0.0) for r in rxns]
+                merged_params[param] = _merge_param_values(vals, N)
+            base_r.parameters = merged_params
+
             new_prods = {}
             for r in rxns:
                 for p, y in r.products.items():
