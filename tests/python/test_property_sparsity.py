@@ -297,6 +297,35 @@ def test_property_12_permuted_solve_equivalence(data):
     )
 
 
+def test_rcm_permutation_wired_into_lu_plan():
+    from mkpp.lowering import prepare_unified_jacobian
+    from mkpp.model import MechanismDefinition, SpeciesDefinition, ReactionDefinition, PhaseMode, AerosolRepresentation
+
+    mech = MechanismDefinition(
+        name="test_sparse_mech",
+        description="Sparse test mechanism",
+        aerosol_representation=AerosolRepresentation.BULK,
+        phases=[],
+        species=[
+            SpeciesDefinition(name="A", phase=PhaseMode.GAS),
+            SpeciesDefinition(name="B", phase=PhaseMode.GAS),
+            SpeciesDefinition(name="C", phase=PhaseMode.GAS),
+            SpeciesDefinition(name="D", phase=PhaseMode.GAS),
+        ],
+        reactions=[
+            ReactionDefinition(reaction_type="ARRHENIUS", reactants={"A": 1}, products={"B": 1}, rate_expression="k1*A", parameters={"A": 1.0, "B": 0.0, "C": 0.0}),
+            ReactionDefinition(reaction_type="ARRHENIUS", reactants={"C": 1}, products={"D": 1}, rate_expression="k2*C", parameters={"A": 1.0, "B": 0.0, "C": 0.0}),
+        ]
+    )
+
+    res = prepare_unified_jacobian(mech)
+    plan = res.get("symbolic_lu_plan")
+    assert plan is not None
+    assert plan.permutation is not None
+    assert plan.blocks is not None
+
+
+
 # ---------------------------------------------------------------------------
 # Property 13: Sparsity optimizer determinism
 # **Validates: Requirements 4.7**

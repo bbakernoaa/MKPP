@@ -302,11 +302,12 @@ def prepare_unified_jacobian(mech: MechanismDefinition) -> Dict[str, Any]:
         sparsity = SparsityOptimizer(jacobian_structure, N)
         analysis = sparsity.analyze()
 
-        # Store analysis for reporting but use plain LU decomposition
-        # until permutation and block-diagonal codegen are fully validated.
         lu_plan = compute_symbolic_lu_decomposition(
             jacobian_matrix,
             ordered_species,
+            permutation=analysis.permutation,
+            blocks=analysis.blocks,
+            is_block_diagonal=analysis.is_block_diagonal,
         )
 
         result["symbolic_lu_plan"] = lu_plan
@@ -578,10 +579,31 @@ def prepare_unified_jacobian_parallel(mech: MechanismDefinition) -> Dict[str, An
     }
 
     try:
-        lu_plan = compute_symbolic_lu_decomposition(jacobian_matrix, ordered_species)
+        N = jacobian_matrix.shape[0]
+        jacobian_structure = set()
+        for i in range(N):
+            for j in range(N):
+                if jacobian_matrix[i, j] != 0:
+                    jacobian_structure.add((i, j))
+
+        sparsity = SparsityOptimizer(jacobian_structure, N)
+        analysis = sparsity.analyze()
+
+        lu_plan = compute_symbolic_lu_decomposition(
+            jacobian_matrix,
+            ordered_species,
+            permutation=analysis.permutation,
+            blocks=analysis.blocks,
+            is_block_diagonal=analysis.is_block_diagonal,
+        )
         result["symbolic_lu_plan"] = lu_plan
+        result["sparsity_analysis"] = analysis
     except Exception:
-        pass
+        try:
+            lu_plan = compute_symbolic_lu_decomposition(jacobian_matrix, ordered_species)
+            result["symbolic_lu_plan"] = lu_plan
+        except Exception:
+            pass
 
     return result
 
@@ -621,6 +643,7 @@ def compute_symbolic_lu_decomposition(
         perm_species_map = [species_map[permutation[i]] for i in range(N)]
         plan = _compute_lu_core(J_perm, perm_species_map)
         plan.permutation = permutation
+        plan.blocks = blocks
         return plan
 
     return _compute_lu_core(J_matrix, species_map)
