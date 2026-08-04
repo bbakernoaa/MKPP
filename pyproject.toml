@@ -3,7 +3,7 @@ name = "mkpp"
 version = "0.1.0"
 description = "Multiphase KPP (MKPP) Engine"
 authors = [
-    { name = "NOAA OMD", email = "nobody@noaa.gov" }
+    { name = "Barry Baker", email = "barry.baker@noaa.gov" }
 ]
 requires-python = ">=3.11"
 dependencies = [
@@ -45,3 +45,6 @@ testpaths = [
     "tests/python",
 ]
 pythonpath = ["src"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]

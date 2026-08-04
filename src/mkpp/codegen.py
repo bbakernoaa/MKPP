@@ -157,6 +157,7 @@ def _emit_rosenbrock_stages(
     mech,
     perm,
     is_reduction: bool = False,
+    skip_first_f_eval: bool = False,
 ) -> None:
     """Emit fully-unrolled Rosenbrock stage computations for any supported solver.
 
@@ -183,6 +184,10 @@ def _emit_rosenbrock_stages(
         Species permutation for state access (from LU plan), or None.
     is_reduction : bool
         If True, emit conditional active-species logic for auto-reduction variant.
+    skip_first_f_eval : bool
+        If True, skip F1 evaluation at stage 1 (assumes F1_i variables are already
+        declared in scope, e.g. for integrate_with_reduction where F1 is computed
+        in the preamble for importance evaluation).
     """
     import re
 
@@ -294,15 +299,22 @@ def _emit_rosenbrock_stages(
         # 2. Evaluate F_stage if NewF[stage-1] is True, else reuse previous
         if tableau.NewF[stage - 1]:
             F_prefix = f"F{stage}"
-            if stage == 1:
+            if stage == 1 and skip_first_f_eval:
+                # F1 already declared in the preamble (e.g. for importance evaluation)
+                f.write(f"          // F1 already computed above (used for importance evaluation)\n")
+            elif stage == 1:
                 # For stage 1, evaluate at the initial state S
                 state_var = "S"
+                f.write(f"          // Rate evaluation F{stage} at {state_var}\n")
+                for i in range(N):
+                    eqn = format_eqn(F_exprs[i], mech.species, state_var=state_var, use_parentheses=False)
+                    f.write(f"          double F{stage}_{i} = {eqn};\n")
             else:
                 state_var = f"Y{stage}"
-            f.write(f"          // Rate evaluation F{stage} at {state_var}\n")
-            for i in range(N):
-                eqn = format_eqn(F_exprs[i], mech.species, state_var=state_var, use_parentheses=False)
-                f.write(f"          double F{stage}_{i} = {eqn};\n")
+                f.write(f"          // Rate evaluation F{stage} at {state_var}\n")
+                for i in range(N):
+                    eqn = format_eqn(F_exprs[i], mech.species, state_var=state_var, use_parentheses=False)
+                    f.write(f"          double F{stage}_{i} = {eqn};\n")
             current_F_prefix = F_prefix
         else:
             # Reuse the previous stage's F evaluation
@@ -962,11 +974,9 @@ def generate_headers(
         f.write("          double dt_total, StateView& state, const double* jvals, double importance_threshold) const\n")
         f.write("      {\n")
         f.write(f"          const int NUM_SPECIES = {N};\n")
-        f.write("          const double g = 1.70710678118654752440;\n")
-        f.write("          const double ros_A0 = 1.0 / g;\n")
-        f.write("          const double ros_C0 = -2.0 / g;\n")
-        f.write("          const double ros_M0 = 3.0 / (2.0 * g);\n")
-        f.write("          const double ros_M1 = 1.0 / (2.0 * g);\n")
+        # Use the same tableau gamma as integrate()
+        gamma = tableau.Gamma[0]
+        f.write(f"          const double g = {gamma:.17g};\n")
         f.write("          const double safety = 0.9;\n")
         f.write("          const double max_growth = 6.0;\n")
         f.write("          const double min_shrink = 0.2;\n\n")
@@ -991,7 +1001,7 @@ def generate_headers(
         f.write("\n")
 
         if lu_plan:
-            # Stage 1 Rates F1
+            # Stage 1 Rates F1 (needed for importance evaluation)
             f.write("          // 1. Stage 1 Rates (F1)\n")
             if sympy_meta:
                 if "f_implicit" in sympy_meta and "f_explicit" in sympy_meta:
@@ -1068,72 +1078,8 @@ def generate_headers(
                 for kind, i, j, expr_str in lu_plan.lu_expressions_ordered:
                     f.write(f"          double {kind}_{i}_{j} = {expr_str};\n")
 
-            # Forward & Backward Substitution for K1 with frozen species getting K1=0
-            f.write("\n          // 5. Forward & Backward Substitution for K1 (frozen species get K1=0)\n")
-            import re
-            for i, expr_str in lu_plan.forward_sub_steps:
-                s = re.sub(r'\bb_(\d+)\b', r'F1_\1', expr_str)
-                s = re.sub(r'\by_(\d+)\b', r'y1_\1', s)
-                f.write(f"          double y1_{i} = active[{i}] ? ({s}) : 0.0;\n")
-            for i, expr_str in lu_plan.backward_sub_steps:
-                s = expr_str
-                s = re.sub(r'\by_(\d+)\b', r'y1_\1', s)
-                s = re.sub(r'\bx_(\d+)\b', r'K1_\1', s)
-                f.write(f"          double K1_{i} = active[{i}] ? ({s}) : 0.0;\n")
-
-            # Fused Intermediate State Ynew
-            f.write("\n          // 6. Fused Intermediate State Ynew\n")
-            for i in range(N):
-                f.write(f"          double Ynew_{i} = S_{i} + ros_A0 * K1_{i};\n")
-
-            # Stage 2 Rates F2 & Substitution (frozen species get K2=0)
-            f.write("\n          // 7. Stage 2 Rates (F2) & Substitution for K2 (frozen species get K2=0)\n")
-            if sympy_meta:
-                for i in range(len(F)):
-                    eqn = format_eqn(F[i], mech.species, state_var="Ynew", use_parentheses=False)
-                    f.write(f"          double F2_{i} = {eqn};\n")
-                    f.write(f"          double rhs2_{i} = F2_{i} + (ros_C0 / dt) * K1_{i};\n")
-
-            for i, expr_str in lu_plan.forward_sub_steps:
-                s = re.sub(r'\bb_(\d+)\b', r'rhs2_\1', expr_str)
-                s = re.sub(r'\by_(\d+)\b', r'y2_\1', s)
-                f.write(f"          double y2_{i} = active[{i}] ? ({s}) : 0.0;\n")
-            for i, expr_str in lu_plan.backward_sub_steps:
-                s = expr_str
-                s = re.sub(r'\by_(\d+)\b', r'y2_\1', s)
-                s = re.sub(r'\bx_(\d+)\b', r'K2_\1', s)
-                f.write(f"          double K2_{i} = active[{i}] ? ({s}) : 0.0;\n")
-
-            # Error Estimation (KPP-compatible: embedded formula with L2 norm)
-            f.write("\n          // 8. Error Estimation (KPP ROS-2 embedded method, L2 norm)\n")
-            f.write("          const double ros_E0 = ros_M1;  // 1/(2*g)\n")
-            f.write("          const double ros_E1 = ros_M1;  // 1/(2*g)\n")
-            f.write("          double err_norm_sq = 0.0;\n")
-            for i in range(N):
-                state_idx = _perm[i] if _perm else i
-                f.write(f"          {{\n")
-                f.write(f"              double Ynew_i = state({state_idx}) + ros_M0 * K1_{i} + ros_M1 * K2_{i};\n")
-                f.write(f"              double ymax = Kokkos::fmax(Kokkos::fabs(state({state_idx})), Kokkos::fabs(Ynew_i));\n")
-                f.write(f"              double sci = atol[{i}] + rtol[{i}] * ymax;\n")
-                f.write(f"              double yerr_i = ros_E0 * K1_{i} + ros_E1 * K2_{i};\n")
-                f.write(f"              err_norm_sq += (yerr_i / sci) * (yerr_i / sci);\n")
-                f.write(f"          }}\n")
-            f.write(f"          double err_norm = Kokkos::sqrt(err_norm_sq / {N});\n")
-            f.write("          err_norm = Kokkos::fmax(err_norm, 1.0e-10);\n")
-
-            # Step Size Control (only update active species on accept)
-            f.write("\n          // 9. Step Size Control (only active species update state)\n")
-            f.write("          double factor = safety / Kokkos::pow(err_norm, 0.5);\n")
-            f.write("          factor = Kokkos::fmax(min_shrink, Kokkos::fmin(factor, max_growth));\n\n")
-            f.write("          if (err_norm <= 1.0) {\n")
-            for i in range(N):
-                state_idx = _perm[i] if _perm else i
-                f.write(f"              if (active[{i}]) state({state_idx}) += ros_M0 * K1_{i} + ros_M1 * K2_{i};\n")
-            f.write("              t += dt;\n")
-            f.write("              dt *= factor;\n")
-            f.write("          } else {\n")
-            f.write("              dt *= factor;\n")
-            f.write("          }\n")
+            # Emit generic Rosenbrock stages using the same tableau as integrate()
+            _emit_rosenbrock_stages(f, tableau, N, lu_plan, sympy_meta, mech, _perm, is_reduction=True, skip_first_f_eval=True)
 
         # Close while loop for integrate_with_reduction
         f.write("          } // end while (t < dt_total)\n")
