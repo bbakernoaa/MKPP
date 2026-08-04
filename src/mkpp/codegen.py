@@ -1,9 +1,428 @@
 import json
 import hashlib
 import math
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 from .model import MechanismDefinition
+
+
+# ---------------------------------------------------------------------------
+# Rosenbrock Coefficient Tableau Storage
+# ---------------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class RosenbrockTableau:
+    """Immutable coefficient tableau for a Rosenbrock solver."""
+    name: str
+    stages: int
+    A: List[float]       # Strictly lower-triangular, row-wise: A(2,1), A(3,1), A(3,2), ...
+    C: List[float]       # Same storage as A
+    M: List[float]       # Solution update weights, length = stages
+    E: List[float]       # Error estimate weights, length = stages
+    Alpha: List[float]   # Stage time offsets, length = stages
+    Gamma: List[float]   # Gamma sums, length = stages
+    NewF: List[bool]     # Whether stage i needs a fresh F evaluation
+    ELO: float           # Estimator of local order (main + embedded + 1)
+
+
+SOLVER_COEFFICIENTS: Dict[str, RosenbrockTableau] = {
+    "ros2": RosenbrockTableau(
+        name="ROS-2",
+        stages=2,
+        A=[1.7071067811865475244],  # 1/g where g = 1 + 1/sqrt(2)
+        C=[-1.1715728752538099024],  # -2/g
+        M=[0.87867965644035742774, 0.29289321881345247560],  # 3/(2g), 1/(2g)
+        E=[0.29289321881345247560, 0.29289321881345247560],  # 1/(2g), 1/(2g)
+        Alpha=[0.0, 1.0],
+        Gamma=[1.7071067811865475244, -1.7071067811865475244],  # g, -g
+        NewF=[True, True],
+        ELO=2.0,
+    ),
+    "ros3": RosenbrockTableau(
+        name="ROS-3",
+        stages=3,
+        A=[1.0, 1.0, 0.0],
+        C=[-1.0156171083877702092, 4.0759956452537699825, 9.2076794298330791242],
+        M=[1.0, 6.1697947043828245593, -0.42772256543218573326],
+        E=[0.5, -2.9079558716805469822, 0.22354069897811569627],
+        Alpha=[0.0, 0.43586652150845899942, 0.43586652150845899942],
+        Gamma=[0.43586652150845899942, 0.24291996454816804367, 2.1851380027664058512],
+        NewF=[True, True, False],
+        ELO=3.0,
+    ),
+    "ros4": RosenbrockTableau(
+        name="ROS-4",
+        stages=4,
+        A=[2.0, 1.867943637803922, 0.2344449711399156,
+           1.867943637803922, 0.2344449711399156, 0.0],
+        C=[-7.137615036412310, 2.580708087951457, 0.6515950076447975,
+           -2.137148994382534, -0.3214669691237626, -0.6949742501781779],
+        M=[2.255570073418735, 0.2870493262186792,
+           0.4353179431840180, 1.093502252409163],
+        E=[-0.2815431932141155, -0.07276199124938920,
+           -0.1082196201495311, -1.093502252409163],
+        Alpha=[0.0, 1.145640000000000, 0.6552168638155900, 0.6552168638155900],
+        Gamma=[0.5728200000000000, -1.769193891319233,
+               0.7592633437920482, -0.1049021087100450],
+        NewF=[True, True, True, False],
+        ELO=4.0,
+    ),
+    "rodas3": RosenbrockTableau(
+        name="RODAS-3",
+        stages=4,
+        A=[0.0, 2.0, 0.0, 2.0, 0.0, 1.0],
+        C=[4.0, 1.0, -1.0, 1.0, -1.0, -8.0/3.0],
+        M=[2.0, 0.0, 1.0, 1.0],
+        E=[0.0, 0.0, 0.0, 1.0],
+        Alpha=[0.0, 0.0, 1.0, 1.0],
+        Gamma=[0.5, 1.5, 0.0, 0.0],
+        NewF=[True, False, True, True],
+        ELO=3.0,
+    ),
+    "rodas4": RosenbrockTableau(
+        name="RODAS-4",
+        stages=6,
+        A=[1.544000000000000,
+           0.9466785280815826, 0.2557011698983284,
+           3.314825187068521, 2.896124015972201, 0.9986419139977817,
+           1.221224509226641, 6.019134481288629, 12.53708332932087, -0.6878860361058950,
+           1.221224509226641, 6.019134481288629, 12.53708332932087, -0.6878860361058950, 1.0],
+        C=[-5.668800000000000,
+           -2.430093356833875, -0.2063599157091915,
+           -0.1073529058151375, -9.594562251023355, -20.47028614809616,
+            7.496443313967647, -10.24680431464352, -33.99990352819905, 11.70890893206160,
+            8.083246795921522, -7.981132988064893, -31.52159432874371, 16.31930543123136, -6.058818238834054],
+        M=[1.221224509226641, 6.019134481288629, 12.53708332932087, -0.6878860361058950, 1.0, 1.0],
+        E=[0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+        Alpha=[0.0, 0.386, 0.210, 0.630, 1.0, 1.0],
+        Gamma=[0.2500000000000000, -0.1043000000000000,
+               0.1035000000000000, -0.03620000000000023, 0.0, 0.0],
+        NewF=[True, True, True, True, True, True],
+        ELO=4.0,
+    ),
+}
+
+
+def get_A(tableau: RosenbrockTableau, i: int, j: int) -> float:
+    """Get A(i,j) from row-wise lower-triangular storage. i,j are 1-indexed; i > j."""
+    return tableau.A[(i - 1) * (i - 2) // 2 + j - 1]
+
+
+def get_C(tableau: RosenbrockTableau, i: int, j: int) -> float:
+    """Get C(i,j) from row-wise lower-triangular storage. i,j are 1-indexed; i > j."""
+    return tableau.C[(i - 1) * (i - 2) // 2 + j - 1]
+
+
+# Module-level assertions verifying array length invariants for each tableau
+for _solver_name, _tableau in SOLVER_COEFFICIENTS.items():
+    _s = _tableau.stages
+    _expected_tri = _s * (_s - 1) // 2
+    assert len(_tableau.A) == _expected_tri, (
+        f"{_solver_name}: len(A)={len(_tableau.A)} != stages*(stages-1)//2={_expected_tri}"
+    )
+    assert len(_tableau.C) == _expected_tri, (
+        f"{_solver_name}: len(C)={len(_tableau.C)} != stages*(stages-1)//2={_expected_tri}"
+    )
+    assert len(_tableau.M) == _s, (
+        f"{_solver_name}: len(M)={len(_tableau.M)} != stages={_s}"
+    )
+    assert len(_tableau.E) == _s, (
+        f"{_solver_name}: len(E)={len(_tableau.E)} != stages={_s}"
+    )
+    assert len(_tableau.Alpha) == _s, (
+        f"{_solver_name}: len(Alpha)={len(_tableau.Alpha)} != stages={_s}"
+    )
+    assert len(_tableau.Gamma) == _s, (
+        f"{_solver_name}: len(Gamma)={len(_tableau.Gamma)} != stages={_s}"
+    )
+    assert len(_tableau.NewF) == _s, (
+        f"{_solver_name}: len(NewF)={len(_tableau.NewF)} != stages={_s}"
+    )
+# Clean up loop variables from module namespace
+del _solver_name, _tableau, _s, _expected_tri
+
+
+# ---------------------------------------------------------------------------
+# Generic Rosenbrock stage emission
+# ---------------------------------------------------------------------------
+
+
+def _emit_rosenbrock_stages(
+    f,
+    tableau: RosenbrockTableau,
+    N: int,
+    lu_plan,
+    sympy_meta,
+    mech,
+    perm,
+    is_reduction: bool = False,
+) -> None:
+    """Emit fully-unrolled Rosenbrock stage computations for any supported solver.
+
+    This function generalizes the existing hardcoded 3-stage Ros3 logic into a
+    Python-time loop that unrolls S stages into named C++ scalar variables.
+    All stage logic is fully unrolled at code-generation time — no runtime loops
+    over stages exist in the emitted C++.
+
+    Parameters
+    ----------
+    f : file handle
+        Open file to write C++ code into.
+    tableau : RosenbrockTableau
+        Coefficient tableau for the selected solver.
+    N : int
+        Number of species.
+    lu_plan : SymbolicLUPlan
+        Symbolic LU factorization plan (solver-independent).
+    sympy_meta : dict
+        Mechanism metadata containing f_vector/f_implicit+f_explicit and jacobian_matrix.
+    mech : MechanismDefinition
+        Mechanism definition (for species list and format_eqn).
+    perm : list or None
+        Species permutation for state access (from LU plan), or None.
+    is_reduction : bool
+        If True, emit conditional active-species logic for auto-reduction variant.
+    """
+    import re
+
+    # Resolve the ODE right-hand-side expressions
+    if sympy_meta:
+        if "f_implicit" in sympy_meta and "f_explicit" in sympy_meta:
+            F_exprs = sympy_meta["f_implicit"] + sympy_meta["f_explicit"]
+        elif "f_vector" in sympy_meta:
+            F_exprs = sympy_meta["f_vector"]
+        else:
+            F_exprs = [0] * N
+    else:
+        F_exprs = [0] * N
+
+    gamma = tableau.Gamma[0]
+    S = tableau.stages
+
+    # --- Helper: emit forward/backward substitution for a given stage ---
+    def _emit_lu_solve(stage_num, rhs_prefix, y_prefix, k_prefix):
+        """Emit forward and backward substitution for one stage solve.
+
+        Maps the generic LU plan variables:
+          b_i -> {rhs_prefix}_{i}
+          y_i -> {y_prefix}_{i}
+          x_i -> {k_prefix}_{i}
+        """
+        if lu_plan.blocks and len(lu_plan.blocks) > 1:
+            # Forward substitution with block comments
+            _emitted_fwd_block = set()
+            for i, expr_str in lu_plan.forward_sub_steps:
+                for block_num, block_indices in enumerate(lu_plan.blocks):
+                    if i in block_indices:
+                        if block_num not in _emitted_fwd_block:
+                            _emitted_fwd_block.add(block_num)
+                            block_species_names = [lu_plan.species_map[idx] for idx in block_indices]
+                            f.write(f"          // Block {block_num}: {k_prefix} forward sub [{', '.join(block_species_names)}]\n")
+                        break
+                s = re.sub(r'\bb_(\d+)\b', rf'{rhs_prefix}_\1', expr_str)
+                s = re.sub(r'\by_(\d+)\b', rf'{y_prefix}_\1', s)
+                if is_reduction:
+                    f.write(f"          double {y_prefix}_{i} = active[{i}] ? ({s}) : 0.0;\n")
+                else:
+                    f.write(f"          double {y_prefix}_{i} = {s};\n")
+            # Backward substitution with block comments
+            _emitted_bwd_block = set()
+            for i, expr_str in lu_plan.backward_sub_steps:
+                for block_num, block_indices in enumerate(lu_plan.blocks):
+                    if i in block_indices:
+                        if block_num not in _emitted_bwd_block:
+                            _emitted_bwd_block.add(block_num)
+                            block_species_names = [lu_plan.species_map[idx] for idx in block_indices]
+                            f.write(f"          // Block {block_num}: {k_prefix} backward sub [{', '.join(block_species_names)}]\n")
+                        break
+                s = expr_str
+                s = re.sub(r'\by_(\d+)\b', rf'{y_prefix}_\1', s)
+                s = re.sub(r'\bx_(\d+)\b', rf'{k_prefix}_\1', s)
+                if is_reduction:
+                    f.write(f"          double {k_prefix}_{i} = active[{i}] ? ({s}) : 0.0;\n")
+                else:
+                    f.write(f"          double {k_prefix}_{i} = {s};\n")
+        else:
+            # Forward substitution (no block comments)
+            for i, expr_str in lu_plan.forward_sub_steps:
+                s = re.sub(r'\bb_(\d+)\b', rf'{rhs_prefix}_\1', expr_str)
+                s = re.sub(r'\by_(\d+)\b', rf'{y_prefix}_\1', s)
+                if is_reduction:
+                    f.write(f"          double {y_prefix}_{i} = active[{i}] ? ({s}) : 0.0;\n")
+                else:
+                    f.write(f"          double {y_prefix}_{i} = {s};\n")
+            # Backward substitution (no block comments)
+            for i, expr_str in lu_plan.backward_sub_steps:
+                s = expr_str
+                s = re.sub(r'\by_(\d+)\b', rf'{y_prefix}_\1', s)
+                s = re.sub(r'\bx_(\d+)\b', rf'{k_prefix}_\1', s)
+                if is_reduction:
+                    f.write(f"          double {k_prefix}_{i} = active[{i}] ? ({s}) : 0.0;\n")
+                else:
+                    f.write(f"          double {k_prefix}_{i} = {s};\n")
+
+    # Track which F variable name is current (for NewF=false reuse)
+    current_F_prefix = None
+
+    # --- Stage loop (Python-time unrolling) ---
+    for stage in range(1, S + 1):
+        f.write(f"\n          // --- Stage {stage} ---\n")
+
+        # 1. Compute intermediate state Y_stage if stage > 1
+        if stage > 1:
+            # Y_stage[i] = S_i + sum(A(stage,j) * K_j[i] for j in 1..stage-1)
+            f.write(f"          // Intermediate state Y{stage}\n")
+            for i in range(N):
+                terms = []
+                for j in range(1, stage):
+                    a_val = get_A(tableau, stage, j)
+                    if a_val != 0.0:
+                        terms.append((a_val, f"K{j}_{i}"))
+                if not terms:
+                    # All A coefficients are zero — Y equals S
+                    f.write(f"          double Y{stage}_{i} = S_{i};\n")
+                elif len(terms) == 1 and terms[0][0] == 1.0:
+                    f.write(f"          double Y{stage}_{i} = S_{i} + {terms[0][1]};\n")
+                else:
+                    sum_expr = " + ".join(
+                        f"{a:.17g} * {kvar}" if a != 1.0 else kvar
+                        for a, kvar in terms
+                    )
+                    f.write(f"          double Y{stage}_{i} = S_{i} + {sum_expr};\n")
+
+        # 2. Evaluate F_stage if NewF[stage-1] is True, else reuse previous
+        if tableau.NewF[stage - 1]:
+            F_prefix = f"F{stage}"
+            if stage == 1:
+                # For stage 1, evaluate at the initial state S
+                state_var = "S"
+            else:
+                state_var = f"Y{stage}"
+            f.write(f"          // Rate evaluation F{stage} at {state_var}\n")
+            for i in range(N):
+                eqn = format_eqn(F_exprs[i], mech.species, state_var=state_var, use_parentheses=False)
+                f.write(f"          double F{stage}_{i} = {eqn};\n")
+            current_F_prefix = F_prefix
+        else:
+            # Reuse the previous stage's F evaluation
+            f.write(f"          // NewF=false: reuse {current_F_prefix} for stage {stage}\n")
+            # current_F_prefix remains unchanged
+
+        # 3. Form RHS: rhs_stage[i] = F_current[i] + sum(C(stage,j)/dt * K_j[i] for j in 1..stage-1)
+        rhs_prefix = f"rhs{stage}"
+        if stage == 1:
+            # For stage 1, the C sum is empty: rhs = F1
+            # We use F1 directly as the RHS (no separate rhs variable needed for stage 1)
+            rhs_prefix = current_F_prefix
+        else:
+            f.write(f"          // RHS for stage {stage}\n")
+            for i in range(N):
+                c_terms = []
+                for j in range(1, stage):
+                    c_val = get_C(tableau, stage, j)
+                    if c_val != 0.0:
+                        c_terms.append((c_val, f"K{j}_{i}"))
+                if not c_terms:
+                    f.write(f"          double rhs{stage}_{i} = {current_F_prefix}_{i};\n")
+                else:
+                    sum_expr = " + ".join(
+                        f"({c:.17g} / dt) * {kvar}" for c, kvar in c_terms
+                    )
+                    f.write(f"          double rhs{stage}_{i} = {current_F_prefix}_{i} + {sum_expr};\n")
+
+        # 4. Solve W * K_stage = rhs_stage using pre-computed LU plan
+        y_prefix = f"y{stage}"
+        k_prefix = f"K{stage}"
+        _emit_lu_solve(stage, rhs_prefix, y_prefix, k_prefix)
+
+    # --- After all stages: Solution update and error estimation ---
+    f.write(f"\n          // --- Solution update and error estimation ---\n")
+
+    # Compute error norm (fused with solution update for cache efficiency)
+    f.write("          double err_norm_sq = 0.0;\n")
+    for i in range(N):
+        state_idx = perm[i] if perm else i
+        # Solution update: Ynew[i] = S_i + sum(M[j] * K_{j+1}[i] for j in range(stages))
+        m_terms = []
+        for j in range(S):
+            if tableau.M[j] != 0.0:
+                m_terms.append((tableau.M[j], f"K{j+1}_{i}"))
+        if m_terms:
+            m_expr = " + ".join(
+                f"{m:.17g} * {kvar}" if m != 1.0 else kvar
+                for m, kvar in m_terms
+            )
+        else:
+            m_expr = "0.0"
+
+        # Error estimate: Yerr[i] = sum(E[j] * K_{j+1}[i] for j in range(stages))
+        e_terms = []
+        for j in range(S):
+            if tableau.E[j] != 0.0:
+                e_terms.append((tableau.E[j], f"K{j+1}_{i}"))
+        if e_terms:
+            e_expr = " + ".join(
+                f"{e:.17g} * {kvar}" if e != 1.0 else kvar
+                for e, kvar in e_terms
+            )
+        else:
+            e_expr = "0.0"
+
+        f.write(f"          {{\n")
+        f.write(f"              double Ynew_i = S_{i} + {m_expr};\n")
+        f.write(f"              double ymax = Kokkos::fmax(Kokkos::fabs(state({state_idx})), Kokkos::fabs(Ynew_i));\n")
+        f.write(f"              double sci = atol[{i}] + rtol[{i}] * ymax;\n")
+        f.write(f"              double yerr_i = {e_expr};\n")
+        f.write(f"              err_norm_sq += (yerr_i / sci) * (yerr_i / sci);\n")
+        f.write(f"          }}\n")
+
+    f.write(f"          double err_norm = Kokkos::sqrt(err_norm_sq / {N});\n")
+    f.write("          err_norm = Kokkos::fmax(err_norm, 1.0e-10);\n")
+
+    # Step-size control with 1/ELO exponent as a literal
+    elo_exponent = 1.0 / tableau.ELO
+    f.write(f"\n          // Step Size Control (order {tableau.ELO:.0f}: exponent = 1/{tableau.ELO:.0f} = {elo_exponent:.17g})\n")
+    # Use specialized functions for common exponents
+    if tableau.ELO == 2.0:
+        f.write("          double factor = safety / Kokkos::sqrt(err_norm);\n")
+    elif tableau.ELO == 3.0:
+        f.write("          double factor = safety / Kokkos::cbrt(err_norm);\n")
+    else:
+        f.write(f"          double factor = safety * Kokkos::pow(err_norm, -{elo_exponent:.17g});\n")
+    f.write("          factor = Kokkos::fmax(min_shrink, Kokkos::fmin(factor, max_growth));\n\n")
+
+    # Accept/reject logic
+    f.write("          if (err_norm <= 1.0) {\n")
+    for i in range(N):
+        state_idx = perm[i] if perm else i
+        # Recompute update terms for state assignment
+        m_terms = []
+        for j in range(S):
+            if tableau.M[j] != 0.0:
+                m_terms.append((tableau.M[j], f"K{j+1}_{i}"))
+        if m_terms:
+            m_expr = " + ".join(
+                f"{m:.17g} * {kvar}" if m != 1.0 else kvar
+                for m, kvar in m_terms
+            )
+        else:
+            m_expr = "0.0"
+
+        if is_reduction:
+            f.write(f"              if (active[{i}]) state({state_idx}) += {m_expr};\n")
+        else:
+            f.write(f"              state({state_idx}) += {m_expr};\n")
+    f.write("              t += dt;\n")
+    f.write("              dt *= factor;\n")
+    f.write("          } else {\n")
+    f.write("              dt *= factor;\n")
+    f.write("          }\n")
+
+
+# ---------------------------------------------------------------------------
+# Code generation utilities
+# ---------------------------------------------------------------------------
 
 
 def _fold_numeric_falloff_powers(code: str) -> str:
@@ -86,10 +505,18 @@ def format_eqn(eqn_str, species_list, state_var="state", use_parentheses=True):
 
     return s
 
-def generate_headers(mech: MechanismDefinition, out_dir: str = "src/solvers", suffix: str = "") -> Dict[str, str]:
+def generate_headers(
+    mech: MechanismDefinition,
+    out_dir: str = "src/solvers",
+    suffix: str = "",
+    solver_name: str = "ros3",
+) -> Dict[str, str]:
     """Emit the Kokkos headers and manifest artifact."""
     if not mech or not mech.species:
         raise ValueError("Cannot generate headers for empty mechanism")
+
+    # Look up the coefficient tableau for the selected solver
+    tableau = SOLVER_COEFFICIENTS[solver_name]
 
     out_path = Path(out_dir)
     out_path.mkdir(parents=True, exist_ok=True)

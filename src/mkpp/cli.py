@@ -31,12 +31,16 @@ def run_compiler(
     verbose: bool = False,
     dry_run: bool = False,
     no_cache: bool = False,
+    solver: str = "ros3",
 ) -> None:
     """Orchestrate the compilation pipeline."""
 
     mech_path = sanitize_path(mech_path)
     env_path = sanitize_path(env_path)
     out_dir = sanitize_path(out_dir)
+
+    # Solver name to pass to code generation
+    solver_name = solver
 
     try:
         # --drgep: fail-fast reject before any SymPy computation
@@ -131,7 +135,7 @@ def run_compiler(
         # --- Code generation stage ---
         _verbose_log("codegen", f"Generating headers to {out_dir}", verbose)
 
-        generate_headers(mech, out_dir=out_dir, suffix="")
+        generate_headers(mech, out_dir=out_dir, suffix="", solver_name=solver_name)
 
         if lump_path:
             from .amore import apply_amore_lumping
@@ -147,7 +151,7 @@ def run_compiler(
             adjoint_metadata_l = prepare_adjoint_and_tlm(mech_lumped)
             mech_lumped.sympy_metadata = prepare_unified_jacobian(mech_lumped)
 
-            generate_headers(mech_lumped, out_dir=out_dir, suffix="_lumped")
+            generate_headers(mech_lumped, out_dir=out_dir, suffix="_lumped", solver_name=solver_name)
 
             if report:
                 from .reporting import write_report
@@ -197,6 +201,12 @@ def main(args=None):
     compile_parser.add_argument("--verbose", action="store_true", help="Emit progress messages to stderr at each pipeline stage")
     compile_parser.add_argument("--dry-run", action="store_true", help="Run parsing and validation only; do not generate code")
     compile_parser.add_argument("--no-cache", action="store_true", help="Skip cache lookup and recompute all symbolic matrices")
+    compile_parser.add_argument(
+        "--solver",
+        choices=["ros2", "ros3", "ros4", "rodas3", "rodas4"],
+        default="ros3",
+        help="Rosenbrock solver method (default: ros3)"
+    )
 
     parsed_args = parser.parse_args(args)
 
@@ -214,6 +224,7 @@ def main(args=None):
             verbose=getattr(parsed_args, "verbose", False),
             dry_run=getattr(parsed_args, "dry_run", False),
             no_cache=getattr(parsed_args, "no_cache", False),
+            solver=parsed_args.solver,
         )
         sys.exit(0)
 
