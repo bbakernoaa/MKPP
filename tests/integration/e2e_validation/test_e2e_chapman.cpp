@@ -26,22 +26,14 @@ struct RosenbrockFunctor {
         int i = team.league_rank();
 
         Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 1), [&](const int& s) {
-            double C_O = state(i, 0, 0, 0);
-            double C_O2 = state(i, 1, 0, 0);
-            double C_O3 = state(i, 2, 0, 0);
-            double C_M = state(i, 3, 0, 0);
-
-            double flat_state[4] = {C_O, C_O2, C_O3, C_M};
+            // Use a subview for state access (generated solver uses operator())
+            auto cell_state = Kokkos::subview(state, i, Kokkos::ALL(), 0, 0);
 
             mkpp::SolverKernels<ExecSpace> solver;
 
             double dt = 3600.0;
-            solver.integrate(dt, flat_state);
-
-            state(i, 0, 0, 0) = flat_state[0];
-            state(i, 1, 0, 0) = flat_state[1];
-            state(i, 2, 0, 0) = flat_state[2];
-            state(i, 3, 0, 0) = flat_state[3];
+            double jvals[2] = {2.0e-5, 0.001};  // O2 photolysis, O3 photolysis
+            solver.integrate(dt, cell_state, jvals);
         });
     }
 };

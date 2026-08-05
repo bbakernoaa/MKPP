@@ -5,7 +5,7 @@
   "artifacts": [
     {
       "kind": "header",
-      "file": "saprc99.hpp"
+      "file": "saprc99_lumped.hpp"
     },
     {
       "kind": "adjoint_tlm_record",
@@ -18,5 +18,13 @@
       "layout": "LayoutLeft",
       "lifetime": "unmanaged_borrowed_from_host"
     }
+  },
+  "solver_partition": {
+    "sza_sorted": true,
+    "micro_blocks": {
+      "implicit": 201,
+      "explicit": 1
+    },
+    "scc_count": 1
   }
 }
