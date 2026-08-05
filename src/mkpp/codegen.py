@@ -652,7 +652,7 @@ def generate_headers(
     if partition_meta:
         manifest["solver_partition"] = partition_meta
 
-    manifest_path = out_path / "manifest.json"
+    manifest_path = out_path / f"{mech.name}_manifest.json"
     with open(manifest_path, "w") as f:
         json.dump(manifest, f, indent=2)
 

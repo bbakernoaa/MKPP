@@ -1,0 +1,22 @@
+{
+  "mechanism": "gocart",
+  "aerosol_representation": "bulk",
+  "checksum": "90b097a176c681f834929fdac406ea8c18cff88fa8f5a348990e3bd48a1431c2",
+  "artifacts": [
+    {
+      "kind": "header",
+      "file": "gocart.hpp"
+    },
+    {
+      "kind": "adjoint_tlm_record",
+      "differentiable": true
+    }
+  ],
+  "host_interface": {
+    "concentrations": {
+      "rank": 4,
+      "layout": "LayoutLeft",
+      "lifetime": "unmanaged_borrowed_from_host"
+    }
+  }
+}
