@@ -1,12 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 project(MKPP_Root CXX)
 
-find_package(Kokkos QUIET)
-
-if(NOT Kokkos_FOUND)
-  message(STATUS "Kokkos not found — skipping C++ solver targets (Python AOT tests still run)")
-  return()
-endif()
+find_package(Kokkos REQUIRED)
 
 # ---------------------------------------------------------------------------
 # Install targets (EE2 compliance: all, debug, install, clean)
