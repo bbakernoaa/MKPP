@@ -118,12 +118,12 @@ jobs:
 
       - name: Verify Committed Headers Are Up-to-Date
         run: |
-          if ! git diff --quiet mkpp-generated/; then
+          if ! git diff --quiet mkpp-generated/*.hpp; then
             echo "::error::Committed headers in mkpp-generated/ are stale. Please regenerate locally:"
             echo "::error::  python -c \"from mkpp.parser import load_mechanism; from mkpp.codegen import generate_headers; ...\""
             echo ""
             echo "Changed files:"
-            git diff --stat mkpp-generated/
+            git diff --stat mkpp-generated/*.hpp
             echo ""
             echo "Run 'mkpp compile' or the regeneration script, then commit the updated headers."
             exit 1
