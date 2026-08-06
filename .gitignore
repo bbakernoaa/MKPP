@@ -66,3 +66,5 @@ src/solvers/
 # Legacy spec-kit tooling (replaced by .kiro/specs/)
 .specify/
 specs/
+.kiro*/
+kpp*/
