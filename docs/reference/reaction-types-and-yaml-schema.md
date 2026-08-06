@@ -106,14 +106,49 @@ Gas-to-aerosol particle surface uptake rate laws.
 
 ---
 
-### 3.7 `PHASE_CHANGE` / `CONDENSATION`
-Direct kinetic phase transfer between gas, aerosol, and aqueous species.
+### 3.7 `EQUILIBRIUM`
+Inorganic aerosol thermodynamic equilibrium system (e.g. $\text{NH}_4/\text{NO}_3/\text{SO}_4$ gas-aerosol partitioning). Replaces deprecated discrete `PHASE_CHANGE` blocks with smooth, continuous thermodynamic equilibrium curves.
 
-- **Formula**: Evaluated as continuous kinetic flux ODEs coupling $[C_{\text{gas}}]$ and $[C_{\text{aerosol}}]$ in the Unified Jacobian state vector.
+- **Formula**:
+  Evaluates temperature-dependent equilibrium constants $K_p(T) = A \cdot \exp\left(-\frac{\Delta H}{R} \left(\frac{1}{T} - \frac{1}{T_{\text{ref}}}\right)\right)$ and applies continuous sigmoid regime blending across sulfate ratio regimes ($R = \frac{[\text{Total NH}_3]}{[\text{Total SO}_4]}$).
+
+- **Parameters**:
+  - `system` (*string*): Thermodynamic system identifier (e.g., `NH4_NO3_SO4`).
+  - `total_species` (*dict*): Mapping of reduced nitrogen, oxidized nitrogen, and sulfate gas/aerosol species lists.
+  - `regime_blending` (*string*): Blending function type (`sigmoid` or `hermite`).
+  - `transition_width` (*float*): Blending transition width parameter (default: `0.05`).
+  - `equilibrium_constants` (*dict*): Temperature dependence parameters (`A`, `dH`, `Tref`) for $K_p$ constants (`Kp_NH4NO3`, `Kp_NH4HSO4`, `Kp_NH42SO4`).
+
+```yaml
+reactions:
+  - type: EQUILIBRIUM
+    system: NH4_NO3_SO4
+    total_species:
+      reduced_nitrogen:
+        gas: NH3
+        aerosol: [NH4a]
+      oxidized_nitrogen:
+        gas: HNO3
+        aerosol: [NO3an1, NO3an2, NO3an3]
+      sulfate:
+        gas: SO2
+        aerosol: [SO4]
+    regime_blending: sigmoid
+    transition_width: 0.05
+    equilibrium_constants:
+      Kp_NH4NO3: { A: 4.39e-17, dH: -74735.0, Tref: 298.15 }
+      Kp_NH4HSO4: { A: 1.086e-2, dH: -40000.0, Tref: 298.15 }
+      Kp_NH42SO4: { A: 1.817e-25, dH: -160000.0, Tref: 298.15 }
+```
 
 ---
 
-### 3.8 `CUSTOM` / `TUNNELING`
+### 3.8 `PHASE_CHANGE` / `CONDENSATION` (Deprecated)
+Direct kinetic phase transfer between gas, aerosol, and aqueous species. *Note*: Users should migrate $\text{NH}_4/\text{NO}_3/\text{SO}_4$ phase change reactions to `EQUILIBRIUM` using `mkpp compile --migrate-equilibrium`.
+
+---
+
+### 3.9 `CUSTOM` / `TUNNELING`
 Custom user-defined SymPy math expressions.
 
 - **Parameters**:

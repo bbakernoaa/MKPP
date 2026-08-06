@@ -129,7 +129,106 @@ void integrate_with_reduction(
 
 ---
 
-## 3. Supported Rosenbrock Solver Tableaus
+## 3. Adjoint & Tangent-Linear Model (TLM) C++ API
+
+When compiled with the `--adjoint` CLI flag, headers expose discrete adjoint structs and routines:
+
+### `CheckpointBuffer` Struct
+
+Allocates thread-safe, cell-indexed trajectory checkpoint memory across integration timesteps.
+
+```cpp
+struct CheckpointBuffer {
+    Kokkos::View<double***, Kokkos::LayoutLeft> state_checkpoints; // (num_cells, max_steps, NUM_SPECIES)
+    Kokkos::View<double**, Kokkos::LayoutLeft> dt_checkpoints;     // (num_cells, max_steps)
+    Kokkos::View<int*, Kokkos::LayoutLeft> step_counts;            // (num_cells)
+
+    CheckpointBuffer(int num_cells, int max_steps);
+};
+```
+
+### `compute_adjoint`
+
+Evaluates the transposed analytical chemical Jacobian matrix $J^T_{i,j} = \frac{\partial f_j}{\partial y_i}$ into `J_adj_block`.
+
+```cpp
+template <typename StateView, typename JacView>
+KOKKOS_INLINE_FUNCTION
+void compute_adjoint(
+    const StateView& state,
+    JacView& J_adj_block,
+    const double* jvals
+);
+```
+
+### `integrate_fwd_checkpoint`
+
+Executes forward integration and saves trajectory checkpoints into `checkpoint_buf` for cell `cell_idx`.
+
+```cpp
+template <typename StateView>
+KOKKOS_INLINE_FUNCTION
+void integrate_fwd_checkpoint(
+    StateView& state,
+    double temp,
+    double press,
+    double t_start,
+    double t_end,
+    CheckpointBuffer& checkpoint_buf,
+    int cell_idx
+);
+```
+
+### `integrate_adj`
+
+Performs discrete adjoint backward integration from $t_{\text{end}}$ to $t_{\text{start}}$ over saved trajectory checkpoints, updating sensitivity vector `lambda`.
+
+```cpp
+template <typename StateView>
+KOKKOS_INLINE_FUNCTION
+void integrate_adj(
+    StateView& lambda,
+    double temp,
+    double press,
+    double t_start,
+    double t_end,
+    const CheckpointBuffer& checkpoint_buf,
+    int cell_idx
+);
+```
+
+---
+
+## 4. `mkpp` CLI Compiler Reference
+
+The `mkpp compile` CLI command generates Kokkos ODE solver headers from mechanism specifications.
+
+### Command Usage
+```bash
+mkpp compile <mechanism.yaml> --test-env <env.yaml> [options]
+```
+
+### CLI Arguments & Flags
+
+| Flag | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `mechanism` | string | *Required* | Path to mechanism YAML specification file |
+| `--test-env` | string | *Required* | Path to test environment YAML configuration file |
+| `--out` | string | `mkpp-generated/` | Output directory for generated C++ headers and manifests |
+| `--solver` | choice | `ros3` | Rosenbrock solver tableau (`ros2`, `ros3`, `ros4`, `rodas3`, `rodas4`) |
+| `--adjoint` | flag | `false` | Emit discrete adjoint/TLM routines and `CheckpointBuffer` |
+| `--strict` | flag | `false` | Enable strict schema and constraint validation |
+| `--emit-manifest` | flag | `true` | Emit metadata manifest JSON alongside C++ headers |
+| `--report` | flag | `false` | Generate Markdown analysis report and species interaction graph |
+| `--lump` | string | `None` | Path to AMORE structural mechanism lumping rules YAML |
+| `--no-cache` | flag | `false` | Skip cache lookup and recompute symbolic matrices from scratch |
+| `--dry-run` | flag | `false` | Run parsing and validation stages without emitting code |
+| `--verbose` | flag | `false` | Emit progress logs to `stderr` at each compilation pipeline stage |
+| `--migrate-equilibrium` | flag | `false` | Rewrite mechanism YAML replacing deprecated `PHASE_CHANGE` blocks with `EQUILIBRIUM` |
+
+---
+
+## 5. Supported Rosenbrock Solver Tableaus
 
 MKPP code generation supports 5 L-stable and A-stable Rosenbrock solver variants via the `--solver` flag:
 

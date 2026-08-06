@@ -157,4 +157,7 @@ This provides out-of-the-box, zero-overhead Adjoint ($\mathbf{\lambda}^{n} = J^T
 
 - [AOT Symbolic LU Architecture Explanation](aot-symbolic-lu-architecture.md)
 - [How-To: Create Custom Reactions](../how-to/create-custom-reactions.md)
+- [How-To: Compile & Run Adjoint and TLM Solvers](../how-to/compile-adjoint-and-tlm-solvers.md)
 - [Reaction Types & YAML Schema Reference](../reference/reaction-types-and-yaml-schema.md)
+- [AOT Solver C++ & CLI API Reference](../reference/aot-solver-api.md)
+- [MKPP Documentation Index](../README.md)
