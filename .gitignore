@@ -44,6 +44,9 @@ core           # Core dumps
 .ruff_cache/
 semantic-review/
 
+# MkDocs Build Artifacts
+site/
+
 # Editor & OS Files
 .vscode/
 .idea/

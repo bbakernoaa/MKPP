@@ -13,6 +13,9 @@ dependencies:
   - pre-commit      # Git hooks
   - ruff            # Python ultra-fast linting/formatting
   - pytest          # Python AOT compiler test framework
+  - mkdocs-material # MkDocs Material theme for GitHub Pages documentation
+  - mkdocstrings    # Autodoc plugin for Python docstrings
+  - mkdocstrings-python
   - pip
   - pip:
     - -e .          # Install the local python package in editable mode (once we scaffold it)
