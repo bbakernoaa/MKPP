@@ -93,34 +93,57 @@ void lu_solve(/* internal scalar references */);
 
 ### `integrate`
 
-Integrates the chemical ODE system over time interval $[t_{\text{start}}, t_{\text{end}}]$ using adaptive Rosenbrock-2 (ROS-2) integration.
+Integrates the chemical ODE system over time interval $[t_{\text{start}}, t_{\text{end}}]$ using any selected Rosenbrock solver tableau (`ros2`, `ros3`, `ros4`, `rodas3`, `rodas4`).
 
 ```cpp
 template <typename StateView>
 KOKKOS_INLINE_FUNCTION
 void integrate(
-    const StateView& y,
-    double temp,
-    double press,
-    double t_start,
-    double t_end,
-    double rtol = 1.0e-4,
-    double atol = 1.0e-3
+    double dt_total,
+    StateView& state,
+    const double* jvals
 );
 ```
 
 #### Parameters
-- **`y`** (`const StateView&`): In-out species state subview. Updated in-place to $y(t_{\text{end}})$.
-- **`temp`** (`double`): Temperature $[K]$.
-- **`press`** (`double`): Pressure $[Pa]$.
-- **`t_start`** (`double`): Integration start time $[s]$.
-- **`t_end`** (`double`): Integration end time $[s]$.
-- **`rtol`** (`double`, optional): Relative tolerance (default: $10^{-4}$).
-- **`atol`** (`double`, optional): Absolute tolerance (default: $10^{-3}$).
+- **`dt_total`** (`double`): Integration step interval $[s]$.
+- **`state`** (`StateView&`): 1D in-out species state subview (size `NUM_SPECIES`). State array access uses RCM-permuted species ordering `state(perm[i])` for optimal bandwidth locality.
+- **`jvals`** (`const double*`): Pointer to runtime photolysis rates array (from Cloud-J driver).
 
 ---
 
-## 3. CF Metadata Standard Table
+### `integrate_with_reduction`
+
+Integrates the chemical ODE system with dynamic auto-reduction, evaluating species importance $I_i = \frac{|F_i|}{\text{atol}_i + \text{rtol}_i |y_i|}$ against `importance_threshold` to freeze inactive species and skip zero-flux operations.
+
+```cpp
+template <typename StateView>
+KOKKOS_INLINE_FUNCTION
+void integrate_with_reduction(
+    double dt_total,
+    StateView& state,
+    const double* jvals,
+    double importance_threshold
+);
+```
+
+---
+
+## 3. Supported Rosenbrock Solver Tableaus
+
+MKPP code generation supports 5 L-stable and A-stable Rosenbrock solver variants via the `--solver` flag:
+
+| Solver Identifier | Method Name | Stages ($S$) | Order ($ELO$) | Error Exponent ($1/ELO$) | Best Use Case |
+| :--- | :--- | :---: | :---: | :---: | :--- |
+| `ros2` | ROS-2 | 2 | 2 | $1/2 = 0.500$ | High-throughput regional/global 3D ESM runs |
+| `ros3` *(Default)* | ROS-3 | 3 | 3 | $1/3 \approx 0.333$ | Operational baseline (KPP parity) |
+| `ros4` | ROS-4 | 4 | 4 | $1/4 = 0.250$ | High-accuracy research simulations |
+| `rodas3` | RODAS-3 | 4 | 3 | $1/3 \approx 0.333$ | Stiff mechanisms with stiff mass balance |
+| `rodas4` | RODAS-4 | 6 | 4 | $1/4 = 0.250$ | Extreme wildfire/pollution plume spikes |
+
+---
+
+## 4. CF Metadata Standard Table
 
 Variables and species states in MKPP generated solvers conform to standard Climate and Forecast (CF) metadata conventions:
 

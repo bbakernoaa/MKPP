@@ -19,7 +19,7 @@ Currently, `codegen.py` hardcodes `Temp = 300.0` and `SUN = 1.0` during the SymP
 - **Action**: Write a loop `for (double t = 0; t < 86400; t += 60.0)` representing a 24-hour cycle.
 - **Action**: At each step, calculate the current Solar Zenith Angle (SZA) and Temperature based on a standard diurnal curve (e.g., sunrise at hour 6, sunset at hour 18).
 
-### Step 3: Implement the KPP "Cloud-J" Feed 
+### Step 3: Implement the KPP "Cloud-J" Feed
 - **Action**: For the KPP baseline run, write a small Python script that uses the exact same diurnal curve (SZA, Temp) to calculate the discrete $J$-rates and Arrhenius rates at every 60-second interval.
 - **Action**: Use `scipy.integrate.odeint` or a bundled legacy KPP executable to solve the 24-hour cycle, feeding it the discrete, stepped rates. This represents the legacy operator-split "Cloud-J feeding KPP" workflow.
 

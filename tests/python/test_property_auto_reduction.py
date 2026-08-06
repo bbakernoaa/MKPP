@@ -5,14 +5,15 @@ Validates:
 - Property 14: Auto-reduction freeze correctness (Requirements 5.3, 5.4)
 - Property 15: Auto-reduction re-activation (Requirements 5.5, 5.6)
 """
-import numpy as np
-from hypothesis import given, settings, assume
-from hypothesis import strategies as st
 
+import numpy as np
+from hypothesis import assume, given, settings
+from hypothesis import strategies as st
 
 # ---------------------------------------------------------------------------
 # Pure-Python auto-reduced ROS-2 single step implementation
 # ---------------------------------------------------------------------------
+
 
 def auto_reduced_ros2_step(state, f_func, jac_func, dt, atol, rtol, threshold):
     """
@@ -45,10 +46,7 @@ def auto_reduced_ros2_step(state, f_func, jac_func, dt, atol, rtol, threshold):
     F1 = f_func(state)
 
     # Determine active set based on importance
-    active = np.array([
-        abs(F1[i]) / (atol[i] + rtol[i] * abs(state[i])) >= threshold
-        for i in range(N)
-    ])
+    active = np.array([abs(F1[i]) / (atol[i] + rtol[i] * abs(state[i])) >= threshold for i in range(N)])
 
     # Build Jacobian
     J = jac_func(state)
@@ -99,6 +97,7 @@ def auto_reduced_ros2_step(state, f_func, jac_func, dt, atol, rtol, threshold):
 # Strategies
 # ---------------------------------------------------------------------------
 
+
 @st.composite
 def random_auto_reduction_scenario(draw, min_n=3, max_n=10):
     """
@@ -110,16 +109,10 @@ def random_auto_reduction_scenario(draw, min_n=3, max_n=10):
     N = draw(st.integers(min_value=min_n, max_value=max_n))
 
     # Random positive state values (concentrations are positive)
-    state = np.array([
-        draw(st.floats(min_value=1.0, max_value=1e6))
-        for _ in range(N)
-    ])
+    state = np.array([draw(st.floats(min_value=1.0, max_value=1e6)) for _ in range(N)])
 
     # Random diagonal rates (negative for stability, representing decay)
-    rates = np.array([
-        draw(st.floats(min_value=-10.0, max_value=-0.01))
-        for _ in range(N)
-    ])
+    rates = np.array([draw(st.floats(min_value=-10.0, max_value=-0.01)) for _ in range(N)])
 
     # The RHS for a diagonal system is: f(state) = rates * state
     # Importance_i = |rates[i] * state[i]| / (atol[i] + rtol[i] * |state[i]|)
@@ -130,23 +123,19 @@ def random_auto_reduction_scenario(draw, min_n=3, max_n=10):
     atol = np.full(N, 1e-3)
     rtol = np.full(N, 1e-4)
 
-    importance = np.array([
-        abs(rates[i] * state[i]) / (atol[i] + rtol[i] * abs(state[i]))
-        for i in range(N)
-    ])
+    importance = np.array([abs(rates[i] * state[i]) / (atol[i] + rtol[i] * abs(state[i])) for i in range(N)])
 
     # Pick threshold so at least 1 species is frozen and at least 1 is active
     sorted_imp = np.sort(importance)
     # Threshold between the smallest and largest importance
     # Ensure at least one frozen and one active
-    if N >= 2 and sorted_imp[0] < sorted_imp[-1]:
+    lo = float(sorted_imp[0]) + 1e-10
+    hi = float(sorted_imp[-1]) - 1e-10
+    if N >= 2 and lo < hi:
         # Pick a threshold between the min and max importances
-        threshold = draw(st.floats(
-            min_value=float(sorted_imp[0]) + 1e-10,
-            max_value=float(sorted_imp[-1]) - 1e-10
-        ))
+        threshold = draw(st.floats(min_value=lo, max_value=hi))
     else:
-        # All importances equal; skip this case
+        # All importances equal or too close; skip this case
         threshold = float(sorted_imp[0]) + 1.0  # All frozen
 
     # Time step
@@ -167,10 +156,7 @@ def random_reactivation_scenario(draw, min_n=3, max_n=8):
     N = draw(st.integers(min_value=min_n, max_value=max_n))
 
     # Random positive state
-    state = np.array([
-        draw(st.floats(min_value=1.0, max_value=1e4))
-        for _ in range(N)
-    ])
+    state = np.array([draw(st.floats(min_value=1.0, max_value=1e4)) for _ in range(N)])
 
     atol = np.full(N, 1e-3)
     rtol = np.full(N, 1e-4)
@@ -182,10 +168,7 @@ def random_reactivation_scenario(draw, min_n=3, max_n=8):
     threshold = 10.0
 
     # Rates for step 1: transition species has very small rate (frozen)
-    rates_step1 = np.array([
-        draw(st.floats(min_value=-10.0, max_value=-1.0))
-        for _ in range(N)
-    ])
+    rates_step1 = np.array([draw(st.floats(min_value=-10.0, max_value=-1.0)) for _ in range(N)])
     # Make transition species have very small rate so importance < threshold
     # importance = |rate * state| / (atol + rtol * |state|)
     # We want importance < threshold
@@ -208,6 +191,7 @@ def random_reactivation_scenario(draw, min_n=3, max_n=8):
 # ---------------------------------------------------------------------------
 # Helper: build f_func and jac_func for a diagonal system
 # ---------------------------------------------------------------------------
+
 
 def make_diagonal_system(rates):
     """
@@ -232,6 +216,7 @@ def make_diagonal_system(rates):
 # **Validates: Requirements 5.3, 5.4**
 # ---------------------------------------------------------------------------
 
+
 @given(data=random_auto_reduction_scenario(min_n=3, max_n=10))
 @settings(max_examples=100)
 def test_property_14_auto_reduction_freeze_correctness(data):
@@ -251,10 +236,7 @@ def test_property_14_auto_reduction_freeze_correctness(data):
 
     # Compute expected importance to determine which species are frozen
     F1 = f_func(state)
-    expected_active = np.array([
-        abs(F1[i]) / (atol[i] + rtol[i] * abs(state[i])) >= threshold
-        for i in range(N)
-    ])
+    expected_active = np.array([abs(F1[i]) / (atol[i] + rtol[i] * abs(state[i])) >= threshold for i in range(N)])
 
     # Need at least one frozen species for this test to be meaningful
     assume(not np.all(expected_active))
@@ -262,32 +244,28 @@ def test_property_14_auto_reduction_freeze_correctness(data):
     assume(np.any(expected_active))
 
     # Run auto-reduced step
-    state_new, K1, K2, active = auto_reduced_ros2_step(
-        state, f_func, jac_func, dt, atol, rtol, threshold
-    )
+    state_new, K1, K2, active = auto_reduced_ros2_step(state, f_func, jac_func, dt, atol, rtol, threshold)
 
     # Verify active mask matches our expectation
-    np.testing.assert_array_equal(active, expected_active,
-        err_msg="Active mask doesn't match expected importance classification")
+    np.testing.assert_array_equal(
+        active,
+        expected_active,
+        err_msg="Active mask doesn't match expected importance classification",
+    )
 
     # For all frozen species: K1=0, K2=0, state unchanged
     for i in range(N):
         if not active[i]:
-            assert K1[i] == 0.0, (
-                f"Frozen species {i}: K1[{i}] = {K1[i]} != 0.0"
-            )
-            assert K2[i] == 0.0, (
-                f"Frozen species {i}: K2[{i}] = {K2[i]} != 0.0"
-            )
-            assert state_new[i] == state[i], (
-                f"Frozen species {i}: state changed from {state[i]} to {state_new[i]}"
-            )
+            assert K1[i] == 0.0, f"Frozen species {i}: K1[{i}] = {K1[i]} != 0.0"
+            assert K2[i] == 0.0, f"Frozen species {i}: K2[{i}] = {K2[i]} != 0.0"
+            assert state_new[i] == state[i], f"Frozen species {i}: state changed from {state[i]} to {state_new[i]}"
 
 
 # ---------------------------------------------------------------------------
 # Property 15: Auto-reduction re-activation
 # **Validates: Requirements 5.5, 5.6**
 # ---------------------------------------------------------------------------
+
 
 @given(data=random_reactivation_scenario(min_n=3, max_n=8))
 @settings(max_examples=100)
@@ -309,9 +287,7 @@ def test_property_15_auto_reduction_reactivation(data):
     # --- Step 1: species at transition_idx should be frozen ---
     f_func1, jac_func1 = make_diagonal_system(rates_step1)
 
-    state_new1, K1_step1, K2_step1, active_step1 = auto_reduced_ros2_step(
-        state, f_func1, jac_func1, dt, atol, rtol, threshold
-    )
+    state_new1, K1_step1, K2_step1, active_step1 = auto_reduced_ros2_step(state, f_func1, jac_func1, dt, atol, rtol, threshold)
 
     # Verify transition species is frozen on step 1
     assert not active_step1[transition_idx], (
@@ -322,23 +298,16 @@ def test_property_15_auto_reduction_reactivation(data):
     )
 
     # Verify frozen properties on step 1
-    assert K1_step1[transition_idx] == 0.0, (
-        f"Frozen species {transition_idx} on step 1: K1 = {K1_step1[transition_idx]} != 0.0"
-    )
-    assert K2_step1[transition_idx] == 0.0, (
-        f"Frozen species {transition_idx} on step 1: K2 = {K2_step1[transition_idx]} != 0.0"
-    )
+    assert K1_step1[transition_idx] == 0.0, f"Frozen species {transition_idx} on step 1: K1 = {K1_step1[transition_idx]} != 0.0"
+    assert K2_step1[transition_idx] == 0.0, f"Frozen species {transition_idx} on step 1: K2 = {K2_step1[transition_idx]} != 0.0"
     assert state_new1[transition_idx] == state[transition_idx], (
-        f"Frozen species {transition_idx} on step 1: state changed from "
-        f"{state[transition_idx]} to {state_new1[transition_idx]}"
+        f"Frozen species {transition_idx} on step 1: state changed from " f"{state[transition_idx]} to {state_new1[transition_idx]}"
     )
 
     # --- Step 2: species at transition_idx should be active (with new rates) ---
     f_func2, jac_func2 = make_diagonal_system(rates_step2)
 
-    state_new2, K1_step2, K2_step2, active_step2 = auto_reduced_ros2_step(
-        state_new1, f_func2, jac_func2, dt, atol, rtol, threshold
-    )
+    state_new2, K1_step2, K2_step2, active_step2 = auto_reduced_ros2_step(state_new1, f_func2, jac_func2, dt, atol, rtol, threshold)
 
     # Verify transition species is active on step 2
     assert active_step2[transition_idx], (

@@ -262,15 +262,35 @@ reactions:
     SS5: 1.0
   gamma: 0.1
   continuous_transition: true
-- type: PHASE_CHANGE
-  reactants:
-    NH3: 1.0
-    HNO3: 1.0
-    SO4: 1.0
-  products:
-    NH4a: 1.0
-    NO3an1: 1.0
-  description: RPMARES / ISORROPIA-Lite inorganic thermodynamic equilibration
+# NOTE: Legacy PHASE_CHANGE for NH3/HNO3/SO4 removed; replaced by EQUILIBRIUM below.
+# Use --migrate-equilibrium to automate this transition for other mechanisms.
+- type: EQUILIBRIUM
+  system: NH4_NO3_SO4
+  total_species:
+    reduced_nitrogen:
+      gas: NH3
+      aerosol: [NH4a]
+    oxidized_nitrogen:
+      gas: HNO3
+      aerosol: [NO3an1, NO3an2, NO3an3]
+    sulfate:
+      gas: SO2
+      aerosol: [SO4]
+  regime_blending: sigmoid
+  transition_width: 0.05
+  equilibrium_constants:
+    Kp_NH4NO3:
+      A: 4.39e-17
+      dH: -74735.0
+      Tref: 298.15
+    Kp_NH4HSO4:
+      A: 1.086e-2
+      dH: -40000.0
+      Tref: 298.15
+    Kp_NH42SO4:
+      A: 1.817e-25
+      dH: -160000.0
+      Tref: 298.15
   continuous_transition: true
 host_interface:
   arrays:

@@ -7,17 +7,16 @@ Validates:
 - Property 12: Permuted solve equivalence (Requirements 4.4, 4.5, 4.6)
 - Property 13: Sparsity optimizer determinism (Requirements 4.7)
 """
+
 import numpy as np
-from hypothesis import given, settings, assume
+from hypothesis import given, settings
 from hypothesis import strategies as st
-
 from mkpp.lowering import SparsityOptimizer
-from mkpp.model import SparsityAnalysis
-
 
 # ---------------------------------------------------------------------------
 # Strategies
 # ---------------------------------------------------------------------------
+
 
 @st.composite
 def random_sparse_structure(draw, min_n=3, max_n=15, min_density=0.1, max_density=0.5):
@@ -89,10 +88,7 @@ def random_diagonally_dominant_system(draw, min_n=2, max_n=8):
         A[i, i] = row_sum + draw(st.floats(min_value=1.0, max_value=5.0))
 
     # Random RHS
-    b = np.array([
-        draw(st.floats(min_value=-10.0, max_value=10.0))
-        for _ in range(n)
-    ])
+    b = np.array([draw(st.floats(min_value=-10.0, max_value=10.0)) for _ in range(n)])
 
     return n, A, b
 
@@ -101,6 +97,7 @@ def random_diagonally_dominant_system(draw, min_n=2, max_n=8):
 # Property 10: Fill-in prediction soundness
 # **Validates: Requirements 4.1, 4.2**
 # ---------------------------------------------------------------------------
+
 
 @given(data=random_sparse_structure(min_n=3, max_n=15, min_density=0.1, max_density=0.5))
 @settings(max_examples=100)
@@ -182,6 +179,7 @@ def test_property_10_fill_in_prediction_soundness(data):
 # **Validates: Requirements 4.3**
 # ---------------------------------------------------------------------------
 
+
 def compute_bandwidth(structure, n):
     """Compute bandwidth = max |i - j| for all (i,j) in structure."""
     if not structure:
@@ -210,9 +208,7 @@ def test_property_11_rcm_bandwidth_reduction(data):
     perm = optimizer.compute_rcm_ordering()
 
     # Verify permutation is valid
-    assert sorted(perm) == list(range(n)), (
-        f"RCM permutation is not a valid permutation of 0..{n-1}: {perm}"
-    )
+    assert sorted(perm) == list(range(n)), f"RCM permutation is not a valid permutation of 0..{n-1}: {perm}"
 
     # Build inverse permutation: inv_perm[old_idx] = new_idx
     inv_perm = [0] * n
@@ -236,6 +232,7 @@ def test_property_11_rcm_bandwidth_reduction(data):
 # Property 12: Permuted solve equivalence
 # **Validates: Requirements 4.4, 4.5, 4.6**
 # ---------------------------------------------------------------------------
+
 
 @given(data=random_diagonally_dominant_system(min_n=2, max_n=8))
 @settings(max_examples=100)
@@ -297,10 +294,57 @@ def test_property_12_permuted_solve_equivalence(data):
     )
 
 
+def test_rcm_permutation_wired_into_lu_plan():
+    from mkpp.lowering import prepare_unified_jacobian
+    from mkpp.model import (
+        AerosolRepresentation,
+        MechanismDefinition,
+        PhaseMode,
+        ReactionDefinition,
+        SpeciesDefinition,
+    )
+
+    mech = MechanismDefinition(
+        name="test_sparse_mech",
+        description="Sparse test mechanism",
+        aerosol_representation=AerosolRepresentation.BULK,
+        phases=[],
+        species=[
+            SpeciesDefinition(name="A", phase=PhaseMode.GAS),
+            SpeciesDefinition(name="B", phase=PhaseMode.GAS),
+            SpeciesDefinition(name="C", phase=PhaseMode.GAS),
+            SpeciesDefinition(name="D", phase=PhaseMode.GAS),
+        ],
+        reactions=[
+            ReactionDefinition(
+                reaction_type="ARRHENIUS",
+                reactants={"A": 1},
+                products={"B": 1},
+                rate_expression="k1*A",
+                parameters={"A": 1.0, "B": 0.0, "C": 0.0},
+            ),
+            ReactionDefinition(
+                reaction_type="ARRHENIUS",
+                reactants={"C": 1},
+                products={"D": 1},
+                rate_expression="k2*C",
+                parameters={"A": 1.0, "B": 0.0, "C": 0.0},
+            ),
+        ],
+    )
+
+    res = prepare_unified_jacobian(mech)
+    plan = res.get("symbolic_lu_plan")
+    assert plan is not None
+    assert plan.permutation is not None
+    assert plan.blocks is not None
+
+
 # ---------------------------------------------------------------------------
 # Property 13: Sparsity optimizer determinism
 # **Validates: Requirements 4.7**
 # ---------------------------------------------------------------------------
+
 
 @given(data=random_sparse_structure(min_n=3, max_n=10, min_density=0.1, max_density=0.5))
 @settings(max_examples=100)
@@ -322,24 +366,14 @@ def test_property_13_sparsity_optimizer_determinism(data):
     result2 = optimizer2.analyze()
 
     # Verify byte-identical results
-    assert result1.original_nnz == result2.original_nnz, (
-        f"original_nnz differs: {result1.original_nnz} vs {result2.original_nnz}"
-    )
-    assert result1.fill_in_positions == result2.fill_in_positions, (
-        f"fill_in_positions differs"
-    )
-    assert result1.total_nnz_after_fill == result2.total_nnz_after_fill, (
-        f"total_nnz_after_fill differs: {result1.total_nnz_after_fill} vs {result2.total_nnz_after_fill}"
-    )
-    assert result1.permutation == result2.permutation, (
-        f"permutation differs: {result1.permutation} vs {result2.permutation}"
-    )
-    assert result1.inverse_permutation == result2.inverse_permutation, (
-        f"inverse_permutation differs"
-    )
-    assert result1.blocks == result2.blocks, (
-        f"blocks differs: {result1.blocks} vs {result2.blocks}"
-    )
-    assert result1.is_block_diagonal == result2.is_block_diagonal, (
-        f"is_block_diagonal differs: {result1.is_block_diagonal} vs {result2.is_block_diagonal}"
-    )
+    assert result1.original_nnz == result2.original_nnz, f"original_nnz differs: {result1.original_nnz} vs {result2.original_nnz}"
+    assert result1.fill_in_positions == result2.fill_in_positions, "fill_in_positions differs"
+    assert (
+        result1.total_nnz_after_fill == result2.total_nnz_after_fill
+    ), f"total_nnz_after_fill differs: {result1.total_nnz_after_fill} vs {result2.total_nnz_after_fill}"
+    assert result1.permutation == result2.permutation, f"permutation differs: {result1.permutation} vs {result2.permutation}"
+    assert result1.inverse_permutation == result2.inverse_permutation, "inverse_permutation differs"
+    assert result1.blocks == result2.blocks, f"blocks differs: {result1.blocks} vs {result2.blocks}"
+    assert (
+        result1.is_block_diagonal == result2.is_block_diagonal
+    ), f"is_block_diagonal differs: {result1.is_block_diagonal} vs {result2.is_block_diagonal}"

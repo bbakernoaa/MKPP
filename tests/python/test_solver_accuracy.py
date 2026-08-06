@@ -1,10 +1,5 @@
-import pytest
 import numpy as np
 import scipy.integrate as integrate
-from mkpp.model import (
-    MechanismDefinition, SpeciesDefinition, ReactionDefinition, PhaseMode, AerosolRepresentation
-)
-from mkpp.lowering import prepare_unified_jacobian, compute_symbolic_lu_decomposition
 
 
 def reference_rosenbrock3_step(y0, dt, f_func, jac_func):
@@ -49,6 +44,7 @@ def reference_rosenbrock3_step(y0, dt, f_func, jac_func):
 
 def test_reference_ros3_fixture():
     """Verify reference Rosenbrock-3 step function against scipy Radau for stiff decay with substepping."""
+
     def f_func(y):
         return np.array([-100.0 * y[0], 100.0 * y[0] - 1.0 * y[1]])
 
@@ -64,14 +60,7 @@ def test_reference_ros3_fixture():
         y_ros3 = reference_rosenbrock3_step(y_ros3, dt, f_func, jac_func)
 
     t_end = dt * num_steps
-    sol = integrate.solve_ivp(
-        lambda t, y: f_func(y),
-        (0, t_end),
-        y0,
-        method='Radau',
-        rtol=1e-10,
-        atol=1e-12
-    )
+    sol = integrate.solve_ivp(lambda t, y: f_func(y), (0, t_end), y0, method="Radau", rtol=1e-10, atol=1e-12)
     y_ref = sol.y[:, -1]
 
     # ROS-3 is 3rd order, so with dt=0.001 on a stiff system it should

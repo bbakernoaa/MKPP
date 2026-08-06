@@ -1,9 +1,11 @@
-import os
-import subprocess
-import yaml
-import re
-from pathlib import Path
 import glob
+import os
+import re
+import subprocess
+from pathlib import Path
+
+import yaml
+
 
 def generate_kpp_baseline(mech_name, kpp_dir, out_dir):
     run_dir = Path(f"kpp_run_{mech_name}")
@@ -18,8 +20,8 @@ def generate_kpp_baseline(mech_name, kpp_dir, out_dir):
         f.write("#DRIVER general\n")
 
     if mech_name == "chapman":
-        subprocess.run(["cp", f"tests/integration/e2e_validation/data/chapman.spc", str(run_dir)])
-        subprocess.run(["cp", f"tests/integration/e2e_validation/data/chapman.eqn", str(run_dir)])
+        subprocess.run(["cp", "tests/integration/e2e_validation/data/chapman.spc", str(run_dir)])
+        subprocess.run(["cp", "tests/integration/e2e_validation/data/chapman.eqn", str(run_dir)])
     else:
         subprocess.run(["cp", f"{kpp_dir}/models/{mech_name}.spc", str(run_dir)])
         subprocess.run(["cp", f"{kpp_dir}/models/{mech_name}.eqn", str(run_dir)])
@@ -29,20 +31,20 @@ def generate_kpp_baseline(mech_name, kpp_dir, out_dir):
     kpp_bin = os.path.abspath(f"{kpp_dir}/bin/kpp")
     env = os.environ.copy()
     env["KPP_HOME"] = os.path.abspath(kpp_dir)
-    res = subprocess.run([kpp_bin, f"{mech_name}.def"], cwd=str(run_dir), env=env, capture_output=True, text=True)
+    subprocess.run([kpp_bin, f"{mech_name}.def"], cwd=str(run_dir), env=env, capture_output=True, text=True)
 
     yaml_path = f"mechanisms/{mech_name}.yaml" if mech_name != "chapman" else "tests/integration/e2e_validation/data/chapman.yaml"
-    with open(yaml_path, "r") as f:
+    with open(yaml_path) as f:
         mech = yaml.safe_load(f)
     mkpp_species = [s["name"] for s in mech["species"]]
     n_spec = len(mkpp_species)
 
-    with open(run_dir / f"{mech_name}_Monitor.c", "r") as f:
+    with open(run_dir / f"{mech_name}_Monitor.c") as f:
         monitor_c = f.read()
 
-    match = re.search(r'SPC_NAMES\[\]\s*=\s*\{([^{}]+)\};', monitor_c)
-    kpp_spc_str = match.group(1).replace('"', '').replace('\n', '').replace(' ', '')
-    kpp_species = [s.strip() for s in kpp_spc_str.split(',') if s.strip()]
+    match = re.search(r"SPC_NAMES\[\]\s*=\s*\{([^{}]+)\};", monitor_c)
+    kpp_spc_str = match.group(1).replace('"', "").replace("\n", "").replace(" ", "")
+    kpp_species = [s.strip() for s in kpp_spc_str.split(",") if s.strip()]
 
     mkpp_to_kpp = []
     for sp in mkpp_species:
@@ -52,7 +54,9 @@ def generate_kpp_baseline(mech_name, kpp_dir, out_dir):
             mkpp_to_kpp.append(-1)
 
     c_map_str = "int mkpp_to_kpp[] = {" + ",".join(map(str, mkpp_to_kpp)) + "};"
-    c_inv_str = "int kpp_to_mkpp[] = {" + ",".join([str(mkpp_species.index(s)) if s in mkpp_species else "-1" for s in kpp_species]) + "};"
+    c_inv_str = (
+        "int kpp_to_mkpp[] = {" + ",".join([str(mkpp_species.index(s)) if s in mkpp_species else "-1" for s in kpp_species]) + "};"
+    )
 
     c_driver = f"""#include <stdio.h>
 #include <stdlib.h>
@@ -149,28 +153,36 @@ int main() {{
     with open(run_dir / "driver.c", "w") as f:
         f.write(c_driver)
 
-    import glob
     c_files = glob.glob(str(run_dir / "*.c"))
     c_files = [c for c in c_files if "Main" not in c and "mex" not in c]
 
-
-    import glob
     for c_file in c_files:
-        with open(c_file, "r") as f:
+        with open(c_file) as f:
             c_text = f.read()
         # Fix Fortran double precision suffixes leaking into C code
-        c_text = re.sub(r'(\d+\.\d+)d([+-]\d+)', r'\1e\2', c_text, flags=re.IGNORECASE)
-        c_text = re.sub(r'(\d+\.\d+)d0', r'\1e0', c_text, flags=re.IGNORECASE)
-        c_text = re.sub(r'(\d+)d([+-]\d+)', r'\1.0e\2', c_text, flags=re.IGNORECASE)
+        c_text = re.sub(r"(\d+\.\d+)d([+-]\d+)", r"\1e\2", c_text, flags=re.IGNORECASE)
+        c_text = re.sub(r"(\d+\.\d+)d0", r"\1e0", c_text, flags=re.IGNORECASE)
+        c_text = re.sub(r"(\d+)d([+-]\d+)", r"\1.0e\2", c_text, flags=re.IGNORECASE)
         c_text = c_text.replace("EXP(", "exp(")
         with open(c_file, "w") as f:
             f.write(c_text)
 
-    res = subprocess.run(["gcc", "-c"] + [os.path.basename(c) for c in c_files], cwd=str(run_dir), capture_output=True, text=True)
+    subprocess.run(
+        ["gcc", "-c"] + [os.path.basename(c) for c in c_files],
+        cwd=str(run_dir),
+        capture_output=True,
+        text=True,
+    )
     o_files = glob.glob(str(run_dir / "*.o"))
-    res = subprocess.run(["gcc"] + [os.path.basename(o) for o in o_files] + ["-o", "generator", "-lm"], cwd=str(run_dir), capture_output=True, text=True)
+    subprocess.run(
+        ["gcc"] + [os.path.basename(o) for o in o_files] + ["-o", "generator", "-lm"],
+        cwd=str(run_dir),
+        capture_output=True,
+        text=True,
+    )
     subprocess.run(["./generator"], cwd=str(run_dir))
     print(f"Generated baseline for {mech_name}")
+
 
 if __name__ == "__main__":
     out_dir = "tests/integration/e2e_validation/data"

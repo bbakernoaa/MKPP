@@ -1,15 +1,149 @@
 import argparse
 import json
 import sys
+import warnings
 from pathlib import Path
-from typing import Optional
+
 import yaml
 
+from .codegen import generate_headers
+from .lowering import partition_reactions
 from .model import CompilationError
 from .parser import load_mechanism
-from .validation import validate_mechanism, validate_mpi_safety, sanitize_path
-from .lowering import partition_reactions
-from .codegen import generate_headers
+from .validation import sanitize_path, validate_mechanism, validate_mpi_safety
+
+# Species that belong to the NH4/NO3/SO4 equilibrium system
+_NH4_NO3_SO4_SPECIES = frozenset({"NH3", "NH4a", "HNO3", "NO3an1", "NO3an2", "NO3an3", "SO2", "SO4"})
+
+# Standard EQUILIBRIUM block for the NH4_NO3_SO4 system
+_EQUILIBRIUM_BLOCK = {
+    "type": "EQUILIBRIUM",
+    "system": "NH4_NO3_SO4",
+    "total_species": {
+        "reduced_nitrogen": {
+            "gas": "NH3",
+            "aerosol": ["NH4a"],
+        },
+        "oxidized_nitrogen": {
+            "gas": "HNO3",
+            "aerosol": ["NO3an1", "NO3an2", "NO3an3"],
+        },
+        "sulfate": {
+            "gas": "SO2",
+            "aerosol": ["SO4"],
+        },
+    },
+    "regime_blending": "sigmoid",
+    "transition_width": 0.05,
+    "equilibrium_constants": {
+        "Kp_NH4NO3": {
+            "A": 4.39e-17,
+            "dH": -74735.0,
+            "Tref": 298.15,
+        },
+        "Kp_NH4HSO4": {
+            "A": 1.086e-2,
+            "dH": -40000.0,
+            "Tref": 298.15,
+        },
+        "Kp_NH42SO4": {
+            "A": 1.817e-25,
+            "dH": -160000.0,
+            "Tref": 298.15,
+        },
+    },
+    "continuous_transition": True,
+}
+
+
+def migrate_equilibrium(mech_path: str) -> str | None:
+    """Migrate PHASE_CHANGE reactions for NH4/NO3/SO4 species to an EQUILIBRIUM block.
+
+    Rewrites the mechanism YAML, removing PHASE_CHANGE reactions that affect
+    NH4/NO3/SO4 species and inserting the standard EQUILIBRIUM block.
+
+    Args:
+        mech_path: Path to the mechanism YAML file.
+
+    Returns:
+        Path to the migrated YAML file, or None if no migration was needed.
+    """
+    with open(mech_path) as f:
+        data = yaml.safe_load(f)
+
+    if data is None:
+        return None
+
+    reactions = data.get("reactions", [])
+
+    # Check idempotency: if EQUILIBRIUM block already exists, skip
+    for rxn in reactions:
+        if rxn.get("type") == "EQUILIBRIUM":
+            print(
+                "[migrate-equilibrium] Mechanism already contains an EQUILIBRIUM block. " "No migration needed.",
+                file=sys.stderr,
+            )
+            return None
+
+    # Find PHASE_CHANGE reactions that overlap with NH4/NO3/SO4 species
+    migrated_reactions = []
+    remaining_reactions = []
+
+    for rxn in reactions:
+        if rxn.get("type") == "PHASE_CHANGE":
+            reactant_species = set(rxn.get("reactants", {}).keys())
+            product_species = set(rxn.get("products", {}).keys())
+            all_species = reactant_species | product_species
+
+            if all_species & _NH4_NO3_SO4_SPECIES:
+                migrated_reactions.append(rxn)
+                continue
+
+        remaining_reactions.append(rxn)
+
+    if not migrated_reactions:
+        print(
+            "[migrate-equilibrium] No PHASE_CHANGE reactions found for NH4/NO3/SO4 species. " "No migration needed.",
+            file=sys.stderr,
+        )
+        return None
+
+    # Insert the EQUILIBRIUM block
+    remaining_reactions.append(_EQUILIBRIUM_BLOCK)
+    data["reactions"] = remaining_reactions
+
+    # Write the modified YAML to a new file
+    mech_path_obj = Path(mech_path)
+    output_path = mech_path_obj.parent / f"{mech_path_obj.stem}_equilibrium{mech_path_obj.suffix}"
+
+    with open(output_path, "w") as f:
+        yaml.dump(data, f, default_flow_style=False, sort_keys=False)
+
+    # Emit deprecation warning
+    warnings.warn(
+        "PHASE_CHANGE reactions for NH4/NO3/SO4 species are deprecated. "
+        "Use EQUILIBRIUM blocks instead. "
+        f"Migrated mechanism written to: {output_path}",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+
+    # Print summary
+    migrated_species: set[str] = set()
+    for rxn in migrated_reactions:
+        migrated_species.update(rxn.get("reactants", {}).keys())
+        migrated_species.update(rxn.get("products", {}).keys())
+
+    print(
+        f"[migrate-equilibrium] Migration summary:\n"
+        f"  Removed {len(migrated_reactions)} PHASE_CHANGE reaction(s)\n"
+        f"  Migrated species: {', '.join(sorted(migrated_species))}\n"
+        f"  Inserted EQUILIBRIUM block (system: NH4_NO3_SO4)\n"
+        f"  Output: {output_path}",
+        file=sys.stderr,
+    )
+
+    return str(output_path)
 
 
 def _verbose_log(stage: str, message: str, verbose: bool) -> None:
@@ -27,16 +161,28 @@ def run_compiler(
     enable_drgep: bool = False,
     drgep_threshold: float = 0.05,
     report: bool = False,
-    lump_path: Optional[str] = None,
+    lump_path: str | None = None,
     verbose: bool = False,
     dry_run: bool = False,
     no_cache: bool = False,
+    solver: str = "ros3",
+    adjoint: bool = False,
+    migrate_equilibrium_flag: bool = False,
 ) -> None:
     """Orchestrate the compilation pipeline."""
 
     mech_path = sanitize_path(mech_path)
     env_path = sanitize_path(env_path)
     out_dir = sanitize_path(out_dir)
+
+    # Solver name to pass to code generation
+    solver_name = solver
+
+    # --- Migration step (before compilation) ---
+    if migrate_equilibrium_flag:
+        migrated_path = migrate_equilibrium(mech_path)
+        if migrated_path is not None:
+            mech_path = migrated_path
 
     try:
         # --drgep: fail-fast reject before any SymPy computation
@@ -49,7 +195,7 @@ def run_compiler(
         # --- Parsing stage ---
         _verbose_log("parsing", f"Loading mechanism from {mech_path}", verbose)
 
-        with open(env_path, 'r') as f:
+        with open(env_path) as f:
             env_config = yaml.safe_load(f) or {}
 
         validate_mpi_safety(env_config)
@@ -62,21 +208,21 @@ def run_compiler(
         validate_mechanism(mech, strict=strict)
 
         from .validation import validate_fuzzer_stiffness
+
         dummy_max_condition = 1e5
         validate_fuzzer_stiffness(max_condition_number=dummy_max_condition)
 
-        from .validation import validate_terminator_safety, validate_mass_conservation
+        from .validation import validate_mass_conservation, validate_terminator_safety
+
         validate_terminator_safety(mech)
         validate_mass_conservation(mech)
 
         # --- Dry-run exit point ---
         if dry_run:
-            num_species = len(getattr(mech, 'species', []))
-            num_reactions = len(getattr(mech, 'reactions', []))
+            num_species = len(getattr(mech, "species", []))
+            num_reactions = len(getattr(mech, "reactions", []))
             print(
-                f"[dry-run] Validation passed. "
-                f"Species: {num_species}, Reactions: {num_reactions}. "
-                f"No code generated.",
+                f"[dry-run] Validation passed. " f"Species: {num_species}, Reactions: {num_reactions}. " f"No code generated.",
                 file=sys.stderr,
             )
             return
@@ -88,7 +234,7 @@ def run_compiler(
         mech.partition_metadata = blocks.get("metadata")
 
         # --- Cache check and lowering stage ---
-        from .cache_manager import CacheManager, CacheEntry
+        from .cache_manager import CacheEntry, CacheManager
 
         cache_mgr = CacheManager()
         cache_key = cache_mgr.compute_key(Path(mech_path))
@@ -97,8 +243,11 @@ def run_compiler(
         if not no_cache:
             cached_entry = cache_mgr.lookup(cache_key)
 
+        # --- Lowering stage ---
+        from .lowering import prepare_adjoint_and_tlm, prepare_unified_jacobian
+
         if cached_entry is not None:
-            _verbose_log("cache", "Cache hit — loading pre-computed symbolic data", verbose)
+            _verbose_log("lowering", "Using cached symbolic Jacobian", verbose)
             sympy_meta = {
                 "species_map": cached_entry.species_map,
                 "jacobian_matrix": cached_entry.jacobian_matrix,
@@ -111,8 +260,7 @@ def run_compiler(
             # --- Lowering stage ---
             _verbose_log("lowering", "Computing symbolic Jacobian and LU decomposition", verbose)
 
-            from .lowering import prepare_adjoint_and_tlm, prepare_unified_jacobian
-            adjoint_metadata = prepare_adjoint_and_tlm(mech)
+            prepare_adjoint_and_tlm(mech)
             mech.sympy_metadata = prepare_unified_jacobian(mech)
 
             # Store to cache for next time
@@ -131,12 +279,12 @@ def run_compiler(
         # --- Code generation stage ---
         _verbose_log("codegen", f"Generating headers to {out_dir}", verbose)
 
-        generate_headers(mech, out_dir=out_dir, suffix="")
+        generate_headers(mech, out_dir=out_dir, suffix="", solver_name=solver_name, adjoint=adjoint)
 
         if lump_path:
             from .amore import apply_amore_lumping
 
-            with open(lump_path, 'r') as fl:
+            with open(lump_path) as fl:
                 rules = yaml.safe_load(fl)
 
             mech_lumped = load_mechanism(mech_path)
@@ -144,17 +292,25 @@ def run_compiler(
 
             blocks_l = partition_reactions(mech_lumped)
             mech_lumped.partition_metadata = blocks_l.get("metadata")
-            adjoint_metadata_l = prepare_adjoint_and_tlm(mech_lumped)
+            prepare_adjoint_and_tlm(mech_lumped)
             mech_lumped.sympy_metadata = prepare_unified_jacobian(mech_lumped)
 
-            generate_headers(mech_lumped, out_dir=out_dir, suffix="_lumped")
+            generate_headers(
+                mech_lumped,
+                out_dir=out_dir,
+                suffix="_lumped",
+                solver_name=solver_name,
+                adjoint=adjoint,
+            )
 
             if report:
                 from .reporting import write_report
+
                 write_report(mech_lumped, mech_lumped.sympy_metadata, out_dir, suffix="_lumped")
 
         if report:
             from .reporting import write_report
+
             write_report(mech, mech.sympy_metadata, out_dir, suffix="")
 
         if emit_manifest:
@@ -173,14 +329,12 @@ def run_compiler(
         print(json.dumps(error.to_dict()), file=sys.stderr)
         sys.exit(1)
 
+
 def main(args=None):
     if args is None:
         args = sys.argv[1:]
 
-    parser = argparse.ArgumentParser(
-        prog="mkpp",
-        description="Multiphase KPP (MKPP) Engine Compiler"
-    )
+    parser = argparse.ArgumentParser(prog="mkpp", description="Multiphase KPP (MKPP) Engine Compiler")
 
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -192,11 +346,51 @@ def main(args=None):
     compile_parser.add_argument("--emit-manifest", action="store_true", help="Emit metadata manifest alongside headers")
     compile_parser.add_argument("--report", action="store_true", help="Generate full mechanism analysis report and graph")
     compile_parser.add_argument("--lump", type=str, help="Path to AMORE lumping rules YAML file")
-    compile_parser.add_argument("--drgep", action="store_true", help="Reject compilation: DRGEP not supported. Use --lump instead.")
-    compile_parser.add_argument("--drgep-threshold", type=float, default=0.05, help="DRGEP interaction threshold for pruning (0.0 to 1.0)")
-    compile_parser.add_argument("--verbose", action="store_true", help="Emit progress messages to stderr at each pipeline stage")
-    compile_parser.add_argument("--dry-run", action="store_true", help="Run parsing and validation only; do not generate code")
-    compile_parser.add_argument("--no-cache", action="store_true", help="Skip cache lookup and recompute all symbolic matrices")
+    compile_parser.add_argument(
+        "--drgep",
+        action="store_true",
+        help="Reject compilation: DRGEP not supported. Use --lump instead.",
+    )
+    compile_parser.add_argument(
+        "--drgep-threshold",
+        type=float,
+        default=0.05,
+        help="DRGEP interaction threshold for pruning (0.0 to 1.0)",
+    )
+    compile_parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Emit progress messages to stderr at each pipeline stage",
+    )
+    compile_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Run parsing and validation only; do not generate code",
+    )
+    compile_parser.add_argument(
+        "--no-cache",
+        action="store_true",
+        help="Skip cache lookup and recompute all symbolic matrices",
+    )
+    compile_parser.add_argument(
+        "--solver",
+        choices=["ros2", "ros3", "ros4", "rodas3", "rodas4"],
+        default="ros3",
+        help="Rosenbrock solver method (default: ros3)",
+    )
+    compile_parser.add_argument(
+        "--adjoint",
+        action="store_true",
+        default=False,
+        help="Emit adjoint/TLM integrators and checkpoint buffer (default: off)",
+    )
+    compile_parser.add_argument(
+        "--migrate-equilibrium",
+        action="store_true",
+        default=False,
+        help="Rewrite mechanism YAML replacing PHASE_CHANGE blocks for NH4/NO3/SO4 "
+        "species with an equivalent EQUILIBRIUM declaration (deprecated migration tool)",
+    )
 
     parsed_args = parser.parse_args(args)
 
@@ -214,8 +408,12 @@ def main(args=None):
             verbose=getattr(parsed_args, "verbose", False),
             dry_run=getattr(parsed_args, "dry_run", False),
             no_cache=getattr(parsed_args, "no_cache", False),
+            solver=parsed_args.solver,
+            adjoint=parsed_args.adjoint,
+            migrate_equilibrium_flag=parsed_args.migrate_equilibrium,
         )
         sys.exit(0)
+
 
 if __name__ == "__main__":
     main()

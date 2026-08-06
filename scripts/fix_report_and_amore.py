@@ -1,10 +1,10 @@
-import sys
+import re
 
-with open("src/mkpp/amore.py", "r") as f:
+with open("src/mkpp/amore.py") as f:
     amore_code = f.read()
 
 # Fix the signature function so it groups by reactants ONLY.
-# In atmospheric chemistry, when lumping VOCs into surrogates, 
+# In atmospheric chemistry, when lumping VOCs into surrogates,
 # you merge the reactions that have the same reactants, and you weight their products.
 # For now, to just get them to merge, we need to relax the signature to only check reactants.
 
@@ -16,8 +16,11 @@ new_sig = """
         return f"{r.reaction_type}|R={react_str}"
 """
 
-import re
-amore_code = re.sub(r'    def sig\(r\):[\s\S]*?return f"\{r\.reaction_type\}\|R=\{react_str\}\|P=\{prod_str\}"', new_sig, amore_code)
+amore_code = re.sub(
+    r'    def sig\(r\):[\s\S]*?return f"\{r\.reaction_type\}\|R=\{react_str\}\|P=\{prod_str\}"',
+    new_sig,
+    amore_code,
+)
 
 # We also need to fix the merging logic to sum up the products
 merge_logic = """
@@ -40,8 +43,11 @@ merge_logic = """
                         existing.products[prod] = yield_val / 2.0
 """
 
-amore_code = re.sub(r'            if s not in merged_map:[\s\S]*?existing\.parameters\["A"\] = f"\(\{existing\.parameters\[\'A\'\]\}\) \+ \(\{r\.parameters\[\'A\'\]\}\)"', merge_logic, amore_code)
+amore_code = re.sub(
+    r'            if s not in merged_map:[\s\S]*?existing\.parameters\["A"\] = f"\(\{existing\.parameters\[\'A\'\]\}\) \+ \(\{r\.parameters\[\'A\'\]\}\)"',
+    merge_logic,
+    amore_code,
+)
 
 with open("src/mkpp/amore.py", "w") as f:
     f.write(amore_code)
-

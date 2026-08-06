@@ -893,4 +893,3 @@ The project will use [Hypothesis](https://hypothesis.readthedocs.io/) for proper
 - `numpy` — numerical comparisons
 - `scipy` — reference ODE solutions for integration tests
 - `sympy` — expression generation and verification
-

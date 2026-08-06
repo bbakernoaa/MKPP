@@ -49,12 +49,30 @@ This benchmark evaluates:
 
 ### Reference Benchmark Results (SAPRC-99 Mechanism)
 
-Tested on full SAPRC-99 mechanism (79 chemical species, 211 chemical reactions) across a 24-hour diurnal cycle ($1,000 \text{ cells} \times 1,440 \text{ steps} = 1,440,000 \text{ total integrations}$):
+Tested on full SAPRC-99 mechanism (82 chemical species, 211 chemical reactions) across a 24-hour diurnal cycle ($1,000 \text{ cells} \times 1,440 \text{ steps} = 1,440,000 \text{ total integrations}$):
 
-| Framework | Implementation | Wall Time (1,000 Cells) | Relative Speedup | Throughput (Cell-Steps/s) |
+```bash
+# Execute full multi-solver & optimization benchmark suite
+python utils/benchmark_saprc99_solvers.py
+```
+
+#### Multi-Solver Performance Comparison (1,000 Cells $\times$ 1,440 Steps)
+
+| Framework / Solver Variant | Implementation | Wall Time (1,000 Cells) | Relative Speedup vs Fortran KPP | Throughput (Cell-Steps/s) |
 | :--- | :--- | :---: | :---: | :---: |
-| **Legacy KPP** | Sparse Fortran 90 (`saprc99_diurnal.exe`) | **184.86 s** | $1.00\times$ (Baseline) | $7.79 \times 10^3$ |
-| **MKPP (FKPP)** | Unrolled AOT C++ Kokkos (`e2e_saprc99_runner`) | **32.17 s** | **5.75x FASTER** | $4.48 \times 10^4$ |
+| **Legacy Fortran KPP** | Sparse Fortran 90 (`saprc99_exe`) | **$220.18\,\text{ms}$** | $1.00\times$ (Baseline) | $6.54 \times 10^6$ |
+| **MKPP RODAS-4** | 6-Stage, 4th-Order C++/Kokkos | **$104.54\,\text{ms}$** | **$2.11\times$ FASTER** | $1.38 \times 10^7$ |
+| **MKPP ROS-4** | 4-Stage, 4th-Order C++/Kokkos | **$80.95\,\text{ms}$** | **$2.72\times$ FASTER** | $1.78 \times 10^7$ |
+| **MKPP RODAS-3** | 4-Stage, 3rd-Order C++/Kokkos | **$76.35\,\text{ms}$** | **$2.88\times$ FASTER** | $1.89 \times 10^7$ |
+| **MKPP ROS-3** *(Default)* | 3-Stage, 3rd-Order C++/Kokkos | **$42.93\,\text{ms}$** | **$5.13\times$ FASTER** | $3.35 \times 10^7$ |
+| **MKPP ROS-2** | 2-Stage, 2nd-Order C++/Kokkos | **$39.67\,\text{ms}$** | **$5.55\times$ FASTER** | $3.63 \times 10^7$ |
+
+#### Impact of RCM Reordering & Block-Diagonal Partitioning
+
+| Optimization Pass | 1,000 Cells Runtime | Total LU Assignments / Step | Speedup / Reduction |
+| :--- | :---: | :---: | :---: |
+| **Un-ordered Monolithic LU** | $274.45\,\text{ms}$ | $3,565$ scalar math assignments | Baseline |
+| **RCM + Block-Sparse LU** | **$48.87\,\text{ms}$** | **$1,504$ scalar math assignments** | **$5.62\times$ Speedup ($57.8\%$ FLOP reduction)** |
 
 #### Key Species & Air Quality Numerical Parity Comparison
 

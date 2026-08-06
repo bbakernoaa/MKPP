@@ -87,6 +87,15 @@ species:
 - name: RO2
   type: FIXED
 reactions:
+- type: PHOTOLYSIS
+  reactants:
+    NO2: 1.0
+  products:
+    'NO': 1.0
+    O3P: 1.0
+  A: '6.69e-1'
+  continuous_transition: true
+  stiff: true
 - type: ARRHENIUS
   reactants:
     O3P: 1.0

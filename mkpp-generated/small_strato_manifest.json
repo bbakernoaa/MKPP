@@ -1,0 +1,22 @@
+{
+  "mechanism": "small_strato",
+  "aerosol_representation": "bulk",
+  "checksum": "7cdd2f123e262212d6397ab77b6baa6b7c32fe6b10d352ef7a0dfcd0f67ee02c",
+  "artifacts": [
+    {
+      "kind": "header",
+      "file": "small_strato.hpp"
+    },
+    {
+      "kind": "adjoint_tlm_record",
+      "differentiable": true
+    }
+  ],
+  "host_interface": {
+    "concentrations": {
+      "rank": 4,
+      "layout": "LayoutLeft",
+      "lifetime": "unmanaged_borrowed_from_host"
+    }
+  }
+}

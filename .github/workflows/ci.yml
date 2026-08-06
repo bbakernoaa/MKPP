@@ -23,14 +23,12 @@ jobs:
         run: pip install pre-commit
 
       - name: Run Pre-commit Hooks
-        # This will execute ruff, clang-format, cmake-format, and shellcheck
         run: pre-commit run --all-files --show-diff-on-failure
 
   build-and-test:
     name: 2. Build & Test Gates
     needs: static-gates
     runs-on: ubuntu-latest
-    # Utilizing an explicit environment variable check block as defined in EE2
     defaults:
       run:
         shell: bash -el {0}
@@ -46,22 +44,100 @@ jobs:
           environment-file: environment.yml
           auto-activate-base: false
 
+      - name: Cache Kokkos Installation
+        id: cache-kokkos
+        uses: actions/cache@v4
+        with:
+          path: /opt/kokkos
+          key: kokkos-4.5.01-serial-${{ runner.os }}-gcc
+
+      - name: Build Kokkos from Source
+        if: steps.cache-kokkos.outputs.cache-hit != 'true'
+        run: |
+          git clone --depth 1 --branch 4.5.01 https://github.com/kokkos/kokkos.git /tmp/kokkos-src
+          cmake -S /tmp/kokkos-src -B /tmp/kokkos-build \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/opt/kokkos \
+            -DKokkos_ENABLE_SERIAL=ON \
+            -DKokkos_ENABLE_OPENMP=OFF \
+            -DKokkos_ENABLE_CUDA=OFF
+          cmake --build /tmp/kokkos-build -j $(nproc)
+          cmake --install /tmp/kokkos-build
+
       - name: Validate Environment (EE2 Compliance)
         run: |
           echo "Checking compilers and environment..."
           python --version
           cmake --version
           ninja --version
+          echo "Kokkos installed at /opt/kokkos"
+          ls /opt/kokkos/lib*/cmake/Kokkos/ || ls /opt/kokkos/lib/cmake/Kokkos/
+
+      - name: Install MKPP Package
+        run: pip install -e .
+
+      - name: Regenerate C++ Headers (AOT Compilation)
+        run: |
+          python -c "
+          from mkpp.parser import load_mechanism
+          from mkpp.codegen import generate_headers
+          from mkpp.amore import apply_amore_lumping
+          from mkpp.lowering import prepare_unified_jacobian, partition_reactions
+          import yaml, os
+
+          out_dir = 'mkpp-generated'
+          os.makedirs(out_dir, exist_ok=True)
+
+          mechanisms = [
+              'mechanisms/chapman.yaml',
+              'mechanisms/small_strato.yaml',
+              'mechanisms/gocart.yaml',
+              'mechanisms/carbon.yaml',
+              'mechanisms/saprc99.yaml',
+              'mechanisms/saprcnov.yaml',
+              'mechanisms/t1.yaml',
+          ]
+          for mech_file in mechanisms:
+              if os.path.exists(mech_file):
+                  mech = load_mechanism(mech_file)
+                  generate_headers(mech, out_dir=out_dir, solver_name='ros3')
+                  print(f'  Generated {mech.name}.hpp')
+
+          # Regenerate lumped variant
+          mech = load_mechanism('mechanisms/saprc99.yaml')
+          with open('mechanisms/lumping_rules_saprc99.yaml') as f:
+              rules = yaml.safe_load(f)
+          mech_lumped = apply_amore_lumping(mech, rules)
+          blocks = partition_reactions(mech_lumped)
+          mech_lumped.partition_metadata = blocks.get('metadata')
+          mech_lumped.sympy_metadata = prepare_unified_jacobian(mech_lumped)
+          generate_headers(mech_lumped, out_dir=out_dir, suffix='_lumped', solver_name='ros3')
+          print('  Generated saprc99_lumped.hpp')
+          "
+
+      - name: Verify Committed Headers Are Up-to-Date
+        run: |
+          if ! git diff --quiet mkpp-generated/*.hpp; then
+            echo "::error::Committed headers in mkpp-generated/ are stale. Please regenerate locally:"
+            echo "::error::  python -c \"from mkpp.parser import load_mechanism; from mkpp.codegen import generate_headers; ...\""
+            echo ""
+            echo "Changed files:"
+            git diff --stat mkpp-generated/*.hpp
+            echo ""
+            echo "Run 'mkpp compile' or the regeneration script, then commit the updated headers."
+            exit 1
+          fi
+          echo "✓ mkpp-generated/ headers are up-to-date with codegen"
 
       - name: Configure CMake
-        run: cmake --preset default
+        run: cmake --preset default -DKokkos_ROOT=/opt/kokkos
 
-      - name: Build C++ / Fortran Core
+      - name: Build C++ Core
         run: cmake --build --preset default
 
-      # The exact testing commands will be fleshed out as tests are added
-      - name: Run C++ / Fortran CTests
-        run: ctest --preset default || echo "No CTests configured yet, bypassing..."
+      - name: Run C++ CTests
+        run: ctest --preset default --output-on-failure
 
       - name: Run Python AOT Tests
-        run: pytest || echo "No pytest tests configured yet, bypassing..."
+        run: pytest tests/python/ -ra -q --strict-markers

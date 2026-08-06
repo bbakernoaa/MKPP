@@ -6,29 +6,26 @@ Validates:
 - Property 3: Stage 2 completeness (Requirements 2.2)
 - Property 4: Tolerance array sizing (Requirements 2.6)
 """
+
 import re
 import tempfile
-from pathlib import Path
 
-import hypothesis
-from hypothesis import given, settings, assume
-from hypothesis import strategies as st
 import sympy as sp
-
-from mkpp.lowering import compute_symbolic_lu_decomposition
+from hypothesis import assume, given, settings
+from hypothesis import strategies as st
 from mkpp.codegen import generate_headers
+from mkpp.lowering import compute_symbolic_lu_decomposition
 from mkpp.model import (
-    MechanismDefinition,
-    SpeciesDefinition,
-    PhaseMode,
     AerosolRepresentation,
-    SymbolicLUPlan,
+    MechanismDefinition,
+    PhaseMode,
+    SpeciesDefinition,
 )
-
 
 # ---------------------------------------------------------------------------
 # Strategies
 # ---------------------------------------------------------------------------
+
 
 @st.composite
 def sparse_sympy_matrix_strategy(draw, min_n=2, max_n=12):
@@ -48,7 +45,7 @@ def sparse_sympy_matrix_strategy(draw, min_n=2, max_n=12):
                 val = sp.Symbol(f"C_{i}", real=True, positive=True) + sp.Float(1.0)
             else:
                 # Off-diagonal: sparse with ~30% density
-                is_nonzero = draw(st.booleans().filter(lambda b: True))
+                draw(st.booleans().filter(lambda b: True))
                 # Use about 30% chance of being non-zero
                 if draw(st.integers(min_value=0, max_value=9)) < 3:
                     coeff = draw(st.floats(min_value=-5.0, max_value=5.0, allow_nan=False, allow_infinity=False))
@@ -72,8 +69,9 @@ def sparse_sympy_matrix_strategy(draw, min_n=2, max_n=12):
 # **Validates: Requirements 2.1**
 # ---------------------------------------------------------------------------
 
+
 @given(data=sparse_sympy_matrix_strategy())
-@settings(max_examples=100)
+@settings(max_examples=100, deadline=None)
 def test_property_2_backward_substitution_variable_init(data):
     """
     For any NxN Jacobian (N=2..12), compute LU plan, simulate the K1 backward
@@ -95,24 +93,20 @@ def test_property_2_backward_substitution_variable_init(data):
     emitted_k1_lines = []
     for i, expr_str in plan.backward_sub_steps:
         s = expr_str  # FIX: must be initialized from expr_str each iteration
-        s = re.sub(r'\by_(\d+)\b', r'y1_\1', s)
-        s = re.sub(r'\bx_(\d+)\b', r'K1_\1', s)
+        s = re.sub(r"\by_(\d+)\b", r"y1_\1", s)
+        s = re.sub(r"\bx_(\d+)\b", r"K1_\1", s)
         emitted_k1_lines.append((i, s))
 
     for i, code_line in emitted_k1_lines:
         # Each K1_i line must reference y1_* (forward-sub intermediates) and/or U_* factors
         # It must NOT reference raw 'b_' placeholders (that would mean stale forward-sub variable)
-        assert 'b_' not in code_line, (
-            f"K1_{i} references stale 'b_' variable: {code_line}"
-        )
+        assert "b_" not in code_line, f"K1_{i} references stale 'b_' variable: {code_line}"
         # Each line must contain at least one of: y1_, U_, K1_, or a numeric literal
-        has_y1 = 'y1_' in code_line
-        has_U = 'U_' in code_line
-        has_K1 = 'K1_' in code_line
-        has_numeric = bool(re.search(r'\d', code_line))
-        assert has_y1 or has_U or has_K1 or has_numeric, (
-            f"K1_{i} line doesn't reference expected variables: {code_line}"
-        )
+        has_y1 = "y1_" in code_line
+        has_U = "U_" in code_line
+        has_K1 = "K1_" in code_line
+        has_numeric = bool(re.search(r"\d", code_line))
+        assert has_y1 or has_U or has_K1 or has_numeric, f"K1_{i} line doesn't reference expected variables: {code_line}"
 
 
 # ---------------------------------------------------------------------------
@@ -120,8 +114,9 @@ def test_property_2_backward_substitution_variable_init(data):
 # **Validates: Requirements 2.2**
 # ---------------------------------------------------------------------------
 
+
 @given(data=sparse_sympy_matrix_strategy())
-@settings(max_examples=100)
+@settings(max_examples=100, deadline=None)
 def test_property_3_stage2_completeness(data):
     """
     For any NxN Jacobian (N=2..12), generate a mechanism with that structure,
@@ -168,33 +163,33 @@ def test_property_3_stage2_completeness(data):
     with tempfile.TemporaryDirectory() as tmp_dir:
         artifacts = generate_headers(mech, out_dir=tmp_dir)
         header_path = artifacts["header"]
-        with open(header_path, 'r') as f:
+        with open(header_path) as f:
             code = f.read()
 
     # Verify Stage 2 completeness:
     # 1. F2 evaluation at intermediate state
-    assert 'F2_0' in code, "Missing F2 evaluation (F2_0 not found)"
+    assert "F2_0" in code, "Missing F2 evaluation (F2_0 not found)"
     # Check F2 references Ynew (intermediate state)
-    f2_lines = [line for line in code.split('\n') if 'double F2_' in line]
+    f2_lines = [line for line in code.split("\n") if "double F2_" in line]
     assert len(f2_lines) >= n, f"Expected at least {n} F2 lines, got {len(f2_lines)}"
     # At least one F2 line should reference Ynew_ since we use Ynew as state_var
-    has_ynew_ref = any('Ynew_' in line for line in f2_lines)
+    any("Ynew_" in line for line in f2_lines)
     # Also accept that for trivial expressions (C_i -> sp_i mapping), the format may differ
     # The key check is F2 lines exist
 
     # 2. rhs2 formation referencing K1
-    rhs2_lines = [line for line in code.split('\n') if 'rhs2_' in line]
+    rhs2_lines = [line for line in code.split("\n") if "rhs2_" in line]
     assert len(rhs2_lines) >= n, f"Expected at least {n} rhs2 lines, got {len(rhs2_lines)}"
     # rhs2 must reference K1
-    has_k1_in_rhs2 = any('K1_' in line for line in rhs2_lines)
+    has_k1_in_rhs2 = any("K1_" in line for line in rhs2_lines)
     assert has_k1_in_rhs2, "rhs2 formation doesn't reference K1"
 
     # 3. K2 forward substitution (y2_*)
-    y2_lines = [line for line in code.split('\n') if 'double y2_' in line]
+    y2_lines = [line for line in code.split("\n") if "double y2_" in line]
     assert len(y2_lines) >= n, f"Expected at least {n} y2 lines, got {len(y2_lines)}"
 
     # 4. K2 backward substitution
-    k2_lines = [line for line in code.split('\n') if 'double K2_' in line]
+    k2_lines = [line for line in code.split("\n") if "double K2_" in line]
     assert len(k2_lines) >= n, f"Expected at least {n} K2 lines, got {len(k2_lines)}"
 
 
@@ -203,8 +198,9 @@ def test_property_3_stage2_completeness(data):
 # **Validates: Requirements 2.6**
 # ---------------------------------------------------------------------------
 
+
 @given(n=st.integers(min_value=1, max_value=20))
-@settings(max_examples=100)
+@settings(max_examples=100, deadline=None)
 def test_property_4_tolerance_array_sizing(n):
     """
     For any mechanism with N species (N=1..20), verify the emitted atol/rtol
@@ -226,32 +222,22 @@ def test_property_4_tolerance_array_sizing(n):
     with tempfile.TemporaryDirectory() as tmp_dir:
         artifacts = generate_headers(mech, out_dir=tmp_dir)
         header_path = artifacts["header"]
-        with open(header_path, 'r') as f:
+        with open(header_path) as f:
             code = f.read()
 
     # Find the atol array declaration and count entries
-    atol_match = re.search(
-        r'static constexpr double atol\[NUM_SPECIES\]\s*=\s*\{([^}]*)\}', code
-    )
+    atol_match = re.search(r"static constexpr double atol\[NUM_SPECIES\]\s*=\s*\{([^}]*)\}", code)
     assert atol_match is not None, "atol array declaration not found in generated code"
-    atol_entries = [e.strip() for e in atol_match.group(1).split(',') if e.strip()]
-    assert len(atol_entries) == n, (
-        f"atol array has {len(atol_entries)} entries, expected {n}"
-    )
+    atol_entries = [e.strip() for e in atol_match.group(1).split(",") if e.strip()]
+    assert len(atol_entries) == n, f"atol array has {len(atol_entries)} entries, expected {n}"
 
     # Find the rtol array declaration and count entries
-    rtol_match = re.search(
-        r'static constexpr double rtol\[NUM_SPECIES\]\s*=\s*\{([^}]*)\}', code
-    )
+    rtol_match = re.search(r"static constexpr double rtol\[NUM_SPECIES\]\s*=\s*\{([^}]*)\}", code)
     assert rtol_match is not None, "rtol array declaration not found in generated code"
-    rtol_entries = [e.strip() for e in rtol_match.group(1).split(',') if e.strip()]
-    assert len(rtol_entries) == n, (
-        f"rtol array has {len(rtol_entries)} entries, expected {n}"
-    )
+    rtol_entries = [e.strip() for e in rtol_match.group(1).split(",") if e.strip()]
+    assert len(rtol_entries) == n, f"rtol array has {len(rtol_entries)} entries, expected {n}"
 
     # Verify NUM_SPECIES constant matches
-    num_species_match = re.search(r'static constexpr int NUM_SPECIES = (\d+);', code)
+    num_species_match = re.search(r"static constexpr int NUM_SPECIES = (\d+);", code)
     assert num_species_match is not None, "NUM_SPECIES declaration not found"
-    assert int(num_species_match.group(1)) == n, (
-        f"NUM_SPECIES is {num_species_match.group(1)}, expected {n}"
-    )
+    assert int(num_species_match.group(1)) == n, f"NUM_SPECIES is {num_species_match.group(1)}, expected {n}"

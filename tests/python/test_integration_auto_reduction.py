@@ -10,26 +10,26 @@ Uses the same small_strato mechanism as test_integration_ros2_vs_radau.py.
 Validates: Requirements 5.7
 """
 
-import sys
 import os
+import sys
 
-import pytest
 import numpy as np
+import pytest
 
 # Add tests/python to path so we can import sibling test modules
 sys.path.insert(0, os.path.dirname(__file__))
 
 from test_integration_ros2_vs_radau import (
-    small_strato_rhs_correct,
-    small_strato_jacobian,
-    ros2_adaptive_solve,
     NUM_SPECIES,
+    ros2_adaptive_solve,
+    small_strato_jacobian,
+    small_strato_rhs_correct,
 )
-
 
 # ---------------------------------------------------------------------------
 # Pure-Python ROS-2 adaptive solver WITH auto-reduction
 # ---------------------------------------------------------------------------
+
 
 def ros2_adaptive_solve_with_reduction(f_func, jac_func, y0, t_span, atol, rtol, importance_threshold):
     """
@@ -195,6 +195,7 @@ def ros2_adaptive_solve_with_reduction(f_func, jac_func, y0, t_span, atol, rtol,
 # Test
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.slow
 def test_auto_reduced_vs_full_solver_small_strato():
     """
@@ -207,15 +208,17 @@ def test_auto_reduced_vs_full_solver_small_strato():
     Validates that both solvers agree within atol=1e-3, rtol=1e-4.
     """
     # Initial conditions (molecules/cm^3, typical stratospheric ~25km values)
-    y0 = np.array([
-        1.0e6,    # O: atomic oxygen
-        1.0e4,    # O1D: excited oxygen
-        5.0e12,   # O3: ozone
-        1.0e9,    # NO
-        5.0e9,    # NO2
-        8.0e17,   # M: third body (fixed)
-        4.0e17,   # O2: molecular oxygen (fixed)
-    ])
+    y0 = np.array(
+        [
+            1.0e6,  # O: atomic oxygen
+            1.0e4,  # O1D: excited oxygen
+            5.0e12,  # O3: ozone
+            1.0e9,  # NO
+            5.0e9,  # NO2
+            8.0e17,  # M: third body (fixed)
+            4.0e17,  # O2: molecular oxygen (fixed)
+        ]
+    )
 
     t_end = 3600.0  # 1 hour integration
 
@@ -253,11 +256,12 @@ def test_auto_reduced_vs_full_solver_small_strato():
 
     # Assert concentrations agree within atol=1e-3, rtol=1e-4
     np.testing.assert_allclose(
-        y_reduced, y_full,
+        y_reduced,
+        y_full,
         atol=1e-3,
         rtol=1e-4,
         err_msg="Auto-reduced ROS-2 solver disagrees with full ROS-2 solver "
-                "beyond atol=1e-3, rtol=1e-4 for small_strato mechanism",
+        "beyond atol=1e-3, rtol=1e-4 for small_strato mechanism",
     )
 
     # Also verify per-species with informative messages
