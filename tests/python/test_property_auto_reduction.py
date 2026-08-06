@@ -129,11 +129,13 @@ def random_auto_reduction_scenario(draw, min_n=3, max_n=10):
     sorted_imp = np.sort(importance)
     # Threshold between the smallest and largest importance
     # Ensure at least one frozen and one active
-    if N >= 2 and sorted_imp[0] < sorted_imp[-1]:
+    lo = float(sorted_imp[0]) + 1e-10
+    hi = float(sorted_imp[-1]) - 1e-10
+    if N >= 2 and lo < hi:
         # Pick a threshold between the min and max importances
-        threshold = draw(st.floats(min_value=float(sorted_imp[0]) + 1e-10, max_value=float(sorted_imp[-1]) - 1e-10))
+        threshold = draw(st.floats(min_value=lo, max_value=hi))
     else:
-        # All importances equal; skip this case
+        # All importances equal or too close; skip this case
         threshold = float(sorted_imp[0]) + 1.0  # All frozen
 
     # Time step

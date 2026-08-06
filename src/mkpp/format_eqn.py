@@ -28,7 +28,7 @@ def _strength_reduce_squares(code: str) -> str:
     return re.sub(rf"pow\(({term}), 2\)", r"\1 * \1", code)
 
 
-def format_eqn(eqn_str, species_list, state_var="state", use_parentheses=True):
+def format_eqn(eqn_str, species_list, state_var="state", use_parentheses=True, keep_env_symbols=False):
     import sympy as sp
 
     # 1. Clean up double negatives first because sympy might fail to parse `--` in strings
@@ -46,14 +46,20 @@ def format_eqn(eqn_str, species_list, state_var="state", use_parentheses=True):
             sp.Symbol("C_DummyNMVOC"): 1.0,
             sp.Symbol("C_FixedOH"): 1.0,
             sp.Symbol("C_FixedCl"): 1.0,
-            # Environmental parameters (not species concentrations)
-            # NOTE: SUN is NOT substituted — photolysis rates are runtime J-values from Cloud-J
-            sp.Symbol("TEMP"): 300.0,
-            sp.Symbol("temp"): 300.0,
-            sp.Symbol("Temp"): 300.0,
             sp.Symbol("S_a"): 1.0,
             sp.Symbol("v_gas"): 1.0,
         }
+
+        # When keep_env_symbols is False (default), substitute environmental
+        # parameters with constants for backward compatibility. When True,
+        # leave Temp and RH as C variable references (used when equilibrium
+        # reactions provide temp/rh as explicit function parameters).
+        if not keep_env_symbols:
+            # Environmental parameters (not species concentrations)
+            # NOTE: SUN is NOT substituted — photolysis rates are runtime J-values from Cloud-J
+            subs_dict[sp.Symbol("TEMP")] = 300.0
+            subs_dict[sp.Symbol("temp")] = 300.0
+            subs_dict[sp.Symbol("Temp")] = 300.0
 
         expr = expr.subs(subs_dict)
         s = sp.ccode(expr)
@@ -61,7 +67,8 @@ def format_eqn(eqn_str, species_list, state_var="state", use_parentheses=True):
     except Exception:
         # Fallback to regex if sympy fails
         s = re.sub(r"([a-zA-Z0-9_\(\)\.\+\-\*\/]+)\*\*(\-?\d+\.\d+|\-?\d+)", r"pow(\1, \2)", s)
-        s = s.replace("Temp", "300.0")
+        if not keep_env_symbols:
+            s = s.replace("Temp", "300.0")
         s = s.replace("S_a", "1.0")
         s = s.replace("v_gas", "1.0")
         s = _fold_numeric_falloff_powers(s)
@@ -77,6 +84,10 @@ def format_eqn(eqn_str, species_list, state_var="state", use_parentheses=True):
 
     # 4. Map J_<idx> photolysis symbols to the jvals array (Cloud-J runtime input)
     s = re.sub(r"\bJ_(\d+)\b", r"jvals[\1]", s)
+
+    # 5. Map Rate_<idx> symbols (PHASE_CHANGE, TUNNELING) to jvals array
+    # These are externally-provided rates from host model thermodynamic solvers (e.g., ISORROPIA)
+    s = re.sub(r"\bRate_(\d+)\b", r"jvals[\1]", s)
 
     s = _strength_reduce_squares(s)
 

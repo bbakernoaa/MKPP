@@ -1,6 +1,7 @@
 import argparse
 import json
 import sys
+import warnings
 from pathlib import Path
 
 import yaml
@@ -10,6 +11,139 @@ from .lowering import partition_reactions
 from .model import CompilationError
 from .parser import load_mechanism
 from .validation import sanitize_path, validate_mechanism, validate_mpi_safety
+
+# Species that belong to the NH4/NO3/SO4 equilibrium system
+_NH4_NO3_SO4_SPECIES = frozenset({"NH3", "NH4a", "HNO3", "NO3an1", "NO3an2", "NO3an3", "SO2", "SO4"})
+
+# Standard EQUILIBRIUM block for the NH4_NO3_SO4 system
+_EQUILIBRIUM_BLOCK = {
+    "type": "EQUILIBRIUM",
+    "system": "NH4_NO3_SO4",
+    "total_species": {
+        "reduced_nitrogen": {
+            "gas": "NH3",
+            "aerosol": ["NH4a"],
+        },
+        "oxidized_nitrogen": {
+            "gas": "HNO3",
+            "aerosol": ["NO3an1", "NO3an2", "NO3an3"],
+        },
+        "sulfate": {
+            "gas": "SO2",
+            "aerosol": ["SO4"],
+        },
+    },
+    "regime_blending": "sigmoid",
+    "transition_width": 0.05,
+    "equilibrium_constants": {
+        "Kp_NH4NO3": {
+            "A": 4.39e-17,
+            "dH": -74735.0,
+            "Tref": 298.15,
+        },
+        "Kp_NH4HSO4": {
+            "A": 1.086e-2,
+            "dH": -40000.0,
+            "Tref": 298.15,
+        },
+        "Kp_NH42SO4": {
+            "A": 1.817e-25,
+            "dH": -160000.0,
+            "Tref": 298.15,
+        },
+    },
+    "continuous_transition": True,
+}
+
+
+def migrate_equilibrium(mech_path: str) -> str | None:
+    """Migrate PHASE_CHANGE reactions for NH4/NO3/SO4 species to an EQUILIBRIUM block.
+
+    Rewrites the mechanism YAML, removing PHASE_CHANGE reactions that affect
+    NH4/NO3/SO4 species and inserting the standard EQUILIBRIUM block.
+
+    Args:
+        mech_path: Path to the mechanism YAML file.
+
+    Returns:
+        Path to the migrated YAML file, or None if no migration was needed.
+    """
+    with open(mech_path) as f:
+        data = yaml.safe_load(f)
+
+    if data is None:
+        return None
+
+    reactions = data.get("reactions", [])
+
+    # Check idempotency: if EQUILIBRIUM block already exists, skip
+    for rxn in reactions:
+        if rxn.get("type") == "EQUILIBRIUM":
+            print(
+                "[migrate-equilibrium] Mechanism already contains an EQUILIBRIUM block. " "No migration needed.",
+                file=sys.stderr,
+            )
+            return None
+
+    # Find PHASE_CHANGE reactions that overlap with NH4/NO3/SO4 species
+    migrated_reactions = []
+    remaining_reactions = []
+
+    for rxn in reactions:
+        if rxn.get("type") == "PHASE_CHANGE":
+            reactant_species = set(rxn.get("reactants", {}).keys())
+            product_species = set(rxn.get("products", {}).keys())
+            all_species = reactant_species | product_species
+
+            if all_species & _NH4_NO3_SO4_SPECIES:
+                migrated_reactions.append(rxn)
+                continue
+
+        remaining_reactions.append(rxn)
+
+    if not migrated_reactions:
+        print(
+            "[migrate-equilibrium] No PHASE_CHANGE reactions found for NH4/NO3/SO4 species. " "No migration needed.",
+            file=sys.stderr,
+        )
+        return None
+
+    # Insert the EQUILIBRIUM block
+    remaining_reactions.append(_EQUILIBRIUM_BLOCK)
+    data["reactions"] = remaining_reactions
+
+    # Write the modified YAML to a new file
+    mech_path_obj = Path(mech_path)
+    output_path = mech_path_obj.parent / f"{mech_path_obj.stem}_equilibrium{mech_path_obj.suffix}"
+
+    with open(output_path, "w") as f:
+        yaml.dump(data, f, default_flow_style=False, sort_keys=False)
+
+    # Emit deprecation warning
+    warnings.warn(
+        "PHASE_CHANGE reactions for NH4/NO3/SO4 species are deprecated. "
+        "Use EQUILIBRIUM blocks instead. "
+        f"Migrated mechanism written to: {output_path}",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+
+    # Print summary
+    migrated_species: set[str] = set()
+    for rxn in migrated_reactions:
+        migrated_species.update(rxn.get("reactants", {}).keys())
+        migrated_species.update(rxn.get("products", {}).keys())
+
+    print(
+        f"[migrate-equilibrium] Migration summary:\n"
+        f"  Removed {len(migrated_reactions)} PHASE_CHANGE reaction(s)\n"
+        f"  Migrated species: {', '.join(sorted(migrated_species))}\n"
+        f"  Inserted EQUILIBRIUM block (system: NH4_NO3_SO4)\n"
+        f"  Output: {output_path}",
+        file=sys.stderr,
+    )
+
+    return str(output_path)
 
 
 def _verbose_log(stage: str, message: str, verbose: bool) -> None:
@@ -33,6 +167,7 @@ def run_compiler(
     no_cache: bool = False,
     solver: str = "ros3",
     adjoint: bool = False,
+    migrate_equilibrium_flag: bool = False,
 ) -> None:
     """Orchestrate the compilation pipeline."""
 
@@ -42,6 +177,12 @@ def run_compiler(
 
     # Solver name to pass to code generation
     solver_name = solver
+
+    # --- Migration step (before compilation) ---
+    if migrate_equilibrium_flag:
+        migrated_path = migrate_equilibrium(mech_path)
+        if migrated_path is not None:
+            mech_path = migrated_path
 
     try:
         # --drgep: fail-fast reject before any SymPy computation
@@ -243,6 +384,13 @@ def main(args=None):
         default=False,
         help="Emit adjoint/TLM integrators and checkpoint buffer (default: off)",
     )
+    compile_parser.add_argument(
+        "--migrate-equilibrium",
+        action="store_true",
+        default=False,
+        help="Rewrite mechanism YAML replacing PHASE_CHANGE blocks for NH4/NO3/SO4 "
+        "species with an equivalent EQUILIBRIUM declaration (deprecated migration tool)",
+    )
 
     parsed_args = parser.parse_args(args)
 
@@ -262,6 +410,7 @@ def main(args=None):
             no_cache=getattr(parsed_args, "no_cache", False),
             solver=parsed_args.solver,
             adjoint=parsed_args.adjoint,
+            migrate_equilibrium_flag=parsed_args.migrate_equilibrium,
         )
         sys.exit(0)
 

@@ -89,6 +89,14 @@ def prepare_adjoint_and_tlm(mech: MechanismDefinition) -> dict[str, bool]:
         ):
             raise ValueError(f"Reaction {r.rate_expression} lacks continuous transition for analytical differentiation.")
 
+    # Check that equilibrium reactions have continuous_transition = True
+    if hasattr(mech, "equilibrium_reactions") and mech.equilibrium_reactions:
+        for eq_def in mech.equilibrium_reactions:
+            if not eq_def.continuous_transition:
+                raise ValueError(
+                    f"Equilibrium system '{eq_def.system}' requires continuous_transition=True " f"for analytical differentiation."
+                )
+
     return {"adjoint_ready": True, "tlm_ready": True}
 
 
@@ -262,6 +270,48 @@ def _evaluate_reaction_fluxes(mech: MechanismDefinition) -> dict[str, Any]:
                 else:
                     df_dt_explicit[product] += flux * sp.Float(stoich)
 
+    # ------------------------------------------------------------------
+    # Equilibrium coupling: add relaxation flux for equilibrium species
+    # This runs AFTER the kinetic reaction loop so that equilibrium
+    # terms are added on top of any existing kinetic contributions.
+    # ------------------------------------------------------------------
+    if mech.equilibrium_reactions:
+        from .equilibrium.registry import get_model
+
+        RH_sym = sp.Symbol("RH", real=True, nonnegative=True)
+
+        for eq_def in mech.equilibrium_reactions:
+            tau_eq_inv = sp.Float(eq_def.relaxation_timescale_inv)
+            model = get_model(eq_def.system)
+
+            # Build total-species symbols for each conserved element
+            # total_species: dict[str, list[str]] where list = [gas, aerosol1, aerosol2, ...]
+            totals: dict[str, sp.Expr] = {}
+            for element_name, sp_list in eq_def.total_species.items():
+                total_expr: sp.Expr = sp.Integer(0)
+                for sp_name in sp_list:
+                    if sp_name in species_symbols:
+                        total_expr += species_symbols[sp_name]
+                totals[element_name] = total_expr
+
+            # Get partition expressions from the analytical equilibrium model
+            eq_exprs = model.partition_expressions(
+                totals,
+                Temp,
+                RH_sym,
+                eq_def.regime_blending,
+                eq_def.transition_width,
+            )
+
+            # Add relaxation flux: drives species toward equilibrium partition
+            # df_dt[species_i] += tau_eq_inv * (eq_expr_i - C_species_i)
+            # This creates a stiff relaxation handled by the Rosenbrock solver
+            # via the Jacobian. Added to df_dt_implicit since equilibrium
+            # coupling is stiff by nature.
+            for sp_name, eq_expr in eq_exprs.items():
+                if sp_name in df_dt_implicit and sp_name not in fixed_species:
+                    df_dt_implicit[sp_name] += tau_eq_inv * (eq_expr - species_symbols[sp_name])
+
     ordered_species = [s.name for s in mech.species]
     f_implicit = sp.Matrix([df_dt_implicit[s] for s in ordered_species])
     f_explicit = sp.Matrix([df_dt_explicit[s] for s in ordered_species])
@@ -318,6 +368,108 @@ def prepare_unified_jacobian(mech: MechanismDefinition) -> dict[str, Any]:
         "photolysis_count": built["photolysis_count"],
         "photolysis_reactions": built["photolysis_reactions"],
     }
+
+    # ------------------------------------------------------------------
+    # Equilibrium symbolic results: extract equilibrium-specific Jacobian
+    # entries and store EquilibriumSymbolicResult for downstream inspection.
+    # The full Jacobian already includes equilibrium derivatives because
+    # f_total contains the relaxation flux terms (tau_eq_inv * (eq_expr - C_i)).
+    # Here we compute and store the isolated equilibrium contributions so
+    # that code emission and adjoint layers can inspect them independently.
+    # ------------------------------------------------------------------
+    if mech.equilibrium_reactions:
+        from .equilibrium.registry import get_model
+        from .model import EquilibriumSymbolicResult
+
+        RH_sym = sp.Symbol("RH", real=True, nonnegative=True)
+        Temp = sp.Symbol("Temp", real=True, nonnegative=True)
+        species_symbols = {s.name: sp.Symbol(f"C_{s.name}", real=True, nonnegative=True) for s in mech.species}
+
+        eq_results = []
+        for eq_def in mech.equilibrium_reactions:
+            model = get_model(eq_def.system)
+
+            # Build total-species symbols for each conserved element
+            totals: dict[str, sp.Expr] = {}
+            for element_name, sp_list in eq_def.total_species.items():
+                total_expr: sp.Expr = sp.Integer(0)
+                for sp_name in sp_list:
+                    if sp_name in species_symbols:
+                        total_expr += species_symbols[sp_name]
+                totals[element_name] = total_expr
+
+            # Get partition expressions from the analytical equilibrium model
+            eq_exprs = model.partition_expressions(totals, Temp, RH_sym, eq_def.regime_blending, eq_def.transition_width)
+
+            # Extract equilibrium-specific Jacobian entries (non-zero ∂eq_i/∂C_j)
+            eq_jac_entries: list[tuple[int, sp.Expr]] = []
+            for i, sp_i_name in enumerate(ordered_species):
+                if sp_i_name in eq_exprs:
+                    for j, sp_j_name in enumerate(ordered_species):
+                        if sp_j_name in species_symbols:
+                            deriv = sp.diff(eq_exprs[sp_i_name], species_symbols[sp_j_name])
+                            if deriv != 0:
+                                eq_jac_entries.append((i, j, deriv))
+
+            # Build total_species_map: element -> species indices
+            total_species_map: dict[str, list[int]] = {}
+            for element_name, sp_list in eq_def.total_species.items():
+                indices = [ordered_species.index(sp_name) for sp_name in sp_list if sp_name in ordered_species]
+                total_species_map[element_name] = indices
+
+            # Build regime weights and equilibrium constants for downstream use
+            regime_weights = []
+            eq_constants = model.equilibrium_constants(Temp)
+
+            eq_result = EquilibriumSymbolicResult(
+                partition_exprs=eq_exprs,
+                jacobian_entries=eq_jac_entries,
+                total_species_map=total_species_map,
+                regime_weights=regime_weights,
+                equilibrium_constants=eq_constants,
+            )
+            eq_results.append(eq_result)
+
+        # ------------------------------------------------------------------
+        # Build-time differentiability verification for equilibrium expressions.
+        # Verify all partition expressions are symbolically differentiable:
+        # no Derivative wrappers (SymPy couldn't differentiate), no Piecewise,
+        # no Abs (non-smooth operations). This catches errors early before
+        # proceeding to code emission.
+        # ------------------------------------------------------------------
+        from .model import CompilationError
+
+        for eq_result in eq_results:
+            for sp_name, expr in eq_result.partition_exprs.items():
+                for sym_name, sym in species_symbols.items():
+                    deriv = sp.diff(expr, sym)
+                    # Check for unevaluated Derivative wrappers
+                    # (indicates SymPy couldn't differentiate)
+                    if deriv.has(sp.Derivative):
+                        raise CompilationError(
+                            stage="lowering",
+                            message=(
+                                f"Equilibrium expression for '{sp_name}' contains "
+                                f"non-differentiable operation with respect to '{sym_name}'"
+                            ),
+                            species_name=sp_name,
+                        )
+                    # Check for forbidden non-smooth functions
+                    if deriv.has(sp.Piecewise) or deriv.has(sp.Abs):
+                        raise CompilationError(
+                            stage="lowering",
+                            message=(
+                                f"Equilibrium expression for '{sp_name}' contains "
+                                f"non-differentiable operation: Piecewise or Abs "
+                                f"detected in derivative w.r.t. '{sym_name}'"
+                            ),
+                            species_name=sp_name,
+                        )
+
+        result["equilibrium_results"] = eq_results
+        result["rh_symbol"] = RH_sym
+    else:
+        result["rh_symbol"] = None
 
     try:
         # Run sparsity analysis: fill-in prediction, RCM reordering, block detection

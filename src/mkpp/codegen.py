@@ -65,6 +65,9 @@ def generate_headers(
 
         sympy_meta = prepare_unified_jacobian(mech)
 
+    # Check if equilibrium reactions are present
+    has_equilibrium = bool(mech.equilibrium_reactions)
+
     # 1. Deterministic header emission
     header_path = out_path / f"{mech.name}{suffix}.hpp"
     with open(header_path, "w") as f:
@@ -84,6 +87,15 @@ def generate_headers(
 
         f.write("namespace mkpp {\n")
         f.write("  // Pure Kokkos abstractions (no raw pragmas allowed)\n")
+
+        # Emit EquilibriumInput enum when equilibrium reactions are present
+        if has_equilibrium:
+            f.write("\n  // Equilibrium meteorological input indices\n")
+            f.write("  enum class EquilibriumInput : int {\n")
+            f.write("      Temperature = 0,\n")
+            f.write("      RelativeHumidity = 1,\n")
+            f.write("      COUNT = 2\n")
+            f.write("  };\n\n")
 
         # T021: Zero-copy unmanaged views for host interaction (e.g. Fortran LayoutLeft)
         if getattr(mech, "host_interface", None) and mech.host_interface.arrays:
@@ -111,9 +123,17 @@ def generate_headers(
 
         # 1. compute_rates
         f.write("      template <class StateView, class RateView>\n")
-        f.write(
-            "      KOKKOS_INLINE_FUNCTION void compute_rates(const StateView& state, RateView& F_block, const double* jvals) const {\n"
-        )
+        if has_equilibrium:
+            f.write(
+                "      KOKKOS_INLINE_FUNCTION void compute_rates(const StateView& state, RateView& F_block, const double* jvals, const double temp, const double rh) const {\n"
+            )
+            f.write("          const double Temp = temp;\n")
+            f.write("          const double RH = rh;\n")
+            f.write("          (void)RH;  // Reserved for future deliquescence modeling\n")
+        else:
+            f.write(
+                "      KOKKOS_INLINE_FUNCTION void compute_rates(const StateView& state, RateView& F_block, const double* jvals) const {\n"
+            )
         if sympy_meta:
             if "f_implicit" in sympy_meta and "f_explicit" in sympy_meta:
                 F = sympy_meta["f_implicit"] + sympy_meta["f_explicit"]
@@ -122,21 +142,31 @@ def generate_headers(
             else:
                 F = []
             for i in range(len(F)):
-                eqn = format_eqn(F[i], mech.species, state_var="state", use_parentheses=True)
+                eqn = format_eqn(F[i], mech.species, state_var="state", use_parentheses=True, keep_env_symbols=has_equilibrium)
                 f.write(f"          F_block({i}) = {eqn};\n")
         f.write("      }\n\n")
 
         # 2. compute_jacobian
         f.write("      template <class StateView, class JacView>\n")
-        f.write(
-            "      KOKKOS_INLINE_FUNCTION void compute_jacobian(const StateView& state, JacView& J_block, const double* jvals) const {\n"
-        )
+        if has_equilibrium:
+            f.write(
+                "      KOKKOS_INLINE_FUNCTION void compute_jacobian(const StateView& state, JacView& J_block, const double* jvals, const double temp, const double rh) const {\n"
+            )
+            f.write("          const double Temp = temp;\n")
+            f.write("          const double RH = rh;\n")
+            f.write("          (void)RH;  // Reserved for future deliquescence modeling\n")
+        else:
+            f.write(
+                "      KOKKOS_INLINE_FUNCTION void compute_jacobian(const StateView& state, JacView& J_block, const double* jvals) const {\n"
+            )
         if sympy_meta and "jacobian_matrix" in sympy_meta:
             J = sympy_meta["jacobian_matrix"]
             for i in range(J.shape[0]):
                 for j in range(J.shape[1]):
                     if J[i, j] != 0:
-                        eqn = format_eqn(J[i, j], mech.species, state_var="state", use_parentheses=True)
+                        eqn = format_eqn(
+                            J[i, j], mech.species, state_var="state", use_parentheses=True, keep_env_symbols=has_equilibrium
+                        )
                         f.write(f"          J_block({i}, {j}) = {eqn};\n")
         f.write("      }\n\n")
 
@@ -168,6 +198,45 @@ def generate_headers(
                         eqn = format_eqn(J[i, j], mech.species, state_var="state", use_parentheses=True)
                         f.write(f"          dF_block({i}) += ({eqn}) * delta_C({j});\n")
         f.write("      }\n\n")
+
+        # 4b. compute_equilibrium_partition (standalone validation function)
+        # Emitted ONLY when equilibrium reactions are present (Requirement 9.1)
+        if mech.equilibrium_reactions and sympy_meta and "equilibrium_results" in sympy_meta:
+            eq_results = sympy_meta["equilibrium_results"]
+            f.write("      // Standalone equilibrium partitioning for validation against ISORROPIA-Lite\n")
+            f.write("      template <class StateView, class ResultView>\n")
+            f.write("      KOKKOS_INLINE_FUNCTION void compute_equilibrium_partition(\n")
+            f.write("          const StateView& state, ResultView& eq_result,\n")
+            f.write("          const double temp, const double rh) const {\n")
+            f.write("          // Compute equilibrium partition fractions at the given state\n")
+            f.write("          // eq_result contains the equilibrium concentrations for each species\n")
+            f.write("          const double Temp = temp;\n")
+            f.write("          const double RH = rh;\n")
+            f.write("          (void)RH;  // Reserved for future deliquescence modeling\n\n")
+
+            for eq_result in eq_results:
+                # Emit total species sum computations
+                f.write("          // Total species concentrations\n")
+                for element_name, species_indices in eq_result.total_species_map.items():
+                    if species_indices:
+                        terms = [f"state({idx})" for idx in species_indices]
+                        total_expr_str = " + ".join(terms)
+                        f.write(f"          const double C_total_{element_name} = {total_expr_str};\n")
+                f.write("\n")
+
+                # Emit equilibrium partition expressions for each species
+                f.write("          // Equilibrium expressions\n")
+                for species_name, expr in eq_result.partition_exprs.items():
+                    # Find the species index
+                    species_idx = next(
+                        (i for i, s in enumerate(mech.species) if s.name == species_name),
+                        None,
+                    )
+                    if species_idx is not None:
+                        eqn = format_eqn(expr, mech.species, state_var="state", use_parentheses=True)
+                        f.write(f"          eq_result({species_idx}) = {eqn};\n")
+
+            f.write("      }\n\n")
 
         # 5. project_mass_conservation
         f.write("      template <class StateView, class MassView>\n")
@@ -242,7 +311,15 @@ def generate_headers(
 
         # 6. integrate (AOT Symbolic LU, generic Rosenbrock solver)
         f.write("      template <class StateView>\n")
-        f.write("      KOKKOS_INLINE_FUNCTION void integrate(double dt_total, StateView& state, const double* jvals) const {\n")
+        if has_equilibrium:
+            f.write(
+                "      KOKKOS_INLINE_FUNCTION void integrate(double dt_total, StateView& state, const double* jvals, const double temp, const double rh) const {\n"
+            )
+            f.write("          const double Temp = temp;\n")
+            f.write("          const double RH = rh;\n")
+            f.write("          (void)RH;  // Reserved for future deliquescence modeling\n")
+        else:
+            f.write("      KOKKOS_INLINE_FUNCTION void integrate(double dt_total, StateView& state, const double* jvals) const {\n")
         f.write(f"          const int NUM_SPECIES = {N};\n")
         f.write(f"          // {tableau.name} coefficients ({tableau.stages}-stage, order {tableau.ELO:.0f})\n")
         gamma = tableau.Gamma[0]
@@ -296,7 +373,7 @@ def generate_headers(
             non_zero_jac_set = set()
             for i, j, expr_str in lu_plan.non_zero_jacobian:
                 non_zero_jac_set.add((i, j))
-                eqn = format_eqn(expr_str, mech.species, state_var="S", use_parentheses=False)
+                eqn = format_eqn(expr_str, mech.species, state_var="S", use_parentheses=False, keep_env_symbols=has_equilibrium)
                 f.write(f"          double J_{i}_{j} = {eqn};\n")
 
             # Determine which W entries are actually needed by the LU plan
@@ -348,8 +425,17 @@ def generate_headers(
         # 7. integrate_with_reduction (Auto-Reduction Kernel)
         f.write("      template <class StateView>\n")
         f.write("      KOKKOS_INLINE_FUNCTION void integrate_with_reduction(\n")
-        f.write("          double dt_total, StateView& state, const double* jvals, double importance_threshold) const\n")
+        if has_equilibrium:
+            f.write(
+                "          double dt_total, StateView& state, const double* jvals, double importance_threshold, const double temp, const double rh) const\n"
+            )
+        else:
+            f.write("          double dt_total, StateView& state, const double* jvals, double importance_threshold) const\n")
         f.write("      {\n")
+        if has_equilibrium:
+            f.write("          const double Temp = temp;\n")
+            f.write("          const double RH = rh;\n")
+            f.write("          (void)RH;  // Reserved for future deliquescence modeling\n")
         f.write(f"          const int NUM_SPECIES = {N};\n")
         # Use the same tableau gamma as integrate()
         gamma = tableau.Gamma[0]
@@ -484,10 +570,18 @@ def generate_headers(
             f.write("      // Returns number of accepted steps, or -1 if MAX_STEPS exceeded.\n")
             f.write("      template <class StateView>\n")
             f.write("      KOKKOS_INLINE_FUNCTION int integrate_fwd_checkpoint(\n")
-            f.write("          double dt_total, StateView& state, const double* jvals,\n")
-            f.write("          CheckpointBuffer& chk) const\n")
+            if has_equilibrium:
+                f.write("          double dt_total, StateView& state, const double* jvals,\n")
+                f.write("          CheckpointBuffer& chk, const double temp, const double rh) const\n")
+            else:
+                f.write("          double dt_total, StateView& state, const double* jvals,\n")
+                f.write("          CheckpointBuffer& chk) const\n")
             f.write("      {\n")
             f.write(f"          const int NUM_SPECIES = {N};\n")
+            if has_equilibrium:
+                f.write("          const double Temp = temp;\n")
+                f.write("          const double RH = rh;\n")
+                f.write("          (void)RH;  // Reserved for future deliquescence modeling\n")
             f.write(f"          // {tableau.name} coefficients ({tableau.stages}-stage, order {tableau.ELO:.0f})\n")
             gamma = tableau.Gamma[0]
             f.write(f"          const double g = {gamma:.17g};\n")
@@ -623,6 +717,62 @@ def generate_headers(
                 f.write(f"          delta_C({k}) = dC_{k};\n")
 
             f.write("      }\n")
+
+        # Diagnostic functions (guarded by #ifdef MKPP_DIAGNOSTICS)
+        if has_equilibrium:
+            f.write("\n#ifdef MKPP_DIAGNOSTICS\n")
+
+            # check_mass_balance: returns |C_gas + C_aer - C_total| for element at element_idx
+            f.write("      template <class StateView>\n")
+            f.write("      KOKKOS_INLINE_FUNCTION double check_mass_balance(\n")
+            f.write("          const StateView& state, int element_idx) const {\n")
+            # Build mass balance residuals for each conserved element from equilibrium definitions
+            eq_def = mech.equilibrium_reactions[0]  # Primary equilibrium system
+            element_names = list(eq_def.total_species.keys())
+            for elem_idx, (element_name, sp_list) in enumerate(eq_def.total_species.items()):
+                species_indices = []
+                for sp_name in sp_list:
+                    for si, spec in enumerate(mech.species):
+                        if spec.name == sp_name:
+                            species_indices.append(si)
+                            break
+                if elem_idx == 0:
+                    f.write(f"          if (element_idx == {elem_idx}) {{\n")
+                else:
+                    f.write(f"          }} else if (element_idx == {elem_idx}) {{\n")
+                f.write(f"              // {element_name}: sum of [{', '.join(sp_list)}]\n")
+                f.write("              double total = 0.0;\n")
+                for si in species_indices:
+                    f.write(f"              total += state({si});\n")
+                # The mass balance residual is |sum_partitioned - C_total|
+                # Since C_total = sum of all participating species, the residual
+                # measures deviation from the initial total (which should be conserved)
+                # For a diagnostic, we return the absolute total (caller compares against initial)
+                f.write("              return total;\n")
+            f.write("          }\n")
+            f.write("          return 0.0;\n")
+            f.write("      }\n\n")
+
+            # check_charge_balance: placeholder returning sum(cation eq) - sum(anion eq)
+            f.write("      template <class StateView>\n")
+            f.write("      KOKKOS_INLINE_FUNCTION double check_charge_balance(\n")
+            f.write("          const StateView& state) const {\n")
+            f.write("          // Placeholder: compute cation equivalents - anion equivalents\n")
+            f.write("          // TODO: Fill in actual ion charges for the equilibrium system\n")
+            f.write("          double balance = 0.0;\n")
+            # Emit charge contributions for known aerosol species
+            for si, spec in enumerate(mech.species):
+                # NH4+ is +1, NO3- is -1, SO4 is -2 (common atmospheric aerosol ions)
+                if spec.name == "NH4a":
+                    f.write(f"          balance += state({si});  // NH4+ (+1)\n")
+                elif spec.name in ("NO3an1", "NO3an2", "NO3an3"):
+                    f.write(f"          balance -= state({si});  // NO3- (-1)\n")
+                elif spec.name == "SO4":
+                    f.write(f"          balance -= 2.0 * state({si});  // SO4^2- (-2)\n")
+            f.write("          return balance;\n")
+            f.write("      }\n")
+
+            f.write("#endif // MKPP_DIAGNOSTICS\n")
 
         f.write("  };\n")
         f.write("}\n")

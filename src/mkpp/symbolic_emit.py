@@ -68,7 +68,8 @@ def _emit_rosenbrock_adjoint_stages(f, tableau, N, lu_plan, sympy_meta, mech, pe
     non_zero_jac_set = set()
     for i, j, expr_str in lu_plan.non_zero_jacobian:
         non_zero_jac_set.add((i, j))
-        eqn = format_eqn(expr_str, mech.species, state_var="S", use_parentheses=False)
+        _adj_has_eq = bool(getattr(mech, "equilibrium_reactions", None))
+        eqn = format_eqn(expr_str, mech.species, state_var="S", use_parentheses=False, keep_env_symbols=_adj_has_eq)
         f.write(f"              double J_{i}_{j} = {eqn};\n")
 
     # Form W = (1/(gamma*h))*I - J (sparse)
@@ -353,6 +354,10 @@ def _emit_rosenbrock_stages(
     else:
         F_exprs = [0] * N
 
+    # Determine if equilibrium reactions are present — if so, Temp and RH must
+    # be emitted as runtime C++ variables rather than substituted with constants.
+    _has_eq = bool(getattr(mech, "equilibrium_reactions", None))
+
     tableau.Gamma[0]
     S = tableau.stages
 
@@ -455,13 +460,13 @@ def _emit_rosenbrock_stages(
                 state_var = "S"
                 f.write(f"          // Rate evaluation F{stage} at {state_var}\n")
                 for i in range(N):
-                    eqn = format_eqn(F_exprs[i], mech.species, state_var=state_var, use_parentheses=False)
+                    eqn = format_eqn(F_exprs[i], mech.species, state_var=state_var, use_parentheses=False, keep_env_symbols=_has_eq)
                     f.write(f"          double F{stage}_{i} = {eqn};\n")
             else:
                 state_var = f"Y{stage}"
                 f.write(f"          // Rate evaluation F{stage} at {state_var}\n")
                 for i in range(N):
-                    eqn = format_eqn(F_exprs[i], mech.species, state_var=state_var, use_parentheses=False)
+                    eqn = format_eqn(F_exprs[i], mech.species, state_var=state_var, use_parentheses=False, keep_env_symbols=_has_eq)
                     f.write(f"          double F{stage}_{i} = {eqn};\n")
             current_F_prefix = F_prefix
         else:
@@ -657,7 +662,8 @@ def _emit_rosenbrock_tlm_stages(
     f.write("              // Recompute Jacobian at checkpointed state (recompute-J strategy, D1)\n")
     for i, j, expr_str in lu_plan.non_zero_jacobian:
         if mech is not None and hasattr(mech, "species") and mech.species:
-            jac_expr = format_eqn(expr_str, mech.species, state_var="S", use_parentheses=False)
+            _tlm_has_eq = bool(getattr(mech, "equilibrium_reactions", None))
+            jac_expr = format_eqn(expr_str, mech.species, state_var="S", use_parentheses=False, keep_env_symbols=_tlm_has_eq)
         else:
             # Fallback for testing: expressions are already in S_k format
             jac_expr = expr_str

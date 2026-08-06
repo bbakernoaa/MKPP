@@ -62,7 +62,40 @@ class ReactionType(Enum):
     TUNNELING = "TUNNELING"
     CONDENSATION = "CONDENSATION"
     PHASE_CHANGE = "PHASE_CHANGE"
+    EQUILIBRIUM = "EQUILIBRIUM"
     UNKNOWN = "UNKNOWN"
+
+
+class EquilibriumInput(Enum):
+    """Index constants for equilibrium input arrays in generated code."""
+
+    Temperature = 0
+    RelativeHumidity = 1
+
+
+@dataclass
+class EquilibriumDefinition:
+    """Parsed EQUILIBRIUM reaction block from mechanism YAML."""
+
+    system: str  # e.g. "NH4_NO3_SO4"
+    total_species: dict[str, list[str]]  # element -> [gas_species, aerosol_species, ...]
+    regime_blending: str = "sigmoid"  # "sigmoid" | "tanh"
+    transition_width: float = 0.05
+    activity_model: str = "fixed"  # "fixed" | "parameterized"
+    equilibrium_constants: dict[str, dict[str, Any]] = field(default_factory=dict)  # name -> {A, dH, Tref} van't Hoff params
+    continuous_transition: bool = True
+    relaxation_timescale_inv: float = 1e6  # 1/tau [s^-1], default: 1e6
+
+
+@dataclass
+class EquilibriumSymbolicResult:
+    """Result of symbolic lowering for an equilibrium system."""
+
+    partition_exprs: dict[str, Any] = field(default_factory=dict)  # species_name -> SymPy Expr: f(C_total, T, RH)
+    jacobian_entries: list[tuple[int, int, Any]] = field(default_factory=list)  # (i, j, ∂f_i/∂C_j)
+    total_species_map: dict[str, list[int]] = field(default_factory=dict)  # element -> species indices
+    regime_weights: list[Any] = field(default_factory=list)  # blending weight expressions
+    equilibrium_constants: dict[str, Any] = field(default_factory=dict)  # Keq(T) expressions
 
 
 @dataclass
@@ -119,6 +152,7 @@ class MechanismDefinition:
     host_interface: Optional["HostInterfaceSchema"] = None
     units: str = "canonical"
     metadata: dict[str, str] = field(default_factory=dict)
+    equilibrium_reactions: list[EquilibriumDefinition] = field(default_factory=list)
 
 
 @dataclass

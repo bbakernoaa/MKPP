@@ -18,7 +18,9 @@ mkpp = "mkpp.cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-packages = ["mkpp"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.ruff]
 line-length = 132
