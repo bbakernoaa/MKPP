@@ -121,9 +121,7 @@ jobs:
           python -c "
           from mkpp.parser import load_mechanism
           from mkpp.codegen import generate_headers
-          from mkpp.amore import apply_amore_lumping
-          from mkpp.lowering import prepare_unified_jacobian, partition_reactions
-          import yaml, os
+          import os
 
           out_dir = 'mkpp-generated'
           os.makedirs(out_dir, exist_ok=True)
@@ -142,17 +140,6 @@ jobs:
                   mech = load_mechanism(mech_file)
                   generate_headers(mech, out_dir=out_dir, solver_name='ros3')
                   print(f'  Generated {mech.name}.hpp')
-
-          # Regenerate lumped variant
-          mech = load_mechanism('mechanisms/saprc99.yaml')
-          with open('mechanisms/lumping_rules_saprc99.yaml') as f:
-              rules = yaml.safe_load(f)
-          mech_lumped = apply_amore_lumping(mech, rules)
-          blocks = partition_reactions(mech_lumped)
-          mech_lumped.partition_metadata = blocks.get('metadata')
-          mech_lumped.sympy_metadata = prepare_unified_jacobian(mech_lumped)
-          generate_headers(mech_lumped, out_dir=out_dir, suffix='_lumped', solver_name='ros3')
-          print('  Generated saprc99_lumped.hpp')
           "
 
       - name: Verify Committed Headers Are Up-to-Date
