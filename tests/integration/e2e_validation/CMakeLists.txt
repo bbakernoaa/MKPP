@@ -1,6 +1,9 @@
-add_subdirectory(${CMAKE_SOURCE_DIR}/src/mkpp_host
-                 ${CMAKE_BINARY_DIR}/mkpp_host)
 cmake_minimum_required(VERSION 3.24)
+
+if(NOT TARGET mkpp_host)
+  add_subdirectory(${CMAKE_SOURCE_DIR}/src/mkpp_host
+                   ${CMAKE_BINARY_DIR}/mkpp_host)
+endif()
 
 set(MECHS "chapman" "small_strato" "carbon" "saprc99")
 
