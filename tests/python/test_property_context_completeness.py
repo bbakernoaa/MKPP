@@ -16,7 +16,6 @@ exists, transpose steps present when adjoint enabled.
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from jinja2 import UndefinedError
-
 from mkpp.lowering import compute_symbolic_lu_decomposition, prepare_unified_jacobian
 from mkpp.model import (
     AerosolRepresentation,
@@ -24,12 +23,10 @@ from mkpp.model import (
     PhaseMode,
     ReactionDefinition,
     SpeciesDefinition,
-    SymbolicLUPlan,
 )
 from mkpp.rosenbrock import SOLVER_COEFFICIENTS
 from mkpp.template_context import build_template_context
 from mkpp.template_engine import TemplateEngine
-
 
 # ---------------------------------------------------------------------------
 # Strategies
@@ -54,10 +51,7 @@ def mechanism_strategy(draw):
 
     # Generate unique species names
     species_names = [f"SP{i}" for i in range(n)]
-    species_list = [
-        SpeciesDefinition(name=name, phase=PhaseMode.GAS)
-        for name in species_names
-    ]
+    species_list = [SpeciesDefinition(name=name, phase=PhaseMode.GAS) for name in species_names]
 
     # Generate reactions: 1-3 ARRHENIUS reactions
     num_reactions = draw(st.integers(min_value=1, max_value=min(3, n - 1)))
@@ -65,11 +59,7 @@ def mechanism_strategy(draw):
     for r_idx in range(num_reactions):
         # Pick a reactant and product from available species (different ones)
         reactant_idx = draw(st.integers(min_value=0, max_value=n - 1))
-        product_idx = draw(
-            st.integers(min_value=0, max_value=n - 1).filter(
-                lambda x, ri=reactant_idx: x != ri
-            )
-        )
+        product_idx = draw(st.integers(min_value=0, max_value=n - 1).filter(lambda x, ri=reactant_idx: x != ri))
         reactant_name = species_names[reactant_idx]
         product_name = species_names[product_idx]
 
@@ -88,11 +78,7 @@ def mechanism_strategy(draw):
     has_photolysis = draw(st.booleans())
     if has_photolysis and n >= 2:
         photo_reactant_idx = draw(st.integers(min_value=0, max_value=n - 1))
-        photo_product_idx = draw(
-            st.integers(min_value=0, max_value=n - 1).filter(
-                lambda x, ri=photo_reactant_idx: x != ri
-            )
-        )
+        photo_product_idx = draw(st.integers(min_value=0, max_value=n - 1).filter(lambda x, ri=photo_reactant_idx: x != ri))
         reactions.append(
             ReactionDefinition(
                 reaction_type="PHOTOLYSIS",
@@ -236,18 +222,10 @@ def test_property_2_context_completeness_no_undefined_error(data):
 
     # When adjoint is enabled, verify transpose steps are present
     if adjoint:
-        assert "transpose_forward_sub_steps" in context, (
-            "transpose_forward_sub_steps missing when adjoint=True"
-        )
-        assert "transpose_backward_sub_steps" in context, (
-            "transpose_backward_sub_steps missing when adjoint=True"
-        )
-        assert context["transpose_forward_sub_steps"] is not None, (
-            "transpose_forward_sub_steps is None when adjoint=True"
-        )
-        assert context["transpose_backward_sub_steps"] is not None, (
-            "transpose_backward_sub_steps is None when adjoint=True"
-        )
+        assert "transpose_forward_sub_steps" in context, "transpose_forward_sub_steps missing when adjoint=True"
+        assert "transpose_backward_sub_steps" in context, "transpose_backward_sub_steps missing when adjoint=True"
+        assert context["transpose_forward_sub_steps"] is not None, "transpose_forward_sub_steps is None when adjoint=True"
+        assert context["transpose_backward_sub_steps"] is not None, "transpose_backward_sub_steps is None when adjoint=True"
 
     # Render header.j2 - must not raise UndefinedError
     engine = TemplateEngine()
@@ -265,9 +243,7 @@ def test_property_2_context_completeness_no_undefined_error(data):
 
     # Rendered output should be non-empty valid C++ text
     assert len(rendered) > 0, "Rendered header is empty"
-    assert "#pragma once" in rendered or "namespace" in rendered, (
-        "Rendered header does not contain expected C++ markers"
-    )
+    assert "#pragma once" in rendered or "namespace" in rendered, "Rendered header does not contain expected C++ markers"
 
 
 @given(data=mechanism_with_blocks_strategy())
@@ -305,20 +281,14 @@ def test_property_2_blocks_present_when_block_structure_exists(data):
     )
 
     # Verify blocks is present and has correct structure
-    assert context["blocks"] is not None, (
-        "blocks should be non-None when LU plan has multi-block structure"
-    )
-    assert len(context["blocks"]) == 2, (
-        f"Expected 2 blocks, got {len(context['blocks'])}"
-    )
+    assert context["blocks"] is not None, "blocks should be non-None when LU plan has multi-block structure"
+    assert len(context["blocks"]) == 2, f"Expected 2 blocks, got {len(context['blocks'])}"
     # Each block should have indices and species_names
     for block in context["blocks"]:
         assert "indices" in block, "Block missing 'indices' key"
         assert "species_names" in block, "Block missing 'species_names' key"
         assert len(block["indices"]) > 0, "Block has empty indices"
-        assert len(block["species_names"]) == len(block["indices"]), (
-            "Block species_names length doesn't match indices length"
-        )
+        assert len(block["species_names"]) == len(block["indices"]), "Block species_names length doesn't match indices length"
 
     # Rendering with blocks should also succeed without UndefinedError
     engine = TemplateEngine()

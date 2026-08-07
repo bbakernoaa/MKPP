@@ -16,12 +16,10 @@ variable name).
 """
 
 import pytest
-from hypothesis import given, settings, assume
+from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 from jinja2.exceptions import TemplateNotFound, UndefinedError
-
 from mkpp.template_engine import TemplateEngine
-
 
 # ---------------------------------------------------------------------------
 # Known valid template names (to exclude from random generation)
@@ -61,11 +59,13 @@ def nonexistent_template_name(draw):
     # Generate a random prefix/subdirectory
     subdirs = draw(st.sampled_from(["", "macros/", "solver_variants/", "kernel_functions/", "nonexistent/"]))
     # Generate a random basename that won't collide with real template names
-    basename = draw(st.text(
-        alphabet=st.characters(whitelist_categories=("Ll", "Lu", "Nd"), whitelist_characters="_-"),
-        min_size=3,
-        max_size=20,
-    ))
+    basename = draw(
+        st.text(
+            alphabet=st.characters(whitelist_categories=("Ll", "Lu", "Nd"), whitelist_characters="_-"),
+            min_size=3,
+            max_size=20,
+        )
+    )
     suffix = draw(st.sampled_from([".j2", ".jinja2", ".txt", ".hpp", ""]))
     name = f"{subdirs}{basename}{suffix}"
     # Ensure it's not actually a valid template
@@ -84,10 +84,7 @@ def valid_template_context(draw):
     has_equilibrium = draw(st.booleans())
 
     species_names = [f"SP{i}" for i in range(n)]
-    species_list = [
-        {"name": name, "index": idx, "elements": {}}
-        for idx, name in enumerate(species_names)
-    ]
+    species_list = [{"name": name, "index": idx, "elements": {}} for idx, name in enumerate(species_names)]
 
     # Jacobian entries: diagonal always
     jacobian_entries = []
@@ -172,12 +169,14 @@ def valid_template_context(draw):
     photolysis_reactions = []
     if has_photolysis:
         for pi in range(num_photolysis):
-            photolysis_reactions.append({
-                "photo_idx": pi,
-                "reactants": {"SP0": 1.0},
-                "products": {"SP1": 1.0},
-                "original_A": 1.0e-5,
-            })
+            photolysis_reactions.append(
+                {
+                    "photo_idx": pi,
+                    "reactants": {"SP0": 1.0},
+                    "products": {"SP1": 1.0},
+                    "original_A": 1.0e-5,
+                }
+            )
 
     adjoint_entries_state = [(i, i, f"-k{i}") for i in range(n)]
 
@@ -278,8 +277,7 @@ def test_property_5_missing_template_raises_template_not_found(template_name):
 
     # Verify diagnostic info: exception should reference the template name
     assert template_name in str(exc_info.value), (
-        f"TemplateNotFound exception should contain the template name '{template_name}' "
-        f"but got: {exc_info.value}"
+        f"TemplateNotFound exception should contain the template name '{template_name}' " f"but got: {exc_info.value}"
     )
 
 
@@ -315,6 +313,5 @@ def test_property_5_missing_context_key_raises_undefined_error(context, key_to_r
     # Verify diagnostic info: exception should reference the missing variable
     error_message = str(exc_info.value)
     assert key_to_remove in error_message, (
-        f"UndefinedError should contain the missing variable name '{key_to_remove}' "
-        f"but got: {error_message}"
+        f"UndefinedError should contain the missing variable name '{key_to_remove}' " f"but got: {error_message}"
     )

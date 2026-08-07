@@ -55,6 +55,7 @@ target_link_libraries(
   test_scipy_validation PRIVATE mkpp_host Kokkos::kokkos GTest::gtest_main
                                 GTest::gtest)
 target_compile_definitions(
-  test_scipy_validation PRIVATE REFERENCE_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")
+  test_scipy_validation
+  PRIVATE REFERENCE_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")
 
 add_test(NAME mkpp_scipy_validation COMMAND test_scipy_validation)

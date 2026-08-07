@@ -152,12 +152,14 @@ def build_template_context(
     lu_expressions = []
     if lu_plan:
         for kind, i, j, expr_str in lu_plan.lu_expressions_ordered:
-            lu_expressions.append({
-                "kind": kind,
-                "i": i,
-                "j": j,
-                "expr": expr_str,
-            })
+            lu_expressions.append(
+                {
+                    "kind": kind,
+                    "i": i,
+                    "j": j,
+                    "expr": expr_str,
+                }
+            )
 
     # --- Serialize forward/backward substitution steps ---
     forward_sub_steps = []
@@ -185,27 +187,31 @@ def build_template_context(
         blocks = []
         for block_indices in lu_plan.blocks:
             block_species_names = [lu_plan.species_map[idx] for idx in block_indices]
-            blocks.append({
-                "indices": block_indices,
-                "species_names": block_species_names,
-            })
+            blocks.append(
+                {
+                    "indices": block_indices,
+                    "species_names": block_species_names,
+                }
+            )
 
     # --- Annotated expressions (for auto-reduction) ---
     annotated_expressions = None
     if lu_plan and lu_plan.annotated_expressions:
         annotated_expressions = []
         for ann_expr in lu_plan.annotated_expressions:
-            annotated_expressions.append({
-                "kind": ann_expr.kind,
-                "row": ann_expr.row,
-                "col": ann_expr.col,
-                "expr": ann_expr.expr,
-                "depends_on": sorted(ann_expr.depends_on),
-            })
+            annotated_expressions.append(
+                {
+                    "kind": ann_expr.kind,
+                    "row": ann_expr.row,
+                    "col": ann_expr.col,
+                    "expr": ann_expr.expr,
+                    "depends_on": sorted(ann_expr.depends_on),
+                }
+            )
 
     # --- Tolerance arrays ---
     default_atol = 100.0  # molecules/cm3, atmospheric chemistry standard
-    default_rtol = 1e-2   # 1% relative tolerance
+    default_rtol = 1e-2  # 1% relative tolerance
     atol_values = None
     rtol_values = None
     if isinstance(getattr(mech, "metadata", None), dict):
@@ -242,11 +248,13 @@ def build_template_context(
     # --- Species metadata ---
     species_list = []
     for idx, sp in enumerate(mech.species):
-        species_list.append({
-            "name": sp.name,
-            "index": idx,
-            "elements": dict(sp.elements) if sp.elements else {},
-        })
+        species_list.append(
+            {
+                "name": sp.name,
+                "index": idx,
+                "elements": dict(sp.elements) if sp.elements else {},
+            }
+        )
 
     # --- Assemble the flat context dictionary ---
     context: dict[str, Any] = {
@@ -284,15 +292,9 @@ def build_template_context(
 
     # Include additional metadata for downstream templates
     context["photolysis_reactions"] = photolysis_reactions
-    context["host_interface"] = (
-        mech.host_interface if getattr(mech, "host_interface", None) else None
-    )
-    context["equilibrium_results"] = (
-        sympy_meta.get("equilibrium_results") if sympy_meta else None
-    )
-    context["mass_projector"] = (
-        sympy_meta.get("mass_projector") if sympy_meta else None
-    )
+    context["host_interface"] = mech.host_interface if getattr(mech, "host_interface", None) else None
+    context["equilibrium_results"] = sympy_meta.get("equilibrium_results") if sympy_meta else None
+    context["mass_projector"] = sympy_meta.get("mass_projector") if sympy_meta else None
 
     # --- Kernel function context: state(i)-based expressions ---
     # These use state_var="state" and use_parentheses=True for kernel function templates
@@ -385,9 +387,7 @@ def build_template_context(
     context["partition_metadata"] = partition_meta
 
     # Continuous transition annotation
-    has_continuous_rxns = any(
-        getattr(r, "continuous_transition", False) for r in mech.reactions
-    )
+    has_continuous_rxns = any(getattr(r, "continuous_transition", False) for r in mech.reactions)
     context["has_continuous_rxns"] = has_continuous_rxns
 
     # Equilibrium reactions metadata for compute_equilibrium_partition
@@ -405,10 +405,12 @@ def build_template_context(
             for element_name, species_indices in eq_result.total_species_map.items():
                 if species_indices:
                     terms = [f"state({idx})" for idx in species_indices]
-                    total_species.append({
-                        "element_name": element_name,
-                        "expr": " + ".join(terms),
-                    })
+                    total_species.append(
+                        {
+                            "element_name": element_name,
+                            "expr": " + ".join(terms),
+                        }
+                    )
             # Partition expressions
             partition_entries = []
             for species_name, expr in eq_result.partition_exprs.items():
@@ -418,14 +420,18 @@ def build_template_context(
                 )
                 if species_idx is not None:
                     eqn = format_eqn(expr, mech.species, state_var="state", use_parentheses=True)
-                    partition_entries.append({
-                        "species_idx": species_idx,
-                        "expr": eqn,
-                    })
-            eq_partition_blocks.append({
-                "total_species": total_species,
-                "partition_entries": partition_entries,
-            })
+                    partition_entries.append(
+                        {
+                            "species_idx": species_idx,
+                            "expr": eqn,
+                        }
+                    )
+            eq_partition_blocks.append(
+                {
+                    "total_species": total_species,
+                    "partition_entries": partition_entries,
+                }
+            )
         equilibrium_partition_data = eq_partition_blocks
     context["equilibrium_partition_data"] = equilibrium_partition_data
 
@@ -442,11 +448,13 @@ def build_template_context(
                     if spec.name == sp_name:
                         species_indices.append(si)
                         break
-            mass_balance_elements.append({
-                "element_name": element_name,
-                "species_list": list(sp_list),
-                "species_indices": species_indices,
-            })
+            mass_balance_elements.append(
+                {
+                    "element_name": element_name,
+                    "species_list": list(sp_list),
+                    "species_indices": species_indices,
+                }
+            )
         # Charge balance species contributions
         charge_contributions = []
         for si, spec in enumerate(mech.species):

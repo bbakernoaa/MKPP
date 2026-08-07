@@ -25,7 +25,6 @@ import tempfile
 
 from hypothesis import given, settings
 from hypothesis import strategies as st
-
 from mkpp.codegen import generate_headers
 from mkpp.model import (
     AerosolRepresentation,
@@ -37,7 +36,6 @@ from mkpp.model import (
 from mkpp.rosenbrock import SOLVER_COEFFICIENTS
 from mkpp.template_context import build_template_context
 from mkpp.template_engine import TemplateEngine
-
 
 # ---------------------------------------------------------------------------
 # Strategies: Generate valid MechanismDefinition instances
@@ -76,11 +74,7 @@ def mechanism_strategy(draw):
     for r_idx in range(n_reactions):
         # Pick reactant and product from available species
         reactant_idx = draw(st.integers(min_value=0, max_value=n_species - 1))
-        product_idx = draw(
-            st.integers(min_value=0, max_value=n_species - 1).filter(
-                lambda x, ri=reactant_idx: x != ri
-            )
-        )
+        product_idx = draw(st.integers(min_value=0, max_value=n_species - 1).filter(lambda x, ri=reactant_idx: x != ri))
         reactions.append(
             ReactionDefinition(
                 reaction_type="ARRHENIUS",
@@ -157,8 +151,7 @@ def test_property_1_roundtrip_equivalence(data):
     output_1 = engine.render("header.j2", context)
 
     assert output_1, (
-        f"Rendered output is empty for mechanism with {len(mech.species)} species, "
-        f"solver={solver_name}, adjoint={adjoint}"
+        f"Rendered output is empty for mechanism with {len(mech.species)} species, " f"solver={solver_name}, adjoint={adjoint}"
     )
 
     # Step 3: Determinism - render again and verify byte-identical output
@@ -174,54 +167,32 @@ def test_property_1_roundtrip_equivalence(data):
 
     # Step 4: Structural correctness - verify expected C++ patterns
     # 4a: Must have #pragma once
-    assert "#pragma once" in output_1, (
-        "Missing #pragma once in rendered output"
-    )
+    assert "#pragma once" in output_1, "Missing #pragma once in rendered output"
 
     # 4b: Must have namespace declaration
-    assert "namespace" in output_1, (
-        "Missing namespace declaration in rendered output"
-    )
+    assert "namespace" in output_1, "Missing namespace declaration in rendered output"
 
     # 4c: Must have struct declaration (SolverKernels)
-    assert "struct" in output_1, (
-        "Missing struct declaration in rendered output"
-    )
+    assert "struct" in output_1, "Missing struct declaration in rendered output"
 
     # 4d: Must contain core function signatures
-    assert "compute_rates" in output_1, (
-        "Missing compute_rates function in rendered output"
-    )
-    assert "compute_jacobian" in output_1, (
-        "Missing compute_jacobian function in rendered output"
-    )
-    assert "integrate" in output_1, (
-        "Missing integrate function in rendered output"
-    )
+    assert "compute_rates" in output_1, "Missing compute_rates function in rendered output"
+    assert "compute_jacobian" in output_1, "Missing compute_jacobian function in rendered output"
+    assert "integrate" in output_1, "Missing integrate function in rendered output"
 
     # 4e: When adjoint is enabled, must contain adjoint functions
     if adjoint:
-        assert "integrate_adj" in output_1, (
-            "Missing integrate_adj function when adjoint=True"
-        )
-        assert "integrate_tlm" in output_1, (
-            "Missing integrate_tlm function when adjoint=True"
-        )
-        assert "integrate_fwd_checkpoint" in output_1, (
-            "Missing integrate_fwd_checkpoint function when adjoint=True"
-        )
+        assert "integrate_adj" in output_1, "Missing integrate_adj function when adjoint=True"
+        assert "integrate_tlm" in output_1, "Missing integrate_tlm function when adjoint=True"
+        assert "integrate_fwd_checkpoint" in output_1, "Missing integrate_fwd_checkpoint function when adjoint=True"
 
     # 4f: Must contain W-matrix entries (W_i_j declarations)
     w_pattern = re.compile(r"double\s+W_\d+_\d+\s*=")
-    assert w_pattern.search(output_1), (
-        "Missing W-matrix declarations (double W_i_j = ...) in rendered output"
-    )
+    assert w_pattern.search(output_1), "Missing W-matrix declarations (double W_i_j = ...) in rendered output"
 
     # 4g: Must contain LU factorization entries
     lu_pattern = re.compile(r"double\s+[LU]_\d+_\d+\s*=")
-    assert lu_pattern.search(output_1), (
-        "Missing LU factorization declarations in rendered output"
-    )
+    assert lu_pattern.search(output_1), "Missing LU factorization declarations in rendered output"
 
 
 @given(data=mechanism_strategy())
@@ -269,11 +240,7 @@ def _first_diff_pos(s1: str, s2: str) -> str:
         if c1 != c2:
             context_start = max(0, i - 20)
             context_end = min(len(s1), i + 20)
-            return (
-                f"position {i}: "
-                f"'{s1[context_start:context_end]}' vs "
-                f"'{s2[context_start:context_end]}'"
-            )
+            return f"position {i}: " f"'{s1[context_start:context_end]}' vs " f"'{s2[context_start:context_end]}'"
     if len(s1) != len(s2):
         return f"strings differ in length: {len(s1)} vs {len(s2)}"
     return "no differences found"

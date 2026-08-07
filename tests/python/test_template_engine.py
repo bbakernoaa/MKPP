@@ -13,10 +13,8 @@ Requirements: 1.2, 2.1, 2.2, 2.3, 2.4, 6.3, 6.4
 import pytest
 from jinja2 import UndefinedError
 from jinja2.exceptions import TemplateNotFound
-
 from mkpp.lowering import (
     compute_symbolic_lu_decomposition,
-    compute_transposed_lu_plan,
     prepare_unified_jacobian,
 )
 from mkpp.model import (
@@ -29,7 +27,6 @@ from mkpp.model import (
 )
 from mkpp.template_context import build_template_context
 from mkpp.template_engine import TemplateEngine
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -135,9 +132,7 @@ class TestBuildTemplateContextChapman:
     def test_produces_all_required_keys(self, chapman_with_lu):
         """build_template_context returns dict with all required keys for Chapman."""
         mech, lu_plan, lowering_data = chapman_with_lu
-        ctx = build_template_context(
-            mech, solver_name="ros3", lu_plan=lu_plan, sympy_meta=lowering_data
-        )
+        ctx = build_template_context(mech, solver_name="ros3", lu_plan=lu_plan, sympy_meta=lowering_data)
 
         # All required keys from Requirement 2.1
         required_keys = [
@@ -165,26 +160,20 @@ class TestBuildTemplateContextChapman:
     def test_mechanism_name_matches(self, chapman_with_lu):
         """Context mechanism_name matches the input mechanism name."""
         mech, lu_plan, lowering_data = chapman_with_lu
-        ctx = build_template_context(
-            mech, solver_name="ros3", lu_plan=lu_plan, sympy_meta=lowering_data
-        )
+        ctx = build_template_context(mech, solver_name="ros3", lu_plan=lu_plan, sympy_meta=lowering_data)
         assert ctx["mechanism_name"] == "chapman_test"
 
     def test_species_count_matches(self, chapman_with_lu):
         """Context num_species matches the mechanism's species count."""
         mech, lu_plan, lowering_data = chapman_with_lu
-        ctx = build_template_context(
-            mech, solver_name="ros3", lu_plan=lu_plan, sympy_meta=lowering_data
-        )
+        ctx = build_template_context(mech, solver_name="ros3", lu_plan=lu_plan, sympy_meta=lowering_data)
         assert ctx["num_species"] == 3
         assert len(ctx["species"]) == 3
 
     def test_species_have_correct_structure(self, chapman_with_lu):
         """Each species entry has name, index, and elements."""
         mech, lu_plan, lowering_data = chapman_with_lu
-        ctx = build_template_context(
-            mech, solver_name="ros3", lu_plan=lu_plan, sympy_meta=lowering_data
-        )
+        ctx = build_template_context(mech, solver_name="ros3", lu_plan=lu_plan, sympy_meta=lowering_data)
         for idx, sp in enumerate(ctx["species"]):
             assert "name" in sp
             assert "index" in sp
@@ -194,13 +183,19 @@ class TestBuildTemplateContextChapman:
     def test_tableau_contains_required_fields(self, chapman_with_lu):
         """Tableau dictionary has all required solver coefficient fields."""
         mech, lu_plan, lowering_data = chapman_with_lu
-        ctx = build_template_context(
-            mech, solver_name="ros3", lu_plan=lu_plan, sympy_meta=lowering_data
-        )
+        ctx = build_template_context(mech, solver_name="ros3", lu_plan=lu_plan, sympy_meta=lowering_data)
         tableau = ctx["tableau"]
         required_tableau_keys = [
-            "name", "stages", "ELO", "Gamma", "M", "E", "Alpha", "NewF",
-            "A_matrix", "C_matrix",
+            "name",
+            "stages",
+            "ELO",
+            "Gamma",
+            "M",
+            "E",
+            "Alpha",
+            "NewF",
+            "A_matrix",
+            "C_matrix",
         ]
         for key in required_tableau_keys:
             assert key in tableau, f"Missing tableau key: {key}"
@@ -210,9 +205,7 @@ class TestBuildTemplateContextChapman:
     def test_lu_expressions_are_present(self, chapman_with_lu):
         """LU expressions list is non-empty for Chapman mechanism."""
         mech, lu_plan, lowering_data = chapman_with_lu
-        ctx = build_template_context(
-            mech, solver_name="ros3", lu_plan=lu_plan, sympy_meta=lowering_data
-        )
+        ctx = build_template_context(mech, solver_name="ros3", lu_plan=lu_plan, sympy_meta=lowering_data)
         assert len(ctx["lu_expressions"]) > 0
         # Each expression should have kind, i, j, expr
         for expr in ctx["lu_expressions"]:
@@ -225,9 +218,7 @@ class TestBuildTemplateContextChapman:
     def test_forward_backward_sub_steps_present(self, chapman_with_lu):
         """Forward and backward substitution steps are present and non-empty."""
         mech, lu_plan, lowering_data = chapman_with_lu
-        ctx = build_template_context(
-            mech, solver_name="ros3", lu_plan=lu_plan, sympy_meta=lowering_data
-        )
+        ctx = build_template_context(mech, solver_name="ros3", lu_plan=lu_plan, sympy_meta=lowering_data)
         assert len(ctx["forward_sub_steps"]) == 3
         assert len(ctx["backward_sub_steps"]) == 3
         for step in ctx["forward_sub_steps"]:
@@ -237,27 +228,21 @@ class TestBuildTemplateContextChapman:
     def test_needed_w_includes_diagonal(self, chapman_with_lu):
         """needed_w always includes diagonal entries for each species."""
         mech, lu_plan, lowering_data = chapman_with_lu
-        ctx = build_template_context(
-            mech, solver_name="ros3", lu_plan=lu_plan, sympy_meta=lowering_data
-        )
+        ctx = build_template_context(mech, solver_name="ros3", lu_plan=lu_plan, sympy_meta=lowering_data)
         for i in range(ctx["num_species"]):
             assert (i, i) in ctx["needed_w"]
 
     def test_photolysis_detected(self, chapman_with_lu):
         """Chapman mechanism has photolysis reactions detected."""
         mech, lu_plan, lowering_data = chapman_with_lu
-        ctx = build_template_context(
-            mech, solver_name="ros3", lu_plan=lu_plan, sympy_meta=lowering_data
-        )
+        ctx = build_template_context(mech, solver_name="ros3", lu_plan=lu_plan, sympy_meta=lowering_data)
         assert ctx["has_photolysis"] is True
         assert ctx["num_photolysis"] > 0
 
     def test_tolerance_arrays_correct_length(self, chapman_with_lu):
         """Tolerance arrays have correct length (one per species)."""
         mech, lu_plan, lowering_data = chapman_with_lu
-        ctx = build_template_context(
-            mech, solver_name="ros3", lu_plan=lu_plan, sympy_meta=lowering_data
-        )
+        ctx = build_template_context(mech, solver_name="ros3", lu_plan=lu_plan, sympy_meta=lowering_data)
         assert len(ctx["tolerance_arrays"]["atol"]) == 3
         assert len(ctx["tolerance_arrays"]["rtol"]) == 3
 
@@ -330,9 +315,7 @@ class TestBuildTemplateContextBlocks:
         )
 
         lowering_data = prepare_unified_jacobian(mech)
-        ctx = build_template_context(
-            mech, solver_name="ros3", lu_plan=lu_plan, sympy_meta=lowering_data
-        )
+        ctx = build_template_context(mech, solver_name="ros3", lu_plan=lu_plan, sympy_meta=lowering_data)
 
         assert ctx["blocks"] is not None
         assert len(ctx["blocks"]) == 2
@@ -347,9 +330,7 @@ class TestBuildTemplateContextBlocks:
         # Single block means all species in one block - treated as no block structure
         lu_plan.blocks = [[0, 1, 2]]
 
-        ctx = build_template_context(
-            mech, solver_name="ros3", lu_plan=lu_plan, sympy_meta=lowering_data
-        )
+        ctx = build_template_context(mech, solver_name="ros3", lu_plan=lu_plan, sympy_meta=lowering_data)
         # Single block is treated as no meaningful block structure
         assert ctx["blocks"] is None
 
@@ -401,9 +382,7 @@ class TestBuildTemplateContextAdjoint:
         """When adjoint=False, transposed steps are not in context."""
         mech, lu_plan, lowering_data = chapman_with_lu
 
-        ctx = build_template_context(
-            mech, solver_name="ros3", lu_plan=lu_plan, sympy_meta=lowering_data
-        )
+        ctx = build_template_context(mech, solver_name="ros3", lu_plan=lu_plan, sympy_meta=lowering_data)
 
         assert ctx["adjoint_enabled"] is False
         assert "transpose_forward_sub_steps" not in ctx
@@ -511,9 +490,7 @@ class TestSubPrefixesFilter:
         """sub_prefixes filter is available in templates rendered by TemplateEngine."""
         template_dir = tmp_path / "templates"
         template_dir.mkdir()
-        (template_dir / "test.j2").write_text(
-            "{{ expr | sub_prefixes(rhs=rhs_prefix, y=y_prefix, x=x_prefix) }}"
-        )
+        (template_dir / "test.j2").write_text("{{ expr | sub_prefixes(rhs=rhs_prefix, y=y_prefix, x=x_prefix) }}")
 
         engine = TemplateEngine(template_dir=template_dir)
         result = engine.render(
@@ -531,9 +508,7 @@ class TestSubPrefixesFilter:
         """sub_prefixes filter works with only some prefixes specified."""
         template_dir = tmp_path / "templates"
         template_dir.mkdir()
-        (template_dir / "test.j2").write_text(
-            "{{ expr | sub_prefixes(rhs=rhs_prefix) }}"
-        )
+        (template_dir / "test.j2").write_text("{{ expr | sub_prefixes(rhs=rhs_prefix) }}")
 
         engine = TemplateEngine(template_dir=template_dir)
         result = engine.render(

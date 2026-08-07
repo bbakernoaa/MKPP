@@ -3,12 +3,13 @@
 import pytest
 from mkpp.codegen import generate_headers, generate_host_api_headers
 from mkpp.model import (
-    MechanismDefinition,
-    SpeciesDefinition,
-    ReactionDefinition,
-    PhaseMode,
     AerosolRepresentation,
+    MechanismDefinition,
+    PhaseMode,
+    ReactionDefinition,
+    SpeciesDefinition,
 )
+
 
 @pytest.fixture
 def dummy_mechanism():

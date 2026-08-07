@@ -63,8 +63,7 @@ class TestChapmanByteIdentical:
         output_2 = _generate_header(chapman_mechanism)
 
         assert output_1 == output_2, (
-            "Chapman header generation is non-deterministic. "
-            "Two successive generations produced different output."
+            "Chapman header generation is non-deterministic. " "Two successive generations produced different output."
         )
 
     def test_chapman_structural_invariants(self, chapman_mechanism):
@@ -110,8 +109,7 @@ class TestChapmanByteIdentical:
 
         # Chapman with 4 species should produce a non-trivial header
         assert len(content) > 5000, (
-            f"Chapman header is unexpectedly small ({len(content)} chars). "
-            "Expected > 5000 chars for a 4-species mechanism."
+            f"Chapman header is unexpectedly small ({len(content)} chars). " "Expected > 5000 chars for a 4-species mechanism."
         )
 
 
@@ -139,8 +137,7 @@ class TestGocartByteIdentical:
         output_2 = _generate_header(gocart_mechanism)
 
         assert output_1 == output_2, (
-            "GOCART header generation is non-deterministic. "
-            "Two successive generations produced different output."
+            "GOCART header generation is non-deterministic. " "Two successive generations produced different output."
         )
 
     def test_gocart_structural_invariants(self, gocart_mechanism):
@@ -208,8 +205,7 @@ class TestChapmanAdjointByteIdentical:
         output_2 = _generate_header(chapman_mechanism, adjoint=True)
 
         assert output_1 == output_2, (
-            "Chapman+adjoint header generation is non-deterministic. "
-            "Two successive generations produced different output."
+            "Chapman+adjoint header generation is non-deterministic. " "Two successive generations produced different output."
         )
 
     def test_chapman_adjoint_structural_invariants(self, chapman_mechanism):
@@ -312,6 +308,5 @@ class TestCrossMechanismConsistency:
         gocart_output = _generate_header(gocart_mechanism)
 
         assert chapman_output != gocart_output, (
-            "Chapman and GOCART mechanisms produced identical headers. "
-            "This indicates a bug in the template rendering pipeline."
+            "Chapman and GOCART mechanisms produced identical headers. " "This indicates a bug in the template rendering pipeline."
         )

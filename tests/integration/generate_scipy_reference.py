@@ -25,7 +25,7 @@ Usage:
 """
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import numpy as np
@@ -54,8 +54,8 @@ def chapman_ode(t, y, jvals):
     j_O3 = jvals[1]
 
     # Rate constants (from mechanism YAML)
-    k2 = 6.0e-34   # O + O2 + M -> O3 + M
-    k4 = 8.0e-12   # O + O3 -> 2 O2
+    k2 = 6.0e-34  # O + O2 + M -> O3 + M
+    k4 = 8.0e-12  # O + O3 -> 2 O2
 
     # Production and loss rates matching generated compute_rates:
     # F_block(0) = -k2*M*O*O2 - k4*O*O3 + 2*O2*j_O2 + O3*j_O3
@@ -118,7 +118,7 @@ def generate_reference():
         "scipy_config": scipy_config,
         "expected_final": expected_final,
         "generated_by": "tests/integration/generate_scipy_reference.py",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
 
     # Write to output location

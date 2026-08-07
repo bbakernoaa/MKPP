@@ -14,9 +14,7 @@ Requirements: 9.3
 """
 
 import pytest
-
 from mkpp.template_engine import TemplateEngine
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -290,7 +288,7 @@ class TestForwardSubMacro:
         result = render_macro(
             engine,
             '{%- from "macros/lu_solve_forward.j2" import emit_forward_sub -%}',
-            '{{ emit_forward_sub(steps, rhs_prefix, y_prefix) }}',
+            "{{ emit_forward_sub(steps, rhs_prefix, y_prefix) }}",
             {
                 "steps": [
                     {"i": 0, "raw_expr": "b_0"},
@@ -308,7 +306,7 @@ class TestForwardSubMacro:
         result = render_macro(
             engine,
             '{%- from "macros/lu_solve_forward.j2" import emit_forward_sub -%}',
-            '{{ emit_forward_sub(steps, rhs_prefix, y_prefix, is_reduction=true) }}',
+            "{{ emit_forward_sub(steps, rhs_prefix, y_prefix, is_reduction=true) }}",
             {
                 "steps": [
                     {"i": 0, "raw_expr": "b_0"},
@@ -330,7 +328,7 @@ class TestForwardSubMacro:
         result = render_macro(
             engine,
             '{%- from "macros/lu_solve_forward.j2" import emit_forward_sub -%}',
-            '{{ emit_forward_sub(steps, rhs_prefix, y_prefix, blocks=blocks) }}',
+            "{{ emit_forward_sub(steps, rhs_prefix, y_prefix, blocks=blocks) }}",
             {
                 "steps": [
                     {"i": 0, "raw_expr": "b_0"},
@@ -355,7 +353,7 @@ class TestForwardSubMacro:
         result = render_macro(
             engine,
             '{%- from "macros/lu_solve_forward.j2" import emit_forward_sub -%}',
-            '{{ emit_forward_sub(steps, rhs_prefix, y_prefix) }}',
+            "{{ emit_forward_sub(steps, rhs_prefix, y_prefix) }}",
             {
                 "steps": [
                     {"i": 0, "raw_expr": "b_0"},
@@ -380,7 +378,7 @@ class TestBackwardSubMacro:
         result = render_macro(
             engine,
             '{%- from "macros/lu_solve_backward.j2" import emit_backward_sub -%}',
-            '{{ emit_backward_sub(steps, y_prefix, x_prefix) }}',
+            "{{ emit_backward_sub(steps, y_prefix, x_prefix) }}",
             {
                 "steps": [
                     {"i": 2, "raw_expr": "y_2 / U_2_2"},
@@ -400,7 +398,7 @@ class TestBackwardSubMacro:
         result = render_macro(
             engine,
             '{%- from "macros/lu_solve_backward.j2" import emit_backward_sub -%}',
-            '{{ emit_backward_sub(steps, y_prefix, x_prefix, is_reduction=true) }}',
+            "{{ emit_backward_sub(steps, y_prefix, x_prefix, is_reduction=true) }}",
             {
                 "steps": [
                     {"i": 1, "raw_expr": "y_1 / U_1_1"},
@@ -420,7 +418,7 @@ class TestBackwardSubMacro:
         result = render_macro(
             engine,
             '{%- from "macros/lu_solve_backward.j2" import emit_backward_sub -%}',
-            '{{ emit_backward_sub(steps, y_prefix, x_prefix, blocks=blocks) }}',
+            "{{ emit_backward_sub(steps, y_prefix, x_prefix, blocks=blocks) }}",
             {
                 "steps": [
                     {"i": 3, "raw_expr": "y_3 / U_3_3"},
@@ -444,7 +442,7 @@ class TestBackwardSubMacro:
         result = render_macro(
             engine,
             '{%- from "macros/lu_solve_backward.j2" import emit_backward_sub -%}',
-            '{{ emit_backward_sub(steps, y_prefix, x_prefix) }}',
+            "{{ emit_backward_sub(steps, y_prefix, x_prefix) }}",
             {
                 "steps": [
                     {"i": 0, "raw_expr": "y_0 / U_0_0"},
@@ -469,7 +467,7 @@ class TestTransposeSolveMacro:
         result = render_macro(
             engine,
             '{%- from "macros/lu_solve_transpose.j2" import emit_transpose_solve -%}',
-            '{{ emit_transpose_solve(fwd_steps, bwd_steps, rhs_prefix, y_prefix, x_prefix) }}',
+            "{{ emit_transpose_solve(fwd_steps, bwd_steps, rhs_prefix, y_prefix, x_prefix) }}",
             {
                 "fwd_steps": [
                     {"i": 0, "raw_expr": "b_0 / U_0_0"},
@@ -496,7 +494,7 @@ class TestTransposeSolveMacro:
         result = render_macro(
             engine,
             '{%- from "macros/lu_solve_transpose.j2" import emit_transpose_solve -%}',
-            '{{ emit_transpose_solve(fwd_steps, bwd_steps, rhs_prefix, y_prefix, x_prefix) }}',
+            "{{ emit_transpose_solve(fwd_steps, bwd_steps, rhs_prefix, y_prefix, x_prefix) }}",
             {
                 "fwd_steps": [
                     {"i": 0, "raw_expr": "b_0"},
@@ -517,7 +515,7 @@ class TestTransposeSolveMacro:
         result = render_macro(
             engine,
             '{%- from "macros/lu_solve_transpose.j2" import emit_transpose_solve -%}',
-            '{{ emit_transpose_solve(fwd_steps, bwd_steps, rhs_prefix, y_prefix, x_prefix, is_reduction=true) }}',
+            "{{ emit_transpose_solve(fwd_steps, bwd_steps, rhs_prefix, y_prefix, x_prefix, is_reduction=true) }}",
             {
                 "fwd_steps": [
                     {"i": 0, "raw_expr": "b_0"},
@@ -541,7 +539,7 @@ class TestTransposeSolveMacro:
         result = render_macro(
             engine,
             '{%- from "macros/lu_solve_transpose.j2" import emit_transpose_solve -%}',
-            '{{ emit_transpose_solve(fwd_steps, bwd_steps, rhs_prefix, y_prefix, x_prefix, blocks=blocks) }}',
+            "{{ emit_transpose_solve(fwd_steps, bwd_steps, rhs_prefix, y_prefix, x_prefix, blocks=blocks) }}",
             {
                 "fwd_steps": [
                     {"i": 0, "raw_expr": "b_0"},

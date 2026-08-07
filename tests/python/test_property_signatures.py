@@ -16,9 +16,7 @@ import re
 
 from hypothesis import given, settings
 from hypothesis import strategies as st
-
 from mkpp.template_engine import TemplateEngine
-
 
 # ---------------------------------------------------------------------------
 # Strategies: Build minimal but valid Template_Context dicts
@@ -63,10 +61,7 @@ def template_context_strategy(draw):
 
     # Species list
     species_names = [f"SP{i}" for i in range(n)]
-    species_list = [
-        {"name": name, "index": idx, "elements": {}}
-        for idx, name in enumerate(species_names)
-    ]
+    species_list = [{"name": name, "index": idx, "elements": {}} for idx, name in enumerate(species_names)]
 
     # Jacobian entries: always include diagonal, random off-diagonal
     jacobian_entries = []
@@ -91,21 +86,25 @@ def template_context_strategy(draw):
     # LU expressions: simple diagonal U entries, off-diagonal L entries
     lu_expressions = []
     for i in range(n):
-        lu_expressions.append({
-            "kind": "U",
-            "i": i,
-            "j": i,
-            "expr": f"W_{i}_{i}",
-        })
+        lu_expressions.append(
+            {
+                "kind": "U",
+                "i": i,
+                "j": i,
+                "expr": f"W_{i}_{i}",
+            }
+        )
     for i in range(1, n):
         for j in range(i):
             if (i, j) in non_zero_jac_set:
-                lu_expressions.append({
-                    "kind": "L",
-                    "i": i,
-                    "j": j,
-                    "expr": f"W_{i}_{j} / U_{j}_{j}",
-                })
+                lu_expressions.append(
+                    {
+                        "kind": "L",
+                        "i": i,
+                        "j": j,
+                        "expr": f"W_{i}_{j} / U_{j}_{j}",
+                    }
+                )
 
     # Forward substitution steps
     forward_sub_steps = []
@@ -121,9 +120,7 @@ def template_context_strategy(draw):
         if i == n - 1:
             backward_sub_steps.append({"i": i, "raw_expr": f"y_{i} / U_{i}_{i}"})
         else:
-            backward_sub_steps.append(
-                {"i": i, "raw_expr": f"(y_{i} - U_{i}_{i+1} * x_{i+1}) / U_{i}_{i}"}
-            )
+            backward_sub_steps.append({"i": i, "raw_expr": f"(y_{i} - U_{i}_{i+1} * x_{i+1}) / U_{i}_{i}"})
 
     # Transposed substitution steps (when adjoint)
     transpose_forward_sub_steps = None
@@ -134,19 +131,13 @@ def template_context_strategy(draw):
             if i == 0:
                 transpose_forward_sub_steps.append({"i": i, "raw_expr": f"b_{i}"})
             else:
-                transpose_forward_sub_steps.append(
-                    {"i": i, "raw_expr": f"b_{i} - U_{0}_{i} * y_0"}
-                )
+                transpose_forward_sub_steps.append({"i": i, "raw_expr": f"b_{i} - U_{0}_{i} * y_0"})
         transpose_backward_sub_steps = []
         for i in range(n - 1, -1, -1):
             if i == n - 1:
-                transpose_backward_sub_steps.append(
-                    {"i": i, "raw_expr": f"y_{i} / U_{i}_{i}"}
-                )
+                transpose_backward_sub_steps.append({"i": i, "raw_expr": f"y_{i} / U_{i}_{i}"})
             else:
-                transpose_backward_sub_steps.append(
-                    {"i": i, "raw_expr": f"(y_{i} - L_{i+1}_{i} * x_{i+1}) / U_{i}_{i}"}
-                )
+                transpose_backward_sub_steps.append({"i": i, "raw_expr": f"(y_{i} - L_{i+1}_{i} * x_{i+1}) / U_{i}_{i}"})
 
     # Tableau: use ROS-3 structure (3 stages)
     tableau_choice = draw(st.sampled_from(["ros2", "ros3"]))
@@ -195,12 +186,14 @@ def template_context_strategy(draw):
     photolysis_reactions = []
     if has_photolysis:
         for pi in range(num_photolysis):
-            photolysis_reactions.append({
-                "photo_idx": pi,
-                "reactants": {"SP0": 1.0},
-                "products": {"SP1": 1.0},
-                "original_A": 1.0e-5,
-            })
+            photolysis_reactions.append(
+                {
+                    "photo_idx": pi,
+                    "reactants": {"SP0": 1.0},
+                    "products": {"SP1": 1.0},
+                    "original_A": 1.0e-5,
+                }
+            )
 
     # Adjoint entries (for compute_adjoint template)
     adjoint_entries_state = []

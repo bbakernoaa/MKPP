@@ -350,4 +350,3 @@ For detailed multi-language host integration instructions, refer to [How-To: Hos
 - [AOT Solver C++ and Host API Reference](aot-solver-api.md)
 - [Reaction Kinetics & Unified Jacobian Explanation](../explanation/unified-jacobian-and-reaction-kinetics.md)
 - [How-To: Create Custom Reactions](../how-to/create-custom-reactions.md)
-

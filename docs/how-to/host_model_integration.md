@@ -171,4 +171,3 @@ int main() {
 - **Zero Python Dependency**: Host models compile and execute purely using standard C11, C++17, and Fortran 2018 toolchains.
 - **Zero Heap Allocations in Integration Loop**: Scratch solver memory is allocated once during `mkpp_initialize()`.
 - **Zero-Copy Memory Interoperability**: Host model concentration and meteorological arrays bind unmanaged views directly across language boundaries.
-

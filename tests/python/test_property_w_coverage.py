@@ -15,9 +15,7 @@ import re
 
 from hypothesis import given, settings
 from hypothesis import strategies as st
-
 from mkpp.template_engine import TemplateEngine
-
 
 # ---------------------------------------------------------------------------
 # Strategies
@@ -74,12 +72,14 @@ def random_lu_plan(draw, min_n=2, max_n=8):
                 if draw(st.booleans()):
                     terms.append(f"L_{i}_{k} * U_{k}_{j}")
             expr = " - ".join(terms) if len(terms) > 1 else terms[0]
-            lu_expressions.append({
-                "kind": "U",
-                "i": i,
-                "j": j,
-                "expr": expr,
-            })
+            lu_expressions.append(
+                {
+                    "kind": "U",
+                    "i": i,
+                    "j": j,
+                    "expr": expr,
+                }
+            )
 
     for i in range(n):
         for j in range(i):
@@ -94,12 +94,14 @@ def random_lu_plan(draw, min_n=2, max_n=8):
                         terms.append(f"L_{i}_{k} * U_{k}_{j}")
                 expr_numer = " - ".join(terms) if len(terms) > 1 else terms[0]
                 expr = f"({expr_numer}) / U_{j}_{j}"
-                lu_expressions.append({
-                    "kind": "L",
-                    "i": i,
-                    "j": j,
-                    "expr": expr,
-                })
+                lu_expressions.append(
+                    {
+                        "kind": "L",
+                        "i": i,
+                        "j": j,
+                        "expr": expr,
+                    }
+                )
 
     # Compute needed_w: diagonal entries + all W entries referenced in LU expressions
     needed_w = set()
@@ -135,8 +137,7 @@ def test_property_4_w_entry_coverage(data):
     # Render w_matrix.j2 macro by importing and calling it via a wrapper template
     engine = TemplateEngine()
     wrapper = (
-        '{%- from "macros/w_matrix.j2" import emit_w_matrix -%}\n'
-        "{{ emit_w_matrix(needed_w, non_zero_jac_set, inv_var, N) }}"
+        '{%- from "macros/w_matrix.j2" import emit_w_matrix -%}\n' "{{ emit_w_matrix(needed_w, non_zero_jac_set, inv_var, N) }}"
     )
     template = engine.env.from_string(wrapper)
     rendered = template.render(

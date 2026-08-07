@@ -118,9 +118,7 @@ def generate_headers(
             arr.name: {
                 "rank": arr.rank,
                 "layout": arr.layout,
-                "lifetime": "unmanaged_borrowed_from_host"
-                if arr.ownership == "host"
-                else "device_owned",
+                "lifetime": "unmanaged_borrowed_from_host" if arr.ownership == "host" else "device_owned",
             }
             for arr in mech.host_interface.arrays
         }

@@ -103,9 +103,7 @@ class TemplateEngine:
         if template_dir is None:
             template_dir = Path(__file__).parent / "templates"
         if not template_dir.is_dir():
-            raise FileNotFoundError(
-                f"Template directory not found: {template_dir}"
-            )
+            raise FileNotFoundError(f"Template directory not found: {template_dir}")
         self.env = Environment(
             loader=FileSystemLoader(str(template_dir)),
             undefined=StrictUndefined,

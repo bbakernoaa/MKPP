@@ -88,17 +88,17 @@ class TestCompiledValidation:
         mech = load_mechanism(str(mech_yaml))
         result = generate_headers(mech, out_dir=str(GENERATED_DIR))
         header_path = Path(result["header"])
-        assert header_path.exists(), (
-            f"Chapman header was not generated at expected path: {header_path}"
-        )
+        assert header_path.exists(), f"Chapman header was not generated at expected path: {header_path}"
         return header_path
 
     def _cmake_configure(self, build_dir: Path) -> subprocess.CompletedProcess:
         """Run CMake configure step for the e2e validation project."""
         cmd = [
             "cmake",
-            "-S", str(PROJECT_ROOT),
-            "-B", str(build_dir),
+            "-S",
+            str(PROJECT_ROOT),
+            "-B",
+            str(build_dir),
             "-DBUILD_TESTING=ON",
             "-DCMAKE_BUILD_TYPE=Release",
         ]
@@ -162,9 +162,7 @@ class TestCompiledValidation:
         # Step 2: CMake configure
         configure_result = self._cmake_configure(build_dir)
         assert configure_result.returncode == 0, (
-            f"CMake configure failed:\n"
-            f"STDOUT:\n{configure_result.stdout}\n"
-            f"STDERR:\n{configure_result.stderr}"
+            f"CMake configure failed:\n" f"STDOUT:\n{configure_result.stdout}\n" f"STDERR:\n{configure_result.stderr}"
         )
 
         # Step 3: Build the Chapman test target
@@ -194,24 +192,18 @@ class TestCompiledValidation:
         # Step 2: CMake configure
         configure_result = self._cmake_configure(build_dir)
         assert configure_result.returncode == 0, (
-            f"CMake configure failed:\n"
-            f"STDOUT:\n{configure_result.stdout}\n"
-            f"STDERR:\n{configure_result.stderr}"
+            f"CMake configure failed:\n" f"STDOUT:\n{configure_result.stdout}\n" f"STDERR:\n{configure_result.stderr}"
         )
 
         # Step 3: Build all test targets
         build_result = self._cmake_build(build_dir)
         if build_result.returncode != 0:
             pytest.fail(
-                f"Build failed. Compilation errors:\n\n"
-                f"STDOUT:\n{build_result.stdout}\n\n"
-                f"STDERR:\n{build_result.stderr}"
+                f"Build failed. Compilation errors:\n\n" f"STDOUT:\n{build_result.stdout}\n\n" f"STDERR:\n{build_result.stderr}"
             )
 
         # Step 4: Run CTest for scipy validation
         ctest_result = self._run_ctest(build_dir, test_name="mkpp_scipy_validation")
         assert ctest_result.returncode == 0, (
-            f"CTest mkpp_scipy_validation failed:\n"
-            f"STDOUT:\n{ctest_result.stdout}\n"
-            f"STDERR:\n{ctest_result.stderr}"
+            f"CTest mkpp_scipy_validation failed:\n" f"STDOUT:\n{ctest_result.stdout}\n" f"STDERR:\n{ctest_result.stderr}"
         )
