@@ -40,6 +40,7 @@ module mkpp_mod
   public :: mkpp_get_photolysis_index
   public :: mkpp_set_state_ptrs
   public :: mkpp_set_photolysis_ptrs
+  public :: mkpp_set_aerosol_ptrs
   public :: mkpp_integrate
   public :: mkpp_evaluate_rates
   public :: mkpp_evaluate_jacobian
@@ -119,6 +120,14 @@ module mkpp_mod
       type(c_ptr), value, intent(in) :: handle
       type(c_ptr), value, intent(in) :: photo
     end function c_mkpp_set_photolysis_ptrs
+
+    function c_mkpp_set_aerosol_ptrs(handle, rh, sa) bind(C, name="mkpp_set_aerosol_ptrs")
+      use, intrinsic :: iso_c_binding
+      integer(c_int) :: c_mkpp_set_aerosol_ptrs
+      type(c_ptr), value, intent(in) :: handle
+      type(c_ptr), value, intent(in) :: rh
+      type(c_ptr), value, intent(in) :: sa
+    end function c_mkpp_set_aerosol_ptrs
 
     function c_mkpp_integrate(handle, dt) bind(C, name="mkpp_integrate")
       use, intrinsic :: iso_c_binding
@@ -244,6 +253,14 @@ contains
     integer, intent(out) :: status
     status = int(c_mkpp_set_photolysis_ptrs(handle%ptr, c_loc(photo(1,1))))
   end subroutine mkpp_set_photolysis_ptrs
+
+  subroutine mkpp_set_aerosol_ptrs(handle, rh, sa, status)
+    type(mkpp_handle_t), intent(in) :: handle
+    real(c_double), target, intent(in) :: rh(:)
+    real(c_double), target, intent(in) :: sa(:)
+    integer, intent(out) :: status
+    status = int(c_mkpp_set_aerosol_ptrs(handle%ptr, c_loc(rh(1)), c_loc(sa(1))))
+  end subroutine mkpp_set_aerosol_ptrs
 
   subroutine mkpp_integrate(handle, dt, status)
     type(mkpp_handle_t), intent(in) :: handle

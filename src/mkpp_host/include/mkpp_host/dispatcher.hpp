@@ -110,10 +110,12 @@ struct mkpp_handle_impl {
     // Unmanaged 2D view over host model species concentrations (num_cells, num_species)
     Kokkos::View<double**, Kokkos::LayoutLeft, Kokkos::HostSpace, Kokkos::MemoryUnmanaged> species_conc;
 
-    // Unmanaged 1D views over host model meteorology (num_cells)
+    // Unmanaged 1D views over host model meteorology & aerosol drivers (num_cells)
     Kokkos::View<double*, Kokkos::LayoutLeft, Kokkos::HostSpace, Kokkos::MemoryUnmanaged> temperature;
     Kokkos::View<double*, Kokkos::LayoutLeft, Kokkos::HostSpace, Kokkos::MemoryUnmanaged> pressure;
     Kokkos::View<double*, Kokkos::LayoutLeft, Kokkos::HostSpace, Kokkos::MemoryUnmanaged> air_density;
+    Kokkos::View<double*, Kokkos::LayoutLeft, Kokkos::HostSpace, Kokkos::MemoryUnmanaged> relative_humidity;
+    Kokkos::View<double*, Kokkos::LayoutLeft, Kokkos::HostSpace, Kokkos::MemoryUnmanaged> aerosol_surface_area;
 
     // Unmanaged 2D view over host model photolysis rates (num_cells, num_photolysis)
     Kokkos::View<double**, Kokkos::LayoutLeft, Kokkos::HostSpace, Kokkos::MemoryUnmanaged> photolysis_rates;

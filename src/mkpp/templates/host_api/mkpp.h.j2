@@ -52,6 +52,10 @@ int mkpp_set_state_ptrs(mkpp_handle_t handle,
 
 int mkpp_set_photolysis_ptrs(mkpp_handle_t handle, const double* photolysis_rates);
 
+int mkpp_set_aerosol_ptrs(mkpp_handle_t handle,
+                         const double* relative_humidity,
+                         const double* aerosol_surface_area);
+
 /* Solver Computation Entry Points */
 int mkpp_integrate(mkpp_handle_t handle, double dt);
 int mkpp_evaluate_rates(mkpp_handle_t handle, double* rates_out);

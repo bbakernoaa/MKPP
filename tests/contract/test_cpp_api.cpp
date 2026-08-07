@@ -25,8 +25,11 @@ TEST(CPP_API, StatePointerBinding) {
     std::vector<double> temp(num_cells, 298.15);
     std::vector<double> pres(num_cells, 101325.0);
     std::vector<double> rho(num_cells, 2.45e19);
+    std::vector<double> rh(num_cells, 70.0);
+    std::vector<double> sa(num_cells, 1.0e-4);
 
     EXPECT_NO_THROW(ctx.setStatePointers(conc.data(), temp.data(), pres.data(), rho.data()));
+    EXPECT_NO_THROW(ctx.setAerosolPointers(rh.data(), sa.data()));
 }
 
 TEST(CPP_API, IndexLookupsAndMetadata) {

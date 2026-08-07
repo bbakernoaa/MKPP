@@ -65,9 +65,12 @@ TEST(C_ABI, BatchMultiCellPhotolysisBinding) {
     std::vector<double> pres(num_cells, 101325.0);
     std::vector<double> rho(num_cells, 2.45e19);
     std::vector<double> photo(num_cells * num_photo, 1.0e-5);
+    std::vector<double> rh(num_cells, 70.0);
+    std::vector<double> sa(num_cells, 1.0e-4);
 
     EXPECT_EQ(mkpp_set_state_ptrs(handle, conc.data(), temp.data(), pres.data(), rho.data()), MKPP_SUCCESS);
     EXPECT_EQ(mkpp_set_photolysis_ptrs(handle, photo.data()), MKPP_SUCCESS);
+    EXPECT_EQ(mkpp_set_aerosol_ptrs(handle, rh.data(), sa.data()), MKPP_SUCCESS);
 
     mkpp_destroy_handle(handle);
 }

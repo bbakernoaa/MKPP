@@ -18,6 +18,8 @@ program test_fortran_interop
   real(c_double), target :: pres(num_cells)
   real(c_double), target :: rho(num_cells)
   real(c_double), target :: photo(num_cells, num_photo)
+  real(c_double), target :: rh(num_cells)
+  real(c_double), target :: sa(num_cells)
   integer :: status, idx, count_val
   real(c_double) :: dt
 
@@ -27,6 +29,8 @@ program test_fortran_interop
   pres(:) = 101325.0d0
   rho(:) = 2.45d19
   photo(:,:) = 1.0d-5
+  rh(:) = 70.0d0
+  sa(:) = 1.0d-4
   dt = 60.0d0
 
   ! 1. Test handle creation
@@ -48,6 +52,10 @@ program test_fortran_interop
   ! 5. Test photolysis binding
   call mkpp_set_photolysis_ptrs(handle, photo, status)
   if (status /= MKPP_SUCCESS) stop "FAIL: mkpp_set_photolysis_ptrs"
+
+  ! 5b. Test aerosol binding (RH and surface area)
+  call mkpp_set_aerosol_ptrs(handle, rh, sa, status)
+  if (status /= MKPP_SUCCESS) stop "FAIL: mkpp_set_aerosol_ptrs"
 
   ! 6. Test species index lookup
   call mkpp_get_species_index(handle, "O3", idx, status)
