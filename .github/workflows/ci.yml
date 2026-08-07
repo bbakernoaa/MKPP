@@ -25,6 +25,45 @@ jobs:
       - name: Run Pre-commit Hooks
         run: pre-commit run --all-files --show-diff-on-failure
 
+      - name: Validate Semantic Versioning (SemVer)
+        run: |
+          python -c "
+          import re, sys, tomllib
+          from pathlib import Path
+
+          with open('pyproject.toml', 'rb') as f:
+              data = tomllib.load(f)
+
+          version = data.get('project', {}).get('version', '')
+          semver_regex = r'^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$'
+
+          if not re.match(semver_regex, version):
+              print(f'::error::Version \"{version}\" in pyproject.toml is not a valid Semantic Version (SemVer 2.0.0)')
+              sys.exit(1)
+
+          print(f'✓ Version \"{version}\" in pyproject.toml is a valid Semantic Version')
+          "
+
+      - name: Validate Conventional Commits (PR Title)
+        if: github.event_name == 'pull_request'
+        run: |
+          python -c "
+          import re, sys
+
+          pr_title = '''${{ github.event.pull_request.title }}'''
+          print(f'Checking PR Title: {pr_title}')
+
+          conv_commit_regex = r'^(feat|fix|perf|refactor|test|docs|ci|chore|build|revert)(\([a-zA-Z0-9_.-]+\))?!?: .+$'
+
+          if not re.match(conv_commit_regex, pr_title):
+              print(f'::error::PR title \"{pr_title}\" does not follow Conventional Commits specification.')
+              print('::error::Format must be: <type>(<scope>): <description>')
+              print('::error::Allowed types: feat, fix, perf, refactor, test, docs, ci, chore, build, revert')
+              sys.exit(1)
+
+          print('✓ PR title complies with Conventional Commits specification')
+          "
+
   build-and-test:
     name: 2. Build & Test Gates
     needs: static-gates
