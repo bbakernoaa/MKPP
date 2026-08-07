@@ -265,6 +265,7 @@ namespace mkpp {
           double dt_total, StateView& state, const double* jvals, double importance_threshold) const
       {
           const int NUM_SPECIES = 4;
+          // ROS-3 coefficients (3-stage, order 3)
           const double g = 0.435866521508459;
           const double safety = 0.9;
           const double max_growth = 6.0;
@@ -344,6 +345,7 @@ namespace mkpp {
           double y1_2 = active[2] ? (F1_2 - L_2_0 * y1_0 - L_2_1 * y1_1) : 0.0;
           // Block 2: K1 forward sub [M]
           double y1_3 = active[3] ? (F1_3) : 0.0;
+
           // Block 2: K1 backward sub [M]
           double K1_3 = active[3] ? (y1_3 / U_3_3) : 0.0;
           // Block 0: K1 backward sub [O2, O]
@@ -351,6 +353,7 @@ namespace mkpp {
           // Block 1: K1 backward sub [O3]
           double K1_1 = active[1] ? ((y1_1 - U_1_2 * K1_2 - U_1_3 * K1_3) / U_1_1) : 0.0;
           double K1_0 = active[0] ? (y1_0 / U_0_0) : 0.0;
+
 
           // --- Stage 2 ---
           // Intermediate state Y2
@@ -375,6 +378,7 @@ namespace mkpp {
           double y2_2 = active[2] ? (rhs2_2 - L_2_0 * y2_0 - L_2_1 * y2_1) : 0.0;
           // Block 2: K2 forward sub [M]
           double y2_3 = active[3] ? (rhs2_3) : 0.0;
+
           // Block 2: K2 backward sub [M]
           double K2_3 = active[3] ? (y2_3 / U_3_3) : 0.0;
           // Block 0: K2 backward sub [O2, O]
@@ -382,6 +386,7 @@ namespace mkpp {
           // Block 1: K2 backward sub [O3]
           double K2_1 = active[1] ? ((y2_1 - U_1_2 * K2_2 - U_1_3 * K2_3) / U_1_1) : 0.0;
           double K2_0 = active[0] ? (y2_0 / U_0_0) : 0.0;
+
 
           // --- Stage 3 ---
           // Intermediate state Y3
@@ -402,6 +407,7 @@ namespace mkpp {
           double y3_2 = active[2] ? (rhs3_2 - L_2_0 * y3_0 - L_2_1 * y3_1) : 0.0;
           // Block 2: K3 forward sub [M]
           double y3_3 = active[3] ? (rhs3_3) : 0.0;
+
           // Block 2: K3 backward sub [M]
           double K3_3 = active[3] ? (y3_3 / U_3_3) : 0.0;
           // Block 0: K3 backward sub [O2, O]
@@ -409,6 +415,7 @@ namespace mkpp {
           // Block 1: K3 backward sub [O3]
           double K3_1 = active[1] ? ((y3_1 - U_1_2 * K3_2 - U_1_3 * K3_3) / U_1_1) : 0.0;
           double K3_0 = active[0] ? (y3_0 / U_0_0) : 0.0;
+
 
           // --- Solution update and error estimation ---
           double err_norm_sq = 0.0;

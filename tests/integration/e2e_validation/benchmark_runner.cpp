@@ -9,7 +9,6 @@
 #include <vector>
 
 #include "saprc99.hpp"
-#include "saprc99_lumped.hpp"
 
 using ExecSpace = Kokkos::DefaultExecutionSpace;
 

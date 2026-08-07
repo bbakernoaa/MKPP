@@ -2,7 +2,7 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/src/mkpp_host
                  ${CMAKE_BINARY_DIR}/mkpp_host)
 cmake_minimum_required(VERSION 3.24)
 
-set(MECHS "chapman" "small_strato" "carbon" "saprc99" "saprc99_lumped")
+set(MECHS "chapman" "small_strato" "carbon" "saprc99")
 
 foreach(MECH ${MECHS})
   if("${MECH}" STREQUAL "chapman")
@@ -15,8 +15,6 @@ foreach(MECH ${MECHS})
     set(NUM_SPEC 12)
   elseif("${MECH}" STREQUAL "saprc99")
     set(NUM_SPEC 82)
-  elseif("${MECH}" STREQUAL "saprc99_lumped")
-    set(NUM_SPEC 35)
   else()
     set(NUM_SPEC 100)
   endif()

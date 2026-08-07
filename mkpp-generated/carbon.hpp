@@ -550,6 +550,7 @@ namespace mkpp {
           double dt_total, StateView& state, const double* jvals, double importance_threshold) const
       {
           const int NUM_SPECIES = 11;
+          // ROS-3 coefficients (3-stage, order 3)
           const double g = 0.435866521508459;
           const double safety = 0.9;
           const double max_growth = 6.0;
@@ -712,6 +713,7 @@ namespace mkpp {
           double y1_9 = active[9] ? (F1_9 - L_9_8 * y1_8) : 0.0;
           // Block 9: K1 forward sub [FixedCl]
           double y1_10 = active[10] ? (F1_10 - L_10_8 * y1_8) : 0.0;
+
           // Block 9: K1 backward sub [FixedCl]
           double K1_10 = active[10] ? (y1_10 / U_10_10) : 0.0;
           // Block 8: K1 backward sub [LCH4byCl]
@@ -733,6 +735,7 @@ namespace mkpp {
           double K1_1 = active[1] ? ((y1_1 - U_1_3 * K1_3) / U_1_1) : 0.0;
           // Block 0: K1 backward sub [PCOfromNMVOC]
           double K1_0 = active[0] ? ((y1_0 - U_0_2 * K1_2) / U_0_0) : 0.0;
+
 
           // --- Stage 2 ---
           // Intermediate state Y2
@@ -792,6 +795,7 @@ namespace mkpp {
           double y2_9 = active[9] ? (rhs2_9 - L_9_8 * y2_8) : 0.0;
           // Block 9: K2 forward sub [FixedCl]
           double y2_10 = active[10] ? (rhs2_10 - L_10_8 * y2_8) : 0.0;
+
           // Block 9: K2 backward sub [FixedCl]
           double K2_10 = active[10] ? (y2_10 / U_10_10) : 0.0;
           // Block 8: K2 backward sub [LCH4byCl]
@@ -813,6 +817,7 @@ namespace mkpp {
           double K2_1 = active[1] ? ((y2_1 - U_1_3 * K2_3) / U_1_1) : 0.0;
           // Block 0: K2 backward sub [PCOfromNMVOC]
           double K2_0 = active[0] ? ((y2_0 - U_0_2 * K2_2) / U_0_0) : 0.0;
+
 
           // --- Stage 3 ---
           // Intermediate state Y3
@@ -861,6 +866,7 @@ namespace mkpp {
           double y3_9 = active[9] ? (rhs3_9 - L_9_8 * y3_8) : 0.0;
           // Block 9: K3 forward sub [FixedCl]
           double y3_10 = active[10] ? (rhs3_10 - L_10_8 * y3_8) : 0.0;
+
           // Block 9: K3 backward sub [FixedCl]
           double K3_10 = active[10] ? (y3_10 / U_10_10) : 0.0;
           // Block 8: K3 backward sub [LCH4byCl]
@@ -882,6 +888,7 @@ namespace mkpp {
           double K3_1 = active[1] ? ((y3_1 - U_1_3 * K3_3) / U_1_1) : 0.0;
           // Block 0: K3 backward sub [PCOfromNMVOC]
           double K3_0 = active[0] ? ((y3_0 - U_0_2 * K3_2) / U_0_0) : 0.0;
+
 
           // --- Solution update and error estimation ---
           double err_norm_sq = 0.0;
