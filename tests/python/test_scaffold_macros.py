@@ -201,7 +201,7 @@ class TestWMatrixMacro:
 class TestLUFactorizeMacro:
     """Tests for emit_lu_factorize macro (Requirements 3.2, 3.6)."""
 
-    def test_emits_L_entries(self, engine):
+    def test_emits_l_entries(self, engine):
         """Emits double L_i_j = expr for L-type entries."""
         result = render_macro(
             engine,
@@ -215,7 +215,7 @@ class TestLUFactorizeMacro:
         )
         assert "double L_1_0 = W_1_0 / U_0_0;" in result
 
-    def test_emits_U_entries(self, engine):
+    def test_emits_u_entries(self, engine):
         """Emits double U_i_j = expr for U-type entries."""
         result = render_macro(
             engine,
@@ -231,7 +231,7 @@ class TestLUFactorizeMacro:
         assert "double U_0_0 = W_0_0;" in result
         assert "double U_1_1 = W_1_1 - L_1_0 * U_0_1;" in result
 
-    def test_mixed_L_and_U_entries(self, engine):
+    def test_mixed_l_and_u_entries(self, engine):
         """Both L and U entries are emitted in order."""
         lu_expressions = [
             {"kind": "U", "i": 0, "j": 0, "expr": "W_0_0"},

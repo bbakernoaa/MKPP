@@ -74,8 +74,12 @@ mkpp-generated/*_manifest.json
 mkpp-generated-*/
 src/solvers/
 
-# Legacy spec-kit tooling (replaced by .kiro/specs/)
+# Spec-kit & superpower tooling artifacts
 .specify/
+specify/
+.speckit/
+speckit/
 specs/
+docs/superpowers/
 .kiro*/
 kpp*/

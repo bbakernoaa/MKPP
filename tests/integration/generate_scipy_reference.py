@@ -49,7 +49,7 @@ def chapman_ode(t, y, jvals):
     dydt : ndarray
         Time derivatives for each species.
     """
-    O, O2, O3, M = y
+    O, O2, O3, M = y  # noqa: E741
     j_O2 = jvals[0]
     j_O3 = jvals[1]
 
