@@ -540,6 +540,12 @@ def prepare_unified_jacobian_parallel(mech: MechanismDefinition) -> dict[str, An
 
     N = len(ordered_species)
 
+    # For mechanisms with < 200 species, the serialization overhead of
+    # multiprocessing (pickling SymPy srepr strings, spawning workers, IPC)
+    # exceeds the differentiation speedup. Fall back to sequential path.
+    if N < 200:
+        return prepare_unified_jacobian(mech)
+
     # Serialize f_total expressions for multiprocessing (SymPy objects aren't picklable)
     f_total_serialized = [sp.srepr(expr) for expr in f_total]
     c_sreprs = [sp.srepr(sym) for sym in c_vector]

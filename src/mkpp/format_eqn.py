@@ -29,6 +29,37 @@ def _strength_reduce_squares(code: str) -> str:
 
 
 def format_eqn(eqn_str, species_list, state_var="state", use_parentheses=True, keep_env_symbols=False):
+    """Convert a symbolic ODE expression string into a C++ code string.
+
+    Parameters
+    ----------
+    eqn_str : str
+        SymPy-parseable expression string (e.g., from KPP rate law).
+    species_list : list
+        Ordered species definitions used to map C_X symbols to state indices.
+    state_var : str
+        Name of the state array variable in generated C++ code.
+    use_parentheses : bool
+        If True, emit ``state(idx)``; if False, emit ``state_idx``.
+    keep_env_symbols : bool
+        If False (default), environmental parameters (Temp, RH) are substituted
+        with constants (Temp=300.0). This produces isothermal code suitable only
+        for constant-temperature simulations.
+        If True, Temp and RH are emitted as C++ variable references, and the
+        generated function MUST accept temp/rh as parameters.
+
+    WARNING
+    -------
+    The current default (keep_env_symbols=False) silently folds temperature to
+    300 K. For temperature-dependent chemistry, callers MUST pass
+    keep_env_symbols=True and ensure the generated C++ function accepts temp/rh
+    as parameters.
+
+    .. deprecated:: planned for MKPP 2.0
+        The default will be inverted to keep_env_symbols=True for physical
+        correctness. This requires all generated function signatures to accept
+        a ``temp`` parameter unconditionally.
+    """
     import sympy as sp
 
     # 1. Clean up double negatives first because sympy might fail to parse `--` in strings

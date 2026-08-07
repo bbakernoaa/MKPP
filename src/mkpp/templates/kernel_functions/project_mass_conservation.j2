@@ -1,0 +1,41 @@
+{#
+  Kernel function template: project_mass_conservation.
+
+  Renders the `project_mass_conservation()` function which projects a
+  concentration vector onto the mass-conserving subspace:
+    C_projected = C - E^T (E E^T)^{-1} (E C - m_0)
+
+  The implementation first computes the mass defect delta_m_i = sum_j(E[i,j]*C(j)) - m_0(i)
+  for each element, then corrects each species using the pre-computed projector matrix P.
+
+  Context variables required:
+    - num_species: int
+    - species: list of species dicts [{name, index, elements}]
+    - mass_projector_data: dict with:
+        - element_map: list of element names
+        - species_map: list of species names (ordered)
+        - projector_entries: list of (i, j, coeff) tuples where P[i,j] != 0
+        - element_species_coeffs: list of dicts per element, each mapping
+            species index -> stoichiometric coefficient in E-matrix
+
+  Requirements: 4.6
+#}
+      template <class StateView, class MassView>
+      KOKKOS_INLINE_FUNCTION void project_mass_conservation(StateView& C_projected, const StateView& C, const MassView& m_0) const {
+          // C_projected = C - E^T (E E^T)^-1 (E C - m_0)
+{% for elem_idx in range(mass_projector_data.element_map | length) %}
+          double delta_m_{{ elem_idx }} = -m_0({{ elem_idx }});
+{% for sp_idx, coeff in mass_projector_data.element_species_coeffs[elem_idx].items() %}
+          delta_m_{{ elem_idx }} += {{ coeff }} * C({{ sp_idx }});
+{% endfor %}
+{% endfor %}
+{% for i in range(num_species) %}
+          C_projected({{ i }}) = C({{ i }});
+{% for proj_entry in mass_projector_data.projector_entries %}
+{% if proj_entry[0] == i %}
+          C_projected({{ i }}) -= ({{ proj_entry[2] }}) * delta_m_{{ proj_entry[1] }};
+{% endif %}
+{% endfor %}
+{% endfor %}
+      }
+

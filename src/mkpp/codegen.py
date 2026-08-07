@@ -2,8 +2,8 @@
 
 This module provides the top-level `generate_headers` function that emits
 Kokkos C++ solver headers from a parsed mechanism definition. It delegates
-to focused submodules for tableau definitions, expression formatting, and
-stage emission.
+to the Jinja2 template engine for C++ emission and to focused submodules
+for tableau definitions and expression formatting.
 
 Public API (backward-compatible):
     - generate_headers
@@ -20,15 +20,13 @@ from pathlib import Path
 from .format_eqn import format_eqn
 from .model import MechanismDefinition
 from .rosenbrock import SOLVER_COEFFICIENTS, RosenbrockTableau, get_A, get_C
-from .symbolic_emit import (
-    _emit_rosenbrock_adjoint_stages,
-    _emit_rosenbrock_stages,
-    _emit_rosenbrock_tlm_stages,
-)
+from .template_context import build_template_context
+from .template_engine import TemplateEngine
 
 # Re-export public API for backward compatibility
 __all__ = [
     "generate_headers",
+    "generate_host_api_headers",
     "SOLVER_COEFFICIENTS",
     "RosenbrockTableau",
     "format_eqn",
@@ -37,751 +35,78 @@ __all__ = [
 ]
 
 
+def generate_host_api_headers(
+    mech: MechanismDefinition,
+    out_dir: str = "src/solvers",
+    solver_name: str = "ros3",
+) -> dict[str, str]:
+    """Emit the C, C++, and Fortran host API headers and wrappers for a mechanism."""
+    if not mech or not mech.species:
+        raise ValueError("Cannot generate host API headers for empty mechanism")
+
+    out_path = Path(out_dir)
+    out_path.mkdir(parents=True, exist_ok=True)
+
+    context = build_template_context(mech, solver_name=solver_name)
+    engine = TemplateEngine()
+
+    rendered = {
+        "c_header": ("mkpp.h", engine.render("host_api/mkpp.h.j2", context)),
+        "fortran_module": ("mkpp_mod.f90", engine.render("host_api/mkpp_mod.f90.j2", context)),
+        "cpp_header": ("mkpp.hpp", engine.render("host_api/mkpp.hpp.j2", context)),
+        "c_api_source": ("mkpp_c_api.cpp", engine.render("host_api/mkpp_c_api.cpp.j2", context)),
+    }
+
+    results = {}
+    for key, (filename, content) in rendered.items():
+        file_path = out_path / filename
+        with open(file_path, "w") as f:
+            f.write(content)
+        results[key] = str(file_path)
+
+    return results
+
+
 def generate_headers(
     mech: MechanismDefinition,
     out_dir: str = "src/solvers",
     suffix: str = "",
     solver_name: str = "ros3",
     adjoint: bool = False,
+    generate_host_api: bool = False,
 ) -> dict[str, str]:
     """Emit the Kokkos headers and manifest artifact."""
     if not mech or not mech.species:
         raise ValueError("Cannot generate headers for empty mechanism")
 
-    # Look up the coefficient tableau for the selected solver
-    tableau = SOLVER_COEFFICIENTS[solver_name]
-
     out_path = Path(out_dir)
     out_path.mkdir(parents=True, exist_ok=True)
 
-    # Retrieve sympy_metadata safely whether stored as attribute or in mech.metadata dict
-    sympy_meta = None
-    if getattr(mech, "metadata", None) and isinstance(mech.metadata, dict):
-        sympy_meta = mech.metadata.get("sympy_metadata")
-    if sympy_meta is None:
-        sympy_meta = getattr(mech, "sympy_metadata", None)
-    if sympy_meta is None and mech.species:
-        from .lowering import prepare_unified_jacobian
+    # 1. Build template context (handles all data preparation)
+    context = build_template_context(mech, solver_name, adjoint=adjoint)
+    # Add suffix to context for filename generation
+    context["suffix"] = suffix
 
-        sympy_meta = prepare_unified_jacobian(mech)
+    # 2. Render the header via Jinja2 template engine
+    engine = TemplateEngine()
+    header_text = engine.render("header.j2", context)
 
-    # Check if equilibrium reactions are present
-    has_equilibrium = bool(mech.equilibrium_reactions)
-
-    # 1. Deterministic header emission
+    # 3. Write rendered output to the same file path as before
     header_path = out_path / f"{mech.name}{suffix}.hpp"
     with open(header_path, "w") as f:
-        f.write("#pragma once\n")
-        f.write("#include <Kokkos_Core.hpp>\n")
-        f.write(f"// Generated solver for {mech.name}\n")
+        f.write(header_text)
 
-        # T027: Emit workload-sorting annotations for downstream runtime
-        partition_meta = getattr(mech, "partition_metadata", None)
-        if partition_meta and partition_meta.get("sza_sorted"):
-            f.write("// SZA Workload Sorted: true\n")
+    results = {"header": str(header_path)}
 
-        # T033: Emit continuous-thermodynamics annotations
-        has_continuous_rxns = any(r.continuous_transition for r in mech.reactions)
-        if has_continuous_rxns:
-            f.write("// Hysteresis/Spline Continuous Transition: true\n")
+    if generate_host_api:
+        api_results = generate_host_api_headers(mech, out_dir=out_dir, solver_name=solver_name)
+        results.update(api_results)
 
-        f.write("namespace mkpp {\n")
-        f.write("  // Pure Kokkos abstractions (no raw pragmas allowed)\n")
-
-        # Emit EquilibriumInput enum when equilibrium reactions are present
-        if has_equilibrium:
-            f.write("\n  // Equilibrium meteorological input indices\n")
-            f.write("  enum class EquilibriumInput : int {\n")
-            f.write("      Temperature = 0,\n")
-            f.write("      RelativeHumidity = 1,\n")
-            f.write("      COUNT = 2\n")
-            f.write("  };\n\n")
-
-        # T021: Zero-copy unmanaged views for host interaction (e.g. Fortran LayoutLeft)
-        if getattr(mech, "host_interface", None) and mech.host_interface.arrays:
-            f.write("  // Bidirectional Host Interface (Zero-Copy)\n")
-            for arr in mech.host_interface.arrays:
-                f.write(f"  using {arr.name}_view_t = Kokkos::View<double")
-                f.write("*" * arr.rank)
-                f.write(f", Kokkos::{arr.layout}, Kokkos::MemoryUnmanaged>;\n")
-
-        # Emit CheckpointBuffer struct when adjoint mode is enabled (D5, Req 4.1, 4.3, 4.4)
-        if adjoint:
-            N = len(mech.species)
-            f.write("  // Checkpoint buffer for discrete adjoint/TLM integration\n")
-            f.write("  // Recompute-J strategy: only state is stored, Jacobian recomputed from saved state\n")
-            f.write("  struct CheckpointBuffer {\n")
-            f.write("      static constexpr int MAX_STEPS = 200;\n")
-            f.write(f"      static constexpr int NUM_SPECIES = {N};\n")
-            f.write("      int num_steps = 0;\n")
-            f.write("      double h[MAX_STEPS];\n")
-            f.write("      double state[MAX_STEPS][NUM_SPECIES];  // saved concentrations at step entry\n")
-            f.write("  };\n\n")
-
-        f.write("  template<typename DeviceType>\n")
-        f.write("  struct SolverKernels {\n")
-
-        # 1. compute_rates
-        f.write("      template <class StateView, class RateView>\n")
-        if has_equilibrium:
-            f.write(
-                "      KOKKOS_INLINE_FUNCTION void compute_rates(const StateView& state, RateView& F_block, const double* jvals, const double temp, const double rh) const {\n"
-            )
-            f.write("          const double Temp = temp;\n")
-            f.write("          const double RH = rh;\n")
-            f.write("          (void)RH;  // Reserved for future deliquescence modeling\n")
-        else:
-            f.write(
-                "      KOKKOS_INLINE_FUNCTION void compute_rates(const StateView& state, RateView& F_block, const double* jvals) const {\n"
-            )
-        if sympy_meta:
-            if "f_implicit" in sympy_meta and "f_explicit" in sympy_meta:
-                F = sympy_meta["f_implicit"] + sympy_meta["f_explicit"]
-            elif "f_vector" in sympy_meta:
-                F = sympy_meta["f_vector"]
-            else:
-                F = []
-            for i in range(len(F)):
-                eqn = format_eqn(F[i], mech.species, state_var="state", use_parentheses=True, keep_env_symbols=has_equilibrium)
-                f.write(f"          F_block({i}) = {eqn};\n")
-        f.write("      }\n\n")
-
-        # 2. compute_jacobian
-        f.write("      template <class StateView, class JacView>\n")
-        if has_equilibrium:
-            f.write(
-                "      KOKKOS_INLINE_FUNCTION void compute_jacobian(const StateView& state, JacView& J_block, const double* jvals, const double temp, const double rh) const {\n"
-            )
-            f.write("          const double Temp = temp;\n")
-            f.write("          const double RH = rh;\n")
-            f.write("          (void)RH;  // Reserved for future deliquescence modeling\n")
-        else:
-            f.write(
-                "      KOKKOS_INLINE_FUNCTION void compute_jacobian(const StateView& state, JacView& J_block, const double* jvals) const {\n"
-            )
-        if sympy_meta and "jacobian_matrix" in sympy_meta:
-            J = sympy_meta["jacobian_matrix"]
-            for i in range(J.shape[0]):
-                for j in range(J.shape[1]):
-                    if J[i, j] != 0:
-                        eqn = format_eqn(
-                            J[i, j], mech.species, state_var="state", use_parentheses=True, keep_env_symbols=has_equilibrium
-                        )
-                        f.write(f"          J_block({i}, {j}) = {eqn};\n")
-        f.write("      }\n\n")
-
-        # 3. compute_adjoint
-        f.write("      template <class StateView, class JacView>\n")
-        f.write(
-            "      KOKKOS_INLINE_FUNCTION void compute_adjoint(const StateView& state, JacView& J_adj_block, const double* jvals) const {\n"
-        )
-        if sympy_meta and "adjoint_matrix" in sympy_meta:
-            J_adj = sympy_meta["adjoint_matrix"]
-            for i in range(J_adj.shape[0]):
-                for j in range(J_adj.shape[1]):
-                    if J_adj[i, j] != 0:
-                        eqn = format_eqn(J_adj[i, j], mech.species, state_var="state", use_parentheses=True)
-                        f.write(f"          J_adj_block({i}, {j}) = {eqn};\n")
-        f.write("      }\n\n")
-
-        # 4. compute_tlm
-        f.write("      template <class StateView, class DeltaView, class RateView>\n")
-        f.write(
-            "      KOKKOS_INLINE_FUNCTION void compute_tlm(const StateView& state, const DeltaView& delta_C, RateView& dF_block, const double* jvals) const {\n"
-        )
-        if sympy_meta and "jacobian_matrix" in sympy_meta:
-            J = sympy_meta["jacobian_matrix"]
-            for i in range(J.shape[0]):
-                f.write(f"          dF_block({i}) = 0.0;\n")
-                for j in range(J.shape[1]):
-                    if J[i, j] != 0:
-                        eqn = format_eqn(J[i, j], mech.species, state_var="state", use_parentheses=True)
-                        f.write(f"          dF_block({i}) += ({eqn}) * delta_C({j});\n")
-        f.write("      }\n\n")
-
-        # 4b. compute_equilibrium_partition (standalone validation function)
-        # Emitted ONLY when equilibrium reactions are present (Requirement 9.1)
-        if mech.equilibrium_reactions and sympy_meta and "equilibrium_results" in sympy_meta:
-            eq_results = sympy_meta["equilibrium_results"]
-            f.write("      // Standalone equilibrium partitioning for validation against ISORROPIA-Lite\n")
-            f.write("      template <class StateView, class ResultView>\n")
-            f.write("      KOKKOS_INLINE_FUNCTION void compute_equilibrium_partition(\n")
-            f.write("          const StateView& state, ResultView& eq_result,\n")
-            f.write("          const double temp, const double rh) const {\n")
-            f.write("          // Compute equilibrium partition fractions at the given state\n")
-            f.write("          // eq_result contains the equilibrium concentrations for each species\n")
-            f.write("          const double Temp = temp;\n")
-            f.write("          const double RH = rh;\n")
-            f.write("          (void)RH;  // Reserved for future deliquescence modeling\n\n")
-
-            for eq_result in eq_results:
-                # Emit total species sum computations
-                f.write("          // Total species concentrations\n")
-                for element_name, species_indices in eq_result.total_species_map.items():
-                    if species_indices:
-                        terms = [f"state({idx})" for idx in species_indices]
-                        total_expr_str = " + ".join(terms)
-                        f.write(f"          const double C_total_{element_name} = {total_expr_str};\n")
-                f.write("\n")
-
-                # Emit equilibrium partition expressions for each species
-                f.write("          // Equilibrium expressions\n")
-                for species_name, expr in eq_result.partition_exprs.items():
-                    # Find the species index
-                    species_idx = next(
-                        (i for i, s in enumerate(mech.species) if s.name == species_name),
-                        None,
-                    )
-                    if species_idx is not None:
-                        eqn = format_eqn(expr, mech.species, state_var="state", use_parentheses=True)
-                        f.write(f"          eq_result({species_idx}) = {eqn};\n")
-
-            f.write("      }\n\n")
-
-        # 5. project_mass_conservation
-        f.write("      template <class StateView, class MassView>\n")
-        f.write(
-            "      KOKKOS_INLINE_FUNCTION void project_mass_conservation(StateView& C_projected, const StateView& C, const MassView& m_0) const {\n"
-        )
-        f.write("          // C_projected = C - E^T (E E^T)^-1 (E C - m_0)\n")
-        if sympy_meta and "mass_projector" in sympy_meta:
-            P = sympy_meta["mass_projector"]
-            elements = sympy_meta["element_map"]
-            for i, elem in enumerate(elements):
-                f.write(f"          double delta_m_{i} = -m_0({i});\n")
-                for j, sp_name in enumerate(sympy_meta["species_map"]):
-                    s_def = next(s for s in mech.species if s.name == sp_name)
-                    if elem in s_def.elements:
-                        f.write(f"          delta_m_{i} += {s_def.elements[elem]} * C({j});\n")
-            for i in range(P.shape[0]):
-                f.write(f"          C_projected({i}) = C({i});\n")
-                for j in range(P.shape[1]):
-                    if P[i, j] != 0:
-                        f.write(f"          C_projected({i}) -= ({P[i, j]}) * delta_m_{j};\n")
-        f.write("      }\n\n")
-
-        # 6a. Per-species tolerance arrays (atol, rtol)
-        N = len(mech.species)
-        # Source tolerances from mechanism metadata or use defaults
-        default_atol = 100.0  # molecules/cm3, atmospheric chemistry standard
-        default_rtol = 1e-2  # 1% relative tolerance, suitable for atmospheric chemistry
-        atol_values = None
-        rtol_values = None
-        if isinstance(getattr(mech, "metadata", None), dict):
-            atol_values = mech.metadata.get("atol")
-            rtol_values = mech.metadata.get("rtol")
-        if atol_values is None:
-            atol_values = [default_atol] * N
-        if rtol_values is None:
-            rtol_values = [default_rtol] * N
-        # Ensure exactly N entries
-        atol_values = list(atol_values)[:N]
-        rtol_values = list(rtol_values)[:N]
-        while len(atol_values) < N:
-            atol_values.append(default_atol)
-        while len(rtol_values) < N:
-            rtol_values.append(default_rtol)
-
-        atol_str = ", ".join(f"{v}" for v in atol_values)
-        rtol_str = ", ".join(f"{v}" for v in rtol_values)
-        f.write(f"      static constexpr int NUM_SPECIES = {N};\n")
-        f.write(f"      static constexpr double atol[NUM_SPECIES] = {{ {atol_str} }};\n")
-        f.write(f"      static constexpr double rtol[NUM_SPECIES] = {{ {rtol_str} }};\n\n")
-
-        # Photolysis metadata (Cloud-J input mapping)
-        num_photolysis = 0
-        photolysis_reactions_meta = []
-        if sympy_meta:
-            num_photolysis = sympy_meta.get("photolysis_count", 0)
-            photolysis_reactions_meta = sympy_meta.get("photolysis_reactions", [])
-
-        if num_photolysis > 0:
-            f.write("      // Photolysis reactions (Cloud-J input mapping):\n")
-            for pr in photolysis_reactions_meta:
-                reactants_str = ", ".join(
-                    f"{k}" for k in (pr["reactants"].keys() if isinstance(pr["reactants"], dict) else pr["reactants"])
-                )
-                products_str = ", ".join(
-                    f"{k}" for k in (pr["products"].keys() if isinstance(pr["products"], dict) else pr["products"])
-                )
-                f.write(
-                    f"      //   jvals[{pr['photo_idx']}] = {reactants_str} -> {products_str}  (original A: {pr['original_A']})\n"
-                )
-            f.write(f"      static constexpr int NUM_PHOTOLYSIS = {num_photolysis};\n\n")
-
-        # 6. integrate (AOT Symbolic LU, generic Rosenbrock solver)
-        f.write("      template <class StateView>\n")
-        if has_equilibrium:
-            f.write(
-                "      KOKKOS_INLINE_FUNCTION void integrate(double dt_total, StateView& state, const double* jvals, const double temp, const double rh) const {\n"
-            )
-            f.write("          const double Temp = temp;\n")
-            f.write("          const double RH = rh;\n")
-            f.write("          (void)RH;  // Reserved for future deliquescence modeling\n")
-        else:
-            f.write("      KOKKOS_INLINE_FUNCTION void integrate(double dt_total, StateView& state, const double* jvals) const {\n")
-        f.write(f"          const int NUM_SPECIES = {N};\n")
-        f.write(f"          // {tableau.name} coefficients ({tableau.stages}-stage, order {tableau.ELO:.0f})\n")
-        gamma = tableau.Gamma[0]
-        f.write(f"          const double g = {gamma:.17g};\n")
-        f.write("          const double safety = 0.9;\n")
-        f.write("          const double max_growth = 6.0;\n")
-        f.write("          const double min_shrink = 0.2;\n")
-        f.write("          double t = 0.0;\n")
-        f.write("          double dt = Kokkos::fmin(dt_total, 1.0);  // conservative initial step\n\n")
-        f.write("          while (t < dt_total) {\n")
-        f.write("          dt = Kokkos::min(dt, dt_total - t);\n")
-        f.write("          const double inv_g_dt = 1.0 / (g * dt);\n\n")
-        f.write("          // 0. Hoist state values into scalar registers\n")
-
-        lu_plan = None
-        if isinstance(getattr(mech, "metadata", None), dict):
-            lu_plan = mech.metadata.get("symbolic_lu_plan")
-        if lu_plan is None and sympy_meta and "symbolic_lu_plan" in sympy_meta:
-            lu_plan = sympy_meta["symbolic_lu_plan"]
-        if lu_plan is None and getattr(mech, "symbolic_lu_plan", None):
-            lu_plan = getattr(mech, "symbolic_lu_plan", None)
-
-        if not lu_plan and sympy_meta and "jacobian_matrix" in sympy_meta:
-            from .lowering import compute_symbolic_lu_decomposition
-
-            lu_plan = compute_symbolic_lu_decomposition(sympy_meta["jacobian_matrix"], [s.name for s in mech.species])
-
-        # Pre-compute transposed LU plan when adjoint mode is enabled (task 5.3)
-        # This must be done once, before emitting adjoint functions that need W^{-T} solves.
-        if adjoint and lu_plan:
-            from .lowering import compute_transposed_lu_plan
-
-            compute_transposed_lu_plan(lu_plan)
-
-        # Determine permutation for state access
-        _perm = lu_plan.permutation if lu_plan and lu_plan.permutation else None
-
-        if _perm:
-            f.write("          // NOTE: State access uses permuted species ordering\n")
-
-        for i in range(N):
-            src_idx = _perm[i] if _perm else i
-            f.write(f"          const double S_{i} = state({src_idx});\n")
-        f.write("\n")
-
-        if lu_plan:
-            import re as _re_w
-
-            # Jacobian Non-Zeros
-            f.write("          // Analytical Jacobian & Iteration Matrix W = inv_g_dt*I - J (sparse)\n")
-            non_zero_jac_set = set()
-            for i, j, expr_str in lu_plan.non_zero_jacobian:
-                non_zero_jac_set.add((i, j))
-                eqn = format_eqn(expr_str, mech.species, state_var="S", use_parentheses=False, keep_env_symbols=has_equilibrium)
-                f.write(f"          double J_{i}_{j} = {eqn};\n")
-
-            # Determine which W entries are actually needed by the LU plan
-            needed_w = set()
-            for _i in range(N):
-                needed_w.add((_i, _i))  # Diagonal always needed
-            for _kind, _i, _j, _expr_str in lu_plan.lu_expressions_ordered:
-                for _m in _re_w.finditer(r"W_(\d+)_(\d+)", _expr_str):
-                    needed_w.add((int(_m.group(1)), int(_m.group(2))))
-
-            for i, j in sorted(needed_w):
-                if i == j:
-                    if (i, i) in non_zero_jac_set:
-                        f.write(f"          double W_{i}_{i} = inv_g_dt - J_{i}_{i};\n")
-                    else:
-                        f.write(f"          double W_{i}_{i} = inv_g_dt;\n")
-                elif (i, j) in non_zero_jac_set:
-                    f.write(f"          double W_{i}_{j} = -J_{i}_{j};\n")
-                else:
-                    # Fill-in dependency: W referenced by LU but no Jacobian entry
-                    f.write(f"          double W_{i}_{j} = 0.0;\n")
-
-            # Symbolic LU Factorization
-            f.write("\n          // Symbolic Doolittle Sparse LU Factorization\n")
-            # Emit block boundary comments if block structure is present
-            if lu_plan.blocks and len(lu_plan.blocks) > 1:
-                _emitted_block_header = set()
-                for kind, i, j, expr_str in lu_plan.lu_expressions_ordered:
-                    # Find which block this expression belongs to
-                    for block_num, block_indices in enumerate(lu_plan.blocks):
-                        if i in block_indices:
-                            if block_num not in _emitted_block_header:
-                                _emitted_block_header.add(block_num)
-                                block_species_names = [lu_plan.species_map[idx] for idx in block_indices]
-                                f.write(f"          // Block {block_num}: species [{', '.join(block_species_names)}]\n")
-                            break
-                    f.write(f"          double {kind}_{i}_{j} = {expr_str};\n")
-            else:
-                for kind, i, j, expr_str in lu_plan.lu_expressions_ordered:
-                    f.write(f"          double {kind}_{i}_{j} = {expr_str};\n")
-
-            # Emit all stage computations using the generic Rosenbrock emitter
-            _emit_rosenbrock_stages(f, tableau, N, lu_plan, sympy_meta, mech, _perm, is_reduction=False)
-
-        # Close while loop
-        f.write("          } // end while (t < dt_total)\n")
-        f.write("      }\n\n")
-
-        # 7. integrate_with_reduction (Auto-Reduction Kernel)
-        f.write("      template <class StateView>\n")
-        f.write("      KOKKOS_INLINE_FUNCTION void integrate_with_reduction(\n")
-        if has_equilibrium:
-            f.write(
-                "          double dt_total, StateView& state, const double* jvals, double importance_threshold, const double temp, const double rh) const\n"
-            )
-        else:
-            f.write("          double dt_total, StateView& state, const double* jvals, double importance_threshold) const\n")
-        f.write("      {\n")
-        if has_equilibrium:
-            f.write("          const double Temp = temp;\n")
-            f.write("          const double RH = rh;\n")
-            f.write("          (void)RH;  // Reserved for future deliquescence modeling\n")
-        f.write(f"          const int NUM_SPECIES = {N};\n")
-        # Use the same tableau gamma as integrate()
-        gamma = tableau.Gamma[0]
-        f.write(f"          const double g = {gamma:.17g};\n")
-        f.write("          const double safety = 0.9;\n")
-        f.write("          const double max_growth = 6.0;\n")
-        f.write("          const double min_shrink = 0.2;\n\n")
-        f.write("          bool active[NUM_SPECIES];\n")
-        f.write("          double t = 0.0;\n")
-        f.write("          double dt = Kokkos::fmin(dt_total, 1.0);  // conservative initial step\n\n")
-        f.write("          // Initialize all species as active\n")
-        for i in range(N):
-            f.write(f"          active[{i}] = true;\n")
-        f.write("\n")
-        f.write("          while (t < dt_total) {\n")
-        f.write("          dt = Kokkos::min(dt, dt_total - t);\n")
-        f.write("          const double inv_g_dt = 1.0 / (g * dt);\n\n")
-
-        # Hoist state values
-        f.write("          // 0. Hoist state values into scalar registers\n")
-        if _perm:
-            f.write("          // NOTE: State access uses permuted species ordering\n")
-        for i in range(N):
-            src_idx = _perm[i] if _perm else i
-            f.write(f"          const double S_{i} = state({src_idx});\n")
-        f.write("\n")
-
-        if lu_plan:
-            import re as _re_w
-
-            # Stage 1 Rates F1 (needed for importance evaluation)
-            f.write("          // 1. Stage 1 Rates (F1)\n")
-            if sympy_meta:
-                if "f_implicit" in sympy_meta and "f_explicit" in sympy_meta:
-                    F = sympy_meta["f_implicit"] + sympy_meta["f_explicit"]
-                elif "f_vector" in sympy_meta:
-                    F = sympy_meta["f_vector"]
-                else:
-                    F = [0] * N
-                for i in range(len(F)):
-                    eqn = format_eqn(F[i], mech.species, state_var="S", use_parentheses=False)
-                    f.write(f"          double F1_{i} = {eqn};\n")
-
-            # Importance evaluation and active/frozen classification
-            f.write("\n          // 2. Evaluate importance and update active set\n")
-            for i in range(N):
-                state_idx = _perm[i] if _perm else i
-                f.write(
-                    f"          active[{i}] = (Kokkos::fabs(F1_{i}) / (atol[{i}] + rtol[{i}] * Kokkos::fabs(state({state_idx}))) >= importance_threshold);\n"
-                )
-
-            # Jacobian Non-Zeros with frozen species handling
-            f.write("\n          // 3. Analytical Jacobian & Iteration Matrix W (identity for frozen species)\n")
-            non_zero_jac_set = set()
-            for i, j, expr_str in lu_plan.non_zero_jacobian:
-                non_zero_jac_set.add((i, j))
-                eqn = format_eqn(expr_str, mech.species, state_var="S", use_parentheses=False)
-                f.write(f"          double J_{i}_{j} = {eqn};\n")
-
-            # Emit W with conditional logic for frozen species (sparse: only needed entries)
-            needed_w2 = set()
-            for _i in range(N):
-                needed_w2.add((_i, _i))  # Diagonal always needed
-            # Gather W references from LU expressions (annotated or plain)
-            if lu_plan.annotated_expressions:
-                for ann_expr in lu_plan.annotated_expressions:
-                    for _m in _re_w.finditer(r"W_(\d+)_(\d+)", ann_expr.expr):
-                        needed_w2.add((int(_m.group(1)), int(_m.group(2))))
-            else:
-                for _kind, _i, _j, _expr_str in lu_plan.lu_expressions_ordered:
-                    for _m in _re_w.finditer(r"W_(\d+)_(\d+)", _expr_str):
-                        needed_w2.add((int(_m.group(1)), int(_m.group(2))))
-
-            for i, j in sorted(needed_w2):
-                if i == j:
-                    if (i, i) in non_zero_jac_set:
-                        f.write(f"          double W_{i}_{i} = active[{i}] ? (inv_g_dt - J_{i}_{i}) : 1.0;\n")
-                    else:
-                        f.write(f"          double W_{i}_{i} = active[{i}] ? inv_g_dt : 1.0;\n")
-                elif (i, j) in non_zero_jac_set:
-                    f.write(f"          double W_{i}_{j} = (active[{i}] && active[{j}]) ? (-J_{i}_{j}) : 0.0;\n")
-                else:
-                    # Fill-in dependency: W referenced by LU but no Jacobian entry
-                    f.write(f"          double W_{i}_{j} = 0.0;\n")
-
-            # Symbolic LU Factorization with conditional skip for frozen species
-            f.write("\n          // 4. Symbolic LU Factorization (conditional skip for frozen species)\n")
-
-            # Use annotated expressions if available for conditional skipping
-            if lu_plan.annotated_expressions:
-                for ann_expr in lu_plan.annotated_expressions:
-                    deps = ann_expr.depends_on
-                    if deps:
-                        cond_parts = [f"active[{d}]" for d in sorted(deps)]
-                        cond = " && ".join(cond_parts)
-                        f.write(f"          double {ann_expr.kind}_{ann_expr.row}_{ann_expr.col} = ({cond}) ? ({ann_expr.expr}) : ")
-                        # For U diagonal, frozen → 1.0; for off-diag → 0.0
-                        if ann_expr.row == ann_expr.col:
-                            f.write("1.0;\n")
-                        else:
-                            f.write("0.0;\n")
-                    else:
-                        f.write(f"          double {ann_expr.kind}_{ann_expr.row}_{ann_expr.col} = {ann_expr.expr};\n")
-            else:
-                # Fallback: emit without conditional skip (use normal LU)
-                for kind, i, j, expr_str in lu_plan.lu_expressions_ordered:
-                    f.write(f"          double {kind}_{i}_{j} = {expr_str};\n")
-
-            # Emit generic Rosenbrock stages using the same tableau as integrate()
-            _emit_rosenbrock_stages(
-                f,
-                tableau,
-                N,
-                lu_plan,
-                sympy_meta,
-                mech,
-                _perm,
-                is_reduction=True,
-                skip_first_f_eval=True,
-            )
-
-        # Close while loop for integrate_with_reduction
-        f.write("          } // end while (t < dt_total)\n")
-        f.write("      }\n")
-
-        # 8. integrate_fwd_checkpoint (gated behind adjoint=True)
-        # Same Rosenbrock integration as integrate() but saves checkpoint data
-        # after each accepted step for use by adjoint/TLM integrators.
-        if adjoint:
-            f.write("\n      // Forward integration with checkpointing for adjoint/TLM\n")
-            f.write("      // Saves step size h and state at each accepted step into CheckpointBuffer.\n")
-            f.write("      // Returns number of accepted steps, or -1 if MAX_STEPS exceeded.\n")
-            f.write("      template <class StateView>\n")
-            f.write("      KOKKOS_INLINE_FUNCTION int integrate_fwd_checkpoint(\n")
-            if has_equilibrium:
-                f.write("          double dt_total, StateView& state, const double* jvals,\n")
-                f.write("          CheckpointBuffer& chk, const double temp, const double rh) const\n")
-            else:
-                f.write("          double dt_total, StateView& state, const double* jvals,\n")
-                f.write("          CheckpointBuffer& chk) const\n")
-            f.write("      {\n")
-            f.write(f"          const int NUM_SPECIES = {N};\n")
-            if has_equilibrium:
-                f.write("          const double Temp = temp;\n")
-                f.write("          const double RH = rh;\n")
-                f.write("          (void)RH;  // Reserved for future deliquescence modeling\n")
-            f.write(f"          // {tableau.name} coefficients ({tableau.stages}-stage, order {tableau.ELO:.0f})\n")
-            gamma = tableau.Gamma[0]
-            f.write(f"          const double g = {gamma:.17g};\n")
-            f.write("          const double safety = 0.9;\n")
-            f.write("          const double max_growth = 6.0;\n")
-            f.write("          const double min_shrink = 0.2;\n")
-            f.write("          int ierr = 0;\n")
-            f.write("          chk.num_steps = 0;\n")
-            f.write("          double t = 0.0;\n")
-            f.write("          double dt = Kokkos::fmin(dt_total, 1.0);  // conservative initial step\n\n")
-            f.write("          while (t < dt_total) {\n")
-            f.write("          dt = Kokkos::min(dt, dt_total - t);\n")
-            f.write("          const double inv_g_dt = 1.0 / (g * dt);\n\n")
-            f.write("          // 0. Hoist state values into scalar registers\n")
-
-            if _perm:
-                f.write("          // NOTE: State access uses permuted species ordering\n")
-
-            for i in range(N):
-                src_idx = _perm[i] if _perm else i
-                f.write(f"          const double S_{i} = state({src_idx});\n")
-            f.write("\n")
-
-            if lu_plan:
-                import re as _re_w
-
-                # Jacobian Non-Zeros
-                f.write("          // Analytical Jacobian & Iteration Matrix W = inv_g_dt*I - J (sparse)\n")
-                non_zero_jac_set_chk = set()
-                for i, j, expr_str in lu_plan.non_zero_jacobian:
-                    non_zero_jac_set_chk.add((i, j))
-                    eqn = format_eqn(expr_str, mech.species, state_var="S", use_parentheses=False)
-                    f.write(f"          double J_{i}_{j} = {eqn};\n")
-
-                # Determine which W entries are actually needed by the LU plan
-                needed_w_chk = set()
-                for _i in range(N):
-                    needed_w_chk.add((_i, _i))  # Diagonal always needed
-                for _kind, _i, _j, _expr_str in lu_plan.lu_expressions_ordered:
-                    for _m in _re_w.finditer(r"W_(\d+)_(\d+)", _expr_str):
-                        needed_w_chk.add((int(_m.group(1)), int(_m.group(2))))
-
-                for i, j in sorted(needed_w_chk):
-                    if i == j:
-                        if (i, i) in non_zero_jac_set_chk:
-                            f.write(f"          double W_{i}_{i} = inv_g_dt - J_{i}_{i};\n")
-                        else:
-                            f.write(f"          double W_{i}_{i} = inv_g_dt;\n")
-                    elif (i, j) in non_zero_jac_set_chk:
-                        f.write(f"          double W_{i}_{j} = -J_{i}_{j};\n")
-                    else:
-                        f.write(f"          double W_{i}_{j} = 0.0;\n")
-
-                # Symbolic LU Factorization
-                f.write("\n          // Symbolic Doolittle Sparse LU Factorization\n")
-                if lu_plan.blocks and len(lu_plan.blocks) > 1:
-                    _emitted_block_header_chk = set()
-                    for kind, i, j, expr_str in lu_plan.lu_expressions_ordered:
-                        for block_num, block_indices in enumerate(lu_plan.blocks):
-                            if i in block_indices:
-                                if block_num not in _emitted_block_header_chk:
-                                    _emitted_block_header_chk.add(block_num)
-                                    block_species_names = [lu_plan.species_map[idx] for idx in block_indices]
-                                    f.write(f"          // Block {block_num}: species [{', '.join(block_species_names)}]\n")
-                                break
-                        f.write(f"          double {kind}_{i}_{j} = {expr_str};\n")
-                else:
-                    for kind, i, j, expr_str in lu_plan.lu_expressions_ordered:
-                        f.write(f"          double {kind}_{i}_{j} = {expr_str};\n")
-
-                # Emit all stage computations with checkpoint=True
-                _emit_rosenbrock_stages(
-                    f,
-                    tableau,
-                    N,
-                    lu_plan,
-                    sympy_meta,
-                    mech,
-                    _perm,
-                    is_reduction=False,
-                    checkpoint=True,
-                )
-
-            # Close while loop
-            f.write("          } // end while (t < dt_total)\n")
-            f.write("          return chk.num_steps;\n")
-            f.write("      }\n")
-
-            # 9. integrate_adj (Discrete Adjoint backward integration)
-            # Walks backward through checkpoint buffer, accumulating adjoint variable λ.
-            # Requirement 2.5: function signature with template params StateView, AdjView.
-            # Requirement 6.2: emitted when --adjoint is enabled.
-            f.write("\n      // Discrete adjoint backward integration through checkpointed trajectory\n")
-            f.write("      // Walks backward through saved steps, accumulating adjoint variable lambda.\n")
-            f.write("      template <class StateView, class AdjView>\n")
-            f.write("      KOKKOS_INLINE_FUNCTION void integrate_adj(\n")
-            f.write("          double dt_total, const StateView& state_final,\n")
-            f.write("          AdjView& lambda, const double* jvals,\n")
-            f.write("          const CheckpointBuffer& chk) const\n")
-            f.write("      {\n")
-            gamma = tableau.Gamma[0]
-            f.write(f"          const double g = {gamma:.17g};\n")
-            # Emit the adjoint stage logic (runtime backward loop, Python-time stage unrolling)
-            _emit_rosenbrock_adjoint_stages(f, tableau, N, lu_plan, sympy_meta, mech, _perm)
-            f.write("      }\n")
-
-            # 10. integrate_tlm (TLM forward propagation, Req 3.4, 6.2)
-            # Propagates perturbation δC forward through checkpointed Rosenbrock steps.
-            f.write("\n      // Tangent Linear Model: forward propagation of perturbation δC\n")
-            f.write("      // Uses checkpoint buffer from integrate_fwd_checkpoint().\n")
-            f.write("      template <class StateView, class PertView>\n")
-            f.write("      KOKKOS_INLINE_FUNCTION void integrate_tlm(\n")
-            f.write("          double dt_total, const StateView& state_0,\n")
-            f.write("          PertView& delta_C, const double* jvals,\n")
-            f.write("          const CheckpointBuffer& chk) const\n")
-            f.write("      {\n")
-            gamma = tableau.Gamma[0]
-            f.write(f"          const double g = {gamma:.17g};\n\n")
-
-            # Declare local aliases for delta_C: dC_k = delta_C(k)
-            # The TLM stage emitter uses dC_k naming for the perturbation vector
-            f.write("          // Local aliases for delta_C (TLM stages use dC_k naming)\n")
-            for k in range(N):
-                f.write(f"          double dC_{k} = delta_C({k});\n")
-            f.write("\n")
-
-            # Emit TLM stage logic (runtime forward loop, Python-time stage unrolling)
-            _emit_rosenbrock_tlm_stages(f, tableau, N, lu_plan, sympy_meta, mech, _perm)
-
-            # Write back final delta_C values to the output view
-            f.write("\n          // Write back final δC to output view\n")
-            for k in range(N):
-                f.write(f"          delta_C({k}) = dC_{k};\n")
-
-            f.write("      }\n")
-
-        # Diagnostic functions (guarded by #ifdef MKPP_DIAGNOSTICS)
-        if has_equilibrium:
-            f.write("\n#ifdef MKPP_DIAGNOSTICS\n")
-
-            # check_mass_balance: returns |C_gas + C_aer - C_total| for element at element_idx
-            f.write("      template <class StateView>\n")
-            f.write("      KOKKOS_INLINE_FUNCTION double check_mass_balance(\n")
-            f.write("          const StateView& state, int element_idx) const {\n")
-            # Build mass balance residuals for each conserved element from equilibrium definitions
-            eq_def = mech.equilibrium_reactions[0]  # Primary equilibrium system
-            element_names = list(eq_def.total_species.keys())
-            for elem_idx, (element_name, sp_list) in enumerate(eq_def.total_species.items()):
-                species_indices = []
-                for sp_name in sp_list:
-                    for si, spec in enumerate(mech.species):
-                        if spec.name == sp_name:
-                            species_indices.append(si)
-                            break
-                if elem_idx == 0:
-                    f.write(f"          if (element_idx == {elem_idx}) {{\n")
-                else:
-                    f.write(f"          }} else if (element_idx == {elem_idx}) {{\n")
-                f.write(f"              // {element_name}: sum of [{', '.join(sp_list)}]\n")
-                f.write("              double total = 0.0;\n")
-                for si in species_indices:
-                    f.write(f"              total += state({si});\n")
-                # The mass balance residual is |sum_partitioned - C_total|
-                # Since C_total = sum of all participating species, the residual
-                # measures deviation from the initial total (which should be conserved)
-                # For a diagnostic, we return the absolute total (caller compares against initial)
-                f.write("              return total;\n")
-            f.write("          }\n")
-            f.write("          return 0.0;\n")
-            f.write("      }\n\n")
-
-            # check_charge_balance: placeholder returning sum(cation eq) - sum(anion eq)
-            f.write("      template <class StateView>\n")
-            f.write("      KOKKOS_INLINE_FUNCTION double check_charge_balance(\n")
-            f.write("          const StateView& state) const {\n")
-            f.write("          // Placeholder: compute cation equivalents - anion equivalents\n")
-            f.write("          // TODO: Fill in actual ion charges for the equilibrium system\n")
-            f.write("          double balance = 0.0;\n")
-            # Emit charge contributions for known aerosol species
-            for si, spec in enumerate(mech.species):
-                # NH4+ is +1, NO3- is -1, SO4 is -2 (common atmospheric aerosol ions)
-                if spec.name == "NH4a":
-                    f.write(f"          balance += state({si});  // NH4+ (+1)\n")
-                elif spec.name in ("NO3an1", "NO3an2", "NO3an3"):
-                    f.write(f"          balance -= state({si});  // NO3- (-1)\n")
-                elif spec.name == "SO4":
-                    f.write(f"          balance -= 2.0 * state({si});  // SO4^2- (-2)\n")
-            f.write("          return balance;\n")
-            f.write("      }\n")
-
-            f.write("#endif // MKPP_DIAGNOSTICS\n")
-
-        f.write("  };\n")
-        f.write("}\n")
-
-    # 2. Manifest metadata emission (T008)
+    # 4. Manifest metadata emission (unchanged logic)
     manifest = {
         "mechanism": mech.name,
         "aerosol_representation": mech.aerosol_representation.value,
-        "checksum": hashlib.sha256(mech.name.encode()).hexdigest(),  # Simplified checksum for MVP
+        "checksum": hashlib.sha256(mech.name.encode()).hexdigest(),
         "artifacts": [
             {"kind": "header", "file": header_path.name},
             {"kind": "adjoint_tlm_record", "differentiable": True},
@@ -793,7 +118,9 @@ def generate_headers(
             arr.name: {
                 "rank": arr.rank,
                 "layout": arr.layout,
-                "lifetime": "unmanaged_borrowed_from_host" if arr.ownership == "host" else "device_owned",
+                "lifetime": "unmanaged_borrowed_from_host"
+                if arr.ownership == "host"
+                else "device_owned",
             }
             for arr in mech.host_interface.arrays
         }
@@ -806,4 +133,5 @@ def generate_headers(
     with open(manifest_path, "w") as f:
         json.dump(manifest, f, indent=2)
 
-    return {"header": str(header_path), "manifest": str(manifest_path)}
+    results["manifest"] = str(manifest_path)
+    return results

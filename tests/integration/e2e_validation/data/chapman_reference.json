@@ -1,0 +1,37 @@
+{
+    "mechanism": "chapman",
+    "solver": "ros3",
+    "species": [
+        "O",
+        "O2",
+        "O3",
+        "M"
+    ],
+    "initial_conditions": [
+        10000000000.0,
+        20000000000.0,
+        30000000000.0,
+        40000000000.0
+    ],
+    "jvals": [
+        2e-05,
+        0.001
+    ],
+    "time_span": [
+        0.0,
+        3600.0
+    ],
+    "scipy_config": {
+        "method": "Radau",
+        "rtol": 1e-12,
+        "atol": 1e-12
+    },
+    "expected_final": [
+        1622754533.8035865,
+        20000000000.0,
+        72.50127371546098,
+        40000000000.0
+    ],
+    "generated_by": "tests/integration/generate_scipy_reference.py",
+    "timestamp": "2026-08-06T19:38:07.821135+00:00"
+}

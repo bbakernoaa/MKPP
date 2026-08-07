@@ -3,6 +3,8 @@ project(MKPP_Root CXX)
 
 find_package(Kokkos REQUIRED)
 
+add_subdirectory(src/mkpp_host)
+
 # ---------------------------------------------------------------------------
 # Install targets (EE2 compliance: all, debug, install, clean)
 # ---------------------------------------------------------------------------

@@ -1,0 +1,70 @@
+{#
+  Transposed LU solve macro for adjoint W^{-T} solves.
+
+  Emits transposed forward substitution (U^T * y = b) followed by
+  transposed backward substitution (L^T * x = y). Used in the discrete
+  adjoint solver variant (integrate_adj) to solve W^{-T} * x = b.
+
+  Parameters:
+    fwd_steps    - list of dicts {i: int, raw_expr: str} for U^T * y = b
+    bwd_steps    - list of dicts {i: int, raw_expr: str} for L^T * x = y
+    rhs_prefix   - prefix replacing 'b' (e.g. "v1")
+    y_prefix     - prefix replacing 'y' (e.g. "yt1")
+    x_prefix     - prefix replacing 'x' (e.g. "u1"), also used in block comments
+    blocks       - optional list of block dicts {indices: [...], species_names: [...]}
+    is_reduction - if true, wrap with active[i] ? (expr) : 0.0
+    indent       - indentation string (default "              ")
+
+  Requirements: 3.5
+#}
+{% macro emit_transpose_solve(fwd_steps, bwd_steps, rhs_prefix, y_prefix, x_prefix, blocks=none, is_reduction=false, indent="              ") %}
+{% if blocks and blocks | length > 1 %}
+{% set ns = namespace(emitted_fwd_blocks=[]) %}
+{% for step in fwd_steps %}
+{% for block_num in range(blocks | length) %}
+{% if step.i in blocks[block_num].indices %}
+{% if block_num not in ns.emitted_fwd_blocks %}
+{% set ns.emitted_fwd_blocks = ns.emitted_fwd_blocks + [block_num] %}
+{{ indent }}// Block {{ block_num }}: {{ x_prefix }} transpose forward sub [{{ blocks[block_num].species_names | join(', ') }}]
+{% endif %}
+{% endif %}
+{% endfor %}
+{% if is_reduction %}
+{{ indent }}double {{ y_prefix }}_{{ step.i }} = active[{{ step.i }}] ? ({{ step.raw_expr | sub_prefixes(rhs=rhs_prefix, y=y_prefix) }}) : 0.0;
+{% else %}
+{{ indent }}double {{ y_prefix }}_{{ step.i }} = {{ step.raw_expr | sub_prefixes(rhs=rhs_prefix, y=y_prefix) }};
+{% endif %}
+{% endfor %}
+{% set ns = namespace(emitted_bwd_blocks=[]) %}
+{% for step in bwd_steps %}
+{% for block_num in range(blocks | length) %}
+{% if step.i in blocks[block_num].indices %}
+{% if block_num not in ns.emitted_bwd_blocks %}
+{% set ns.emitted_bwd_blocks = ns.emitted_bwd_blocks + [block_num] %}
+{{ indent }}// Block {{ block_num }}: {{ x_prefix }} transpose backward sub [{{ blocks[block_num].species_names | join(', ') }}]
+{% endif %}
+{% endif %}
+{% endfor %}
+{% if is_reduction %}
+{{ indent }}double {{ x_prefix }}_{{ step.i }} = active[{{ step.i }}] ? ({{ step.raw_expr | sub_prefixes(y=y_prefix, x=x_prefix) }}) : 0.0;
+{% else %}
+{{ indent }}double {{ x_prefix }}_{{ step.i }} = {{ step.raw_expr | sub_prefixes(y=y_prefix, x=x_prefix) }};
+{% endif %}
+{% endfor %}
+{% else %}
+{% for step in fwd_steps %}
+{% if is_reduction %}
+{{ indent }}double {{ y_prefix }}_{{ step.i }} = active[{{ step.i }}] ? ({{ step.raw_expr | sub_prefixes(rhs=rhs_prefix, y=y_prefix) }}) : 0.0;
+{% else %}
+{{ indent }}double {{ y_prefix }}_{{ step.i }} = {{ step.raw_expr | sub_prefixes(rhs=rhs_prefix, y=y_prefix) }};
+{% endif %}
+{% endfor %}
+{% for step in bwd_steps %}
+{% if is_reduction %}
+{{ indent }}double {{ x_prefix }}_{{ step.i }} = active[{{ step.i }}] ? ({{ step.raw_expr | sub_prefixes(y=y_prefix, x=x_prefix) }}) : 0.0;
+{% else %}
+{{ indent }}double {{ x_prefix }}_{{ step.i }} = {{ step.raw_expr | sub_prefixes(y=y_prefix, x=x_prefix) }};
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endmacro %}

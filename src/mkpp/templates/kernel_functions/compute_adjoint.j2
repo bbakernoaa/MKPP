@@ -1,0 +1,22 @@
+{#
+  Kernel function template: compute_adjoint (Adjoint Jacobian J^T evaluation).
+
+  Renders the `compute_adjoint()` function which evaluates the transpose
+  Jacobian (adjoint) matrix J^T[i,j] at the given state.
+
+  Only non-zero entries are emitted (sparse adjoint Jacobian).
+
+  Context variables required:
+    - num_species: int
+    - adjoint_entries_state: list of (i, j, expr) tuples using state(i) format
+      These are the entries of J^T (the transposed Jacobian).
+
+  Requirements: 4.6
+#}
+      template <class StateView, class JacView>
+      KOKKOS_INLINE_FUNCTION void compute_adjoint(const StateView& state, JacView& J_adj_block, const double* jvals) const {
+{% for entry in adjoint_entries_state %}
+          J_adj_block({{ entry[0] }}, {{ entry[1] }}) = {{ entry[2] }};
+{% endfor %}
+      }
+

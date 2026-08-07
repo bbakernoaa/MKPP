@@ -1,0 +1,45 @@
+{#
+  Forward substitution macro for Ly = b.
+
+  Emits C++ variable declarations of the form:
+      double y_i = <expr>;
+  where the raw expression's b_N and y_N placeholders are substituted
+  with the caller-supplied prefixes via the sub_prefixes filter.
+
+  Parameters:
+    steps        - list of dicts {i: int, raw_expr: str}
+    rhs_prefix   - prefix replacing 'b' (e.g. "F1", "rhs2")
+    y_prefix     - prefix replacing 'y' (e.g. "y1", "y2")
+    blocks       - optional list of block dicts {indices: [...], species_names: [...]}
+    is_reduction - if true, wrap with active[i] ? (expr) : 0.0
+    indent       - indentation string (default "          ")
+    k_prefix     - prefix for block comment labels (e.g. "K1")
+#}
+{% macro emit_forward_sub(steps, rhs_prefix, y_prefix, blocks=none, is_reduction=false, indent="          ", k_prefix="") %}
+{% if blocks %}
+{% set ns = namespace(emitted_blocks=[]) %}
+{% for step in steps %}
+{% for block_num in range(blocks | length) %}
+{% if step.i in blocks[block_num].indices %}
+{% if block_num not in ns.emitted_blocks %}
+{% set ns.emitted_blocks = ns.emitted_blocks + [block_num] %}
+{{ indent }}// Block {{ block_num }}: {{ k_prefix }} forward sub [{{ blocks[block_num].species_names | join(', ') }}]
+{% endif %}
+{% endif %}
+{% endfor %}
+{% if is_reduction %}
+{{ indent }}double {{ y_prefix }}_{{ step.i }} = active[{{ step.i }}] ? ({{ step.raw_expr | sub_prefixes(rhs=rhs_prefix, y=y_prefix) }}) : 0.0;
+{% else %}
+{{ indent }}double {{ y_prefix }}_{{ step.i }} = {{ step.raw_expr | sub_prefixes(rhs=rhs_prefix, y=y_prefix) }};
+{% endif %}
+{% endfor %}
+{% else %}
+{% for step in steps %}
+{% if is_reduction %}
+{{ indent }}double {{ y_prefix }}_{{ step.i }} = active[{{ step.i }}] ? ({{ step.raw_expr | sub_prefixes(rhs=rhs_prefix, y=y_prefix) }}) : 0.0;
+{% else %}
+{{ indent }}double {{ y_prefix }}_{{ step.i }} = {{ step.raw_expr | sub_prefixes(rhs=rhs_prefix, y=y_prefix) }};
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endmacro %}

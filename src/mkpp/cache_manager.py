@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+import sympy
+
 
 @dataclass
 class CacheKey:
@@ -42,13 +44,13 @@ class CacheManager:
         self.cache_dir = cache_dir
 
     def compute_key(self, yaml_path: Path) -> CacheKey:
-        """SHA-256 of file contents + MKPP version string."""
+        """SHA-256 of file contents + MKPP version string + SymPy version."""
         file_bytes = yaml_path.read_bytes()
         try:
             version = importlib.metadata.version("mkpp")
         except importlib.metadata.PackageNotFoundError:
             version = "dev"
-        hash_input = file_bytes + version.encode()
+        hash_input = file_bytes + version.encode() + sympy.__version__.encode()
         yaml_hash = hashlib.sha256(hash_input).hexdigest()
         return CacheKey(yaml_hash=yaml_hash, mkpp_version=version)
 

@@ -1,0 +1,60 @@
+{#
+  W-matrix formation macro.
+
+  Emits C++ variable declarations for the iteration matrix W = inv_var*I - J.
+  For diagonal entries (i == j):
+    - If (i, i) is in non_zero_jac_set: W_i_i = inv_var - J_i_i
+    - Otherwise: W_i_i = inv_var (no Jacobian contribution)
+  For off-diagonal entries (i != j):
+    - If (i, j) is in non_zero_jac_set: W_i_j = -J_i_j
+    - Otherwise: W_i_j = 0.0 (fill-in dependency, needed by LU but no Jacobian)
+
+  When is_reduction is true:
+    - Diagonal: W_i_i = active[i] ? (inv_var - J_i_i) : inv_var
+    - Off-diagonal non-zero: W_i_j = active[i] ? (-J_i_j) : 0.0
+
+  When blocks is provided, emit block-boundary comments at transitions.
+
+  Parameters:
+    needed_w          - sorted list of (i, j) tuples for W entries required by LU plan
+    non_zero_jac_set  - set of (i, j) tuples where Jacobian is non-zero
+    inv_var           - name of the inverse-gamma-h variable (e.g. "inv_g_h", "inv_g_dt")
+    N                 - number of species
+    is_reduction      - if true, emit conditional guards for auto-reduction
+    blocks            - optional list of block dicts with {indices: [...], species_names: [...]}
+    indent            - indentation string (default: 14 spaces for nested context)
+#}
+{% macro emit_w_matrix(needed_w, non_zero_jac_set, inv_var, N, is_reduction=false, blocks=none, indent="              ") %}
+{% set ns = namespace(last_block=-1) %}
+{% for entry in needed_w %}
+{% set i = entry[0] %}
+{% set j = entry[1] %}
+{% if blocks %}
+{% for block in blocks %}
+{% if i in block.indices and loop.index0 != ns.last_block %}
+{% set ns.last_block = loop.index0 %}
+{{ indent }}// Block {{ loop.index0 }}: species [{{ block.species_names | join(', ') }}]
+{% endif %}
+{% endfor %}
+{% endif %}
+{% if i == j %}
+{% if (i, j) in non_zero_jac_set %}
+{% if is_reduction %}
+{{ indent }}double W_{{ i }}_{{ j }} = active[{{ i }}] ? ({{ inv_var }} - J_{{ i }}_{{ j }}) : {{ inv_var }};
+{% else %}
+{{ indent }}double W_{{ i }}_{{ j }} = {{ inv_var }} - J_{{ i }}_{{ j }};
+{% endif %}
+{% else %}
+{{ indent }}double W_{{ i }}_{{ j }} = {{ inv_var }};
+{% endif %}
+{% elif (i, j) in non_zero_jac_set %}
+{% if is_reduction %}
+{{ indent }}double W_{{ i }}_{{ j }} = active[{{ i }}] ? (-J_{{ i }}_{{ j }}) : 0.0;
+{% else %}
+{{ indent }}double W_{{ i }}_{{ j }} = -J_{{ i }}_{{ j }};
+{% endif %}
+{% else %}
+{{ indent }}double W_{{ i }}_{{ j }} = 0.0;
+{% endif %}
+{% endfor %}
+{% endmacro %}

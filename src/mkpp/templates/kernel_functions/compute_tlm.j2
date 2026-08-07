@@ -1,0 +1,28 @@
+{#
+  Kernel function template: compute_tlm (TLM J*deltaC product).
+
+  Renders the `compute_tlm()` function which computes the Tangent Linear Model
+  product dF = J * delta_C, where J is the Jacobian evaluated at state.
+
+  Each row dF_block(i) = sum_j J[i,j] * delta_C(j) for non-zero J[i,j].
+
+  Context variables required:
+    - num_species: int
+    - jacobian_entries_state: list of (i, j, expr) tuples using state(i) format
+      (same Jacobian entries as compute_jacobian but used for matrix-vector product)
+    - non_zero_jac_set: set of (i, j) tuples with non-zero Jacobian positions
+
+  Requirements: 4.6
+#}
+      template <class StateView, class DeltaView, class RateView>
+      KOKKOS_INLINE_FUNCTION void compute_tlm(const StateView& state, const DeltaView& delta_C, RateView& dF_block, const double* jvals) const {
+{% for i in range(num_species) %}
+          dF_block({{ i }}) = 0.0;
+{% for entry in jacobian_entries_state %}
+{% if entry[0] == i %}
+          dF_block({{ i }}) += ({{ entry[2] }}) * delta_C({{ entry[1] }});
+{% endif %}
+{% endfor %}
+{% endfor %}
+      }
+

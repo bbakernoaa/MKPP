@@ -1,0 +1,29 @@
+{#
+  Kernel function template: compute_jacobian (Jacobian matrix evaluation).
+
+  Renders the `compute_jacobian()` function which evaluates the analytical
+  Jacobian matrix J[i,j] = dF_i/dC_j at the given state.
+
+  Only non-zero entries are emitted (sparse Jacobian).
+
+  Context variables required:
+    - num_species: int
+    - jacobian_entries_state: list of (i, j, expr) tuples using state(i) format
+    - has_equilibrium: bool (if true, signature includes temp, rh params)
+
+  Requirements: 4.6
+#}
+      template <class StateView, class JacView>
+{% if has_equilibrium %}
+      KOKKOS_INLINE_FUNCTION void compute_jacobian(const StateView& state, JacView& J_block, const double* jvals, const double temp, const double rh) const {
+          const double Temp = temp;
+          const double RH = rh;
+          (void)RH;  // Reserved for future deliquescence modeling
+{% else %}
+      KOKKOS_INLINE_FUNCTION void compute_jacobian(const StateView& state, JacView& J_block, const double* jvals) const {
+{% endif %}
+{% for entry in jacobian_entries_state %}
+          J_block({{ entry[0] }}, {{ entry[1] }}) = {{ entry[2] }};
+{% endfor %}
+      }
+

@@ -1,0 +1,468 @@
+"""Template context construction for Jinja2 code generation.
+
+Assembles all data needed for Jinja2 template rendering into a flat
+dictionary (Template_Context). Templates receive no Python function
+calls, only pre-computed data.
+"""
+
+import re
+from typing import Any
+
+from .format_eqn import format_eqn
+from .model import MechanismDefinition, SymbolicLUPlan
+from .rosenbrock import SOLVER_COEFFICIENTS
+
+
+def build_template_context(
+    mech: MechanismDefinition,
+    solver_name: str = "ros3",
+    lu_plan: SymbolicLUPlan | None = None,
+    sympy_meta: dict | None = None,
+    adjoint: bool = False,
+) -> dict[str, Any]:
+    """Assemble all data needed for Jinja2 template rendering.
+
+    Parameters
+    ----------
+    mech : MechanismDefinition
+        Parsed mechanism definition containing species, reactions, and metadata.
+    solver_name : str
+        Name of the Rosenbrock solver variant (key in SOLVER_COEFFICIENTS).
+    lu_plan : SymbolicLUPlan or None
+        Pre-computed symbolic LU plan. If None, will be retrieved from
+        mechanism metadata or computed from sympy_meta.
+    sympy_meta : dict or None
+        Mechanism symbolic metadata containing jacobian_matrix, f_vector, etc.
+        If None, will be retrieved from mechanism metadata or computed.
+    adjoint : bool
+        If True, include transposed LU substitution steps for adjoint solves.
+
+    Returns
+    -------
+    dict
+        Flat dictionary with all keys required for Jinja2 template rendering.
+
+    Raises
+    ------
+    ValueError
+        If the mechanism has no species (empty mechanism).
+    KeyError
+        If solver_name is not found in SOLVER_COEFFICIENTS.
+    """
+    # Validate non-empty mechanism
+    if not mech or not mech.species:
+        raise ValueError("Cannot build template context for empty mechanism (no species)")
+
+    N = len(mech.species)
+
+    # --- Resolve tableau ---
+    tableau = SOLVER_COEFFICIENTS[solver_name]
+
+    # --- Resolve sympy_meta ---
+    if sympy_meta is None:
+        if getattr(mech, "metadata", None) and isinstance(mech.metadata, dict):
+            sympy_meta = mech.metadata.get("sympy_metadata")
+        if sympy_meta is None:
+            sympy_meta = getattr(mech, "sympy_metadata", None)
+        if sympy_meta is None:
+            from .lowering import prepare_unified_jacobian
+
+            sympy_meta = prepare_unified_jacobian(mech)
+
+    # --- Resolve LU plan ---
+    if lu_plan is None:
+        if isinstance(getattr(mech, "metadata", None), dict):
+            lu_plan = mech.metadata.get("symbolic_lu_plan")
+        if lu_plan is None and sympy_meta and "symbolic_lu_plan" in sympy_meta:
+            lu_plan = sympy_meta["symbolic_lu_plan"]
+        if lu_plan is None and getattr(mech, "symbolic_lu_plan", None):
+            lu_plan = getattr(mech, "symbolic_lu_plan", None)
+        if lu_plan is None and sympy_meta and "jacobian_matrix" in sympy_meta:
+            from .lowering import compute_symbolic_lu_decomposition
+
+            lu_plan = compute_symbolic_lu_decomposition(
+                sympy_meta["jacobian_matrix"],
+                [s.name for s in mech.species],
+            )
+
+    # --- Compute transposed LU plan when adjoint is enabled ---
+    if adjoint and lu_plan:
+        if not lu_plan.transpose_forward_sub_steps:
+            from .lowering import compute_transposed_lu_plan
+
+            compute_transposed_lu_plan(lu_plan)
+
+    # --- Determine permutation ---
+    permutation = lu_plan.permutation if lu_plan and lu_plan.permutation else None
+
+    # --- Determine equilibrium and photolysis flags ---
+    has_equilibrium = bool(mech.equilibrium_reactions)
+    has_photolysis = False
+    num_photolysis = 0
+    photolysis_reactions = []
+    if sympy_meta:
+        num_photolysis = sympy_meta.get("photolysis_count", 0)
+        photolysis_reactions = sympy_meta.get("photolysis_reactions", [])
+        has_photolysis = num_photolysis > 0
+
+    # --- Format Jacobian entries via format_eqn() ---
+    jacobian_entries = []
+    non_zero_jac_set = set()
+    if lu_plan:
+        for i, j, expr_str in lu_plan.non_zero_jacobian:
+            non_zero_jac_set.add((i, j))
+            eqn = format_eqn(
+                expr_str,
+                mech.species,
+                state_var="S",
+                use_parentheses=False,
+                keep_env_symbols=has_equilibrium,
+            )
+            jacobian_entries.append((i, j, eqn))
+
+    # --- Format F-vector expressions ---
+    f_exprs = []
+    if sympy_meta:
+        if "f_implicit" in sympy_meta and "f_explicit" in sympy_meta:
+            F_raw = sympy_meta["f_implicit"] + sympy_meta["f_explicit"]
+        elif "f_vector" in sympy_meta:
+            F_raw = sympy_meta["f_vector"]
+        else:
+            F_raw = [0] * N
+        for expr in F_raw:
+            eqn = format_eqn(
+                expr,
+                mech.species,
+                state_var="S",
+                use_parentheses=False,
+                keep_env_symbols=has_equilibrium,
+            )
+            f_exprs.append(eqn)
+
+    # --- Determine W-entry requirements by scanning LU expressions ---
+    needed_w = set()
+    for i in range(N):
+        needed_w.add((i, i))  # Diagonal always needed
+    if lu_plan:
+        for _kind, _i, _j, expr_str in lu_plan.lu_expressions_ordered:
+            for m in re.finditer(r"W_(\d+)_(\d+)", expr_str):
+                needed_w.add((int(m.group(1)), int(m.group(2))))
+
+    # --- Serialize LU expressions ---
+    lu_expressions = []
+    if lu_plan:
+        for kind, i, j, expr_str in lu_plan.lu_expressions_ordered:
+            lu_expressions.append({
+                "kind": kind,
+                "i": i,
+                "j": j,
+                "expr": expr_str,
+            })
+
+    # --- Serialize forward/backward substitution steps ---
+    forward_sub_steps = []
+    backward_sub_steps = []
+    if lu_plan:
+        for i, expr_str in lu_plan.forward_sub_steps:
+            forward_sub_steps.append({"i": i, "raw_expr": expr_str})
+        for i, expr_str in lu_plan.backward_sub_steps:
+            backward_sub_steps.append({"i": i, "raw_expr": expr_str})
+
+    # --- Serialize transposed substitution steps (adjoint) ---
+    transpose_forward_sub_steps = None
+    transpose_backward_sub_steps = None
+    if adjoint and lu_plan and lu_plan.transpose_forward_sub_steps:
+        transpose_forward_sub_steps = []
+        for i, expr_str in lu_plan.transpose_forward_sub_steps:
+            transpose_forward_sub_steps.append({"i": i, "raw_expr": expr_str})
+        transpose_backward_sub_steps = []
+        for i, expr_str in lu_plan.transpose_backward_sub_steps:
+            transpose_backward_sub_steps.append({"i": i, "raw_expr": expr_str})
+
+    # --- Blocks ---
+    blocks = None
+    if lu_plan and lu_plan.blocks and len(lu_plan.blocks) > 1:
+        blocks = []
+        for block_indices in lu_plan.blocks:
+            block_species_names = [lu_plan.species_map[idx] for idx in block_indices]
+            blocks.append({
+                "indices": block_indices,
+                "species_names": block_species_names,
+            })
+
+    # --- Annotated expressions (for auto-reduction) ---
+    annotated_expressions = None
+    if lu_plan and lu_plan.annotated_expressions:
+        annotated_expressions = []
+        for ann_expr in lu_plan.annotated_expressions:
+            annotated_expressions.append({
+                "kind": ann_expr.kind,
+                "row": ann_expr.row,
+                "col": ann_expr.col,
+                "expr": ann_expr.expr,
+                "depends_on": sorted(ann_expr.depends_on),
+            })
+
+    # --- Tolerance arrays ---
+    default_atol = 100.0  # molecules/cm3, atmospheric chemistry standard
+    default_rtol = 1e-2   # 1% relative tolerance
+    atol_values = None
+    rtol_values = None
+    if isinstance(getattr(mech, "metadata", None), dict):
+        atol_values = mech.metadata.get("atol")
+        rtol_values = mech.metadata.get("rtol")
+    if atol_values is None:
+        atol_values = [default_atol] * N
+    if rtol_values is None:
+        rtol_values = [default_rtol] * N
+    # Ensure exactly N entries
+    atol_values = list(atol_values)[:N]
+    rtol_values = list(rtol_values)[:N]
+    while len(atol_values) < N:
+        atol_values.append(default_atol)
+    while len(rtol_values) < N:
+        rtol_values.append(default_rtol)
+
+    tolerance_arrays = {"atol": atol_values, "rtol": rtol_values}
+
+    # --- Tableau serialization ---
+    tableau_dict = {
+        "name": tableau.name,
+        "stages": tableau.stages,
+        "ELO": tableau.ELO,
+        "Gamma": list(tableau.Gamma),
+        "M": list(tableau.M),
+        "E": list(tableau.E),
+        "Alpha": list(tableau.Alpha),
+        "NewF": list(tableau.NewF),
+        "A_matrix": list(tableau.A),
+        "C_matrix": list(tableau.C),
+    }
+
+    # --- Species metadata ---
+    species_list = []
+    for idx, sp in enumerate(mech.species):
+        species_list.append({
+            "name": sp.name,
+            "index": idx,
+            "elements": dict(sp.elements) if sp.elements else {},
+        })
+
+    # --- Assemble the flat context dictionary ---
+    context: dict[str, Any] = {
+        "mechanism_name": mech.name,
+        "species": species_list,
+        "num_species": N,
+        "reactions": mech.reactions if getattr(mech, "reactions", None) else [],
+        "num_reactions": len(mech.reactions) if getattr(mech, "reactions", None) else 0,
+        "non_zero_jacobian_count": len(jacobian_entries) if jacobian_entries else N * N,
+        "tableau": tableau_dict,
+        "lu_expressions": lu_expressions,
+        "forward_sub_steps": forward_sub_steps,
+        "backward_sub_steps": backward_sub_steps,
+        "needed_w": sorted(needed_w),
+        "non_zero_jac_set": non_zero_jac_set,
+        "blocks": blocks,
+        "jacobian_entries": jacobian_entries,
+        "f_exprs": f_exprs,
+        "permutation": permutation,
+        "adjoint_enabled": adjoint,
+        "has_equilibrium": has_equilibrium,
+        "has_photolysis": has_photolysis,
+        "num_photolysis": num_photolysis,
+        "tolerance_arrays": tolerance_arrays,
+    }
+
+    # Conditionally include adjoint-specific data
+    if adjoint:
+        context["transpose_forward_sub_steps"] = transpose_forward_sub_steps
+        context["transpose_backward_sub_steps"] = transpose_backward_sub_steps
+
+    # Include annotated expressions for auto-reduction
+    if annotated_expressions is not None:
+        context["annotated_expressions"] = annotated_expressions
+
+    # Include additional metadata for downstream templates
+    context["photolysis_reactions"] = photolysis_reactions
+    context["host_interface"] = (
+        mech.host_interface if getattr(mech, "host_interface", None) else None
+    )
+    context["equilibrium_results"] = (
+        sympy_meta.get("equilibrium_results") if sympy_meta else None
+    )
+    context["mass_projector"] = (
+        sympy_meta.get("mass_projector") if sympy_meta else None
+    )
+
+    # --- Kernel function context: state(i)-based expressions ---
+    # These use state_var="state" and use_parentheses=True for kernel function templates
+    # (compute_rates, compute_jacobian, compute_adjoint, compute_tlm)
+    rate_exprs_state = []
+    if sympy_meta:
+        if "f_implicit" in sympy_meta and "f_explicit" in sympy_meta:
+            F_raw_state = sympy_meta["f_implicit"] + sympy_meta["f_explicit"]
+        elif "f_vector" in sympy_meta:
+            F_raw_state = sympy_meta["f_vector"]
+        else:
+            F_raw_state = [0] * N
+        for expr in F_raw_state:
+            eqn = format_eqn(
+                expr,
+                mech.species,
+                state_var="state",
+                use_parentheses=True,
+                keep_env_symbols=has_equilibrium,
+            )
+            rate_exprs_state.append(eqn)
+    context["rate_exprs_state"] = rate_exprs_state
+
+    jacobian_entries_state = []
+    if sympy_meta and "jacobian_matrix" in sympy_meta:
+        J_matrix = sympy_meta["jacobian_matrix"]
+        for i in range(J_matrix.shape[0]):
+            for j in range(J_matrix.shape[1]):
+                if J_matrix[i, j] != 0:
+                    eqn = format_eqn(
+                        J_matrix[i, j],
+                        mech.species,
+                        state_var="state",
+                        use_parentheses=True,
+                        keep_env_symbols=has_equilibrium,
+                    )
+                    jacobian_entries_state.append((i, j, eqn))
+    context["jacobian_entries_state"] = jacobian_entries_state
+
+    adjoint_entries_state = []
+    if sympy_meta and "adjoint_matrix" in sympy_meta:
+        J_adj = sympy_meta["adjoint_matrix"]
+        for i in range(J_adj.shape[0]):
+            for j in range(J_adj.shape[1]):
+                if J_adj[i, j] != 0:
+                    eqn = format_eqn(
+                        J_adj[i, j],
+                        mech.species,
+                        state_var="state",
+                        use_parentheses=True,
+                    )
+                    adjoint_entries_state.append((i, j, eqn))
+    context["adjoint_entries_state"] = adjoint_entries_state
+
+    # --- Mass projector data for project_mass_conservation template ---
+    mass_projector_data = None
+    if sympy_meta and "mass_projector" in sympy_meta:
+        P = sympy_meta["mass_projector"]
+        elements = sympy_meta["element_map"]
+        species_map = sympy_meta["species_map"]
+
+        # Build element->species coefficient mapping (E-matrix rows)
+        element_species_coeffs = []
+        for elem_idx, elem in enumerate(elements):
+            coeffs = {}
+            for sp_idx, sp_name in enumerate(species_map):
+                s_def = next(s for s in mech.species if s.name == sp_name)
+                if elem in s_def.elements:
+                    coeffs[sp_idx] = s_def.elements[elem]
+            element_species_coeffs.append(coeffs)
+
+        # Build projector non-zero entries
+        projector_entries = []
+        for i in range(P.shape[0]):
+            for j in range(P.shape[1]):
+                if P[i, j] != 0:
+                    projector_entries.append((i, j, P[i, j]))
+
+        mass_projector_data = {
+            "element_map": list(elements),
+            "species_map": list(species_map),
+            "projector_entries": projector_entries,
+            "element_species_coeffs": element_species_coeffs,
+        }
+    context["mass_projector_data"] = mass_projector_data
+
+    # --- Additional metadata for header.j2 ---
+    # Partition metadata for SZA sorting annotation
+    partition_meta = getattr(mech, "partition_metadata", None)
+    context["partition_metadata"] = partition_meta
+
+    # Continuous transition annotation
+    has_continuous_rxns = any(
+        getattr(r, "continuous_transition", False) for r in mech.reactions
+    )
+    context["has_continuous_rxns"] = has_continuous_rxns
+
+    # Equilibrium reactions metadata for compute_equilibrium_partition
+    equilibrium_reactions = mech.equilibrium_reactions if mech.equilibrium_reactions else []
+    context["equilibrium_reactions"] = equilibrium_reactions
+
+    # --- Pre-compute equilibrium partition data for templates ---
+    equilibrium_partition_data = None
+    if mech.equilibrium_reactions and sympy_meta and "equilibrium_results" in sympy_meta:
+        eq_results = sympy_meta["equilibrium_results"]
+        eq_partition_blocks = []
+        for eq_result in eq_results:
+            # Total species sums
+            total_species = []
+            for element_name, species_indices in eq_result.total_species_map.items():
+                if species_indices:
+                    terms = [f"state({idx})" for idx in species_indices]
+                    total_species.append({
+                        "element_name": element_name,
+                        "expr": " + ".join(terms),
+                    })
+            # Partition expressions
+            partition_entries = []
+            for species_name, expr in eq_result.partition_exprs.items():
+                species_idx = next(
+                    (i for i, s in enumerate(mech.species) if s.name == species_name),
+                    None,
+                )
+                if species_idx is not None:
+                    eqn = format_eqn(expr, mech.species, state_var="state", use_parentheses=True)
+                    partition_entries.append({
+                        "species_idx": species_idx,
+                        "expr": eqn,
+                    })
+            eq_partition_blocks.append({
+                "total_species": total_species,
+                "partition_entries": partition_entries,
+            })
+        equilibrium_partition_data = eq_partition_blocks
+    context["equilibrium_partition_data"] = equilibrium_partition_data
+
+    # --- Diagnostics data for equilibrium mechanisms ---
+    diagnostics_data = None
+    if has_equilibrium and mech.equilibrium_reactions:
+        eq_def = mech.equilibrium_reactions[0]  # Primary equilibrium system
+        # Mass balance elements
+        mass_balance_elements = []
+        for element_name, sp_list in eq_def.total_species.items():
+            species_indices = []
+            for sp_name in sp_list:
+                for si, spec in enumerate(mech.species):
+                    if spec.name == sp_name:
+                        species_indices.append(si)
+                        break
+            mass_balance_elements.append({
+                "element_name": element_name,
+                "species_list": list(sp_list),
+                "species_indices": species_indices,
+            })
+        # Charge balance species contributions
+        charge_contributions = []
+        for si, spec in enumerate(mech.species):
+            if spec.name == "NH4a":
+                charge_contributions.append({"idx": si, "sign": "+", "coeff": 1.0, "comment": "NH4+ (+1)"})
+            elif spec.name in ("NO3an1", "NO3an2", "NO3an3"):
+                charge_contributions.append({"idx": si, "sign": "-", "coeff": 1.0, "comment": "NO3- (-1)"})
+            elif spec.name == "SO4":
+                charge_contributions.append({"idx": si, "sign": "-", "coeff": 2.0, "comment": "SO4^2- (-2)"})
+        diagnostics_data = {
+            "mass_balance_elements": mass_balance_elements,
+            "charge_contributions": charge_contributions,
+        }
+    context["diagnostics_data"] = diagnostics_data
+
+    # Suffix for filename reference
+    context["suffix"] = ""
+
+    return context

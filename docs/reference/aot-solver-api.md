@@ -242,7 +242,61 @@ MKPP code generation supports 5 L-stable and A-stable Rosenbrock solver variants
 
 ---
 
-## 4. CF Metadata Standard Table
+## 6. High-Level Multi-Language Host Model API (`mkpp.h`, `mkpp_mod.f90`, `mkpp.hpp`)
+
+When generating solvers with the `--host-api` flag (`python -m mkpp generate --host-api`), MKPP emits C11, C++17, and Fortran 2018 wrapper interface files alongside Kokkos solver headers, enabling zero-copy host model integration without Python dependencies at compile or run time.
+
+### C11 ABI Interface (`mkpp.h`)
+Opaque handle C ABI functions returning integer status codes (`0` for success `MKPP_SUCCESS`, `<0` for errors):
+
+```c
+/* Opaque Context Handle */
+typedef struct mkpp_handle_s* mkpp_handle_t;
+
+/* Lifecycle & State Binding */
+int mkpp_create_handle(mkpp_handle_t* handle_out, size_t num_cells);
+int mkpp_destroy_handle(mkpp_handle_t handle);
+int mkpp_initialize(mkpp_handle_t handle);
+
+int mkpp_set_state_ptrs(mkpp_handle_t handle, double* species_conc, const double* temp, const double* pressure, const double* air_density);
+int mkpp_set_photolysis_ptrs(mkpp_handle_t handle, const double* photolysis_rates);
+
+/* Solver Computation & Diagnostics */
+int mkpp_integrate(mkpp_handle_t handle, double dt);
+int mkpp_evaluate_rates(mkpp_handle_t handle, double* rates_out);
+int mkpp_evaluate_jacobian(mkpp_handle_t handle, double* jac_out);
+
+/* Metadata Lookups & Error Handling */
+int mkpp_get_species_index(mkpp_handle_t handle, const char* species_name, int* index_out);
+int mkpp_get_photolysis_index(mkpp_handle_t handle, const char* photo_name, int* index_out);
+int mkpp_get_last_error(mkpp_handle_t handle, char* buffer, size_t buffer_len);
+```
+
+### Fortran 2018 Module (`mkpp_mod.f90`)
+Modern Fortran module using `iso_c_binding` to bind 2D column-major arrays `(num_cells, num_species)` zero-copy:
+
+```fortran
+use iso_c_binding
+use mkpp_mod
+
+type(mkpp_handle_t) :: handle
+real(c_double), target :: conc(num_cells, MKPP_NUM_SPECIES)
+real(c_double), target :: temp(num_cells), pres(num_cells), rho(num_cells)
+integer :: status
+
+call mkpp_create_handle(handle, num_cells, status)
+call mkpp_initialize(handle, status)
+call mkpp_set_state_ptrs(handle, conc, temp, pres, rho, status)
+call mkpp_integrate(handle, 60.0d0, status)
+call mkpp_destroy_handle(handle, status)
+```
+
+### C++ Interface (`mkpp.hpp`)
+RAII `mkpp::MechanismContext` wrapper class managing handle lifecycles and throwing `std::runtime_error` on failure.
+
+---
+
+## 7. CF Metadata Standard Table
 
 Variables and species states in MKPP generated solvers conform to standard Climate and Forecast (CF) metadata conventions:
 
@@ -258,7 +312,8 @@ Variables and species states in MKPP generated solvers conform to standard Clima
 
 ## Related Documents
 
-- [Reaction Types & YAML Schema Reference](reaction-types-and-yaml-schema.md)
+- [Reaction Types & OpenAtmos YAML Schema Reference](reaction-types-and-yaml-schema.md)
+- [How-To: Host Model Integration](../how-to/host_model_integration.md)
 - [Reaction Kinetics & Unified Jacobian Explanation](../explanation/unified-jacobian-and-reaction-kinetics.md)
 - [How-To: Create Custom Reactions](../how-to/create-custom-reactions.md)
 - [AOT Solver Quickstart Tutorial](../tutorials/aot-solver-quickstart.md)
