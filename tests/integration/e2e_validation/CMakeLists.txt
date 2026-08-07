@@ -46,3 +46,15 @@ add_executable(benchmark_runner benchmark_runner.cpp)
 target_include_directories(benchmark_runner
                            PRIVATE ${CMAKE_SOURCE_DIR}/mkpp-generated)
 target_link_libraries(benchmark_runner PRIVATE mkpp_host Kokkos::kokkos)
+
+# SciPy reference validation test
+add_executable(test_scipy_validation test_scipy_validation.cpp)
+target_include_directories(test_scipy_validation
+                           PRIVATE ${CMAKE_SOURCE_DIR}/mkpp-generated)
+target_link_libraries(
+  test_scipy_validation PRIVATE mkpp_host Kokkos::kokkos GTest::gtest_main
+                                GTest::gtest)
+target_compile_definitions(
+  test_scipy_validation PRIVATE REFERENCE_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")
+
+add_test(NAME mkpp_scipy_validation COMMAND test_scipy_validation)
