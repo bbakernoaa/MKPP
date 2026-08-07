@@ -148,6 +148,10 @@ def mechanism_with_phase_change_equilibrium_conflict(draw):
 
     # Pick overlapping species: at least one species appears in both PHASE_CHANGE and EQUILIBRIUM
     overlap_sp = all_species[0]
+<<<<<<< HEAD
+=======
+    gas_sp = all_species[1]
+>>>>>>> origin/develop
     aerosol_sp = [all_species[2]]
 
     # Build PHASE_CHANGE reaction referencing the overlap species

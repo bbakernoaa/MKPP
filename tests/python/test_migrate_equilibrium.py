@@ -44,7 +44,11 @@ def test_migrate_equilibrium_removes_phase_change(tmp_path):
     """PHASE_CHANGE for NH4/NO3/SO4 species is removed and EQUILIBRIUM block added."""
     mech_file = _make_mech_with_phase_change(tmp_path)
 
+<<<<<<< HEAD
     with warnings.catch_warnings(record=True):
+=======
+    with warnings.catch_warnings(record=True) as w:
+>>>>>>> origin/develop
         warnings.simplefilter("always")
         result = migrate_equilibrium(str(mech_file))
 

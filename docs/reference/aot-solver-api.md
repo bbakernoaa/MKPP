@@ -129,6 +129,7 @@ void integrate_with_reduction(
 
 ---
 
+<<<<<<< HEAD
 ## 3. Adjoint & Tangent-Linear Model (TLM) C++ API
 
 When compiled with the `--adjoint` CLI flag, headers expose discrete adjoint structs and routines:
@@ -242,6 +243,7 @@ MKPP code generation supports 5 L-stable and A-stable Rosenbrock solver variants
 
 ---
 
+<<<<<<< HEAD
 ## 6. High-Level Multi-Language Host Model API (`mkpp.h`, `mkpp_mod.f90`, `mkpp.hpp`)
 
 When generating solvers with the `--host-api` flag (`python -m mkpp generate --host-api`), MKPP emits C11, C++17, and Fortran 2018 wrapper interface files alongside Kokkos solver headers, enabling zero-copy host model integration without Python dependencies at compile or run time.
@@ -297,6 +299,9 @@ RAII `mkpp::MechanismContext` wrapper class managing handle lifecycles and throw
 ---
 
 ## 7. CF Metadata Standard Table
+=======
+## 4. CF Metadata Standard Table
+>>>>>>> origin/develop
 
 Variables and species states in MKPP generated solvers conform to standard Climate and Forecast (CF) metadata conventions:
 

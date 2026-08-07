@@ -7,6 +7,7 @@ for tableau definitions and expression formatting.
 
 Public API (backward-compatible):
     - generate_headers
+    - generate_host_api_headers
     - SOLVER_COEFFICIENTS
     - RosenbrockTableau
     - format_eqn
@@ -118,7 +119,9 @@ def generate_headers(
             arr.name: {
                 "rank": arr.rank,
                 "layout": arr.layout,
-                "lifetime": "unmanaged_borrowed_from_host" if arr.ownership == "host" else "device_owned",
+                "lifetime": "unmanaged_borrowed_from_host"
+                if arr.ownership == "host"
+                else "device_owned",
             }
             for arr in mech.host_interface.arrays
         }
