@@ -2,7 +2,13 @@ name: Publish CI Docker Image
 
 on:
   push:
-    branches: ["main", "develop"]
+    branches: ["main", "develop", "feature/*", "feature/**"]
+    paths:
+      - '.github/docker/Dockerfile.ci'
+      - 'environment.yml'
+      - 'pyproject.toml'
+      - '.github/workflows/docker-publish.yml'
+  pull_request:
     paths:
       - '.github/docker/Dockerfile.ci'
       - 'environment.yml'
