@@ -65,53 +65,24 @@ jobs:
           "
 
   env-setup:
-    name: 2. Environment & Dependency Setup
+    name: 2. Environment Validation
     needs: static-gates
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash -el {0}
+    container:
+      image: ghcr.io/bbakernoaa/mkpp-ci-env:latest
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Conda Environment
-        uses: conda-incubator/setup-miniconda@v3
-        with:
-          activate-environment: mkpp-env
-          environment-file: environment.yml
-          auto-activate-base: false
-          cache-environment: true
-          cache-environment-key: conda-env-${{ runner.os }}-${{ hashFiles('environment.yml') }}
-
-      - name: Cache Kokkos Installation
-        id: cache-kokkos
-        uses: actions/cache@v4
-        with:
-          path: /opt/kokkos
-          key: kokkos-4.5.01-serial-${{ runner.os }}-gcc
-
-      - name: Build Kokkos from Source
-        if: steps.cache-kokkos.outputs.cache-hit != 'true'
-        run: |
-          git clone --depth 1 --branch 4.5.01 https://github.com/kokkos/kokkos.git /tmp/kokkos-src
-          cmake -S /tmp/kokkos-src -B /tmp/kokkos-build \
-            -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_INSTALL_PREFIX=/opt/kokkos \
-            -DKokkos_ENABLE_SERIAL=ON \
-            -DKokkos_ENABLE_OPENMP=OFF \
-            -DKokkos_ENABLE_CUDA=OFF
-          cmake --build /tmp/kokkos-build -j $(nproc)
-          cmake --install /tmp/kokkos-build
-
       - name: Validate Environment (EE2 Compliance)
         run: |
-          echo "Checking compilers and environment..."
-          python --version
+          echo "Checking compilers and environment inside container..."
+          python3 --version
           cmake --version
           ninja --version
+          gcc --version
+          gfortran --version
           echo "Kokkos installed at /opt/kokkos"
           ls /opt/kokkos/lib*/cmake/Kokkos/ || ls /opt/kokkos/lib/cmake/Kokkos/
 
@@ -119,9 +90,8 @@ jobs:
     name: 3. AOT Codegen & Freshness Gate
     needs: env-setup
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash -el {0}
+    container:
+      image: ghcr.io/bbakernoaa/mkpp-ci-env:latest
 
     steps:
       - name: Checkout Code
@@ -140,24 +110,14 @@ jobs:
               - 'environment.yml'
               - '.github/workflows/ci.yml'
 
-      - name: Setup Conda Environment
-        if: steps.changes.outputs.codegen == 'true'
-        uses: conda-incubator/setup-miniconda@v3
-        with:
-          activate-environment: mkpp-env
-          environment-file: environment.yml
-          auto-activate-base: false
-          cache-environment: true
-          cache-environment-key: conda-env-${{ runner.os }}-${{ hashFiles('environment.yml') }}
-
       - name: Install MKPP Package
         if: steps.changes.outputs.codegen == 'true'
-        run: pip install -e .
+        run: pip3 install -e .
 
       - name: Regenerate C++ Headers (AOT Compilation)
         if: steps.changes.outputs.codegen == 'true'
         run: |
-          python -c "
+          python3 -c "
           from mkpp.parser import load_mechanism
           from mkpp.codegen import generate_headers
           import os
@@ -186,7 +146,7 @@ jobs:
         run: |
           if ! git diff --quiet mkpp-generated/*.hpp; then
             echo "::error::Committed headers in mkpp-generated/ are stale. Please regenerate locally:"
-            echo "::error::  python -c \"from mkpp.parser import load_mechanism; from mkpp.codegen import generate_headers; ...\""
+            echo "::error::  python3 -c \"from mkpp.parser import load_mechanism; from mkpp.codegen import generate_headers; ...\""
             echo ""
             echo "Changed files:"
             git diff --stat mkpp-generated/*.hpp
@@ -204,29 +164,12 @@ jobs:
     name: 4. C++ Core Build
     needs: aot-codegen
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash -el {0}
+    container:
+      image: ghcr.io/bbakernoaa/mkpp-ci-env:latest
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-
-      - name: Setup Conda Environment
-        uses: conda-incubator/setup-miniconda@v3
-        with:
-          activate-environment: mkpp-env
-          environment-file: environment.yml
-          auto-activate-base: false
-          cache-environment: true
-          cache-environment-key: conda-env-${{ runner.os }}-${{ hashFiles('environment.yml') }}
-
-      - name: Cache Kokkos Installation
-        id: cache-kokkos
-        uses: actions/cache@v4
-        with:
-          path: /opt/kokkos
-          key: kokkos-4.5.01-serial-${{ runner.os }}-gcc
 
       - name: Configure CMake
         run: cmake --preset default -DKokkos_ROOT=/opt/kokkos
@@ -245,29 +188,12 @@ jobs:
     name: 5. Test Gates
     needs: build-cpp
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash -el {0}
+    container:
+      image: ghcr.io/bbakernoaa/mkpp-ci-env:latest
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-
-      - name: Setup Conda Environment
-        uses: conda-incubator/setup-miniconda@v3
-        with:
-          activate-environment: mkpp-env
-          environment-file: environment.yml
-          auto-activate-base: false
-          cache-environment: true
-          cache-environment-key: conda-env-${{ runner.os }}-${{ hashFiles('environment.yml') }}
-
-      - name: Cache Kokkos Installation
-        id: cache-kokkos
-        uses: actions/cache@v4
-        with:
-          path: /opt/kokkos
-          key: kokkos-4.5.01-serial-${{ runner.os }}-gcc
 
       - name: Download Build Artifacts
         uses: actions/download-artifact@v4
@@ -276,13 +202,13 @@ jobs:
           path: build/
 
       - name: Ensure Executable Permissions
-        run: chmod +x build/bin/* build/tests/integration/e2e_validation/* 2>/dev/null || true
+        run: find build/ -type f -exec chmod +x {} +
 
       - name: Run C++ CTests
         run: ctest --preset default --output-on-failure
 
       - name: Install MKPP Package
-        run: pip install -e .
+        run: pip3 install -e .
 
       - name: Run Python AOT Tests
         run: pytest tests/python/ -ra -q --strict-markers

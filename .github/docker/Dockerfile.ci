@@ -1,0 +1,46 @@
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV KOKKOS_ROOT=/opt/kokkos
+ENV PATH="/opt/kokkos/bin:${PATH}"
+
+# Install compilers, CMake, Ninja, Python and base build tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    gcc \
+    g++ \
+    gfortran \
+    cmake \
+    ninja-build \
+    git \
+    curl \
+    python3 \
+    python3-pip \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python packages required for MKPP build and testing
+RUN pip3 install --no-cache-dir \
+    pyyaml \
+    sympy \
+    jinja2 \
+    networkx \
+    pytest \
+    pre-commit \
+    ruff \
+    mkdocs-material \
+    mkdocstrings \
+    mkdocstrings-python
+
+# Build and install Kokkos 4.5.01 to /opt/kokkos
+RUN git clone --depth 1 --branch 4.5.01 https://github.com/kokkos/kokkos.git /tmp/kokkos-src && \
+    cmake -S /tmp/kokkos-src -B /tmp/kokkos-build \
+      -G Ninja \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX=/opt/kokkos \
+      -DKokkos_ENABLE_SERIAL=ON \
+      -DKokkos_ENABLE_OPENMP=OFF \
+      -DKokkos_ENABLE_CUDA=OFF && \
+    cmake --build /tmp/kokkos-build -j $(nproc) && \
+    cmake --install /tmp/kokkos-build && \
+    rm -rf /tmp/kokkos-src /tmp/kokkos-build
