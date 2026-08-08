@@ -11,11 +11,19 @@
     - jacobian_entries_state: list of (i, j, expr) tuples using state(i) format
       (same Jacobian entries as compute_jacobian but used for matrix-vector product)
     - non_zero_jac_set: set of (i, j) tuples with non-zero Jacobian positions
+    - has_equilibrium: bool (if true, signature includes temp, rh params)
 
   Requirements: 4.6
 #}
       template <class StateView, class DeltaView, class RateView>
+{% if has_equilibrium %}
+      KOKKOS_INLINE_FUNCTION void compute_tlm(const StateView& state, const DeltaView& delta_C, RateView& dF_block, const double* jvals, const double temp, const double rh) const {
+          const double Temp = temp;
+          const double RH = rh;
+          (void)RH;  // Reserved for future deliquescence modeling
+{% else %}
       KOKKOS_INLINE_FUNCTION void compute_tlm(const StateView& state, const DeltaView& delta_C, RateView& dF_block, const double* jvals) const {
+{% endif %}
 {% for i in range(num_species) %}
           dF_block({{ i }}) = 0.0;
 {% for entry in jacobian_entries_state %}

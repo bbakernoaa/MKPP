@@ -168,7 +168,10 @@ namespace mkpp {
       }
 
       template <class StateView, class JacView>
-      KOKKOS_INLINE_FUNCTION void compute_adjoint(const StateView& state, JacView& J_adj_block, const double* jvals) const {
+      KOKKOS_INLINE_FUNCTION void compute_adjoint(const StateView& state, JacView& J_adj_block, const double* jvals, const double temp, const double rh) const {
+          const double Temp = temp;
+          const double RH = rh;
+          (void)RH;  // Reserved for future deliquescence modeling
           J_adj_block(0, 0) = -5.0442046141041832e-12*state(3) - 3.3000000000000001e-12*state(4);
           J_adj_block(0, 3) = -5.0442046141041832e-12*state(3);
           J_adj_block(0, 4) = 5.0442046141041832e-12*state(3) - 3.3000000000000001e-12*state(4);
@@ -283,7 +286,10 @@ namespace mkpp {
       }
 
       template <class StateView, class DeltaView, class RateView>
-      KOKKOS_INLINE_FUNCTION void compute_tlm(const StateView& state, const DeltaView& delta_C, RateView& dF_block, const double* jvals) const {
+      KOKKOS_INLINE_FUNCTION void compute_tlm(const StateView& state, const DeltaView& delta_C, RateView& dF_block, const double* jvals, const double temp, const double rh) const {
+          const double Temp = temp;
+          const double RH = rh;
+          (void)RH;  // Reserved for future deliquescence modeling
           dF_block(0) = 0.0;
           dF_block(0) += (-1.2000000000000001e-11*state(3)*exp(-260.0/Temp) - 3.3000000000000001e-12*state(4)) * delta_C(0);
           dF_block(0) += (2.0*jvals[0]) * delta_C(2);
