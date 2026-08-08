@@ -112,7 +112,7 @@ jobs:
 
       - name: Install MKPP Package
         if: steps.changes.outputs.codegen == 'true'
-        run: pip3 install -e .
+        run: pip3 install --no-build-isolation -e .
 
       - name: Regenerate C++ Headers (AOT Compilation)
         if: steps.changes.outputs.codegen == 'true'
@@ -208,7 +208,7 @@ jobs:
         run: ctest --preset default --output-on-failure
 
       - name: Install MKPP Package
-        run: pip3 install -e .
+        run: pip3 install --no-build-isolation -e .
 
       - name: Run Python AOT Tests
         run: pytest tests/python/ -ra -q --strict-markers
