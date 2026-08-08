@@ -143,7 +143,6 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           activate-environment: mkpp-env
-          environment-file: environment.yml
           auto-activate-base: false
 
       - name: Install MKPP Package
@@ -212,7 +211,6 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           activate-environment: mkpp-env
-          environment-file: environment.yml
           auto-activate-base: false
 
       - name: Cache Kokkos Installation
@@ -258,7 +256,6 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           activate-environment: mkpp-env
-          environment-file: environment.yml
           auto-activate-base: false
 
       - name: Cache Kokkos Installation
