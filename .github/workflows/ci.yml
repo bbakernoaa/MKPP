@@ -76,19 +76,14 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Cache Conda Environment
-        id: cache-conda
-        uses: actions/cache@v4
-        with:
-          path: /usr/share/miniconda/envs/mkpp-env
-          key: conda-env-${{ runner.os }}-${{ hashFiles('environment.yml') }}
-
       - name: Setup Conda Environment
         uses: conda-incubator/setup-miniconda@v3
         with:
           activate-environment: mkpp-env
           environment-file: environment.yml
           auto-activate-base: false
+          cache-environment: true
+          cache-environment-key: conda-env-${{ runner.os }}-${{ hashFiles('environment.yml') }}
 
       - name: Cache Kokkos Installation
         id: cache-kokkos
@@ -132,18 +127,14 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Cache Conda Environment
-        id: cache-conda
-        uses: actions/cache@v4
-        with:
-          path: /usr/share/miniconda/envs/mkpp-env
-          key: conda-env-${{ runner.os }}-${{ hashFiles('environment.yml') }}
-
       - name: Setup Conda Environment
         uses: conda-incubator/setup-miniconda@v3
         with:
           activate-environment: mkpp-env
+          environment-file: environment.yml
           auto-activate-base: false
+          cache-environment: true
+          cache-environment-key: conda-env-${{ runner.os }}-${{ hashFiles('environment.yml') }}
 
       - name: Install MKPP Package
         run: pip install -e .
@@ -200,18 +191,14 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Cache Conda Environment
-        id: cache-conda
-        uses: actions/cache@v4
-        with:
-          path: /usr/share/miniconda/envs/mkpp-env
-          key: conda-env-${{ runner.os }}-${{ hashFiles('environment.yml') }}
-
       - name: Setup Conda Environment
         uses: conda-incubator/setup-miniconda@v3
         with:
           activate-environment: mkpp-env
+          environment-file: environment.yml
           auto-activate-base: false
+          cache-environment: true
+          cache-environment-key: conda-env-${{ runner.os }}-${{ hashFiles('environment.yml') }}
 
       - name: Cache Kokkos Installation
         id: cache-kokkos
@@ -245,18 +232,14 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Cache Conda Environment
-        id: cache-conda
-        uses: actions/cache@v4
-        with:
-          path: /usr/share/miniconda/envs/mkpp-env
-          key: conda-env-${{ runner.os }}-${{ hashFiles('environment.yml') }}
-
       - name: Setup Conda Environment
         uses: conda-incubator/setup-miniconda@v3
         with:
           activate-environment: mkpp-env
+          environment-file: environment.yml
           auto-activate-base: false
+          cache-environment: true
+          cache-environment-key: conda-env-${{ runner.os }}-${{ hashFiles('environment.yml') }}
 
       - name: Cache Kokkos Installation
         id: cache-kokkos
