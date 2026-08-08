@@ -99,6 +99,9 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Mark Git Directory Safe
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
       - name: Check for Codegen-related Changes
         id: changes
         uses: dorny/paths-filter@v3
