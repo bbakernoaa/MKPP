@@ -21,6 +21,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Install Python packages required for MKPP build and testing
 RUN pip3 install --no-cache-dir \
+    setuptools \
+    wheel \
     pyyaml \
     sympy \
     jinja2 \

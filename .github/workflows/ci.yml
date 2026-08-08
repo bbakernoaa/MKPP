@@ -92,6 +92,8 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/bbakernoaa/mkpp-ci-env:latest
+    env:
+      PYTHONPATH: ${{ github.workspace }}/src
 
     steps:
       - name: Checkout Code
@@ -190,6 +192,8 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/bbakernoaa/mkpp-ci-env:latest
+    env:
+      PYTHONPATH: ${{ github.workspace }}/src
 
     steps:
       - name: Checkout Code
