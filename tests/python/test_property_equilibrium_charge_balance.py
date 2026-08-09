@@ -89,7 +89,7 @@ _C_S = sp.Symbol("C_S", positive=True)
 _TOTALS = {"reduced_nitrogen": _C_N, "oxidized_nitrogen": _C_Ox, "sulfate": _C_S}
 
 # Build partition expressions once
-_EXPRS = _MODEL.partition_expressions(_TOTALS, _T, _RH, "tanh", 0.05)
+_EXPRS = _MODEL.partition_expressions(_TOTALS, _T, _RH, "sigmoid", 0.05)
 
 # Pre-lambdify for numerical evaluation
 _SYMBOLS = (_T, _RH, _C_N, _C_Ox, _C_S)

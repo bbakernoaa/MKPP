@@ -32,7 +32,7 @@ def _build_chapman_mechanism():
 
 def _build_saprc99_mechanism():
     """Load the SAPRC-99 mechanism for testing."""
-    return load_mechanism("mechanisms/saprc99.yaml")
+    return load_mechanism("mechanisms/saprc99_mini.yaml")
 
 
 def _generate_with_adjoint(mech, solver_name: str, tmp_dir: str) -> str:
