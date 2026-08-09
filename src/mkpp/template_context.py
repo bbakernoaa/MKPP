@@ -249,24 +249,30 @@ def build_template_context(
             )
 
     # --- Tolerance arrays ---
-    default_atol = 100.0  # molecules/cm3, atmospheric chemistry standard
-    default_rtol = 1e-2  # 1% relative tolerance
-    atol_values = None
-    rtol_values = None
+    default_atol = 1.0  # molecules/cm3 (conservative default)
+    default_rtol = 1e-4  # 0.01% relative tolerance
+
+    # Start with defaults
+    atol_values = [default_atol] * N
+    rtol_values = [default_rtol] * N
+
+    # Override with metadata arrays if present (batch override)
     if isinstance(getattr(mech, "metadata", None), dict):
-        atol_values = mech.metadata.get("atol")
-        rtol_values = mech.metadata.get("rtol")
-    if atol_values is None:
-        atol_values = [default_atol] * N
-    if rtol_values is None:
-        rtol_values = [default_rtol] * N
-    # Ensure exactly N entries
-    atol_values = list(atol_values)[:N]
-    rtol_values = list(rtol_values)[:N]
-    while len(atol_values) < N:
-        atol_values.append(default_atol)
-    while len(rtol_values) < N:
-        rtol_values.append(default_rtol)
+        meta_atol = mech.metadata.get("atol")
+        meta_rtol = mech.metadata.get("rtol")
+        if meta_atol is not None:
+            for i in range(min(len(meta_atol), N)):
+                atol_values[i] = meta_atol[i]
+        if meta_rtol is not None:
+            for i in range(min(len(meta_rtol), N)):
+                rtol_values[i] = meta_rtol[i]
+
+    # Override with per-species values (highest priority)
+    for i, sp in enumerate(mech.species):
+        if getattr(sp, "solver_atol", None) is not None:
+            atol_values[i] = sp.solver_atol
+        if getattr(sp, "solver_rtol", None) is not None:
+            rtol_values[i] = sp.solver_rtol
 
     tolerance_arrays = {"atol": atol_values, "rtol": rtol_values}
 

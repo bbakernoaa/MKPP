@@ -104,6 +104,8 @@ class SpeciesDefinition:
     phase: PhaseMode
     elements: dict[str, int] = field(default_factory=dict)
     role: str | None = None
+    solver_atol: float | None = field(default=None)
+    solver_rtol: float | None = field(default=None)
 
 
 @dataclass
