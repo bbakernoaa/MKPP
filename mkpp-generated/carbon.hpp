@@ -119,8 +119,8 @@ namespace mkpp {
       }
 
       static constexpr int NUM_SPECIES = 11;
-      static constexpr double atol[NUM_SPECIES] = { 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0 };
-      static constexpr double rtol[NUM_SPECIES] = { 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01 };
+      static constexpr double atol[NUM_SPECIES] = { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 };
+      static constexpr double rtol[NUM_SPECIES] = { 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001 };
 
       template <class StateView>
       KOKKOS_INLINE_FUNCTION void integrate(double dt_total, StateView& state, const double* jvals) const {

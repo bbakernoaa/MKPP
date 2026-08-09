@@ -117,8 +117,8 @@ namespace mkpp {
       }
 
       static constexpr int NUM_SPECIES = 7;
-      static constexpr double atol[NUM_SPECIES] = { 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0 };
-      static constexpr double rtol[NUM_SPECIES] = { 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01 };
+      static constexpr double atol[NUM_SPECIES] = { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 };
+      static constexpr double rtol[NUM_SPECIES] = { 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001 };
 
       // Photolysis reactions (Cloud-J input mapping):
       //   jvals[0] = O2 -> O  (original A: 2.643E-10 * SUN*SUN*SUN)
