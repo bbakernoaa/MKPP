@@ -122,7 +122,9 @@ def build_template_context(
                 orig_row = permutation[row]
                 for col in range(N):
                     orig_col = permutation[col]
-                    match_tuple = next((item for item in lu_plan.non_zero_jacobian if item[0] == orig_row and item[1] == orig_col), None)
+                    match_tuple = next(
+                        (item for item in lu_plan.non_zero_jacobian if item[0] == orig_row and item[1] == orig_col), None
+                    )
                     if match_tuple:
                         non_zero_jac_set.add((row, col))
                         eqn = format_eqn(
