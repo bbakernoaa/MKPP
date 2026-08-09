@@ -118,24 +118,17 @@ def build_template_context(
             for reg_idx, orig_idx in enumerate(permutation):
                 inv_p[orig_idx] = reg_idx
 
-            for row in range(N):
-                orig_row = permutation[row]
-                for col in range(N):
-                    orig_col = permutation[col]
-                    match_tuple = next(
-                        (item for item in lu_plan.non_zero_jacobian if item[0] == orig_row and item[1] == orig_col), None
-                    )
-                    if match_tuple:
-                        non_zero_jac_set.add((row, col))
-                        eqn = format_eqn(
-                            match_tuple[2],
-                            mech.species,
-                            state_var="S",
-                            use_parentheses=False,
-                            keep_env_symbols=has_equilibrium,
-                        )
-                        remapped_eqn = _remap_s_indices(eqn, inv_p)
-                        jacobian_entries.append((row, col, remapped_eqn))
+            for i, j, expr_str in lu_plan.non_zero_jacobian:
+                non_zero_jac_set.add((i, j))
+                eqn = format_eqn(
+                    expr_str,
+                    mech.species,
+                    state_var="S",
+                    use_parentheses=False,
+                    keep_env_symbols=has_equilibrium,
+                )
+                remapped_eqn = _remap_s_indices(eqn, inv_p)
+                jacobian_entries.append((i, j, remapped_eqn))
         else:
             for i, j, expr_str in lu_plan.non_zero_jacobian:
                 non_zero_jac_set.add((i, j))

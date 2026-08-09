@@ -177,6 +177,7 @@ def parse_mechanism_micm(name: str, data: dict[str, Any]) -> MechanismDefinition
         reactions=reactions,
         host_interface=host_interface,
         equilibrium_reactions=equilibrium_reactions,
+        metadata=data.get("metadata", {}),
     )
 
 
