@@ -5,7 +5,7 @@ if(NOT TARGET mkpp_host)
                    ${CMAKE_BINARY_DIR}/mkpp_host)
 endif()
 
-set(MECHS "chapman" "small_strato" "carbon" "saprc99")
+set(MECHS "chapman" "small_strato" "carbon")
 
 foreach(MECH ${MECHS})
   if("${MECH}" STREQUAL "chapman")
