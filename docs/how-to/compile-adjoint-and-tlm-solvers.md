@@ -19,7 +19,7 @@ Pass the `--adjoint` flag to `mkpp compile` when generating C++ headers:
 ```bash
 # Compile SAPRC-99 mechanism with ROS-3 solver and Adjoint/TLM support
 mkpp compile mechanisms/saprc99.yaml \
-  --test-env example_env.yaml \
+  --test-env example_env.yaml \V
   --out mkpp-generated \
   --solver ros3 \
   --adjoint
