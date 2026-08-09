@@ -1,6 +1,12 @@
 import re
-import tomllib
 from pathlib import Path
+
+import pytest
+
+try:
+    import tomllib
+except ModuleNotFoundError:
+    tomllib = None
 
 import mkpp
 
@@ -11,6 +17,7 @@ SEMVER_REGEX = (
 )
 
 
+@pytest.mark.skipif(tomllib is None, reason="tomllib requires Python 3.11+")
 def test_pyproject_semver():
     pyproject_path = Path(__file__).parents[2] / "pyproject.toml"
     with open(pyproject_path, "rb") as f:

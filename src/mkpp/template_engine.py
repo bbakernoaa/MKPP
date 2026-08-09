@@ -39,8 +39,8 @@ def _sub_prefixes(
 
     Performs regex-based substitution of generic variable names used in
     symbolic LU plan expressions with context-appropriate C++ variable
-    prefixes. This is the Jinja2 filter equivalent of the ``re.sub`` calls
-    in ``symbolic_emit.py``.
+    prefixes. This is the Jinja2 filter equivalent of the former
+    ``re.sub`` calls in the old imperative emitter.
 
     Substitutions performed (in order):
       - ``b_<digits>`` → ``{rhs}_<digits>``  (RHS vector entries)
