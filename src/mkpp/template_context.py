@@ -105,20 +105,46 @@ def build_template_context(
         photolysis_reactions = sympy_meta.get("photolysis_reactions", [])
         has_photolysis = num_photolysis > 0
 
+    def _remap_s_indices(expr_str: str, inv_perm: list[int]) -> str:
+        """Remap unpermuted species index S_i to permuted register index S_{inv_perm[i]}."""
+        return re.sub(r"\bS_(\d+)\b", lambda m: f"S_{inv_perm[int(m.group(1))]}", expr_str)
+
     # --- Format Jacobian entries via format_eqn() ---
     jacobian_entries = []
     non_zero_jac_set = set()
     if lu_plan:
-        for i, j, expr_str in lu_plan.non_zero_jacobian:
-            non_zero_jac_set.add((i, j))
-            eqn = format_eqn(
-                expr_str,
-                mech.species,
-                state_var="S",
-                use_parentheses=False,
-                keep_env_symbols=has_equilibrium,
-            )
-            jacobian_entries.append((i, j, eqn))
+        if permutation:
+            inv_p = [0] * N
+            for reg_idx, orig_idx in enumerate(permutation):
+                inv_p[orig_idx] = reg_idx
+
+            for row in range(N):
+                orig_row = permutation[row]
+                for col in range(N):
+                    orig_col = permutation[col]
+                    match_tuple = next((item for item in lu_plan.non_zero_jacobian if item[0] == orig_row and item[1] == orig_col), None)
+                    if match_tuple:
+                        non_zero_jac_set.add((row, col))
+                        eqn = format_eqn(
+                            match_tuple[2],
+                            mech.species,
+                            state_var="S",
+                            use_parentheses=False,
+                            keep_env_symbols=has_equilibrium,
+                        )
+                        remapped_eqn = _remap_s_indices(eqn, inv_p)
+                        jacobian_entries.append((row, col, remapped_eqn))
+        else:
+            for i, j, expr_str in lu_plan.non_zero_jacobian:
+                non_zero_jac_set.add((i, j))
+                eqn = format_eqn(
+                    expr_str,
+                    mech.species,
+                    state_var="S",
+                    use_parentheses=False,
+                    keep_env_symbols=has_equilibrium,
+                )
+                jacobian_entries.append((i, j, eqn))
 
     # --- Format F-vector expressions ---
     f_exprs = []
@@ -129,15 +155,33 @@ def build_template_context(
             F_raw = sympy_meta["f_vector"]
         else:
             F_raw = [0] * N
-        for expr in F_raw:
-            eqn = format_eqn(
-                expr,
-                mech.species,
-                state_var="S",
-                use_parentheses=False,
-                keep_env_symbols=has_equilibrium,
-            )
-            f_exprs.append(eqn)
+
+        if permutation:
+            inv_p = [0] * N
+            for reg_idx, orig_idx in enumerate(permutation):
+                inv_p[orig_idx] = reg_idx
+
+            for k in range(N):
+                orig_idx = permutation[k]
+                eqn = format_eqn(
+                    F_raw[orig_idx],
+                    mech.species,
+                    state_var="S",
+                    use_parentheses=False,
+                    keep_env_symbols=has_equilibrium,
+                )
+                remapped_eqn = _remap_s_indices(eqn, inv_p)
+                f_exprs.append(remapped_eqn)
+        else:
+            for expr in F_raw:
+                eqn = format_eqn(
+                    expr,
+                    mech.species,
+                    state_var="S",
+                    use_parentheses=False,
+                    keep_env_symbols=has_equilibrium,
+                )
+                f_exprs.append(eqn)
 
     # --- Determine W-entry requirements by scanning LU expressions ---
     needed_w = set()

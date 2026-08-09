@@ -97,23 +97,23 @@ namespace mkpp {
           const double S_3 = state(3);
 
           // Analytical Jacobian & Iteration Matrix W = inv_g_dt*I - J (sparse)
-          double J_1_0 = 6.0e-34*S_3*S_0;
-          double J_1_1 = -7.9999999999999998e-12*S_0 - 1.0*jvals[1];
-          double J_1_2 = 6.0e-34*S_3*S_1 - 7.9999999999999998e-12*S_2;
-          double J_1_3 = 6.0e-34*S_0*S_1;
-          double J_2_0 = -6.0e-34*S_3*S_0 + 2.0*jvals[0];
-          double J_2_1 = -7.9999999999999998e-12*S_0 + 1.0*jvals[1];
-          double J_2_2 = -6.0e-34*S_3*S_1 - 7.9999999999999998e-12*S_2;
-          double J_2_3 = -6.0e-34*S_0*S_1;
-          double W_0_0 = inv_g_dt;
+          double J_0_0 = -7.9999999999999998e-12*S_2 - 1.0*jvals[1];
+          double J_0_1 = 6.0e-34*S_3*S_0 - 7.9999999999999998e-12*S_1;
+          double J_0_2 = 6.0e-34*S_3*S_2;
+          double J_0_3 = 6.0e-34*S_2*S_0;
+          double J_1_0 = -7.9999999999999998e-12*S_2 + 1.0*jvals[1];
+          double J_1_1 = -6.0e-34*S_3*S_0 - 7.9999999999999998e-12*S_1;
+          double J_1_2 = -6.0e-34*S_3*S_2 + 2.0*jvals[0];
+          double J_1_3 = -6.0e-34*S_2*S_0;
+          double W_0_0 = inv_g_dt - J_0_0;
           double W_1_0 = -J_1_0;
           double W_1_1 = inv_g_dt - J_1_1;
           double W_1_2 = -J_1_2;
           double W_1_3 = -J_1_3;
-          double W_2_0 = -J_2_0;
-          double W_2_1 = -J_2_1;
-          double W_2_2 = inv_g_dt - J_2_2;
-          double W_2_3 = -J_2_3;
+          double W_2_0 = 0.0;
+          double W_2_1 = 0.0;
+          double W_2_2 = inv_g_dt;
+          double W_2_3 = 0.0;
           double W_3_3 = inv_g_dt;
 
           // Symbolic Doolittle Sparse LU Factorization
@@ -133,9 +133,9 @@ namespace mkpp {
 
           // --- Stage 1 ---
           // Rate evaluation F1 at S
-          double F1_0 = -6.0e-34*S_3*S_0*S_1 - 7.9999999999999998e-12*S_0*S_2 + 2.0*S_1*jvals[0] + 1.0*S_2*jvals[1];
-          double F1_1 = 0.0;
-          double F1_2 = 6.0e-34*S_3*S_0*S_1 - 7.9999999999999998e-12*S_0*S_2 - 1.0*S_2*jvals[1];
+          double F1_0 = 0.0;
+          double F1_1 = 6.0e-34*S_3*S_2*S_0 - 7.9999999999999998e-12*S_2*S_1 - 1.0*S_1*jvals[1];
+          double F1_2 = -6.0e-34*S_3*S_2*S_0 - 7.9999999999999998e-12*S_2*S_1 + 2.0*S_0*jvals[0] + 1.0*S_1*jvals[1];
           double F1_3 = 0.0;
           // Block 0: K1 forward sub [O2, O]
           double y1_0 = F1_0;
@@ -159,9 +159,9 @@ namespace mkpp {
           double Y2_2 = S_2 + K1_2;
           double Y2_3 = S_3 + K1_3;
           // Rate evaluation F2 at Y2
-          double F2_0 = -6.0e-34*Y2_3*Y2_0*Y2_1 - 7.9999999999999998e-12*Y2_0*Y2_2 + 2.0*Y2_1*jvals[0] + 1.0*Y2_2*jvals[1];
-          double F2_1 = 0.0;
-          double F2_2 = 6.0e-34*Y2_3*Y2_0*Y2_1 - 7.9999999999999998e-12*Y2_0*Y2_2 - 1.0*Y2_2*jvals[1];
+          double F2_0 = 0.0;
+          double F2_1 = 6.0e-34*Y2_3*Y2_2*Y2_0 - 7.9999999999999998e-12*Y2_2*Y2_1 - 1.0*Y2_1*jvals[1];
+          double F2_2 = -6.0e-34*Y2_3*Y2_2*Y2_0 - 7.9999999999999998e-12*Y2_2*Y2_1 + 2.0*Y2_0*jvals[0] + 1.0*Y2_1*jvals[1];
           double F2_3 = 0.0;
           // RHS for stage 2
           double rhs2_0 = F2_0 + (-1.0156171083877703 / dt) * K1_0;
@@ -293,9 +293,9 @@ namespace mkpp {
           const double S_3 = state(3);
 
           // 1. Stage 1 Rates (F1)
-          double F1_0 = -6.0e-34*S_3*S_0*S_1 - 7.9999999999999998e-12*S_0*S_2 + 2.0*S_1*jvals[0] + 1.0*S_2*jvals[1];
-          double F1_1 = 0.0;
-          double F1_2 = 6.0e-34*S_3*S_0*S_1 - 7.9999999999999998e-12*S_0*S_2 - 1.0*S_2*jvals[1];
+          double F1_0 = 0.0;
+          double F1_1 = 6.0e-34*S_3*S_2*S_0 - 7.9999999999999998e-12*S_2*S_1 - 1.0*S_1*jvals[1];
+          double F1_2 = -6.0e-34*S_3*S_2*S_0 - 7.9999999999999998e-12*S_2*S_1 + 2.0*S_0*jvals[0] + 1.0*S_1*jvals[1];
           double F1_3 = 0.0;
 
           // 2. Evaluate importance and update active set
@@ -305,23 +305,23 @@ namespace mkpp {
           active[3] = (Kokkos::fabs(F1_3) / (atol[3] + rtol[3] * Kokkos::fabs(state(3))) >= importance_threshold);
 
           // 3. Analytical Jacobian & Iteration Matrix W (identity for frozen species)
-          double J_1_0 = 6.0e-34*S_3*S_0;
-          double J_1_1 = -7.9999999999999998e-12*S_0 - 1.0*jvals[1];
-          double J_1_2 = 6.0e-34*S_3*S_1 - 7.9999999999999998e-12*S_2;
-          double J_1_3 = 6.0e-34*S_0*S_1;
-          double J_2_0 = -6.0e-34*S_3*S_0 + 2.0*jvals[0];
-          double J_2_1 = -7.9999999999999998e-12*S_0 + 1.0*jvals[1];
-          double J_2_2 = -6.0e-34*S_3*S_1 - 7.9999999999999998e-12*S_2;
-          double J_2_3 = -6.0e-34*S_0*S_1;
-          double W_0_0 = active[0] ? inv_g_dt : 1.0;
+          double J_0_0 = -7.9999999999999998e-12*S_2 - 1.0*jvals[1];
+          double J_0_1 = 6.0e-34*S_3*S_0 - 7.9999999999999998e-12*S_1;
+          double J_0_2 = 6.0e-34*S_3*S_2;
+          double J_0_3 = 6.0e-34*S_2*S_0;
+          double J_1_0 = -7.9999999999999998e-12*S_2 + 1.0*jvals[1];
+          double J_1_1 = -6.0e-34*S_3*S_0 - 7.9999999999999998e-12*S_1;
+          double J_1_2 = -6.0e-34*S_3*S_2 + 2.0*jvals[0];
+          double J_1_3 = -6.0e-34*S_2*S_0;
+          double W_0_0 = active[0] ? (inv_g_dt - J_0_0) : 1.0;
           double W_1_0 = (active[1] && active[0]) ? (-J_1_0) : 0.0;
           double W_1_1 = active[1] ? (inv_g_dt - J_1_1) : 1.0;
           double W_1_2 = (active[1] && active[2]) ? (-J_1_2) : 0.0;
           double W_1_3 = (active[1] && active[3]) ? (-J_1_3) : 0.0;
-          double W_2_0 = (active[2] && active[0]) ? (-J_2_0) : 0.0;
-          double W_2_1 = (active[2] && active[1]) ? (-J_2_1) : 0.0;
-          double W_2_2 = active[2] ? (inv_g_dt - J_2_2) : 1.0;
-          double W_2_3 = (active[2] && active[3]) ? (-J_2_3) : 0.0;
+          double W_2_0 = 0.0;
+          double W_2_1 = 0.0;
+          double W_2_2 = active[2] ? inv_g_dt : 1.0;
+          double W_2_3 = 0.0;
           double W_3_3 = active[3] ? inv_g_dt : 1.0;
 
           // 4. Symbolic LU Factorization (conditional skip for frozen species)
@@ -362,9 +362,9 @@ namespace mkpp {
           double Y2_2 = S_2 + K1_2;
           double Y2_3 = S_3 + K1_3;
           // Rate evaluation F2 at Y2
-          double F2_0 = -6.0e-34*Y2_3*Y2_0*Y2_1 - 7.9999999999999998e-12*Y2_0*Y2_2 + 2.0*Y2_1*jvals[0] + 1.0*Y2_2*jvals[1];
-          double F2_1 = 0.0;
-          double F2_2 = 6.0e-34*Y2_3*Y2_0*Y2_1 - 7.9999999999999998e-12*Y2_0*Y2_2 - 1.0*Y2_2*jvals[1];
+          double F2_0 = 0.0;
+          double F2_1 = 6.0e-34*Y2_3*Y2_2*Y2_0 - 7.9999999999999998e-12*Y2_2*Y2_1 - 1.0*Y2_1*jvals[1];
+          double F2_2 = -6.0e-34*Y2_3*Y2_2*Y2_0 - 7.9999999999999998e-12*Y2_2*Y2_1 + 2.0*Y2_0*jvals[0] + 1.0*Y2_1*jvals[1];
           double F2_3 = 0.0;
           // RHS for stage 2
           double rhs2_0 = F2_0 + (-1.0156171083877703 / dt) * K1_0;
