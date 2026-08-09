@@ -35,7 +35,15 @@ def parse_mechanism_micm(name: str, data: dict[str, Any]) -> MechanismDefinition
             role = "fixed"
         else:
             role = "variable"
-        species.append(SpeciesDefinition(name=sp_name, phase=phase, role=role))
+        species.append(
+            SpeciesDefinition(
+                name=sp_name,
+                phase=phase,
+                role=role,
+                solver_atol=s.get("_atol"),
+                solver_rtol=s.get("_rtol"),
+            )
+        )
 
     phases = []
     for p in data.get("phases", []):
@@ -177,6 +185,7 @@ def parse_mechanism_micm(name: str, data: dict[str, Any]) -> MechanismDefinition
         reactions=reactions,
         host_interface=host_interface,
         equilibrium_reactions=equilibrium_reactions,
+        metadata=data.get("metadata", {}),
     )
 
 

@@ -106,5 +106,7 @@ This guarantees:
 - [Reaction Kinetics & Unified Jacobian Explanation](unified-jacobian-and-reaction-kinetics.md)
 - [How-To: Create Custom Reactions](../how-to/create-custom-reactions.md)
 - [How-To: Run AOT Solver Benchmarks](../how-to/run-aot-solver-benchmarks.md)
+- [How-To: Compile & Run Adjoint and TLM Solvers](../how-to/compile-adjoint-and-tlm-solvers.md)
 - [Reaction Types & YAML Schema Reference](../reference/reaction-types-and-yaml-schema.md)
-- [AOT Solver API Reference](../reference/aot-solver-api.md)
+- [AOT Solver C++ & CLI API Reference](../reference/aot-solver-api.md)
+- [MKPP Documentation Index](../README.md)

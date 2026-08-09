@@ -1,7 +1,7 @@
 """NH4/NO3/SO4 analytical equilibrium model (ISORROPIA-Lite).
 
 Provides smooth, C1-continuous partition expressions for the
-ammonium-nitrate-sulfate thermodynamic system using tanh-based
+ammonium-nitrate-sulfate thermodynamic system using algebraic sigmoid
 regime blending. All expressions are SymPy primitives suitable
 for symbolic differentiation in the unified Jacobian.
 """
@@ -38,7 +38,7 @@ class NH4NO3SO4Model(EquilibriumModel):
       - 1 <= R < 2 (ammonia-rich): sulfate saturated as (NH4)2SO4
       - R >= 2 (ammonia-rich with nitrate): NH4NO3 formation
 
-    Transitions between regimes are blended with tanh functions
+    Transitions between regimes are blended with algebraic sigmoid functions
     to ensure C1-continuity.
     """
 
@@ -91,14 +91,13 @@ class NH4NO3SO4Model(EquilibriumModel):
         totals: dict[str, sp.Symbol],
         T: sp.Symbol,
         RH: sp.Symbol,
-        blending: str,
-        width: float,
+        blending: str = "sigmoid",
+        width: float = 0.05,
     ) -> dict[str, sp.Expr]:
         """Produce smooth partition expressions for each species.
 
-        Uses sulfate-ratio-based regime blending with tanh transitions.
-        All expressions use only SymPy primitives (sp.exp, sp.tanh,
-        arithmetic) — no Piecewise, Abs, Max, or Min.
+        Uses sulfate-ratio-based regime blending with algebraic sigmoid transitions.
+        All expressions use only SymPy primitives — no Piecewise, Abs, Max, or Min.
 
         Conservation is enforced by construction: within each element,
         one species is computed as (total - sum of others).
@@ -112,9 +111,9 @@ class NH4NO3SO4Model(EquilibriumModel):
         RH : sp.Symbol
             Relative humidity symbol (fraction, 0-1).
         blending : str
-            Blending function type ("sigmoid" or "tanh").
+            Blending function type ("sigmoid", default "sigmoid").
         width : float
-            Transition width in sulfate-ratio units.
+            Transition width in sulfate-ratio units (default 0.05).
 
         Returns
         -------
@@ -137,15 +136,21 @@ class NH4NO3SO4Model(EquilibriumModel):
         R = C_N / (C_S + _eps)
 
         # ----------------------------------------------------------
-        # Regime blending weights using tanh
+        # Regime blending weights using algebraic sigmoid:
         # w1 = weight for regime "R >= 1" (transition at R=1)
         # w2 = weight for regime "R >= 2" (transition at R=2)
         #
-        # w_i(R) = 0.5 * (1 + tanh((R - R_threshold) / width))
+        # w_i(R) = 0.5 * (1 + u / sqrt(1 + u^2)), where u = (R - R_0) / width
+        # Smooth C^inf algebraic blending: avoids transcendental tanh,
+        # yielding fast SymPy differentiation, hardware-accelerated C++
+        # evaluation, and compact expression trees.
         # ----------------------------------------------------------
         inv_width = sp.Float(1.0 / width)
-        w1 = sp.Rational(1, 2) * (1 + sp.tanh((R - 1) * inv_width))
-        w2 = sp.Rational(1, 2) * (1 + sp.tanh((R - 2) * inv_width))
+        u1 = (R - 1) * inv_width
+        u2 = (R - 2) * inv_width
+
+        w1 = sp.Rational(1, 2) * (1 + u1 / sp.sqrt(1 + u1**2))
+        w2 = sp.Rational(1, 2) * (1 + u2 / sp.sqrt(1 + u2**2))
 
         # ----------------------------------------------------------
         # REGIME definitions for reduced nitrogen:

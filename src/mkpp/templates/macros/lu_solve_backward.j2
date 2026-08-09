@@ -1,0 +1,45 @@
+{#
+  Backward substitution macro (Ux = y).
+
+  Emits C++ variable declarations for backward substitution steps,
+  applying prefix substitutions via the sub_prefixes filter and
+  optionally emitting block-boundary comments and active-species guards.
+
+  Parameters:
+    steps       - list of dicts with {i: int, raw_expr: str}
+    y_prefix    - prefix to replace 'y' placeholders (intermediate vector)
+    x_prefix    - prefix to replace 'x' placeholders (solution vector)
+    blocks      - optional list of block dicts with {indices: [...], species_names: [...]}
+    is_reduction - if true, wrap expressions with active[i] ? (expr) : 0.0
+    indent      - indentation string (default "          ")
+
+  Requirements: 3.4, 3.6, 3.7
+#}
+{% macro emit_backward_sub(steps, y_prefix, x_prefix, blocks=none, is_reduction=false, indent="          ") %}
+{% if blocks %}
+{% set emitted_blocks = [] %}
+{% for step in steps %}
+{% for block in blocks %}
+{% if step.i in block.indices %}
+{% if block.indices[0] not in emitted_blocks %}
+{% if emitted_blocks.append(block.indices[0]) %}{% endif %}
+{{ indent }}// Block {{ loop.index0 }}: {{ x_prefix }} backward sub [{{ block.species_names | join(', ') }}]
+{% endif %}
+{% endif %}
+{% endfor %}
+{% if is_reduction %}
+{{ indent }}double {{ x_prefix }}_{{ step.i }} = active[{{ step.i }}] ? ({{ step.raw_expr | sub_prefixes(y=y_prefix, x=x_prefix) }}) : 0.0;
+{% else %}
+{{ indent }}double {{ x_prefix }}_{{ step.i }} = {{ step.raw_expr | sub_prefixes(y=y_prefix, x=x_prefix) }};
+{% endif %}
+{% endfor %}
+{% else %}
+{% for step in steps %}
+{% if is_reduction %}
+{{ indent }}double {{ x_prefix }}_{{ step.i }} = active[{{ step.i }}] ? ({{ step.raw_expr | sub_prefixes(y=y_prefix, x=x_prefix) }}) : 0.0;
+{% else %}
+{{ indent }}double {{ x_prefix }}_{{ step.i }} = {{ step.raw_expr | sub_prefixes(y=y_prefix, x=x_prefix) }};
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endmacro %}

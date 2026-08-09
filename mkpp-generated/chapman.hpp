@@ -66,8 +66,8 @@ namespace mkpp {
       }
 
       static constexpr int NUM_SPECIES = 4;
-      static constexpr double atol[NUM_SPECIES] = { 100.0, 100.0, 100.0, 100.0 };
-      static constexpr double rtol[NUM_SPECIES] = { 0.01, 0.01, 0.01, 0.01 };
+      static constexpr double atol[NUM_SPECIES] = { 1e-12, 1e-12, 1e-12, 1e-12 };
+      static constexpr double rtol[NUM_SPECIES] = { 1e-08, 1e-08, 1e-08, 1e-08 };
 
       // Photolysis reactions (Cloud-J input mapping):
       //   jvals[0] = O2 -> O  (original A: 1e-05)
@@ -97,14 +97,14 @@ namespace mkpp {
           const double S_3 = state(3);
 
           // Analytical Jacobian & Iteration Matrix W = inv_g_dt*I - J (sparse)
-          double J_1_0 = 6.0e-34*S_3*S_0;
-          double J_1_1 = -7.9999999999999998e-12*S_0 - 1.0*jvals[1];
-          double J_1_2 = 6.0e-34*S_3*S_1 - 7.9999999999999998e-12*S_2;
-          double J_1_3 = 6.0e-34*S_0*S_1;
-          double J_2_0 = -6.0e-34*S_3*S_0 + 2.0*jvals[0];
-          double J_2_1 = -7.9999999999999998e-12*S_0 + 1.0*jvals[1];
-          double J_2_2 = -6.0e-34*S_3*S_1 - 7.9999999999999998e-12*S_2;
-          double J_2_3 = -6.0e-34*S_0*S_1;
+          double J_1_0 = 6.0e-34*S_3*S_2;
+          double J_1_1 = -7.9999999999999998e-12*S_2 - 1.0*jvals[1];
+          double J_1_2 = 6.0e-34*S_3*S_0 - 7.9999999999999998e-12*S_1;
+          double J_1_3 = 6.0e-34*S_2*S_0;
+          double J_2_0 = -6.0e-34*S_3*S_2 + 2.0*jvals[0];
+          double J_2_1 = -7.9999999999999998e-12*S_2 + 1.0*jvals[1];
+          double J_2_2 = -6.0e-34*S_3*S_0 - 7.9999999999999998e-12*S_1;
+          double J_2_3 = -6.0e-34*S_2*S_0;
           double W_0_0 = inv_g_dt;
           double W_1_0 = -J_1_0;
           double W_1_1 = inv_g_dt - J_1_1;
@@ -133,9 +133,9 @@ namespace mkpp {
 
           // --- Stage 1 ---
           // Rate evaluation F1 at S
-          double F1_0 = -6.0e-34*S_3*S_0*S_1 - 7.9999999999999998e-12*S_0*S_2 + 2.0*S_1*jvals[0] + 1.0*S_2*jvals[1];
-          double F1_1 = 0.0;
-          double F1_2 = 6.0e-34*S_3*S_0*S_1 - 7.9999999999999998e-12*S_0*S_2 - 1.0*S_2*jvals[1];
+          double F1_0 = 0.0;
+          double F1_1 = 6.0e-34*S_3*S_2*S_0 - 7.9999999999999998e-12*S_2*S_1 - 1.0*S_1*jvals[1];
+          double F1_2 = -6.0e-34*S_3*S_2*S_0 - 7.9999999999999998e-12*S_2*S_1 + 2.0*S_0*jvals[0] + 1.0*S_1*jvals[1];
           double F1_3 = 0.0;
           // Block 0: K1 forward sub [O2, O]
           double y1_0 = F1_0;
@@ -159,9 +159,9 @@ namespace mkpp {
           double Y2_2 = S_2 + K1_2;
           double Y2_3 = S_3 + K1_3;
           // Rate evaluation F2 at Y2
-          double F2_0 = -6.0e-34*Y2_3*Y2_0*Y2_1 - 7.9999999999999998e-12*Y2_0*Y2_2 + 2.0*Y2_1*jvals[0] + 1.0*Y2_2*jvals[1];
-          double F2_1 = 0.0;
-          double F2_2 = 6.0e-34*Y2_3*Y2_0*Y2_1 - 7.9999999999999998e-12*Y2_0*Y2_2 - 1.0*Y2_2*jvals[1];
+          double F2_0 = 0.0;
+          double F2_1 = 6.0e-34*Y2_3*Y2_2*Y2_0 - 7.9999999999999998e-12*Y2_2*Y2_1 - 1.0*Y2_1*jvals[1];
+          double F2_2 = -6.0e-34*Y2_3*Y2_2*Y2_0 - 7.9999999999999998e-12*Y2_2*Y2_1 + 2.0*Y2_0*jvals[0] + 1.0*Y2_1*jvals[1];
           double F2_3 = 0.0;
           // RHS for stage 2
           double rhs2_0 = F2_0 + (-1.0156171083877703 / dt) * K1_0;
@@ -265,6 +265,7 @@ namespace mkpp {
           double dt_total, StateView& state, const double* jvals, double importance_threshold) const
       {
           const int NUM_SPECIES = 4;
+          // ROS-3 coefficients (3-stage, order 3)
           const double g = 0.435866521508459;
           const double safety = 0.9;
           const double max_growth = 6.0;
@@ -292,9 +293,9 @@ namespace mkpp {
           const double S_3 = state(3);
 
           // 1. Stage 1 Rates (F1)
-          double F1_0 = -6.0e-34*S_3*S_0*S_1 - 7.9999999999999998e-12*S_0*S_2 + 2.0*S_1*jvals[0] + 1.0*S_2*jvals[1];
-          double F1_1 = 0.0;
-          double F1_2 = 6.0e-34*S_3*S_0*S_1 - 7.9999999999999998e-12*S_0*S_2 - 1.0*S_2*jvals[1];
+          double F1_0 = 0.0;
+          double F1_1 = 6.0e-34*S_3*S_2*S_0 - 7.9999999999999998e-12*S_2*S_1 - 1.0*S_1*jvals[1];
+          double F1_2 = -6.0e-34*S_3*S_2*S_0 - 7.9999999999999998e-12*S_2*S_1 + 2.0*S_0*jvals[0] + 1.0*S_1*jvals[1];
           double F1_3 = 0.0;
 
           // 2. Evaluate importance and update active set
@@ -304,14 +305,14 @@ namespace mkpp {
           active[3] = (Kokkos::fabs(F1_3) / (atol[3] + rtol[3] * Kokkos::fabs(state(3))) >= importance_threshold);
 
           // 3. Analytical Jacobian & Iteration Matrix W (identity for frozen species)
-          double J_1_0 = 6.0e-34*S_3*S_0;
-          double J_1_1 = -7.9999999999999998e-12*S_0 - 1.0*jvals[1];
-          double J_1_2 = 6.0e-34*S_3*S_1 - 7.9999999999999998e-12*S_2;
-          double J_1_3 = 6.0e-34*S_0*S_1;
-          double J_2_0 = -6.0e-34*S_3*S_0 + 2.0*jvals[0];
-          double J_2_1 = -7.9999999999999998e-12*S_0 + 1.0*jvals[1];
-          double J_2_2 = -6.0e-34*S_3*S_1 - 7.9999999999999998e-12*S_2;
-          double J_2_3 = -6.0e-34*S_0*S_1;
+          double J_1_0 = 6.0e-34*S_3*S_2;
+          double J_1_1 = -7.9999999999999998e-12*S_2 - 1.0*jvals[1];
+          double J_1_2 = 6.0e-34*S_3*S_0 - 7.9999999999999998e-12*S_1;
+          double J_1_3 = 6.0e-34*S_2*S_0;
+          double J_2_0 = -6.0e-34*S_3*S_2 + 2.0*jvals[0];
+          double J_2_1 = -7.9999999999999998e-12*S_2 + 1.0*jvals[1];
+          double J_2_2 = -6.0e-34*S_3*S_0 - 7.9999999999999998e-12*S_1;
+          double J_2_3 = -6.0e-34*S_2*S_0;
           double W_0_0 = active[0] ? inv_g_dt : 1.0;
           double W_1_0 = (active[1] && active[0]) ? (-J_1_0) : 0.0;
           double W_1_1 = active[1] ? (inv_g_dt - J_1_1) : 1.0;
@@ -344,6 +345,7 @@ namespace mkpp {
           double y1_2 = active[2] ? (F1_2 - L_2_0 * y1_0 - L_2_1 * y1_1) : 0.0;
           // Block 2: K1 forward sub [M]
           double y1_3 = active[3] ? (F1_3) : 0.0;
+
           // Block 2: K1 backward sub [M]
           double K1_3 = active[3] ? (y1_3 / U_3_3) : 0.0;
           // Block 0: K1 backward sub [O2, O]
@@ -352,6 +354,7 @@ namespace mkpp {
           double K1_1 = active[1] ? ((y1_1 - U_1_2 * K1_2 - U_1_3 * K1_3) / U_1_1) : 0.0;
           double K1_0 = active[0] ? (y1_0 / U_0_0) : 0.0;
 
+
           // --- Stage 2 ---
           // Intermediate state Y2
           double Y2_0 = S_0 + K1_0;
@@ -359,9 +362,9 @@ namespace mkpp {
           double Y2_2 = S_2 + K1_2;
           double Y2_3 = S_3 + K1_3;
           // Rate evaluation F2 at Y2
-          double F2_0 = -6.0e-34*Y2_3*Y2_0*Y2_1 - 7.9999999999999998e-12*Y2_0*Y2_2 + 2.0*Y2_1*jvals[0] + 1.0*Y2_2*jvals[1];
-          double F2_1 = 0.0;
-          double F2_2 = 6.0e-34*Y2_3*Y2_0*Y2_1 - 7.9999999999999998e-12*Y2_0*Y2_2 - 1.0*Y2_2*jvals[1];
+          double F2_0 = 0.0;
+          double F2_1 = 6.0e-34*Y2_3*Y2_2*Y2_0 - 7.9999999999999998e-12*Y2_2*Y2_1 - 1.0*Y2_1*jvals[1];
+          double F2_2 = -6.0e-34*Y2_3*Y2_2*Y2_0 - 7.9999999999999998e-12*Y2_2*Y2_1 + 2.0*Y2_0*jvals[0] + 1.0*Y2_1*jvals[1];
           double F2_3 = 0.0;
           // RHS for stage 2
           double rhs2_0 = F2_0 + (-1.0156171083877703 / dt) * K1_0;
@@ -375,6 +378,7 @@ namespace mkpp {
           double y2_2 = active[2] ? (rhs2_2 - L_2_0 * y2_0 - L_2_1 * y2_1) : 0.0;
           // Block 2: K2 forward sub [M]
           double y2_3 = active[3] ? (rhs2_3) : 0.0;
+
           // Block 2: K2 backward sub [M]
           double K2_3 = active[3] ? (y2_3 / U_3_3) : 0.0;
           // Block 0: K2 backward sub [O2, O]
@@ -382,6 +386,7 @@ namespace mkpp {
           // Block 1: K2 backward sub [O3]
           double K2_1 = active[1] ? ((y2_1 - U_1_2 * K2_2 - U_1_3 * K2_3) / U_1_1) : 0.0;
           double K2_0 = active[0] ? (y2_0 / U_0_0) : 0.0;
+
 
           // --- Stage 3 ---
           // Intermediate state Y3
@@ -402,6 +407,7 @@ namespace mkpp {
           double y3_2 = active[2] ? (rhs3_2 - L_2_0 * y3_0 - L_2_1 * y3_1) : 0.0;
           // Block 2: K3 forward sub [M]
           double y3_3 = active[3] ? (rhs3_3) : 0.0;
+
           // Block 2: K3 backward sub [M]
           double K3_3 = active[3] ? (y3_3 / U_3_3) : 0.0;
           // Block 0: K3 backward sub [O2, O]
@@ -409,6 +415,7 @@ namespace mkpp {
           // Block 1: K3 backward sub [O3]
           double K3_1 = active[1] ? ((y3_1 - U_1_2 * K3_2 - U_1_3 * K3_3) / U_1_1) : 0.0;
           double K3_0 = active[0] ? (y3_0 / U_0_0) : 0.0;
+
 
           // --- Solution update and error estimation ---
           double err_norm_sq = 0.0;

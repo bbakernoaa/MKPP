@@ -131,17 +131,17 @@ class TestEquilibriumAdjointCodegen:
         assert "integrate_adj" in self.code, "integrate_adj function should be present in generated code"
         assert len(self.adj_body) > 0, "integrate_adj function body should not be empty"
 
-    def test_adjoint_code_contains_tanh(self):
-        """Verify adjoint Jacobian entries contain tanh (regime blending).
+    def test_adjoint_code_contains_regime_blending(self):
+        """Verify adjoint Jacobian entries contain regime blending functions (sigmoid or tanh).
 
-        The equilibrium model uses smooth sigmoid blending:
-            w_i(R) = 0.5 * (1 + tanh((R - R_threshold) / width))
+        The equilibrium model uses smooth blending:
+            w_i(R) = 0.5 * (1 + u / sqrt(1 + u^2))  [sigmoid]
+            or 0.5 * (1 + tanh(u))                 [tanh]
         When J is recomputed at each checkpointed state in the adjoint loop,
-        these tanh terms appear in the J entries.
+        these terms appear in the J entries.
         """
-        assert "tanh" in self.adj_body, (
-            "Generated adjoint code should contain 'tanh' from equilibrium "
-            "regime blending (sigmoid transition between thermodynamic regimes). "
+        assert "sqrt" in self.adj_body or "tanh" in self.adj_body, (
+            "Generated adjoint code should contain regime blending functions (sqrt or tanh). "
             f"Adjoint body length: {len(self.adj_body)} chars"
         )
 
@@ -313,9 +313,11 @@ class TestEquilibriumTLMCodegen:
         assert "integrate_tlm" in self.code, "integrate_tlm function should be present in generated code"
         assert len(self.tlm_body) > 0, "integrate_tlm function body should not be empty"
 
-    def test_tlm_code_contains_tanh(self):
-        """Verify TLM Jacobian entries contain tanh (regime blending)."""
-        assert "tanh" in self.tlm_body, "Generated TLM code should contain 'tanh' from equilibrium " "regime blending"
+    def test_tlm_code_contains_regime_blending(self):
+        """Verify TLM Jacobian entries contain regime blending functions (sigmoid or tanh)."""
+        assert (
+            "sqrt" in self.tlm_body or "tanh" in self.tlm_body
+        ), "Generated TLM code should contain regime blending functions (sqrt or tanh)"
 
     def test_tlm_code_contains_exp(self):
         """Verify TLM Jacobian entries contain exp (van't Hoff constants)."""

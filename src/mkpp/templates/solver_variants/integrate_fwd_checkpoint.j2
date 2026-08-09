@@ -1,0 +1,278 @@
+{#
+  Template: integrate_fwd_checkpoint()
+
+  Renders the forward-checkpoint variant of the Rosenbrock integrator.
+  Identical to integrate() except:
+    - Returns int (number of accepted steps) instead of void
+    - Accepts a CheckpointBuffer& chk parameter
+    - After each accepted step, saves h and state into checkpoint buffer
+    - If MAX_STEPS exceeded, sets ierr=1 and returns -1
+
+  Context variables required:
+    - num_species       : int
+    - tableau           : dict with name, stages, ELO, Gamma, M, E, NewF, A_matrix, C_matrix
+    - has_equilibrium   : bool
+    - permutation       : list[int] or None
+    - jacobian_entries  : list of (i, j, expr) tuples
+    - needed_w          : sorted list of (i, j) tuples
+    - non_zero_jac_set  : set of (i, j) tuples
+    - lu_expressions    : list of dicts {kind, i, j, expr}
+    - forward_sub_steps : list of dicts {i, raw_expr}
+    - backward_sub_steps: list of dicts {i, raw_expr}
+    - f_exprs           : list of C++ rate expressions per species
+    - blocks            : optional list of block dicts
+    - tolerance_arrays  : dict with atol, rtol arrays
+
+  Requirements: 4.3
+#}
+{% from "macros/w_matrix.j2" import emit_w_matrix %}
+{% from "macros/lu_factorize.j2" import emit_lu_factorize %}
+{% from "macros/lu_solve_forward.j2" import emit_forward_sub %}
+{% from "macros/lu_solve_backward.j2" import emit_backward_sub %}
+
+      // Forward integration with checkpointing for adjoint/TLM
+      // Saves step size h and state at each accepted step into CheckpointBuffer.
+      // Returns number of accepted steps, or -1 if MAX_STEPS exceeded.
+      template <class StateView>
+      KOKKOS_INLINE_FUNCTION int integrate_fwd_checkpoint(
+{% if has_equilibrium %}
+          double dt_total, StateView& state, const double* jvals,
+          CheckpointBuffer& chk, const double temp, const double rh) const
+{% else %}
+          double dt_total, StateView& state, const double* jvals,
+          CheckpointBuffer& chk) const
+{% endif %}
+      {
+          const int NUM_SPECIES = {{ num_species }};
+{% if has_equilibrium %}
+          const double Temp = temp;
+          const double RH = rh;
+          (void)RH;  // Reserved for future deliquescence modeling
+{% endif %}
+          // {{ tableau.name }} coefficients ({{ tableau.stages }}-stage, order {{ tableau.ELO | int }})
+          const double g = {{ "%.17g" | format(tableau.Gamma[0]) }};
+          const double safety = 0.9;
+          const double max_growth = 6.0;
+          const double min_shrink = 0.2;
+          int ierr = 0;
+          chk.num_steps = 0;
+          double t = 0.0;
+          double dt = Kokkos::fmin(dt_total, 1.0);  // conservative initial step
+
+          while (t < dt_total) {
+          dt = Kokkos::min(dt, dt_total - t);
+          const double inv_g_dt = 1.0 / (g * dt);
+
+          // 0. Hoist state values into scalar registers
+{% if permutation %}
+          // NOTE: State access uses permuted species ordering
+{% endif %}
+{% for i in range(num_species) %}
+{% if permutation %}
+          const double S_{{ i }} = state({{ permutation[i] }});
+{% else %}
+          const double S_{{ i }} = state({{ i }});
+{% endif %}
+{% endfor %}
+
+          // Analytical Jacobian & Iteration Matrix W = inv_g_dt*I - J (sparse)
+{% for entry in jacobian_entries %}
+          double J_{{ entry[0] }}_{{ entry[1] }} = {{ entry[2] }};
+{% endfor %}
+{{ emit_w_matrix(needed_w, non_zero_jac_set, "inv_g_dt", num_species, is_reduction=false, blocks=blocks, indent="          ") }}
+          // Symbolic Doolittle Sparse LU Factorization
+{{ emit_lu_factorize(lu_expressions, blocks=blocks, is_reduction=false) }}
+{#- === Stage loop (unrolled at template-render time) === -#}
+{% set ns = namespace(current_F_prefix="F1") %}
+{% for stage in range(1, tableau.stages + 1) %}
+
+          // --- Stage {{ stage }} ---
+{% if stage > 1 %}
+          // Intermediate state Y{{ stage }}
+{% for i in range(num_species) %}
+{% set a_terms = [] %}
+{% for j in range(1, stage) %}
+{% set a_idx = (stage - 1) * (stage - 2) // 2 + j - 1 %}
+{% if tableau.A_matrix[a_idx] != 0.0 %}
+{% if a_terms.append((tableau.A_matrix[a_idx], "K" ~ j ~ "_" ~ i)) %}{% endif %}
+{% endif %}
+{% endfor %}
+{% if a_terms | length == 0 %}
+          double Y{{ stage }}_{{ i }} = S_{{ i }};
+{% elif a_terms | length == 1 and a_terms[0][0] == 1.0 %}
+          double Y{{ stage }}_{{ i }} = S_{{ i }} + {{ a_terms[0][1] }};
+{% else %}
+{% set term_strs = [] %}
+{% for t in a_terms %}
+{% if t[0] == 1.0 %}
+{% if term_strs.append(t[1]) %}{% endif %}
+{% else %}
+{% if term_strs.append("%.17g" | format(t[0]) ~ " * " ~ t[1]) %}{% endif %}
+{% endif %}
+{% endfor %}
+          double Y{{ stage }}_{{ i }} = S_{{ i }} + {{ term_strs | join(" + ") }};
+{% endif %}
+{% endfor %}
+{% endif %}
+{#- F evaluation for this stage -#}
+{% if tableau.NewF[stage - 1] %}
+{% if stage == 1 %}
+          // Rate evaluation F{{ stage }} at S
+{% for i in range(num_species) %}
+          double F{{ stage }}_{{ i }} = {{ f_exprs[i] }};
+{% endfor %}
+{% else %}
+          // Rate evaluation F{{ stage }} at Y{{ stage }}
+{% for i in range(num_species) %}
+          double F{{ stage }}_{{ i }} = {{ f_exprs[i] | replace("S_", "Y" ~ stage ~ "_") }};
+{% endfor %}
+{% endif %}
+{% set ns.current_F_prefix = "F" ~ stage %}
+{% else %}
+          // NewF=false: reuse {{ ns.current_F_prefix }} for stage {{ stage }}
+{% endif %}
+{#- RHS computation -#}
+{% if stage == 1 %}
+{#- For stage 1, RHS is just F1 (use F1 prefix directly) -#}
+{% set rhs_prefix = ns.current_F_prefix %}
+{% else %}
+          // RHS for stage {{ stage }}
+{% for i in range(num_species) %}
+{% set c_terms = [] %}
+{% for j in range(1, stage) %}
+{% set c_idx = (stage - 1) * (stage - 2) // 2 + j - 1 %}
+{% if tableau.C_matrix[c_idx] != 0.0 %}
+{% if c_terms.append((tableau.C_matrix[c_idx], "K" ~ j ~ "_" ~ i)) %}{% endif %}
+{% endif %}
+{% endfor %}
+{% if c_terms | length == 0 %}
+          double rhs{{ stage }}_{{ i }} = {{ ns.current_F_prefix }}_{{ i }};
+{% else %}
+{% set term_strs = [] %}
+{% for t in c_terms %}
+{% if term_strs.append("(" ~ "%.17g" | format(t[0]) ~ " / dt) * " ~ t[1]) %}{% endif %}
+{% endfor %}
+          double rhs{{ stage }}_{{ i }} = {{ ns.current_F_prefix }}_{{ i }} + {{ term_strs | join(" + ") }};
+{% endif %}
+{% endfor %}
+{% set rhs_prefix = "rhs" ~ stage %}
+{% endif %}
+{#- LU solve: forward + backward substitution -#}
+{{ emit_forward_sub(forward_sub_steps, rhs_prefix, "y" ~ stage, blocks=blocks, is_reduction=false, indent="          ", k_prefix="K" ~ stage) }}
+{{ emit_backward_sub(backward_sub_steps, "y" ~ stage, "K" ~ stage, blocks=blocks, is_reduction=false, indent="          ") }}
+{% endfor %}
+
+          // --- Solution update and error estimation ---
+          double err_norm_sq = 0.0;
+{% for i in range(num_species) %}
+{% if permutation %}
+{% set state_idx = permutation[i] %}
+{% else %}
+{% set state_idx = i %}
+{% endif %}
+          {
+{% set m_terms = [] %}
+{% for j in range(tableau.stages) %}
+{% if tableau.M[j] != 0.0 %}
+{% if m_terms.append((tableau.M[j], "K" ~ (j+1) ~ "_" ~ i)) %}{% endif %}
+{% endif %}
+{% endfor %}
+{% if m_terms | length == 0 %}
+              double Ynew_i = S_{{ i }} + 0.0;
+{% else %}
+{% set term_strs = [] %}
+{% for t in m_terms %}
+{% if t[0] == 1.0 %}
+{% if term_strs.append(t[1]) %}{% endif %}
+{% else %}
+{% if term_strs.append("%.17g" | format(t[0]) ~ " * " ~ t[1]) %}{% endif %}
+{% endif %}
+{% endfor %}
+              double Ynew_i = S_{{ i }} + {{ term_strs | join(" + ") }};
+{% endif %}
+              double ymax = Kokkos::fmax(Kokkos::fabs(state({{ state_idx }})), Kokkos::fabs(Ynew_i));
+              double sci = atol[{{ i }}] + rtol[{{ i }}] * ymax;
+{% set e_terms = [] %}
+{% for j in range(tableau.stages) %}
+{% if tableau.E[j] != 0.0 %}
+{% if e_terms.append((tableau.E[j], "K" ~ (j+1) ~ "_" ~ i)) %}{% endif %}
+{% endif %}
+{% endfor %}
+{% if e_terms | length == 0 %}
+              double yerr_i = 0.0;
+{% else %}
+{% set term_strs = [] %}
+{% for t in e_terms %}
+{% if t[0] == 1.0 %}
+{% if term_strs.append(t[1]) %}{% endif %}
+{% else %}
+{% if term_strs.append("%.17g" | format(t[0]) ~ " * " ~ t[1]) %}{% endif %}
+{% endif %}
+{% endfor %}
+              double yerr_i = {{ term_strs | join(" + ") }};
+{% endif %}
+              err_norm_sq += (yerr_i / sci) * (yerr_i / sci);
+          }
+{% endfor %}
+          double err_norm = Kokkos::sqrt(err_norm_sq / {{ num_species }});
+          err_norm = Kokkos::fmax(err_norm, 1.0e-10);
+
+          // Step Size Control (order {{ tableau.ELO | int }}: exponent = 1/{{ tableau.ELO | int }} = {{ "%.17g" | format(1.0 / tableau.ELO) }})
+{% if tableau.ELO == 2.0 %}
+          double factor = safety / Kokkos::sqrt(err_norm);
+{% elif tableau.ELO == 3.0 %}
+          double factor = safety / Kokkos::cbrt(err_norm);
+{% else %}
+          double factor = safety * Kokkos::pow(err_norm, -{{ "%.17g" | format(1.0 / tableau.ELO) }});
+{% endif %}
+          factor = Kokkos::fmax(min_shrink, Kokkos::fmin(factor, max_growth));
+
+          if (err_norm <= 1.0) {
+{% for i in range(num_species) %}
+{% if permutation %}
+{% set state_idx = permutation[i] %}
+{% else %}
+{% set state_idx = i %}
+{% endif %}
+{% set m_terms = [] %}
+{% for j in range(tableau.stages) %}
+{% if tableau.M[j] != 0.0 %}
+{% if m_terms.append((tableau.M[j], "K" ~ (j+1) ~ "_" ~ i)) %}{% endif %}
+{% endif %}
+{% endfor %}
+{% if m_terms | length == 0 %}
+              state({{ state_idx }}) += 0.0;
+{% else %}
+{% set term_strs = [] %}
+{% for t in m_terms %}
+{% if t[0] == 1.0 %}
+{% if term_strs.append(t[1]) %}{% endif %}
+{% else %}
+{% if term_strs.append("%.17g" | format(t[0]) ~ " * " ~ t[1]) %}{% endif %}
+{% endif %}
+{% endfor %}
+              state({{ state_idx }}) += {{ term_strs | join(" + ") }};
+{% endif %}
+{% endfor %}
+              // Save checkpoint data for adjoint/TLM
+              if (chk.num_steps >= CheckpointBuffer::MAX_STEPS) {
+                  ierr = 1;  // Exceeded MAX_STEPS budget
+                  return -1;
+              }
+              chk.h[chk.num_steps] = dt;
+{% for i in range(num_species) %}
+{% if permutation %}
+              chk.state[chk.num_steps][{{ i }}] = state({{ permutation[i] }});
+{% else %}
+              chk.state[chk.num_steps][{{ i }}] = state({{ i }});
+{% endif %}
+{% endfor %}
+              chk.num_steps++;
+              t += dt;
+              dt *= factor;
+          } else {
+              dt *= factor;
+          }
+          } // end while (t < dt_total)
+          return chk.num_steps;
+      }

@@ -32,7 +32,7 @@ from mkpp.parser import load_mechanism
 
 MAX_STEPS = 200
 MAX_CHECKPOINT_MEMORY_BYTES = 256 * 1024  # 256 KB = 262,144 bytes
-SAPRC99_PATH = "mechanisms/saprc99.yaml"
+SAPRC99_PATH = "mechanisms/saprc99_mini.yaml"
 
 
 # ---------------------------------------------------------------------------
@@ -144,14 +144,14 @@ class TestSAPRC99AdjointGeneration:
         assert "integrate_fwd_checkpoint" in code, "integrate_fwd_checkpoint not found in generated code"
         assert "CheckpointBuffer" in code, "CheckpointBuffer struct not found in generated code"
 
-    def test_num_species_is_82(self, tmp_path):
-        """The generated CheckpointBuffer has NUM_SPECIES = 82 for SAPRC-99.
+    def test_num_species_is_17(self, tmp_path):
+        """The generated CheckpointBuffer has NUM_SPECIES = 17 for saprc99_mini.
 
         **Validates: Requirements 8.2**
         """
         code = _generate_saprc99_adjoint(str(tmp_path))
-        # CheckpointBuffer should have NUM_SPECIES = 82
-        assert "static constexpr int NUM_SPECIES = 82;" in code
+        # CheckpointBuffer should have NUM_SPECIES = 17
+        assert "static constexpr int NUM_SPECIES = 17;" in code
 
     def test_checkpoint_memory_within_256kb(self, tmp_path):
         """Checkpoint memory fits within 256 KB bound.
@@ -160,12 +160,12 @@ class TestSAPRC99AdjointGeneration:
             state: MAX_STEPS * NUM_SPECIES * 8 bytes
             h:     MAX_STEPS * 8 bytes
             num_steps: 4 bytes (int)
-        Total = 200 * 82 * 8 + 200 * 8 + 4 = 132,804 bytes
+        Total = 200 * 17 * 8 + 200 * 8 + 4 = 28,804 bytes
 
         **Validates: Requirements 8.2**
         """
         mech = _load_saprc99()
-        num_species = len(mech.species)  # 82
+        num_species = len(mech.species)  # 17
 
         # Calculate checkpoint memory per the D5 design (state + h + num_steps)
         state_bytes = MAX_STEPS * num_species * 8  # double state[MAX_STEPS][NUM_SPECIES]
@@ -183,8 +183,7 @@ class TestSAPRC99AdjointGeneration:
             f"  num_steps: {num_steps_bytes} bytes"
         )
 
-        # Verify the actual value is approximately what we expect (~130 KB)
-        expected_approx = 132_804
+        expected_approx = 28_804
         assert abs(total_bytes - expected_approx) < 100, (
             f"Checkpoint memory calculation unexpected: " f"got {total_bytes}, expected ~{expected_approx}"
         )

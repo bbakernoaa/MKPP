@@ -98,4 +98,37 @@ void execute_mechanism(const std::string& name, StateViewType state, double dt,
 }
 
 }  // namespace host
+
+/// @brief Core handle implementation structure for MKPP Host Model API C ABI wrappers.
+struct mkpp_handle_impl {
+    std::size_t num_cells{0};
+    std::size_t num_species{0};
+    std::size_t num_reactions{0};
+    std::size_t num_photolysis{0};
+    bool is_initialized{false};
+
+    // Unmanaged 2D view over host model species concentrations (num_cells, num_species)
+    Kokkos::View<double**, Kokkos::LayoutLeft, Kokkos::HostSpace, Kokkos::MemoryUnmanaged> species_conc;
+
+    // Unmanaged 1D views over host model meteorology & aerosol drivers (num_cells)
+    Kokkos::View<double*, Kokkos::LayoutLeft, Kokkos::HostSpace, Kokkos::MemoryUnmanaged> temperature;
+    Kokkos::View<double*, Kokkos::LayoutLeft, Kokkos::HostSpace, Kokkos::MemoryUnmanaged> pressure;
+    Kokkos::View<double*, Kokkos::LayoutLeft, Kokkos::HostSpace, Kokkos::MemoryUnmanaged> air_density;
+    Kokkos::View<double*, Kokkos::LayoutLeft, Kokkos::HostSpace, Kokkos::MemoryUnmanaged> relative_humidity;
+    Kokkos::View<double*, Kokkos::LayoutLeft, Kokkos::HostSpace, Kokkos::MemoryUnmanaged> aerosol_surface_area;
+
+    // Unmanaged 2D view over host model photolysis rates (num_cells, num_photolysis)
+    Kokkos::View<double**, Kokkos::LayoutLeft, Kokkos::HostSpace, Kokkos::MemoryUnmanaged> photolysis_rates;
+
+    // Allocated scratch workspace memory for internal solver calculations
+    Kokkos::View<double**, Kokkos::LayoutLeft> workspace_scratch;
+
+    // Human-readable error diagnostic message for last failure
+    std::string last_error_msg;
+
+    void set_error(const std::string& msg) {
+        last_error_msg = msg;
+    }
+};
+
 }  // namespace mkpp

@@ -58,7 +58,7 @@ _C_S = sp.Symbol("C_S", positive=True)
 _TOTALS = {"reduced_nitrogen": _C_N, "oxidized_nitrogen": _C_Ox, "sulfate": _C_S}
 
 # Build partition expressions once (they are purely symbolic)
-_EXPRS = _MODEL.partition_expressions(_TOTALS, _T, _RH, "tanh", 0.05)
+_EXPRS = _MODEL.partition_expressions(_TOTALS, _T, _RH, "sigmoid", 0.05)
 
 # Pre-lambdify partition expressions for numerical evaluation
 _SYMBOLS = (_T, _RH, _C_N, _C_Ox, _C_S)
@@ -73,7 +73,7 @@ _LAMBDIFIED = {name: sp.lambdify(_SYMBOLS, expr, modules="numpy") for name, expr
 
 
 @given(
-    blending=st.sampled_from(["tanh", "sigmoid"]),
+    blending=st.just("sigmoid"),
     width=st.floats(min_value=0.01, max_value=0.5),
 )
 @settings(max_examples=100)
@@ -222,7 +222,7 @@ def test_property_5_c1_continuity_of_regime_blending(T_val, RH_val, C_Ox_val, C_
 
 
 @given(
-    blending=st.sampled_from(["tanh", "sigmoid"]),
+    blending=st.just("sigmoid"),
     width=st.floats(min_value=0.01, max_value=0.5),
 )
 @settings(max_examples=100)

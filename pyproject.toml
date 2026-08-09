@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=64.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "mkpp"
 version = "0.1.0"
@@ -11,6 +15,12 @@ dependencies = [
     "sympy>=1.12,<2",
     "jinja2>=3.1,<4",
     "networkx>=3.1,<4"
+]
+
+[project.optional-dependencies]
+docs = [
+    "mkdocs-material>=9.5",
+    "mkdocstrings[python]>=0.25",
 ]
 
 [project.scripts]
@@ -42,13 +52,11 @@ ignore = ["N806", "N803"]
 
 [tool.ruff.lint.per-file-ignores]
 "src/mkpp/codegen.py" = ["E501"]
-"src/mkpp/symbolic_emit.py" = ["E501"]
 "src/mkpp/reporting.py" = ["E501"]
 "src/mkpp/rosenbrock.py" = ["N802"]
 "src/isorropialite/tests/property_variance_checker.py" = ["E501"]
 "src/Cloud-J/tests/tools/run_benchmarks.py" = ["E501"]
 "scripts/fix_report_and_amore.py" = ["E501"]
-"tests/python/test_emit_lu_solve_transpose.py" = ["E741"]
 "tests/python/test_property_lu_plan_independence.py" = ["E741"]
 "tests/python/test_property_structured_errors.py" = ["E741"]
 "tests/python/test_property_auto_reduction.py" = ["E501"]

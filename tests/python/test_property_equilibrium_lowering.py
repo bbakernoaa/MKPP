@@ -24,7 +24,7 @@ from mkpp.model import (
 # ---------------------------------------------------------------------------
 
 # Blending function choices (both supported modes)
-blending_st = st.sampled_from(["tanh", "sigmoid"])
+blending_st = st.just("sigmoid")
 
 # Transition width parameter
 width_st = st.floats(min_value=0.01, max_value=0.5)

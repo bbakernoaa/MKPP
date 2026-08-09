@@ -1,0 +1,97 @@
+site_name: MultiphaseKinetic PreProcessor (MKPP / FKPP)
+site_description: Exascale-ready AOT chemical ODE solver compiler for NOAA NWP models
+site_author: NOAA NWS Office of Modeling and Development
+repo_url: https://github.com/bbakernoaa/MKPP
+repo_name: bbakernoaa/MKPP
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+markdown_extensions:
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+
+exclude_docs: |
+  Project Plan_ Next-Gen Multiphase Atmospheric Chemistry Solver (Futuristic KPP) V8.md
+  Wiser_columbia_0054D_19280.md
+  plans/*
+  superpowers/*
+
+extra_javascript:
+  - https://cdnjs.cloudflare.com/ajax/libs/katex/0.16.8/katex.min.js
+  - https://cdnjs.cloudflare.com/ajax/libs/katex/0.16.8/contrib/auto-render.min.js
+  - js/katex.js
+
+extra_css:
+  - https://cdnjs.cloudflare.com/ajax/libs/katex/0.16.8/katex.min.css
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            show_source: true
+            show_root_heading: true
+
+not_in_nav: |
+  Project Plan_ Next-Gen Multiphase Atmospheric Chemistry Solver (Futuristic KPP) V8.md
+  Wiser_columbia_0054D_19280.md
+  plans/*
+  superpowers/*
+
+nav:
+  - Home: README.md
+  - Tutorials:
+      - AOT Solver Quickstart: tutorials/aot-solver-quickstart.md
+  - How-To Guides:
+      - Create Custom Reactions: how-to/create-custom-reactions.md
+      - Run AOT Solver Benchmarks: how-to/run-aot-solver-benchmarks.md
+      - Compile Adjoint & TLM Solvers: how-to/compile-adjoint-and-tlm-solvers.md
+  - Reference:
+      - C++ & CLI API Reference: reference/aot-solver-api.md
+      - Reaction Types & YAML Schema: reference/reaction-types-and-yaml-schema.md
+      - Python Code API:
+          - CLI: reference/api/cli.md
+          - Parser: reference/api/parser.md
+          - Lowering & Calculus: reference/api/lowering.md
+          - Code Generation: reference/api/codegen.md
+          - AMORE Lumping: reference/api/amore.md
+  - Explanation:
+      - End-to-End Compiler Pipeline: explanation/mkpp-end-to-end-architecture.md
+      - AOT Symbolic LU Architecture: explanation/aot-symbolic-lu-architecture.md
+      - Reaction Kinetics & Unified Jacobian: explanation/unified-jacobian-and-reaction-kinetics.md

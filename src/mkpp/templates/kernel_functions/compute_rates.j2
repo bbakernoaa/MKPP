@@ -1,0 +1,26 @@
+{#
+  Kernel function template: compute_rates (F-vector evaluation).
+
+  Renders the `compute_rates()` function which evaluates the rate of change
+  (F-vector) for each species at the given state.
+
+  Context variables required:
+    - num_species: int
+    - rate_exprs_state: list of C++ expressions using state(i) format with parentheses
+    - has_equilibrium: bool (if true, signature includes temp, rh params)
+
+  Requirements: 4.6
+#}
+      template <class StateView, class RateView>
+{% if has_equilibrium %}
+      KOKKOS_INLINE_FUNCTION void compute_rates(const StateView& state, RateView& F_block, const double* jvals, const double temp, const double rh) const {
+          const double Temp = temp;
+          const double RH = rh;
+          (void)RH;  // Reserved for future deliquescence modeling
+{% else %}
+      KOKKOS_INLINE_FUNCTION void compute_rates(const StateView& state, RateView& F_block, const double* jvals) const {
+{% endif %}
+{% for expr in rate_exprs_state %}
+          F_block({{ loop.index0 }}) = {{ expr }};
+{% endfor %}
+      }

@@ -36,6 +36,9 @@ mkpp compile mechanisms/saprc99.yaml --test-env example_env.yaml --out mkpp-gene
 
 # Compile high-accuracy ROS-4 (4-stage order 4) solver
 mkpp compile mechanisms/saprc99.yaml --test-env example_env.yaml --out mkpp-generated --solver ros4
+
+# Compile ROS-3 solver with discrete Adjoint / TLM support for JEDI 4D-Var
+mkpp compile mechanisms/saprc99.yaml --test-env example_env.yaml --out mkpp-generated --solver ros3 --adjoint
 ```
 
 The generated header (`mkpp-generated/saprc99.hpp`) contains:
@@ -104,6 +107,9 @@ make -j
 ## Next Steps
 
 - Learn how to define custom kinetics with the [How-To: Create Custom Reactions](../how-to/create-custom-reactions.md) guide.
+- Learn how to compile and run discrete adjoint models with the [How-To: Compile & Run Adjoint and TLM Solvers](../how-to/compile-adjoint-and-tlm-solvers.md) guide.
+- Review CLI options and function signatures in the [AOT Solver C++ & CLI API Reference](../reference/aot-solver-api.md).
 - Review reaction rate laws and parameters in the [Reaction Types & YAML Schema Reference](../reference/reaction-types-and-yaml-schema.md).
 - Explore the [How-To: Run AOT Solver Benchmarks](../how-to/run-aot-solver-benchmarks.md) guide to benchmark accuracy and performance against legacy KPP.
-- Read the [AOT Symbolic LU Architecture Explanation](../explanation/aot-symbolic-lu-architecture.md) and [Reaction Kinetics & Unified Jacobian Explanation](../explanation/unified-jacobian-and-reaction-kinetics.md) for deep-dive technical details.
+- Read the [Complete End-to-End MKPP Architecture & Compiler Pipeline](../explanation/mkpp-end-to-end-architecture.md) for a complete system walkthrough.
+- Visit the [MKPP Documentation Index](../README.md) to explore all Diátaxis documentation.

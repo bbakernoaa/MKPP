@@ -32,8 +32,8 @@ class EquilibriumModel(ABC):
         totals: dict[str, sp.Symbol],
         T: sp.Symbol,
         RH: sp.Symbol,
-        blending: str,
-        width: float,
+        blending: str = "sigmoid",
+        width: float = 0.05,
     ) -> dict[str, sp.Expr]:
         """Return SymPy expressions for each partitioned species.
 
@@ -47,7 +47,7 @@ class EquilibriumModel(ABC):
         RH : sp.Symbol
             Relative humidity symbol (fraction, 0-1).
         blending : str
-            Regime blending function type ("sigmoid" or "tanh").
+            Regime blending function type ("sigmoid").
         width : float
             Transition width for regime blending (in ratio units).
 

@@ -1,0 +1,210 @@
+{#-
+  Solver variant template: integrate_tlm()
+
+  Renders the Tangent Linear Model (TLM) forward propagation function.
+  Propagates perturbation δC forward through checkpointed Rosenbrock steps.
+
+  At each checkpointed step:
+    1. Load h and state from checkpoint buffer
+    2. Recompute Jacobian at saved state (recompute-J strategy)
+    3. Form W = (1/(gamma*h))*I - J and do symbolic LU factorization
+    4. Unroll TLM stages i = 1, ..., s at template-render time:
+       - RHS_i = J*(δC + Σ A_{i,j}*δK_j) + Σ C_{i,j}/h*δK_j  (sparse J*vector)
+       - Solve W * δK_i = RHS_i using non-transposed LU
+    5. After all stages: δC += Σ M_i * δK_i
+
+  Context variables used:
+    num_species        - int, number of species N
+    tableau            - dict with Gamma, stages, M, A_matrix, C_matrix
+    jacobian_entries   - list of (i, j, c_expr) tuples for non-zero Jacobian
+    non_zero_jac_set   - set of (i, j) tuples where Jacobian is non-zero
+    needed_w           - sorted list of (i, j) tuples for W entries
+    lu_expressions     - list of dicts {kind, i, j, expr}
+    forward_sub_steps  - list of dicts {i, raw_expr}
+    backward_sub_steps - list of dicts {i, raw_expr}
+    blocks             - optional list of block dicts {indices, species_names}
+
+  Requirements: 4.5
+-#}
+      // Tangent Linear Model: forward propagation of perturbation δC
+      // Uses checkpoint buffer from integrate_fwd_checkpoint().
+      template <class StateView, class PertView>
+      KOKKOS_INLINE_FUNCTION void integrate_tlm(
+          double dt_total, const StateView& state_0,
+          PertView& delta_C, const double* jvals,
+          const CheckpointBuffer& chk) const
+      {
+          const double g = {{ "%.17g" | format(tableau.Gamma[0]) }};
+
+          // Local aliases for delta_C (TLM stages use dC_k naming)
+{% for k in range(num_species) %}
+          double dC_{{ k }} = delta_C({{ k }});
+{% endfor %}
+
+
+          // === TLM Forward Propagation ===
+          for (int step = 0; step < chk.num_steps; step++) {
+              const double h = chk.h[step];
+              const double inv_g_h = 1.0 / ({{ "%.17g" | format(tableau.Gamma[0]) }} * h);
+
+              // Reload checkpointed state
+{% for i in range(num_species) %}
+              const double S_{{ i }} = chk.state[step][{{ i }}];
+{% endfor %}
+
+              // Recompute Jacobian at checkpointed state (recompute-J strategy, D1)
+{% for entry in jacobian_entries %}
+              double J_{{ entry[0] }}_{{ entry[1] }} = {{ entry[2] }};
+{% endfor %}
+
+              // Form iteration matrix W = inv_g_h*I - J
+{% for entry in needed_w %}
+{% set i = entry[0] %}
+{% set j = entry[1] %}
+{% if i == j %}
+{% if (i, j) in non_zero_jac_set %}
+              double W_{{ i }}_{{ j }} = inv_g_h - J_{{ i }}_{{ j }};
+{% else %}
+              double W_{{ i }}_{{ j }} = inv_g_h;
+{% endif %}
+{% elif (i, j) in non_zero_jac_set %}
+              double W_{{ i }}_{{ j }} = -J_{{ i }}_{{ j }};
+{% else %}
+              double W_{{ i }}_{{ j }} = 0.0;
+{% endif %}
+{% endfor %}
+
+              // Symbolic LU Factorization
+{% if blocks %}
+{% set ns = namespace(emitted_block_nums=[]) %}
+{% for entry in lu_expressions %}
+{% for block_num in range(blocks | length) %}
+{% if entry.i in blocks[block_num].indices and block_num not in ns.emitted_block_nums %}
+{% set ns.emitted_block_nums = ns.emitted_block_nums + [block_num] %}
+              // Block {{ block_num }}: [{{ blocks[block_num].species_names | join(', ') }}]
+{% endif %}
+{% endfor %}
+              double {{ entry.kind }}_{{ entry.i }}_{{ entry.j }} = {{ entry.expr }};
+{% endfor %}
+{% else %}
+{% for entry in lu_expressions %}
+              double {{ entry.kind }}_{{ entry.i }}_{{ entry.j }} = {{ entry.expr }};
+{% endfor %}
+{% endif %}
+
+{% for stage in range(1, tableau.stages + 1) %}
+
+              // --- TLM Stage {{ stage }} ---
+              // RHS: J*(δC + Σ A_{i,j}*δK_j) + Σ C_{i,j}/h*δK_j
+{% if stage == 1 %}
+{# Stage 1: no previous stages, RHS_k = Σ_col J_{k,col} * δC_col (sparse J*δC) #}
+{% for k in range(num_species) %}
+{% set j_terms = [] %}
+{% for col in range(num_species) %}
+{% if (k, col) in non_zero_jac_set %}
+{% if j_terms.append("J_" ~ k ~ "_" ~ col ~ " * dC_" ~ col) %}{% endif %}
+{% endif %}
+{% endfor %}
+{% if j_terms %}
+              double tlm_rhs{{ stage }}_{{ k }} = {{ j_terms | join(' + ') }};
+{% else %}
+              double tlm_rhs{{ stage }}_{{ k }} = 0.0;
+{% endif %}
+{% endfor %}
+{% else %}
+{# General case: arg_col = δC_col + Σ_{j<i} A_{i,j} * δK_j_col #}
+{# RHS_k = Σ_col J_{k,col} * arg_col + Σ_{j<i} C_{i,j}/h * δK_j_k #}
+{% for k in range(num_species) %}
+{% set terms = [] %}
+{# J[k,:] * (δC + Σ A_{i,j} * δK_j) — expand inline #}
+{% for col in range(num_species) %}
+{% if (k, col) in non_zero_jac_set %}
+{% set inner_parts = ["dC_" ~ col] %}
+{% for prev_j in range(1, stage) %}
+{% set a_idx = (stage - 1) * (stage - 2) // 2 + prev_j - 1 %}
+{% set a_val = tableau.A_matrix[a_idx] %}
+{% if a_val != 0.0 %}
+{% if a_val == 1.0 %}
+{% if inner_parts.append("dK" ~ prev_j ~ "_" ~ col) %}{% endif %}
+{% else %}
+{% if inner_parts.append("%.17g" | format(a_val) ~ " * dK" ~ prev_j ~ "_" ~ col) %}{% endif %}
+{% endif %}
+{% endif %}
+{% endfor %}
+{% if inner_parts | length == 1 %}
+{% if terms.append("J_" ~ k ~ "_" ~ col ~ " * " ~ inner_parts[0]) %}{% endif %}
+{% else %}
+{% if terms.append("J_" ~ k ~ "_" ~ col ~ " * (" ~ inner_parts | join(' + ') ~ ")") %}{% endif %}
+{% endif %}
+{% endif %}
+{% endfor %}
+{# Σ_{j<i} C_{i,j}/h * δK_j_k #}
+{% for prev_j in range(1, stage) %}
+{% set c_idx = (stage - 1) * (stage - 2) // 2 + prev_j - 1 %}
+{% set c_val = tableau.C_matrix[c_idx] %}
+{% if c_val != 0.0 %}
+{% if terms.append("(" ~ "%.17g" | format(c_val) ~ " / h) * dK" ~ prev_j ~ "_" ~ k) %}{% endif %}
+{% endif %}
+{% endfor %}
+{% if terms %}
+              double tlm_rhs{{ stage }}_{{ k }} = {{ terms | join(' + ') }};
+{% else %}
+              double tlm_rhs{{ stage }}_{{ k }} = 0.0;
+{% endif %}
+{% endfor %}
+{% endif %}
+              // Solve W * dK{{ stage }} = tlm_rhs{{ stage }}
+{% if blocks %}
+{% set ns_fwd = namespace(emitted_blocks=[]) %}
+{% for step in forward_sub_steps %}
+{% for block_num in range(blocks | length) %}
+{% if step.i in blocks[block_num].indices and block_num not in ns_fwd.emitted_blocks %}
+{% set ns_fwd.emitted_blocks = ns_fwd.emitted_blocks + [block_num] %}
+              // Block {{ block_num }}: dK{{ stage }} forward sub [{{ blocks[block_num].species_names | join(', ') }}]
+{% endif %}
+{% endfor %}
+              double tlm_y{{ stage }}_{{ step.i }} = {{ step.raw_expr | sub_prefixes(rhs="tlm_rhs" ~ stage, y="tlm_y" ~ stage) }};
+{% endfor %}
+{% set ns_bwd = namespace(emitted_blocks=[]) %}
+{% for step in backward_sub_steps %}
+{% for block_num in range(blocks | length) %}
+{% if step.i in blocks[block_num].indices and block_num not in ns_bwd.emitted_blocks %}
+{% set ns_bwd.emitted_blocks = ns_bwd.emitted_blocks + [block_num] %}
+              // Block {{ block_num }}: dK{{ stage }} backward sub [{{ blocks[block_num].species_names | join(', ') }}]
+{% endif %}
+{% endfor %}
+              double dK{{ stage }}_{{ step.i }} = {{ step.raw_expr | sub_prefixes(y="tlm_y" ~ stage, x="dK" ~ stage) }};
+{% endfor %}
+{% else %}
+{% for step in forward_sub_steps %}
+              double tlm_y{{ stage }}_{{ step.i }} = {{ step.raw_expr | sub_prefixes(rhs="tlm_rhs" ~ stage, y="tlm_y" ~ stage) }};
+{% endfor %}
+{% for step in backward_sub_steps %}
+              double dK{{ stage }}_{{ step.i }} = {{ step.raw_expr | sub_prefixes(y="tlm_y" ~ stage, x="dK" ~ stage) }};
+{% endfor %}
+{% endif %}
+{% endfor %}
+
+              // --- δC update: δC += Σ M_i * δK_i ---
+{% for k in range(num_species) %}
+{% set m_terms = [] %}
+{% for j in range(tableau.stages) %}
+{% if tableau.M[j] != 0.0 %}
+{% if tableau.M[j] == 1.0 %}
+{% if m_terms.append("dK" ~ (j + 1) ~ "_" ~ k) %}{% endif %}
+{% else %}
+{% if m_terms.append("%.17g" | format(tableau.M[j]) ~ " * dK" ~ (j + 1) ~ "_" ~ k) %}{% endif %}
+{% endif %}
+{% endif %}
+{% endfor %}
+{% if m_terms %}
+              dC_{{ k }} += {{ m_terms | join(' + ') }};
+{% endif %}
+{% endfor %}
+          } // end for (step)
+
+          // Write back final δC to output view
+{% for k in range(num_species) %}
+          delta_C({{ k }}) = dC_{{ k }};
+{% endfor %}
+      }

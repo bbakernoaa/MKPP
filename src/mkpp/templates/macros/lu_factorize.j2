@@ -1,0 +1,29 @@
+{#- Scaffold block: Symbolic LU Factorization emission.
+
+    Emits `double L_i_j = expr;` / `double U_i_j = expr;` for each LU expression.
+    Optionally emits block-boundary comments when block structure is provided.
+
+    Parameters:
+      lu_expressions : list of dicts with {kind: 'L'|'U', i: int, j: int, expr: str}
+      blocks         : optional list of block dicts with {indices: [...], species_names: [...]}
+      is_reduction   : if True, reserved for auto-reduction variant (future use)
+      annotated_expressions : optional annotated expression data for reduction variant (future use)
+-#}
+{% macro emit_lu_factorize(lu_expressions, blocks=none, is_reduction=false, annotated_expressions=none) %}
+{% if blocks %}
+{% set ns = namespace(emitted_block_nums=[]) %}
+{% for entry in lu_expressions %}
+{% for block_num in range(blocks | length) %}
+{% if entry.i in blocks[block_num].indices and block_num not in ns.emitted_block_nums %}
+{% set ns.emitted_block_nums = ns.emitted_block_nums + [block_num] %}
+// Block {{ block_num }}: species [{{ blocks[block_num].species_names | join(', ') }}]
+{% endif %}
+{% endfor %}
+double {{ entry.kind }}_{{ entry.i }}_{{ entry.j }} = {{ entry.expr }};
+{% endfor %}
+{% else %}
+{% for entry in lu_expressions %}
+double {{ entry.kind }}_{{ entry.i }}_{{ entry.j }} = {{ entry.expr }};
+{% endfor %}
+{% endif %}
+{% endmacro %}

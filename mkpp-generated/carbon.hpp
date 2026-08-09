@@ -119,8 +119,8 @@ namespace mkpp {
       }
 
       static constexpr int NUM_SPECIES = 11;
-      static constexpr double atol[NUM_SPECIES] = { 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0 };
-      static constexpr double rtol[NUM_SPECIES] = { 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01 };
+      static constexpr double atol[NUM_SPECIES] = { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 };
+      static constexpr double rtol[NUM_SPECIES] = { 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001 };
 
       template <class StateView>
       KOKKOS_INLINE_FUNCTION void integrate(double dt_total, StateView& state, const double* jvals) const {
@@ -159,18 +159,18 @@ namespace mkpp {
           double J_4_2 = 38199.012000000002;
           double J_4_3 = 4.2566445999999996e-15;
           double J_4_4 = -7.3679649000000001e-14;
-          double J_4_6 = -7.3679649000000001e-14*S_1;
+          double J_4_6 = -7.3679649000000001e-14*S_4;
           double J_5_4 = 7.3679649000000001e-14;
-          double J_5_6 = 7.3679649000000001e-14*S_1;
+          double J_5_6 = 7.3679649000000001e-14*S_4;
           double J_6_4 = -7.3679649000000001e-14;
-          double J_6_6 = -6.6007061575166499e-15*S_0 - 7.3679649000000001e-14*S_1;
+          double J_6_6 = -6.6007061575166499e-15*S_8 - 7.3679649000000001e-14*S_4;
           double J_6_8 = -6.6007061575166499e-15;
-          double J_7_6 = 6.6007061575166499e-15*S_0;
+          double J_7_6 = 6.6007061575166499e-15*S_8;
           double J_7_8 = 6.6007061575166499e-15;
           double J_9_8 = 1.0315008299507354e-13;
-          double J_9_10 = 1.0315008299507354e-13*S_0;
+          double J_9_10 = 1.0315008299507354e-13*S_8;
           double J_10_8 = -1.0315008299507354e-13;
-          double J_10_10 = -1.0315008299507354e-13*S_0;
+          double J_10_10 = -1.0315008299507354e-13*S_8;
           double W_0_0 = inv_g_dt;
           double W_0_2 = -J_0_2;
           double W_1_1 = inv_g_dt;
@@ -236,17 +236,17 @@ namespace mkpp {
 
           // --- Stage 1 ---
           // Rate evaluation F1 at S
-          double F1_0 = 0.0;
-          double F1_1 = 38199.012000000002 - 7.3679649000000001e-14*S_1;
-          double F1_2 = 4.2566445999999996e-15;
-          double F1_3 = 38199.012000000002;
-          double F1_4 = 6.6007061575166499e-15*S_0;
-          double F1_5 = 1.0315008299507354e-13*S_0;
-          double F1_6 = 7.3679649000000001e-14*S_1;
-          double F1_7 = -6.6007061575166499e-15*S_0 - 7.3679649000000001e-14*S_1;
-          double F1_8 = -1.0315008299507354e-13*S_0;
-          double F1_9 = -4.2566445999999996e-15;
-          double F1_10 = -38199.012000000002;
+          double F1_0 = 38199.012000000002;
+          double F1_1 = 4.2566445999999996e-15;
+          double F1_2 = -38199.012000000002;
+          double F1_3 = -4.2566445999999996e-15;
+          double F1_4 = 38199.012000000002 - 7.3679649000000001e-14*S_4;
+          double F1_5 = 7.3679649000000001e-14*S_4;
+          double F1_6 = -6.6007061575166499e-15*S_8 - 7.3679649000000001e-14*S_4;
+          double F1_7 = 6.6007061575166499e-15*S_8;
+          double F1_8 = 0.0;
+          double F1_9 = 1.0315008299507354e-13*S_8;
+          double F1_10 = -1.0315008299507354e-13*S_8;
           // Block 0: K1 forward sub [PCOfromNMVOC]
           double y1_0 = F1_0;
           // Block 1: K1 forward sub [PCOfromCH4, LCH4byOH]
@@ -304,17 +304,17 @@ namespace mkpp {
           double Y2_9 = S_9 + K1_9;
           double Y2_10 = S_10 + K1_10;
           // Rate evaluation F2 at Y2
-          double F2_0 = 0.0;
-          double F2_1 = 38199.012000000002 - 7.3679649000000001e-14*Y2_1;
-          double F2_2 = 4.2566445999999996e-15;
-          double F2_3 = 38199.012000000002;
-          double F2_4 = 6.6007061575166499e-15*Y2_0;
-          double F2_5 = 1.0315008299507354e-13*Y2_0;
-          double F2_6 = 7.3679649000000001e-14*Y2_1;
-          double F2_7 = -6.6007061575166499e-15*Y2_0 - 7.3679649000000001e-14*Y2_1;
-          double F2_8 = -1.0315008299507354e-13*Y2_0;
-          double F2_9 = -4.2566445999999996e-15;
-          double F2_10 = -38199.012000000002;
+          double F2_0 = 38199.012000000002;
+          double F2_1 = 4.2566445999999996e-15;
+          double F2_2 = -38199.012000000002;
+          double F2_3 = -4.2566445999999996e-15;
+          double F2_4 = 38199.012000000002 - 7.3679649000000001e-14*Y2_4;
+          double F2_5 = 7.3679649000000001e-14*Y2_4;
+          double F2_6 = -6.6007061575166499e-15*Y2_8 - 7.3679649000000001e-14*Y2_4;
+          double F2_7 = 6.6007061575166499e-15*Y2_8;
+          double F2_8 = 0.0;
+          double F2_9 = 1.0315008299507354e-13*Y2_8;
+          double F2_10 = -1.0315008299507354e-13*Y2_8;
           // RHS for stage 2
           double rhs2_0 = F2_0 + (-1.0156171083877703 / dt) * K1_0;
           double rhs2_1 = F2_1 + (-1.0156171083877703 / dt) * K1_1;
@@ -550,6 +550,7 @@ namespace mkpp {
           double dt_total, StateView& state, const double* jvals, double importance_threshold) const
       {
           const int NUM_SPECIES = 11;
+          // ROS-3 coefficients (3-stage, order 3)
           const double g = 0.435866521508459;
           const double safety = 0.9;
           const double max_growth = 6.0;
@@ -591,17 +592,17 @@ namespace mkpp {
           const double S_10 = state(8);
 
           // 1. Stage 1 Rates (F1)
-          double F1_0 = 0.0;
-          double F1_1 = 38199.012000000002 - 7.3679649000000001e-14*S_1;
-          double F1_2 = 4.2566445999999996e-15;
-          double F1_3 = 38199.012000000002;
-          double F1_4 = 6.6007061575166499e-15*S_0;
-          double F1_5 = 1.0315008299507354e-13*S_0;
-          double F1_6 = 7.3679649000000001e-14*S_1;
-          double F1_7 = -6.6007061575166499e-15*S_0 - 7.3679649000000001e-14*S_1;
-          double F1_8 = -1.0315008299507354e-13*S_0;
-          double F1_9 = -4.2566445999999996e-15;
-          double F1_10 = -38199.012000000002;
+          double F1_0 = 38199.012000000002;
+          double F1_1 = 4.2566445999999996e-15;
+          double F1_2 = -38199.012000000002;
+          double F1_3 = -4.2566445999999996e-15;
+          double F1_4 = 38199.012000000002 - 7.3679649000000001e-14*S_4;
+          double F1_5 = 7.3679649000000001e-14*S_4;
+          double F1_6 = -6.6007061575166499e-15*S_8 - 7.3679649000000001e-14*S_4;
+          double F1_7 = 6.6007061575166499e-15*S_8;
+          double F1_8 = 0.0;
+          double F1_9 = 1.0315008299507354e-13*S_8;
+          double F1_10 = -1.0315008299507354e-13*S_8;
 
           // 2. Evaluate importance and update active set
           active[0] = (Kokkos::fabs(F1_0) / (atol[0] + rtol[0] * Kokkos::fabs(state(3))) >= importance_threshold);
@@ -624,18 +625,18 @@ namespace mkpp {
           double J_4_2 = 38199.012000000002;
           double J_4_3 = 4.2566445999999996e-15;
           double J_4_4 = -7.3679649000000001e-14;
-          double J_4_6 = -7.3679649000000001e-14*S_1;
+          double J_4_6 = -7.3679649000000001e-14*S_4;
           double J_5_4 = 7.3679649000000001e-14;
-          double J_5_6 = 7.3679649000000001e-14*S_1;
+          double J_5_6 = 7.3679649000000001e-14*S_4;
           double J_6_4 = -7.3679649000000001e-14;
-          double J_6_6 = -6.6007061575166499e-15*S_0 - 7.3679649000000001e-14*S_1;
+          double J_6_6 = -6.6007061575166499e-15*S_8 - 7.3679649000000001e-14*S_4;
           double J_6_8 = -6.6007061575166499e-15;
-          double J_7_6 = 6.6007061575166499e-15*S_0;
+          double J_7_6 = 6.6007061575166499e-15*S_8;
           double J_7_8 = 6.6007061575166499e-15;
           double J_9_8 = 1.0315008299507354e-13;
-          double J_9_10 = 1.0315008299507354e-13*S_0;
+          double J_9_10 = 1.0315008299507354e-13*S_8;
           double J_10_8 = -1.0315008299507354e-13;
-          double J_10_10 = -1.0315008299507354e-13*S_0;
+          double J_10_10 = -1.0315008299507354e-13*S_8;
           double W_0_0 = active[0] ? inv_g_dt : 1.0;
           double W_0_2 = (active[0] && active[2]) ? (-J_0_2) : 0.0;
           double W_1_1 = active[1] ? inv_g_dt : 1.0;
@@ -712,6 +713,7 @@ namespace mkpp {
           double y1_9 = active[9] ? (F1_9 - L_9_8 * y1_8) : 0.0;
           // Block 9: K1 forward sub [FixedCl]
           double y1_10 = active[10] ? (F1_10 - L_10_8 * y1_8) : 0.0;
+
           // Block 9: K1 backward sub [FixedCl]
           double K1_10 = active[10] ? (y1_10 / U_10_10) : 0.0;
           // Block 8: K1 backward sub [LCH4byCl]
@@ -734,6 +736,7 @@ namespace mkpp {
           // Block 0: K1 backward sub [PCOfromNMVOC]
           double K1_0 = active[0] ? ((y1_0 - U_0_2 * K1_2) / U_0_0) : 0.0;
 
+
           // --- Stage 2 ---
           // Intermediate state Y2
           double Y2_0 = S_0 + K1_0;
@@ -748,17 +751,17 @@ namespace mkpp {
           double Y2_9 = S_9 + K1_9;
           double Y2_10 = S_10 + K1_10;
           // Rate evaluation F2 at Y2
-          double F2_0 = 0.0;
-          double F2_1 = 38199.012000000002 - 7.3679649000000001e-14*Y2_1;
-          double F2_2 = 4.2566445999999996e-15;
-          double F2_3 = 38199.012000000002;
-          double F2_4 = 6.6007061575166499e-15*Y2_0;
-          double F2_5 = 1.0315008299507354e-13*Y2_0;
-          double F2_6 = 7.3679649000000001e-14*Y2_1;
-          double F2_7 = -6.6007061575166499e-15*Y2_0 - 7.3679649000000001e-14*Y2_1;
-          double F2_8 = -1.0315008299507354e-13*Y2_0;
-          double F2_9 = -4.2566445999999996e-15;
-          double F2_10 = -38199.012000000002;
+          double F2_0 = 38199.012000000002;
+          double F2_1 = 4.2566445999999996e-15;
+          double F2_2 = -38199.012000000002;
+          double F2_3 = -4.2566445999999996e-15;
+          double F2_4 = 38199.012000000002 - 7.3679649000000001e-14*Y2_4;
+          double F2_5 = 7.3679649000000001e-14*Y2_4;
+          double F2_6 = -6.6007061575166499e-15*Y2_8 - 7.3679649000000001e-14*Y2_4;
+          double F2_7 = 6.6007061575166499e-15*Y2_8;
+          double F2_8 = 0.0;
+          double F2_9 = 1.0315008299507354e-13*Y2_8;
+          double F2_10 = -1.0315008299507354e-13*Y2_8;
           // RHS for stage 2
           double rhs2_0 = F2_0 + (-1.0156171083877703 / dt) * K1_0;
           double rhs2_1 = F2_1 + (-1.0156171083877703 / dt) * K1_1;
@@ -792,6 +795,7 @@ namespace mkpp {
           double y2_9 = active[9] ? (rhs2_9 - L_9_8 * y2_8) : 0.0;
           // Block 9: K2 forward sub [FixedCl]
           double y2_10 = active[10] ? (rhs2_10 - L_10_8 * y2_8) : 0.0;
+
           // Block 9: K2 backward sub [FixedCl]
           double K2_10 = active[10] ? (y2_10 / U_10_10) : 0.0;
           // Block 8: K2 backward sub [LCH4byCl]
@@ -813,6 +817,7 @@ namespace mkpp {
           double K2_1 = active[1] ? ((y2_1 - U_1_3 * K2_3) / U_1_1) : 0.0;
           // Block 0: K2 backward sub [PCOfromNMVOC]
           double K2_0 = active[0] ? ((y2_0 - U_0_2 * K2_2) / U_0_0) : 0.0;
+
 
           // --- Stage 3 ---
           // Intermediate state Y3
@@ -861,6 +866,7 @@ namespace mkpp {
           double y3_9 = active[9] ? (rhs3_9 - L_9_8 * y3_8) : 0.0;
           // Block 9: K3 forward sub [FixedCl]
           double y3_10 = active[10] ? (rhs3_10 - L_10_8 * y3_8) : 0.0;
+
           // Block 9: K3 backward sub [FixedCl]
           double K3_10 = active[10] ? (y3_10 / U_10_10) : 0.0;
           // Block 8: K3 backward sub [LCH4byCl]
@@ -882,6 +888,7 @@ namespace mkpp {
           double K3_1 = active[1] ? ((y3_1 - U_1_3 * K3_3) / U_1_1) : 0.0;
           // Block 0: K3 backward sub [PCOfromNMVOC]
           double K3_0 = active[0] ? ((y3_0 - U_0_2 * K3_2) / U_0_0) : 0.0;
+
 
           // --- Solution update and error estimation ---
           double err_norm_sq = 0.0;

@@ -79,7 +79,7 @@ class EquilibriumDefinition:
 
     system: str  # e.g. "NH4_NO3_SO4"
     total_species: dict[str, list[str]]  # element -> [gas_species, aerosol_species, ...]
-    regime_blending: str = "sigmoid"  # "sigmoid" | "tanh"
+    regime_blending: str = "sigmoid"  # "sigmoid"
     transition_width: float = 0.05
     activity_model: str = "fixed"  # "fixed" | "parameterized"
     equilibrium_constants: dict[str, dict[str, Any]] = field(default_factory=dict)  # name -> {A, dH, Tref} van't Hoff params
@@ -104,6 +104,8 @@ class SpeciesDefinition:
     phase: PhaseMode
     elements: dict[str, int] = field(default_factory=dict)
     role: str | None = None
+    solver_atol: float | None = field(default=None)
+    solver_rtol: float | None = field(default=None)
 
 
 @dataclass

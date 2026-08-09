@@ -242,7 +242,7 @@ class TestIntegrateTLMEquilibriumEntries:
         has_j_2 = "J_2_" in tlm_section or "J_3_" in tlm_section
         assert has_j_2, "integrate_tlm should recompute Jacobian entries involving " "equilibrium species (indices 2, 3)"
 
-    def test_integrate_tlm_uses_dC_for_equilibrium_species(self):
+    def test_integrate_tlm_uses_dc_for_equilibrium_species(self):
         """Verify that TLM stage RHS references dC_2 and dC_3 (equilibrium species).
 
         The TLM stage computation forms J*(δC + Σ A*δK), which requires

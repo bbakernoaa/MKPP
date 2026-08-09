@@ -123,7 +123,7 @@ def test_partition_expressions_sulfate_rich_regime(model, symbols):
         "oxidized_nitrogen": C_Ox,
         "sulfate": C_S,
     }
-    exprs = model.partition_expressions(totals, T, RH, blending="tanh", width=0.05)
+    exprs = model.partition_expressions(totals, T, RH, blending="sigmoid", width=0.05)
 
     # Evaluate at conditions where R = C_N / C_S < 1
     # e.g., C_N = 1e-9, C_S = 5e-9 => R = 0.2
@@ -151,7 +151,7 @@ def test_partition_expressions_ammonia_rich_regime(model, symbols):
         "oxidized_nitrogen": C_Ox,
         "sulfate": C_S,
     }
-    exprs = model.partition_expressions(totals, T, RH, blending="tanh", width=0.05)
+    exprs = model.partition_expressions(totals, T, RH, blending="sigmoid", width=0.05)
 
     # Evaluate at conditions where R = C_N / C_S >> 2
     # e.g., C_N = 1e-8, C_S = 1e-9 => R = 10
@@ -182,7 +182,7 @@ def test_partition_expressions_no_forbidden_sympy_ops(model, symbols):
         "oxidized_nitrogen": C_Ox,
         "sulfate": C_S,
     }
-    exprs = model.partition_expressions(totals, T, RH, blending="tanh", width=0.05)
+    exprs = model.partition_expressions(totals, T, RH, blending="sigmoid", width=0.05)
 
     forbidden_types = (sp.Piecewise, sp.Abs, sp.Max, sp.Min)
 
@@ -208,7 +208,7 @@ def test_partition_expressions_conservation_exact(model, symbols):
         "oxidized_nitrogen": C_Ox,
         "sulfate": C_S,
     }
-    exprs = model.partition_expressions(totals, T, RH, blending="tanh", width=0.05)
+    exprs = model.partition_expressions(totals, T, RH, blending="sigmoid", width=0.05)
 
     # Symbolic check: NH3 + NH4a should simplify to C_N
     residual = sp.simplify(exprs["NH3"] + exprs["NH4a"] - C_N)

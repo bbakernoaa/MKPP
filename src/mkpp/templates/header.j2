@@ -1,0 +1,207 @@
+{#
+  Top-level header template: renders the complete .hpp file.
+
+  This is the main entry point for Jinja2-based code generation. It produces
+  a complete Kokkos C++ header file including:
+    1. #pragma once
+    2. #include <Kokkos_Core.hpp>
+    3. Generated solver comment
+    4. Optional SZA sorting / continuous transition annotations
+    5. namespace mkpp {
+    6. Optional EquilibriumInput enum (when has_equilibrium)
+    7. Optional host interface unmanaged views
+    8. Optional CheckpointBuffer struct (when adjoint_enabled)
+    9. template<typename DeviceType> struct SolverKernels {
+   10. Kernel functions: compute_rates, compute_jacobian, compute_adjoint, compute_tlm
+   11. Optional compute_equilibrium_partition (when has_equilibrium + equilibrium_results)
+   12. project_mass_conservation
+   13. Tolerance arrays (NUM_SPECIES, atol[], rtol[])
+   14. Photolysis metadata comments
+   15. Solver variants: integrate, integrate_with_reduction
+   16. Conditional (adjoint): integrate_fwd_checkpoint, integrate_adj, integrate_tlm
+   17. Optional diagnostic functions (equilibrium, guarded by #ifdef MKPP_DIAGNOSTICS)
+   18. Closing braces: }; and }
+
+  Context variables required:
+    - mechanism_name, num_species, species
+    - has_equilibrium, adjoint_enabled
+    - partition_metadata, has_continuous_rxns
+    - host_interface
+    - tolerance_arrays (atol, rtol)
+    - photolysis_reactions, num_photolysis, has_photolysis
+    - rate_exprs_state, jacobian_entries_state, adjoint_entries_state
+    - mass_projector_data
+    - equilibrium_partition_data
+    - diagnostics_data
+    - All variables needed by included solver variant templates
+
+  Requirements: 4.6
+#}
+#pragma once
+#include <Kokkos_Core.hpp>
+// Generated solver for {{ mechanism_name }}
+{% if partition_metadata and partition_metadata.get is defined and partition_metadata.get("sza_sorted") %}
+// SZA Workload Sorted: true
+{% endif %}
+{% if has_continuous_rxns %}
+// Hysteresis/Spline Continuous Transition: true
+{% endif %}
+namespace mkpp {
+  // Pure Kokkos abstractions (no raw pragmas allowed)
+{% if has_equilibrium %}
+
+  // Equilibrium meteorological input indices
+  enum class EquilibriumInput : int {
+      Temperature = 0,
+      RelativeHumidity = 1,
+      COUNT = 2
+  };
+
+{% endif %}
+{% if host_interface and host_interface.arrays %}
+  // Bidirectional Host Interface (Zero-Copy)
+{% for arr in host_interface.arrays %}
+  using {{ arr.name }}_view_t = Kokkos::View<double{{ "*" * arr.rank }}, Kokkos::{{ arr.layout }}, Kokkos::MemoryUnmanaged>;
+{% endfor %}
+{% endif %}
+{% if adjoint_enabled %}
+  // Checkpoint buffer for discrete adjoint/TLM integration
+  // Recompute-J strategy: only state is stored, Jacobian recomputed from saved state
+  struct CheckpointBuffer {
+      static constexpr int MAX_STEPS = 200;
+      static constexpr int NUM_SPECIES = {{ num_species }};
+      int num_steps = 0;
+      double h[MAX_STEPS];
+      double state[MAX_STEPS][NUM_SPECIES];  // saved concentrations at step entry
+  };
+
+{% endif %}
+  template<typename DeviceType>
+  struct SolverKernels {
+{% include "kernel_functions/compute_rates.j2" %}
+
+{% include "kernel_functions/compute_jacobian.j2" %}
+
+{% include "kernel_functions/compute_adjoint.j2" %}
+
+{% include "kernel_functions/compute_tlm.j2" %}
+
+{% if equilibrium_partition_data %}
+      // Standalone equilibrium partitioning for validation against ISORROPIA-Lite
+      template <class StateView, class ResultView>
+      KOKKOS_INLINE_FUNCTION void compute_equilibrium_partition(
+          const StateView& state, ResultView& eq_result,
+          const double temp, const double rh) const {
+          // Compute equilibrium partition fractions at the given state
+          // eq_result contains the equilibrium concentrations for each species
+          const double Temp = temp;
+          const double RH = rh;
+          (void)RH;  // Reserved for future deliquescence modeling
+
+{% for block in equilibrium_partition_data %}
+          // Total species concentrations
+{% for total in block.total_species %}
+          const double C_total_{{ total.element_name }} = {{ total.expr }};
+{% endfor %}
+
+          // Equilibrium expressions
+{% for entry in block.partition_entries %}
+          eq_result({{ entry.species_idx }}) = {{ entry.expr }};
+{% endfor %}
+{% endfor %}
+      }
+
+{% endif %}
+{% if mass_projector_data %}
+{% include "kernel_functions/project_mass_conservation.j2" %}
+
+{% else %}
+      template <class StateView, class MassView>
+      KOKKOS_INLINE_FUNCTION void project_mass_conservation(StateView& C_projected, const StateView& C, const MassView& m_0) const {
+          // C_projected = C - E^T (E E^T)^-1 (E C - m_0)
+      }
+
+{% endif %}
+      static constexpr int NUM_SPECIES = {{ num_species }};
+      static constexpr double atol[NUM_SPECIES] = { {{ tolerance_arrays.atol | join(", ") }} };
+      static constexpr double rtol[NUM_SPECIES] = { {{ tolerance_arrays.rtol | join(", ") }} };
+
+{% if has_photolysis and num_photolysis > 0 %}
+      // Photolysis reactions (Cloud-J input mapping):
+{% for pr in photolysis_reactions %}
+{% if pr.reactants is mapping %}
+{% set reactants_str = pr.reactants.keys() | list | join(", ") %}
+{% else %}
+{% set reactants_str = pr.reactants | join(", ") %}
+{% endif %}
+{% if pr.products is mapping %}
+{% set products_str = pr.products.keys() | list | join(", ") %}
+{% else %}
+{% set products_str = pr.products | join(", ") %}
+{% endif %}
+      //   jvals[{{ pr.photo_idx }}] = {{ reactants_str }} -> {{ products_str }}  (original A: {{ pr.original_A }})
+{% endfor %}
+      static constexpr int NUM_PHOTOLYSIS = {{ num_photolysis }};
+
+{% endif %}
+{% include "solver_variants/integrate.j2" %}
+
+{% include "solver_variants/integrate_with_reduction.j2" %}
+{% if adjoint_enabled %}
+
+{% include "solver_variants/integrate_fwd_checkpoint.j2" %}
+
+{% include "solver_variants/integrate_adj.j2" %}
+
+{% include "solver_variants/integrate_tlm.j2" %}
+{% endif %}
+{% if has_equilibrium and diagnostics_data %}
+
+#ifdef MKPP_DIAGNOSTICS
+      template <class StateView>
+      KOKKOS_INLINE_FUNCTION double check_mass_balance(
+          const StateView& state, int element_idx) const {
+{% for elem in diagnostics_data.mass_balance_elements %}
+{% if loop.index0 == 0 %}
+          if (element_idx == {{ loop.index0 }}) {
+{% else %}
+          } else if (element_idx == {{ loop.index0 }}) {
+{% endif %}
+              // {{ elem.element_name }}: sum of [{{ elem.species_list | join(", ") }}]
+              double total = 0.0;
+{% for si in elem.species_indices %}
+              total += state({{ si }});
+{% endfor %}
+              return total;
+{% endfor %}
+          }
+          return 0.0;
+      }
+
+      template <class StateView>
+      KOKKOS_INLINE_FUNCTION double check_charge_balance(
+          const StateView& state) const {
+          // Placeholder: compute cation equivalents - anion equivalents
+          // TODO: Fill in actual ion charges for the equilibrium system
+          double balance = 0.0;
+{% for contrib in diagnostics_data.charge_contributions %}
+{% if contrib.sign == "+" %}
+{% if contrib.coeff == 1.0 %}
+          balance += state({{ contrib.idx }});  // {{ contrib.comment }}
+{% else %}
+          balance += {{ contrib.coeff }} * state({{ contrib.idx }});  // {{ contrib.comment }}
+{% endif %}
+{% else %}
+{% if contrib.coeff == 1.0 %}
+          balance -= state({{ contrib.idx }});  // {{ contrib.comment }}
+{% else %}
+          balance -= {{ contrib.coeff }} * state({{ contrib.idx }});  // {{ contrib.comment }}
+{% endif %}
+{% endif %}
+{% endfor %}
+          return balance;
+      }
+#endif // MKPP_DIAGNOSTICS
+{% endif %}
+  };
+}

@@ -1,8 +1,11 @@
-add_subdirectory(${CMAKE_SOURCE_DIR}/src/mkpp_host
-                 ${CMAKE_BINARY_DIR}/mkpp_host)
 cmake_minimum_required(VERSION 3.24)
 
-set(MECHS "chapman" "small_strato" "carbon" "saprc99" "saprc99_lumped")
+if(NOT TARGET mkpp_host)
+  add_subdirectory(${CMAKE_SOURCE_DIR}/src/mkpp_host
+                   ${CMAKE_BINARY_DIR}/mkpp_host)
+endif()
+
+set(MECHS "chapman" "small_strato" "carbon")
 
 foreach(MECH ${MECHS})
   if("${MECH}" STREQUAL "chapman")
@@ -15,8 +18,6 @@ foreach(MECH ${MECHS})
     set(NUM_SPEC 12)
   elseif("${MECH}" STREQUAL "saprc99")
     set(NUM_SPEC 82)
-  elseif("${MECH}" STREQUAL "saprc99_lumped")
-    set(NUM_SPEC 35)
   else()
     set(NUM_SPEC 100)
   endif()
@@ -46,3 +47,16 @@ add_executable(benchmark_runner benchmark_runner.cpp)
 target_include_directories(benchmark_runner
                            PRIVATE ${CMAKE_SOURCE_DIR}/mkpp-generated)
 target_link_libraries(benchmark_runner PRIVATE mkpp_host Kokkos::kokkos)
+
+# SciPy reference validation test
+add_executable(test_scipy_validation test_scipy_validation.cpp)
+target_include_directories(test_scipy_validation
+                           PRIVATE ${CMAKE_SOURCE_DIR}/mkpp-generated)
+target_link_libraries(
+  test_scipy_validation PRIVATE mkpp_host Kokkos::kokkos GTest::gtest_main
+                                GTest::gtest)
+target_compile_definitions(
+  test_scipy_validation
+  PRIVATE REFERENCE_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")
+
+add_test(NAME mkpp_scipy_validation COMMAND test_scipy_validation)

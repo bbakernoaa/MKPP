@@ -1,0 +1,152 @@
+{#
+  Solver variant template: Discrete Adjoint backward integration (integrate_adj).
+
+  Renders the `integrate_adj()` function which walks backward through the
+  checkpointed trajectory, accumulating the adjoint variable lambda via the
+  Sandu et al. (2003) discrete adjoint formula.
+
+  Template-time (Python/Jinja2) unrolling:
+    - Adjoint stages i = s, s-1, ..., 1 are unrolled at render time.
+    - Each stage computes v_i (RHS) and solves W^{-T} * u_i = v_i.
+
+  Runtime loop:
+    - Backward loop over checkpointed steps (step = num_steps-1 ... 0).
+    - At each step: reload state, recompute Jacobian, form W, LU factorize,
+      then execute the unrolled adjoint stages.
+
+  Context variables required:
+    - mechanism_name, num_species, species
+    - tableau (name, stages, Gamma, M, A_matrix, C_matrix)
+    - jacobian_entries: list of (i, j, formatted_expr)
+    - non_zero_jac_set: set of (i, j) for non-zero Jacobian positions
+    - needed_w: sorted list of (i, j) tuples
+    - lu_expressions: list of {kind, i, j, expr}
+    - blocks: optional list of {indices, species_names}
+    - transpose_forward_sub_steps: list of {i, raw_expr}
+    - transpose_backward_sub_steps: list of {i, raw_expr}
+    - has_equilibrium: bool
+
+  Uses macros:
+    - macros/w_matrix.j2: emit_w_matrix
+    - macros/lu_factorize.j2: emit_lu_factorize
+    - macros/lu_solve_transpose.j2: emit_transpose_solve
+
+  Requirements: 4.4
+#}
+{% from "macros/w_matrix.j2" import emit_w_matrix %}
+{% from "macros/lu_factorize.j2" import emit_lu_factorize %}
+{% from "macros/lu_solve_transpose.j2" import emit_transpose_solve %}
+{#
+  Helper macro to compute A(i, j) from the row-wise lower-triangular storage.
+  i and j are 1-indexed stage numbers with i > j.
+  Index into flat array: (i-1)*(i-2)//2 + (j-1)
+#}
+{% macro get_A(tableau, i, j) %}{{ tableau.A_matrix[(i - 1) * (i - 2) // 2 + j - 1] }}{% endmacro %}
+{% macro get_C(tableau, i, j) %}{{ tableau.C_matrix[(i - 1) * (i - 2) // 2 + j - 1] }}{% endmacro %}
+
+      // Discrete adjoint backward integration through checkpointed trajectory
+      // Walks backward through saved steps, accumulating adjoint variable lambda.
+      template <class StateView, class AdjView>
+      KOKKOS_INLINE_FUNCTION void integrate_adj(
+          double dt_total, const StateView& state_final,
+          AdjView& lambda, const double* jvals,
+          const CheckpointBuffer& chk) const
+      {
+          const double g = {{ "%.17g" | format(tableau.Gamma[0]) }};
+
+          // --- Discrete Adjoint: backward integration over checkpointed steps ---
+          for (int step = chk.num_steps - 1; step >= 0; step--) {
+              const double h = chk.h[step];
+              const double inv_g_h = 1.0 / (g * h);
+
+              // Reload checkpointed state
+{% for k in range(num_species) %}
+              const double S_{{ k }} = chk.state[step][{{ k }}];
+{% endfor %}
+
+              // Recompute Jacobian at checkpointed state (recompute-J strategy, D1)
+{% for entry in jacobian_entries %}
+              double J_{{ entry[0] }}_{{ entry[1] }} = {{ entry[2] }};
+{% endfor %}
+
+              // Form iteration matrix W = (1/(gamma*h))*I - J
+{{ emit_w_matrix(needed_w, non_zero_jac_set, "inv_g_h", num_species, is_reduction=false, blocks=blocks, indent="              ") }}
+
+              // Symbolic LU Factorization (recomputed at each adjoint step)
+{% if blocks %}
+{% set ns = namespace(emitted_block_nums=[]) %}
+{% for entry in lu_expressions %}
+{% for block_num in range(blocks | length) %}
+{% if entry.i in blocks[block_num].indices and block_num not in ns.emitted_block_nums %}
+{% set ns.emitted_block_nums = ns.emitted_block_nums + [block_num] %}
+              // Block {{ block_num }}: species [{{ blocks[block_num].species_names | join(', ') }}]
+{% endif %}
+{% endfor %}
+              double {{ entry.kind }}_{{ entry.i }}_{{ entry.j }} = {{ entry.expr }};
+{% endfor %}
+{% else %}
+{% for entry in lu_expressions %}
+              double {{ entry.kind }}_{{ entry.i }}_{{ entry.j }} = {{ entry.expr }};
+{% endfor %}
+{% endif %}
+
+              // --- Adjoint stage unrolling (s={{ tableau.stages }} stages, backward) ---
+              // Driving vector: lam_k = lambda_{n+1} (constant for this step)
+{% for k in range(num_species) %}
+              const double lam_{{ k }} = lambda({{ k }});
+{% endfor %}
+{% for stage in range(tableau.stages, 0, -1) %}
+
+              // Adjoint stage {{ stage }}
+              // v{{ stage }}: RHS for W^{-T} solve
+{% set m_val = tableau.M[stage - 1] %}
+{% for k in range(num_species) %}
+{% set terms = [] %}
+{# M_i * lam_k term #}
+{% if m_val != 0.0 %}
+{% if m_val == 1.0 %}
+{% set _ = terms.append("lam_" ~ k) %}
+{% else %}
+{% set _ = terms.append("%.17g" | format(m_val) ~ " * lam_" ~ k) %}
+{% endif %}
+{% endif %}
+{# Sum over j > stage (previously computed stages, which have higher index) #}
+{% for j in range(stage + 1, tableau.stages + 1) %}
+{% set a_val = tableau.A_matrix[(j - 1) * (j - 2) // 2 + stage - 1] %}
+{% set c_val = tableau.C_matrix[(j - 1) * (j - 2) // 2 + stage - 1] %}
+{% if a_val != 0.0 %}
+{# (J^T * u_j)_k = sum_col J[col,k] * u_j_col (sparse) #}
+{% set jt_terms = [] %}
+{% for col in range(num_species) %}
+{% if (col, k) in non_zero_jac_set %}
+{% set _ = jt_terms.append("J_" ~ col ~ "_" ~ k ~ " * u" ~ j ~ "_" ~ col) %}
+{% endif %}
+{% endfor %}
+{% if jt_terms %}
+{% if a_val == 1.0 %}
+{% set _ = terms.append("(" ~ jt_terms | join(" + ") ~ ")") %}
+{% else %}
+{% set _ = terms.append("%.17g" | format(a_val) ~ " * (" ~ jt_terms | join(" + ") ~ ")") %}
+{% endif %}
+{% endif %}
+{% endif %}
+{% if c_val != 0.0 %}
+{% set _ = terms.append("(%.17g" | format(c_val) ~ " / h) * u" ~ j ~ "_" ~ k) %}
+{% endif %}
+{% endfor %}
+{% if terms %}
+              double v{{ stage }}_{{ k }} = {{ terms | join(" + ") }};
+{% else %}
+              double v{{ stage }}_{{ k }} = 0.0;
+{% endif %}
+{% endfor %}
+              // W^{-T} solve for u{{ stage }}
+{{ emit_transpose_solve(transpose_forward_sub_steps, transpose_backward_sub_steps, "v" ~ stage, "yt" ~ stage, "u" ~ stage, blocks=blocks, is_reduction=false, indent="              ") }}
+{% endfor %}
+
+              // --- Lambda update: lambda_n = lambda_{n+1} + Σ u_i ---
+{% for k in range(num_species) %}
+              lambda({{ k }}) = lam_{{ k }}{% for i in range(1, tableau.stages + 1) %} + u{{ i }}_{{ k }}{% endfor %};
+{% endfor %}
+          } // end for (step)
+      }

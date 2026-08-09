@@ -129,7 +129,106 @@ void integrate_with_reduction(
 
 ---
 
-## 3. Supported Rosenbrock Solver Tableaus
+## 3. Adjoint & Tangent-Linear Model (TLM) C++ API
+
+When compiled with the `--adjoint` CLI flag, headers expose discrete adjoint structs and routines:
+
+### `CheckpointBuffer` Struct
+
+Allocates thread-safe, cell-indexed trajectory checkpoint memory across integration timesteps.
+
+```cpp
+struct CheckpointBuffer {
+    Kokkos::View<double***, Kokkos::LayoutLeft> state_checkpoints; // (num_cells, max_steps, NUM_SPECIES)
+    Kokkos::View<double**, Kokkos::LayoutLeft> dt_checkpoints;     // (num_cells, max_steps)
+    Kokkos::View<int*, Kokkos::LayoutLeft> step_counts;            // (num_cells)
+
+    CheckpointBuffer(int num_cells, int max_steps);
+};
+```
+
+### `compute_adjoint`
+
+Evaluates the transposed analytical chemical Jacobian matrix $J^T_{i,j} = \frac{\partial f_j}{\partial y_i}$ into `J_adj_block`.
+
+```cpp
+template <typename StateView, typename JacView>
+KOKKOS_INLINE_FUNCTION
+void compute_adjoint(
+    const StateView& state,
+    JacView& J_adj_block,
+    const double* jvals
+);
+```
+
+### `integrate_fwd_checkpoint`
+
+Executes forward integration and saves trajectory checkpoints into `checkpoint_buf` for cell `cell_idx`.
+
+```cpp
+template <typename StateView>
+KOKKOS_INLINE_FUNCTION
+void integrate_fwd_checkpoint(
+    StateView& state,
+    double temp,
+    double press,
+    double t_start,
+    double t_end,
+    CheckpointBuffer& checkpoint_buf,
+    int cell_idx
+);
+```
+
+### `integrate_adj`
+
+Performs discrete adjoint backward integration from $t_{\text{end}}$ to $t_{\text{start}}$ over saved trajectory checkpoints, updating sensitivity vector `lambda`.
+
+```cpp
+template <typename StateView>
+KOKKOS_INLINE_FUNCTION
+void integrate_adj(
+    StateView& lambda,
+    double temp,
+    double press,
+    double t_start,
+    double t_end,
+    const CheckpointBuffer& checkpoint_buf,
+    int cell_idx
+);
+```
+
+---
+
+## 4. `mkpp` CLI Compiler Reference
+
+The `mkpp compile` CLI command generates Kokkos ODE solver headers from mechanism specifications.
+
+### Command Usage
+```bash
+mkpp compile <mechanism.yaml> --test-env <env.yaml> [options]
+```
+
+### CLI Arguments & Flags
+
+| Flag | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `mechanism` | string | *Required* | Path to mechanism YAML specification file |
+| `--test-env` | string | *Required* | Path to test environment YAML configuration file |
+| `--out` | string | `mkpp-generated/` | Output directory for generated C++ headers and manifests |
+| `--solver` | choice | `ros3` | Rosenbrock solver tableau (`ros2`, `ros3`, `ros4`, `rodas3`, `rodas4`) |
+| `--adjoint` | flag | `false` | Emit discrete adjoint/TLM routines and `CheckpointBuffer` |
+| `--strict` | flag | `false` | Enable strict schema and constraint validation |
+| `--emit-manifest` | flag | `true` | Emit metadata manifest JSON alongside C++ headers |
+| `--report` | flag | `false` | Generate Markdown analysis report and species interaction graph |
+| `--lump` | string | `None` | Path to AMORE structural mechanism lumping rules YAML |
+| `--no-cache` | flag | `false` | Skip cache lookup and recompute symbolic matrices from scratch |
+| `--dry-run` | flag | `false` | Run parsing and validation stages without emitting code |
+| `--verbose` | flag | `false` | Emit progress logs to `stderr` at each compilation pipeline stage |
+| `--migrate-equilibrium` | flag | `false` | Rewrite mechanism YAML replacing deprecated `PHASE_CHANGE` blocks with `EQUILIBRIUM` |
+
+---
+
+## 5. Supported Rosenbrock Solver Tableaus
 
 MKPP code generation supports 5 L-stable and A-stable Rosenbrock solver variants via the `--solver` flag:
 
@@ -143,7 +242,64 @@ MKPP code generation supports 5 L-stable and A-stable Rosenbrock solver variants
 
 ---
 
+## 6. High-Level Multi-Language Host Model API (`mkpp.h`, `mkpp_mod.f90`, `mkpp.hpp`)
+
+When generating solvers with the `--host-api` flag (`python -m mkpp generate --host-api`), MKPP emits C11, C++17, and Fortran 2018 wrapper interface files alongside Kokkos solver headers, enabling zero-copy host model integration without Python dependencies at compile or run time.
+
+### C11 ABI Interface (`mkpp.h`)
+Opaque handle C ABI functions returning integer status codes (`0` for success `MKPP_SUCCESS`, `<0` for errors):
+
+```c
+/* Opaque Context Handle */
+typedef struct mkpp_handle_s* mkpp_handle_t;
+
+/* Lifecycle & State Binding */
+int mkpp_create_handle(mkpp_handle_t* handle_out, size_t num_cells);
+int mkpp_destroy_handle(mkpp_handle_t handle);
+int mkpp_initialize(mkpp_handle_t handle);
+
+int mkpp_set_state_ptrs(mkpp_handle_t handle, double* species_conc, const double* temp, const double* pressure, const double* air_density);
+int mkpp_set_photolysis_ptrs(mkpp_handle_t handle, const double* photolysis_rates);
+
+/* Solver Computation & Diagnostics */
+int mkpp_integrate(mkpp_handle_t handle, double dt);
+int mkpp_evaluate_rates(mkpp_handle_t handle, double* rates_out);
+int mkpp_evaluate_jacobian(mkpp_handle_t handle, double* jac_out);
+
+/* Metadata Lookups & Error Handling */
+int mkpp_get_species_index(mkpp_handle_t handle, const char* species_name, int* index_out);
+int mkpp_get_photolysis_index(mkpp_handle_t handle, const char* photo_name, int* index_out);
+int mkpp_get_last_error(mkpp_handle_t handle, char* buffer, size_t buffer_len);
+```
+
+### Fortran 2018 Module (`mkpp_mod.f90`)
+Modern Fortran module using `iso_c_binding` to bind 2D column-major arrays `(num_cells, num_species)` zero-copy:
+
+```fortran
+use iso_c_binding
+use mkpp_mod
+
+type(mkpp_handle_t) :: handle
+real(c_double), target :: conc(num_cells, MKPP_NUM_SPECIES)
+real(c_double), target :: temp(num_cells), pres(num_cells), rho(num_cells)
+integer :: status
+
+call mkpp_create_handle(handle, num_cells, status)
+call mkpp_initialize(handle, status)
+call mkpp_set_state_ptrs(handle, conc, temp, pres, rho, status)
+call mkpp_integrate(handle, 60.0d0, status)
+call mkpp_destroy_handle(handle, status)
+```
+
+### C++ Interface (`mkpp.hpp`)
+RAII `mkpp::MechanismContext` wrapper class managing handle lifecycles and throwing `std::runtime_error` on failure.
+
+---
+
+## 7. CF Metadata Standard Table
+=======
 ## 4. CF Metadata Standard Table
+>>>>>>> origin/develop
 
 Variables and species states in MKPP generated solvers conform to standard Climate and Forecast (CF) metadata conventions:
 
@@ -159,7 +315,8 @@ Variables and species states in MKPP generated solvers conform to standard Clima
 
 ## Related Documents
 
-- [Reaction Types & YAML Schema Reference](reaction-types-and-yaml-schema.md)
+- [Reaction Types & OpenAtmos YAML Schema Reference](reaction-types-and-yaml-schema.md)
+- [How-To: Host Model Integration](../how-to/host_model_integration.md)
 - [Reaction Kinetics & Unified Jacobian Explanation](../explanation/unified-jacobian-and-reaction-kinetics.md)
 - [How-To: Create Custom Reactions](../how-to/create-custom-reactions.md)
 - [AOT Solver Quickstart Tutorial](../tutorials/aot-solver-quickstart.md)

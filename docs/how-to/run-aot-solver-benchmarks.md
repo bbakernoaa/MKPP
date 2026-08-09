@@ -124,5 +124,7 @@ objdump -d build/bin/test_gocart | grep -A 20 "lu_decompose"
 
 ## Related Documents
 
-- [AOT Solver API Reference](../reference/aot-solver-api.md)
+- [AOT Solver C++ & CLI API Reference](../reference/aot-solver-api.md)
 - [AOT Symbolic LU Architecture Explanation](../explanation/aot-symbolic-lu-architecture.md)
+- [How-To: Compile & Run Adjoint and TLM Solvers](compile-adjoint-and-tlm-solvers.md)
+- [MKPP Documentation Index](../README.md)

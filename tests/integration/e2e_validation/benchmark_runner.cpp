@@ -9,7 +9,6 @@
 #include <vector>
 
 #include "saprc99.hpp"
-#include "saprc99_lumped.hpp"
 
 using ExecSpace = Kokkos::DefaultExecutionSpace;
 
@@ -105,15 +104,8 @@ int main(int argc, char** argv) {
     Kokkos::initialize(argc, argv);
     {
         std::vector<double> final_state;
-        double time_ms = 0.0;
-
-        if (mode == "lumped") {
-            time_ms = run_diurnal_benchmark<mkpp::SolverKernels<ExecSpace>>(
-                num_cells, 35, num_steps, 60.0, final_state);
-        } else {
-            time_ms = run_diurnal_benchmark<mkpp::SolverKernels<ExecSpace>>(
-                num_cells, 79, num_steps, 60.0, final_state);
-        }
+        double time_ms = run_diurnal_benchmark<mkpp::SolverKernels<ExecSpace>>(
+            num_cells, 79, num_steps, 60.0, final_state);
 
         std::cout << "CELLS=" << num_cells << ", STEPS=" << num_steps << ", MODE=" << mode
                   << ", TIME_MS=" << std::fixed << std::setprecision(2) << time_ms

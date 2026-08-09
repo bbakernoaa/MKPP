@@ -75,9 +75,12 @@ class TestGocartCompilesWithEquilibrium:
         diagnostics_section = gocart_header_content[diag_start:diag_end]
         assert "check_mass_balance" in diagnostics_section
 
-    def test_tanh_in_equilibrium_expressions(self, gocart_header_content):
-        """Verify tanh appears in the generated code (regime blending expressions)."""
-        assert "tanh" in gocart_header_content, "tanh not found - equilibrium regime blending should use tanh"
+    def test_regime_blending_in_equilibrium_expressions(self, gocart_header_content):
+        """Verify regime blending expressions appear in the generated code."""
+        # Algebraic sigmoid produces 'sqrt' or 'pow', whereas 'tanh' produces 'tanh'
+        assert (
+            "sqrt" in gocart_header_content or "tanh" in gocart_header_content
+        ), "Regime blending functions (algebraic sigmoid or tanh) not found in generated code"
 
     def test_exp_in_vant_hoff_constants(self, gocart_header_content):
         """Verify exp appears in the generated code (van't Hoff temperature dependence)."""

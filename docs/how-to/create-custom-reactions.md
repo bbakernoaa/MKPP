@@ -136,4 +136,6 @@ Verify that `mkpp-generated/my_mechanism.hpp` contains the unrolled C++ rate and
 
 - [Reaction Kinetics & Unified Jacobian Explanation](../explanation/unified-jacobian-and-reaction-kinetics.md)
 - [Reaction Types & YAML Schema Reference](../reference/reaction-types-and-yaml-schema.md)
-- [AOT Solver API Reference](../reference/aot-solver-api.md)
+- [AOT Solver C++ & CLI API Reference](../reference/aot-solver-api.md)
+- [How-To: Compile & Run Adjoint and TLM Solvers](compile-adjoint-and-tlm-solvers.md)
+- [MKPP Documentation Index](../README.md)
