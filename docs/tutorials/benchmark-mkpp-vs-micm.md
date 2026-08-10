@@ -73,7 +73,7 @@ Execute the compiled binaries from the command line:
 #### 1. Chapman Mechanism (4 Species, 4 Reactions, 1,000 cells x 100 steps)
 ```text
 ==========================================================================
-      Direct C++ Benchmark: MKPP vs NCAR/MICM (Chapman Mechanism)       
+      Direct C++ Benchmark: MKPP vs NCAR/MICM (Chapman Mechanism)
 ==========================================================================
 Grid Cells : 1000
 Timesteps  : 100
@@ -89,7 +89,7 @@ Throughput (cell-st/s)      9.90e+06          3.34e+05          --
 #### 2. T1 Mechanism (210 Species, 547 Reactions, 1,000 cells x 10 steps)
 ```text
 ==========================================================================
-      Direct C++ Benchmark: MKPP vs NCAR/MICM (T1 Mechanism)            
+      Direct C++ Benchmark: MKPP vs NCAR/MICM (T1 Mechanism)
 ==========================================================================
 Species    : 210
 Reactions  : 547
@@ -110,7 +110,7 @@ If you look closely at the source code of the benchmark (`tests/integration/e2e_
 
 1. **MICM (Runtime Assembly)**:
    MICM dynamically allocates state objects, evaluates generalized sparse matrices in loops, and resolves generic rate constants during the time integration loop.
-   
+
 2. **MKPP (Compile-Time Symbolic Unrolling)**:
    MKPP hoists the cell state into scalar registers, computes the exact symbolic non-zero Jacobian operations sequentially, and executes a branch-free Doolittle LU factorization natively on the CPU/GPU.
 
