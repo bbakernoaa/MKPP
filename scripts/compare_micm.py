@@ -32,10 +32,9 @@ from scipy.integrate import solve_ivp
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
-from mkpp.codegen import generate_headers
-from mkpp.lowering import prepare_unified_jacobian
-from mkpp.parser import load_mechanism
-
+from mkpp.codegen import generate_headers  # noqa: E402
+from mkpp.lowering import prepare_unified_jacobian  # noqa: E402
+from mkpp.parser import load_mechanism  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Reference Kinetic ODE Evaluator for MICM / OpenAtmos Reaction Types
@@ -46,7 +45,7 @@ def _parse_param(val: Any, default: float = 0.0) -> float:
     """Parse numeric parameter or float representation safely."""
     if val is None:
         return default
-    if isinstance(val, (int, float)):
+    if isinstance(val, int | float):
         return float(val)
     try:
         return float(str(val))
@@ -141,7 +140,7 @@ def build_micm_ode_system(mech: Any, env_dict: dict[str, Any] | None = None) -> 
 
             for spec_name, stoich in reactants.items():
                 if spec_name in sp_idx:
-                    flux *= (y[sp_idx[spec_name]] ** float(stoich))
+                    flux *= y[sp_idx[spec_name]] ** float(stoich)
                 elif spec_name == "M":
                     flux *= M_density
 
@@ -189,6 +188,7 @@ def run_micm_comparison(
         with open(env_path) as f:
             if env_path.suffix in (".yaml", ".yml"):
                 import yaml
+
                 env_dict = yaml.safe_load(f)
             else:
                 env_dict = json.load(f)
@@ -432,27 +432,31 @@ def generate_markdown_report(results: list[dict[str, Any]]) -> str:
             f"{p['mkpp_time_ms']:.2f} | {p['reference_time_ms']:.2f} | {p['speedup']:.2f}x | {status_icon} |"
         )
 
-    lines.extend([
-        "",
-        "## Detailed Mechanism Results",
-        "",
-    ])
+    lines.extend(
+        [
+            "",
+            "## Detailed Mechanism Results",
+            "",
+        ]
+    )
 
     for r in results:
-        lines.extend([
-            f"### Mechanism: `{r['mechanism']}`",
-            "",
-            f"- **Path**: `{r['mechanism_path']}`",
-            f"- **Grid Cells**: {r['grid_cells']:,}",
-            f"- **Timesteps**: {r['timesteps']:,} (dt = {r['dt']} s)",
-            f"- **Jacobian Non-Zeros**: {r['structural']['jacobian_non_zeros']}",
-            f"- **Throughput**: {r['performance']['throughput_cell_steps_per_sec']:.2e} cell-steps/sec",
-            "",
-            "#### Species Accuracy Table",
-            "",
-            "| Species | Computed | Expected | Abs Error | Rel Error | Status |",
-            "| :--- | :---: | :---: | :---: | :---: | :---: |",
-        ])
+        lines.extend(
+            [
+                f"### Mechanism: `{r['mechanism']}`",
+                "",
+                f"- **Path**: `{r['mechanism_path']}`",
+                f"- **Grid Cells**: {r['grid_cells']:,}",
+                f"- **Timesteps**: {r['timesteps']:,} (dt = {r['dt']} s)",
+                f"- **Jacobian Non-Zeros**: {r['structural']['jacobian_non_zeros']}",
+                f"- **Throughput**: {r['performance']['throughput_cell_steps_per_sec']:.2e} cell-steps/sec",
+                "",
+                "#### Species Accuracy Table",
+                "",
+                "| Species | Computed | Expected | Abs Error | Rel Error | Status |",
+                "| :--- | :---: | :---: | :---: | :---: | :---: |",
+            ]
+        )
         for sp in r["accuracy"]["species_results"]:
             icon = "PASS" if sp["passed"] else "FAIL"
             lines.append(
@@ -470,9 +474,7 @@ def generate_markdown_report(results: list[dict[str, Any]]) -> str:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="Automated comparison script: MKPP vs MICM / OpenAtmos kinetics."
-    )
+    parser = argparse.ArgumentParser(description="Automated comparison script: MKPP vs MICM / OpenAtmos kinetics.")
     parser.add_argument(
         "-m",
         "--mechanism",

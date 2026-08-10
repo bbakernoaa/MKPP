@@ -84,11 +84,11 @@ int main(int argc, char* argv[]) {
 
         std::cout << "Running MICM T1 Benchmark..." << std::flush;
         auto start_micm = std::chrono::high_resolution_clock::now();
-        
+
         for (int step = 0; step < num_steps; ++step) {
             micm_solver.Solve(dt, s);
         }
-        
+
         auto end_micm = std::chrono::high_resolution_clock::now();
         double micm_time_ms = std::chrono::duration<double, std::milli>(end_micm - start_micm).count();
         std::cout << " done (" << micm_time_ms << " ms)\n" << std::endl;

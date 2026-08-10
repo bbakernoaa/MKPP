@@ -6,7 +6,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from scripts.compare_micm import run_micm_comparison
+from scripts.compare_micm import run_micm_comparison  # noqa: E402
 
 
 def test_run_micm_comparison_chapman_fixture():

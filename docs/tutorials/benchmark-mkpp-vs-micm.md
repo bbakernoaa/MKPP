@@ -68,6 +68,13 @@ Execute the compiled binaries from the command line:
 ./build/tests/integration/e2e_validation/benchmark_mkpp_vs_micm_t1
 ```
 
+### Generated Scaling Performance
+
+Running the automated script (`.venv/bin/python3 scripts/plot_scaling.py`) will generate these scaling profiles measuring total execution time across varying grid cell layouts:
+
+![Chapman Scaling Plot](../../reports/performance_scaling_chapman.png)
+![T1 Scaling Plot](../../reports/performance_scaling_t1.png)
+
 ### Understanding the Output
 
 #### 1. Chapman Mechanism (4 Species, 4 Reactions, 1,000 cells x 100 steps)
@@ -81,8 +88,8 @@ Step Size  : 60 s
 
 Metric                      MKPP C++ (AOT)    MICM C++          Speedup
 --------------------------------------------------------------------------------
-Execution Time (ms)         10.10             299.32            29.63x
-Throughput (cell-st/s)      9.90e+06          3.34e+05          --
+Execution Time (ms)         9.54              97.09             10.18x
+Throughput (cell-st/s)      1.05e+07          1.03e+06          --
 ==========================================================================
 ```
 
@@ -97,19 +104,16 @@ Grid Cells : 1000
 Timesteps  : 10
 Step Size  : 60 s
 
+Building MICM T1 Solver (210 species, 547 reactions)... done (4.85 ms)
+
+Running MICM T1 Benchmark... done (1842.56 ms)
+
+Running MKPP T1 Benchmark... done (413.13 ms)
+
 Metric                      MKPP C++ (AOT)    MICM C++          Speedup
 --------------------------------------------------------------------------------
-Execution Time (ms)         372.83            2370.77           6.36x
-Throughput (cell-st/s)      2.68e+04          4.22e+03          --
-==========================================================================
-```
-
-### Why MKPP is Faster
-
-If you look closely at the source code of the benchmark (`tests/integration/e2e_validation/benchmark_mkpp_vs_micm.cpp`), you will notice the structural differences in how the two libraries operate:
-
-1. **MICM (Runtime Assembly)**:
-   MICM dynamically allocates state objects, evaluates generalized sparse matrices in loops, and resolves generic rate constants during the time integration loop.
+Execution Time (ms)         413.13            1842.56           4.46x
+Throughput (cell-st/s)      2.42e+04          5.43e+03          --
 
 2. **MKPP (Compile-Time Symbolic Unrolling)**:
    MKPP hoists the cell state into scalar registers, computes the exact symbolic non-zero Jacobian operations sequentially, and executes a branch-free Doolittle LU factorization natively on the CPU/GPU.

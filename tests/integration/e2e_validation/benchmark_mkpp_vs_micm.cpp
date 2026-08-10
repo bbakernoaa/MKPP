@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
         int num_cells = 1000;
         int num_steps = 100;
         const double dt = 60.0;
-        
+
         if (const char* env_cells = std::getenv("NUM_CELLS")) {
             num_cells = std::atoi(env_cells);
         }
@@ -118,7 +118,7 @@ int main(int argc, char* argv[]) {
 
         // 3. Benchmark MICM
         auto start_micm = std::chrono::high_resolution_clock::now();
-        
+
         auto s = micm_solver.GetState(num_cells);
         for (int cell = 0; cell < num_cells; ++cell) {
             s.conditions_[cell].temperature_ = 288.15;
@@ -129,11 +129,11 @@ int main(int argc, char* argv[]) {
         s.SetCustomRateParameter("J1", custom_rates);
         std::vector<double> custom_rates2(num_cells, 1.0e-4);
         s.SetCustomRateParameter("J3", custom_rates2);
-        
+
         for (int step = 0; step < num_steps; ++step) {
             micm_solver.Solve(dt, s);
         }
-        
+
         auto end_micm = std::chrono::high_resolution_clock::now();
         double micm_time_ms = std::chrono::duration<double, std::milli>(end_micm - start_micm).count();
 
