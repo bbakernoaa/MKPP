@@ -62,7 +62,6 @@ target_compile_definitions(
   PRIVATE REFERENCE_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")
 
 add_test(NAME mkpp_scipy_validation COMMAND test_scipy_validation)
-
 if(MKPP_ENABLE_MICM_COMPARE)
   add_executable(benchmark_mkpp_vs_micm benchmark_mkpp_vs_micm.cpp)
   target_include_directories(
