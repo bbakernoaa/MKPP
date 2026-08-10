@@ -1,1 +1,0 @@
-../../.specify/extensions/prompter/.specify-dev/agent-commands/copilot/speckit.prompter.specify.agent.md

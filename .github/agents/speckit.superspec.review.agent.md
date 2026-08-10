@@ -1,1 +1,0 @@
-../../.specify/extensions/superspec/.specify-dev/agent-commands/copilot/speckit.superspec.review.agent.md

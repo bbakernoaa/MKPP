@@ -1,1 +1,0 @@
-../../.specify/extensions/stack/.specify-dev/agent-commands/copilot/speckit.stack.submit.agent.md
