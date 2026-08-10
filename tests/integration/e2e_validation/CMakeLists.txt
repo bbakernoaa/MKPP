@@ -36,13 +36,17 @@ foreach(MECH ${MECHS})
 
   add_test(NAME E2ESolver_${MECH} COMMAND e2e_${MECH}_runner)
 
-  add_test(
-    NAME E2ECompare_${MECH}
-    COMMAND
-      python3 ${CMAKE_CURRENT_SOURCE_DIR}/compare_baselines.py --baseline
-      ${CMAKE_CURRENT_SOURCE_DIR}/data/kpp_baseline_${MECH}.csv --target
-      e2e_output.csv --hpp ${CMAKE_SOURCE_DIR}/mkpp-generated/${MECH}.hpp)
-  set_tests_properties(E2ECompare_${MECH} PROPERTIES DEPENDS E2ESolver_${MECH})
+  # Only add the compare test if we have a KPP baseline CSV for it
+  if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/data/kpp_baseline_${MECH}.csv)
+    add_test(
+      NAME E2ECompare_${MECH}
+      COMMAND
+        python3 ${CMAKE_CURRENT_SOURCE_DIR}/compare_baselines.py --baseline
+        ${CMAKE_CURRENT_SOURCE_DIR}/data/kpp_baseline_${MECH}.csv --target
+        e2e_output.csv --hpp ${CMAKE_SOURCE_DIR}/mkpp-generated/${MECH}.hpp)
+    set_tests_properties(E2ECompare_${MECH} PROPERTIES DEPENDS
+                                                       E2ESolver_${MECH})
+  endif()
 endforeach()
 
 add_executable(benchmark_runner benchmark_runner.cpp)
