@@ -6,7 +6,7 @@ tags: [reactions, openatmos, schema, yaml, mkpp]
 
 # Reference: Reaction Types, Parameters, and OpenAtmos YAML Schema
 
-This document provides a reference for all reaction types, parameter definitions, OpenAtmos YAML schema rules, species phase modes, and host model coupling interfaces supported by the Futuristic Kinetic PreProcessor (MKPP/FKPP).
+This document provides a reference for all reaction types, parameter definitions, OpenAtmos YAML schema rules, species phase modes, and host model coupling interfaces supported by the Multiphase Kinetic PreProcessor (MKPP).
 
 ---
 
