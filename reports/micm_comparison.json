@@ -14,10 +14,10 @@
       "header_size_bytes": 23387
     },
     "performance": {
-      "mkpp_time_ms": 10.920875007286668,
-      "reference_time_ms": 290.94154108315706,
-      "speedup": 26.640863565330978,
-      "throughput_cell_steps_per_sec": 9156775.435418647,
+      "mkpp_time_ms": 1.4570839703083038,
+      "reference_time_ms": 3.40662500821054,
+      "speedup": 2.3379743910639093,
+      "throughput_cell_steps_per_sec": 68630224.50164011,
       "instruction_count": null
     },
     "accuracy": {
@@ -25,38 +25,38 @@
       "species_results": [
         {
           "species": "O",
-          "computed": 17241442.951397225,
-          "expected": 17241380.430450436,
-          "abs_error": 62.5209467895329,
-          "rel_error": 3.626214678211791e-06,
-          "tolerance": 1724.1380430450436,
+          "computed": 0.9999999545200036,
+          "expected": 0.9999999545200027,
+          "abs_error": 8.881784197001252e-16,
+          "rel_error": 8.881784600944792e-16,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "O2",
-          "computed": 165517116.58880612,
-          "expected": 165517241.6307012,
-          "abs_error": 125.04189509153366,
-          "rel_error": 7.554614483639394e-07,
-          "tolerance": 16551.72416307012,
+          "computed": 0.21000009473999376,
+          "expected": 0.21000009473999526,
+          "abs_error": 1.4988010832439613e-15,
+          "rel_error": 7.137144795575702e-15,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "O3",
-          "computed": 17241441.43033017,
-          "expected": 17241378.90938218,
-          "abs_error": 62.520947989076376,
-          "rel_error": 3.6262150676970842e-06,
-          "tolerance": 1724.137890938218,
+          "computed": 0.9999999520000028,
+          "expected": 0.9999999520000022,
+          "abs_error": 5.551115123125783e-16,
+          "rel_error": 5.551115389579309e-16,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "M",
-          "computed": 100000000.0,
-          "expected": 100000000.0,
+          "computed": 1.0,
+          "expected": 1.0,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 10000.0,
+          "tolerance": 1.0,
           "passed": true
         }
       ]
@@ -77,10 +77,10 @@
       "header_size_bytes": 23399
     },
     "performance": {
-      "mkpp_time_ms": 60.77,
-      "reference_time_ms": 447.208666941151,
-      "speedup": 7.359036809958055,
-      "throughput_cell_steps_per_sec": 1645548.790521639,
+      "mkpp_time_ms": 30.73,
+      "reference_time_ms": 88.93237495794892,
+      "speedup": 2.893992025966447,
+      "throughput_cell_steps_per_sec": 3254149.0400260333,
       "instruction_count": null
     },
     "accuracy": {
@@ -88,26 +88,26 @@
       "species_results": [
         {
           "species": "O",
-          "computed": 135203760.37972674,
-          "expected": 135203760.37972674,
+          "computed": 2.2114876203790543,
+          "expected": 2.2114876203790543,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 13520.376037972674,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "O2",
-          "computed": 232396979.34954736,
-          "expected": 232396979.34954736,
+          "computed": 1.8905380618908385,
+          "expected": 1.8905380618908385,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 23239.697934954736,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "O3",
-          "computed": 760.3070595578156,
-          "expected": 760.3070595578156,
+          "computed": 0.002478751946421466,
+          "expected": 0.002478751946421466,
           "abs_error": 0.0,
           "rel_error": 0.0,
           "tolerance": 1.0,
@@ -115,11 +115,11 @@
         },
         {
           "species": "M",
-          "computed": 100000000.0,
-          "expected": 100000000.0,
+          "computed": 1.0,
+          "expected": 1.0,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 10000.0,
+          "tolerance": 1.0,
           "passed": true
         }
       ]
@@ -140,10 +140,10 @@
       "header_size_bytes": 42257
     },
     "performance": {
-      "mkpp_time_ms": 89.8,
-      "reference_time_ms": 1569.7158749680966,
-      "speedup": 17.480132237952077,
-      "throughput_cell_steps_per_sec": 1113585.74610245,
+      "mkpp_time_ms": 44.53,
+      "reference_time_ms": 1.444541965611279,
+      "speedup": 0.03243974771190836,
+      "throughput_cell_steps_per_sec": 2245677.0716370987,
       "instruction_count": null
     },
     "accuracy": {
@@ -151,17 +151,17 @@
       "species_results": [
         {
           "species": "O",
-          "computed": 47500389.066030405,
-          "expected": 47500389.066030405,
+          "computed": 1.0000003624498088,
+          "expected": 1.0000003624498088,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 4750.038906603041,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "O1D",
-          "computed": 4.1218831248092716e-20,
-          "expected": 4.1218831248092716e-20,
+          "computed": 0.9999988534009165,
+          "expected": 0.9999988534009165,
           "abs_error": 0.0,
           "rel_error": 0.0,
           "tolerance": 1.0,
@@ -169,47 +169,47 @@
         },
         {
           "species": "O3",
-          "computed": 45680394.5232801,
-          "expected": 45680394.5232801,
+          "computed": 0.9999992799553252,
+          "expected": 0.9999992799553252,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 4568.03945232801,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "NO",
-          "computed": 198162868.12103426,
-          "expected": 198162868.12103426,
+          "computed": 1.0000000641036375,
+          "expected": 1.0000000641036375,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 19816.286812103426,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "NO2",
-          "computed": 1837131.8789656917,
-          "expected": 1837131.8789656917,
+          "computed": 0.9999999358963625,
+          "expected": 0.9999999358963625,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 183.71318789656917,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "M",
-          "computed": 100000000.0,
-          "expected": 100000000.0,
+          "computed": 1.0,
+          "expected": 1.0,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 10000.0,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "O2",
-          "computed": 306810647.74258244,
-          "expected": 306810647.74258244,
+          "computed": 1.0000015041934687,
+          "expected": 1.0000015041934687,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 30681.064774258244,
+          "tolerance": 1.0,
           "passed": true
         }
       ]
@@ -230,10 +230,10 @@
       "header_size_bytes": 1045023
     },
     "performance": {
-      "mkpp_time_ms": 2022.0,
-      "reference_time_ms": 552.9710829723626,
-      "speedup": 0.2734772912820785,
-      "throughput_cell_steps_per_sec": 49455.98417408507,
+      "mkpp_time_ms": 1464.09,
+      "reference_time_ms": 7.077582995407283,
+      "speedup": 0.004834117434998725,
+      "throughput_cell_steps_per_sec": 68301.81204707362,
       "instruction_count": null
     },
     "accuracy": {
@@ -241,236 +241,236 @@
       "species_results": [
         {
           "species": "OH",
-          "computed": 19544208.28418895,
-          "expected": 19544208.28418895,
+          "computed": 1.1164708796474976,
+          "expected": 1.1164708796474976,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 1954.4208284188949,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "NO3",
-          "computed": 98980365.03518182,
-          "expected": 98980365.03518182,
+          "computed": 0.9999999998007233,
+          "expected": 0.9999999998007233,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 9898.036503518182,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "H2O2",
-          "computed": 82843270.37793733,
-          "expected": 82843270.37793733,
+          "computed": 0.9417645279336618,
+          "expected": 0.9417645279336618,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 8284.327037793733,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "DMS",
-          "computed": 32131180.354735017,
-          "expected": 32131180.354735017,
+          "computed": 0.9999999679272279,
+          "expected": 0.9999999679272279,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 3213.118035473502,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "SO2",
-          "computed": 3598645.205373525,
-          "expected": 3598645.205373525,
+          "computed": 0.9999999452846363,
+          "expected": 0.9999999452846363,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 359.8645205373525,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "SO4",
-          "computed": 264270174.43989074,
-          "expected": 264270174.43989074,
+          "computed": 1.0000000867881356,
+          "expected": 1.0000000867881356,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 26427.017443989076,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "BC1",
-          "computed": 97044553.35485065,
-          "expected": 97044553.35485065,
+          "computed": 0.9704455335485082,
+          "expected": 0.9704455335485082,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 9704.455335485065,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "BC2",
-          "computed": 102955446.64514935,
-          "expected": 102955446.64514935,
+          "computed": 1.029554466451492,
+          "expected": 1.029554466451492,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 10295.544664514935,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "OC1",
-          "computed": 97044553.35485065,
-          "expected": 97044553.35485065,
+          "computed": 0.9704455335485082,
+          "expected": 0.9704455335485082,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 9704.455335485065,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "OC2",
-          "computed": 102955446.64514935,
-          "expected": 102955446.64514935,
+          "computed": 1.029554466451492,
+          "expected": 1.029554466451492,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 10295.544664514935,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "DUST1",
-          "computed": 100000000.0,
-          "expected": 100000000.0,
+          "computed": 1.0,
+          "expected": 1.0,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 10000.0,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "DUST2",
-          "computed": 100000000.0,
-          "expected": 100000000.0,
+          "computed": 1.0,
+          "expected": 1.0,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 10000.0,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "DUST3",
-          "computed": 100000000.0,
-          "expected": 100000000.0,
+          "computed": 1.0,
+          "expected": 1.0,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 10000.0,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "DUST4",
-          "computed": 100000000.0,
-          "expected": 100000000.0,
+          "computed": 1.0,
+          "expected": 1.0,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 10000.0,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "DUST5",
-          "computed": 100000000.0,
-          "expected": 100000000.0,
+          "computed": 1.0,
+          "expected": 1.0,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 10000.0,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "SS1",
-          "computed": 100000000.0,
-          "expected": 100000000.0,
+          "computed": 1.0,
+          "expected": 1.0,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 10000.0,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "SS2",
-          "computed": 100000000.0,
-          "expected": 100000000.0,
+          "computed": 1.0,
+          "expected": 1.0,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 10000.0,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "SS3",
-          "computed": 100000000.0,
-          "expected": 100000000.0,
+          "computed": 1.0,
+          "expected": 1.0,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 10000.0,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "SS4",
-          "computed": 100000000.0,
-          "expected": 100000000.0,
+          "computed": 1.0,
+          "expected": 1.0,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 10000.0,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "SS5",
-          "computed": 100000000.0,
-          "expected": 100000000.0,
+          "computed": 1.0,
+          "expected": 1.0,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 10000.0,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "HNO3",
-          "computed": 247875.21766663613,
-          "expected": 247875.21766663613,
+          "computed": 0.9999999400000017,
+          "expected": 0.9999999400000017,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 24.787521766663616,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "NH3",
-          "computed": 100000000.0,
-          "expected": 100000000.0,
+          "computed": 1.0,
+          "expected": 1.0,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 10000.0,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "NH4a",
-          "computed": 100000000.0,
-          "expected": 100000000.0,
+          "computed": 1.0,
+          "expected": 1.0,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 10000.0,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "NO3an1",
-          "computed": 139900849.9129337,
-          "expected": 139900849.9129337,
+          "computed": 1.000000023999999,
+          "expected": 1.000000023999999,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 13990.084991293372,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "NO3an2",
-          "computed": 129925637.43469995,
-          "expected": 129925637.43469995,
+          "computed": 1.0000000180000002,
+          "expected": 1.0000000180000002,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 12992.563743469997,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "NO3an3",
-          "computed": 129925637.43469995,
-          "expected": 129925637.43469995,
+          "computed": 1.0000000180000002,
+          "expected": 1.0000000180000002,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 12992.563743469997,
+          "tolerance": 1.0,
           "passed": true
         }
       ]
@@ -491,10 +491,10 @@
       "header_size_bytes": 51964
     },
     "performance": {
-      "mkpp_time_ms": 29.45,
-      "reference_time_ms": 769.1278329584748,
-      "speedup": 26.11639500707894,
-      "throughput_cell_steps_per_sec": 3395585.7385398983,
+      "mkpp_time_ms": 26.88,
+      "reference_time_ms": 102.42862498853356,
+      "speedup": 3.8105887272519925,
+      "throughput_cell_steps_per_sec": 3720238.0952380956,
       "instruction_count": null
     },
     "accuracy": {
@@ -502,98 +502,98 @@
       "species_results": [
         {
           "species": "CH4",
-          "computed": 100000000.0,
-          "expected": 100000000.0,
+          "computed": 1.0,
+          "expected": 1.0,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 10000.0,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "CO",
-          "computed": 191709546.23702496,
-          "expected": 191709546.23702496,
+          "computed": 1.9999999991413862,
+          "expected": 1.9999999991413862,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 19170.9546237025,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "PCOfromCH4",
-          "computed": 100000000.00255376,
-          "expected": 100000000.00255376,
+          "computed": 1.0000000000255396,
+          "expected": 1.0000000000255396,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 10000.000000255377,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "PCOfromNMVOC",
-          "computed": 200000000.00000006,
-          "expected": 200000000.00000006,
+          "computed": 2.000000000000002,
+          "expected": 2.000000000000002,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 20000.000000000007,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "LCH4byOH",
-          "computed": 100000000.0,
-          "expected": 100000000.0,
+          "computed": 1.0,
+          "expected": 1.0,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 10000.0,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "LCH4byCl",
-          "computed": 100000000.0,
-          "expected": 100000000.0,
+          "computed": 1.0,
+          "expected": 1.0,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 10000.0,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "LCObyOH",
-          "computed": 108290453.7655404,
-          "expected": 108290453.7655404,
+          "computed": 1.0000000008841554,
+          "expected": 1.0000000008841554,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 10829.04537655404,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "FixedOH",
-          "computed": 91709546.2344596,
-          "expected": 91709546.2344596,
+          "computed": 0.9999999991158444,
+          "expected": 0.9999999991158444,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 9170.95462344596,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "FixedCl",
-          "computed": 100000000.0,
-          "expected": 100000000.0,
+          "computed": 1.0,
+          "expected": 1.0,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 10000.0,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "DummyCH4",
-          "computed": 99999999.99744624,
-          "expected": 99999999.99744624,
+          "computed": 0.9999999999744601,
+          "expected": 0.9999999999744601,
           "abs_error": 0.0,
           "rel_error": 0.0,
-          "tolerance": 9999.999999744625,
+          "tolerance": 1.0,
           "passed": true
         },
         {
           "species": "DummyNMVOC",
-          "computed": 4.339867509637862e-296,
-          "expected": 4.339867509637862e-296,
+          "computed": -4.258394917244935e-53,
+          "expected": -4.258394917244935e-53,
           "abs_error": 0.0,
           "rel_error": 0.0,
           "tolerance": 1.0,
