@@ -3,7 +3,7 @@
 #include <chrono>
 #include <iomanip>
 #include <iostream>
-#include <vector>
+#include <cstdlib>
 
 // Generated MICM C++ T1 Solver
 #include "generated_micm_t1.hpp"
@@ -39,10 +39,17 @@ struct MKPPT1Functor {
 int main(int argc, char* argv[]) {
     Kokkos::initialize(argc, argv);
     {
-        const int num_cells = 1000;
-        const int num_steps = 10;
+        int num_cells = 1000;
+        int num_steps = 10;
         const double dt = 60.0;
         const int num_species = 210;
+
+        if (const char* env_cells = std::getenv("NUM_CELLS")) {
+            num_cells = std::atoi(env_cells);
+        }
+        if (const char* env_steps = std::getenv("NUM_STEPS")) {
+            num_steps = std::atoi(env_steps);
+        }
 
         std::cout << "==========================================================================" << std::endl;
         std::cout << "      Direct C++ Benchmark: MKPP vs NCAR/MICM (T1 Mechanism)            " << std::endl;
@@ -68,17 +75,20 @@ int main(int argc, char* argv[]) {
         init_conc[10] = 1.9e19; // N2
         init_conc[4]  = 5.1e18; // O2
 
+        auto s = micm_solver.GetState(num_cells);
+        for (int cell = 0; cell < num_cells; ++cell) {
+            s.conditions_[cell].temperature_ = 288.15;
+            s.conditions_[cell].pressure_ = 101325.0;
+            s.variables_[cell] = init_conc;
+        }
+
         std::cout << "Running MICM T1 Benchmark..." << std::flush;
         auto start_micm = std::chrono::high_resolution_clock::now();
-        for (int cell = 0; cell < num_cells; ++cell) {
-            auto s = micm_solver.GetState();
-            s.conditions_[0].temperature_ = 288.15;
-            s.conditions_[0].pressure_ = 101325.0;
-            s.variables_[0] = init_conc;
-            for (int step = 0; step < num_steps; ++step) {
-                micm_solver.Solve(dt, s);
-            }
+        
+        for (int step = 0; step < num_steps; ++step) {
+            micm_solver.Solve(dt, s);
         }
+        
         auto end_micm = std::chrono::high_resolution_clock::now();
         double micm_time_ms = std::chrono::duration<double, std::milli>(end_micm - start_micm).count();
         std::cout << " done (" << micm_time_ms << " ms)\n" << std::endl;
