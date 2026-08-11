@@ -60,8 +60,18 @@ def run_both(binary, cells, steps, title, out_file):
     plt.legend(fontsize=12)
 
     plt.tight_layout()
+    os.makedirs(os.path.dirname(out_file), exist_ok=True)
     plt.savefig(out_file, dpi=300)
     print(f"Plot saved to {out_file}")
+
+    # Also save to docs assets directory if available
+    filename = os.path.basename(out_file)
+    docs_asset_dir = os.path.join("docs", "assets", "images")
+    if os.path.exists(os.path.dirname(docs_asset_dir)):
+        os.makedirs(docs_asset_dir, exist_ok=True)
+        docs_out_file = os.path.join(docs_asset_dir, filename)
+        plt.savefig(docs_out_file, dpi=300)
+        print(f"Plot saved to {docs_out_file}")
 
 
 run_both(
