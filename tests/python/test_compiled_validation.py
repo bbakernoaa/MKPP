@@ -119,7 +119,7 @@ class TestCompiledValidation:
 
     def _cmake_build(self, build_dir: Path, target: str = None) -> subprocess.CompletedProcess:
         """Run CMake build step."""
-        cmd = ["cmake", "--build", str(build_dir), "--config", "Release"]
+        cmd = ["cmake", "--build", str(build_dir), "--config", "Release", "--parallel"]
         if target:
             cmd.extend(["--target", target])
 
@@ -182,7 +182,7 @@ class TestCompiledValidation:
 
         Orchestrates the end-to-end pipeline:
         1. Generate Chapman header
-        2. CMake configure + build
+        2. CMake configure + build test_scipy_validation
         3. Run CTest mkpp_scipy_validation test
         4. Validate solver output matches SciPy Radau reference
         """
@@ -195,8 +195,8 @@ class TestCompiledValidation:
             f"CMake configure failed:\n" f"STDOUT:\n{configure_result.stdout}\n" f"STDERR:\n{configure_result.stderr}"
         )
 
-        # Step 3: Build all test targets
-        build_result = self._cmake_build(build_dir)
+        # Step 3: Build the scipy validation test target
+        build_result = self._cmake_build(build_dir, target="test_scipy_validation")
         if build_result.returncode != 0:
             pytest.fail(
                 f"Build failed. Compilation errors:\n\n" f"STDOUT:\n{build_result.stdout}\n\n" f"STDERR:\n{build_result.stderr}"
