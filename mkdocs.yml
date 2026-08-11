@@ -1,4 +1,4 @@
-site_name: MultiphaseKinetic PreProcessor (MKPP / FKPP)
+site_name: Multiphase Kinetic PreProcessor (MKPP)
 site_description: Exascale-ready AOT chemical ODE solver compiler for NOAA NWP models
 site_author: NOAA NWS Office of Modeling and Development
 repo_url: https://github.com/bbakernoaa/MKPP

@@ -1,4 +1,4 @@
-# C++ Kokkos & FKPP Format Style
+# C++ Kokkos & MKPP Format Style
 BasedOnStyle: Google
 Language: Cpp
 Standard: c++20 # Target modern C++ (C++23 is the goal, 20 is the closest standard config)

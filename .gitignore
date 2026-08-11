@@ -83,3 +83,5 @@ specs/
 docs/superpowers/
 .kiro*/
 kpp*/
+.github/agents/
+.github/prompts/

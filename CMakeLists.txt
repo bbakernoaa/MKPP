@@ -25,6 +25,23 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/google/googletest.git
   GIT_TAG v1.14.0)
 
+option(MKPP_ENABLE_MICM_COMPARE
+       "Fetch NCAR/micm and build direct C++ side-by-side comparison benchmark"
+       OFF)
+
+if(MKPP_ENABLE_MICM_COMPARE)
+  set(CMAKE_CXX_STANDARD
+      20
+      CACHE STRING "C++ standard")
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+  include(FetchContent)
+  FetchContent_Declare(
+    micm
+    GIT_REPOSITORY https://github.com/NCAR/micm.git
+    GIT_TAG main)
+  FetchContent_MakeAvailable(micm)
+endif()
+
 if(BUILD_TESTING)
   FetchContent_MakeAvailable(googletest)
   enable_testing()

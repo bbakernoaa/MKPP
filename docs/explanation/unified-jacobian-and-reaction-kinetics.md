@@ -1,6 +1,6 @@
 # Explanation: Reaction Kinetics, Multiphase Aerosols, and Unified Jacobian Construction
 
-This document explains the mathematical foundations, reaction rate formulations, multiphase aerosol state vector integration, and SymPy-based Unified Jacobian construction in the Futuristic Kinetic PreProcessor (MKPP/FKPP).
+This document explains the mathematical foundations, reaction rate formulations, multiphase aerosol state vector integration, and SymPy-based Unified Jacobian construction in the Multiphase Kinetic PreProcessor (MKPP).
 
 ---
 

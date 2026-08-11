@@ -5,7 +5,7 @@ if(NOT TARGET mkpp_host)
                    ${CMAKE_BINARY_DIR}/mkpp_host)
 endif()
 
-set(MECHS "chapman" "small_strato" "carbon")
+set(MECHS "chapman" "small_strato" "carbon" "t1")
 
 foreach(MECH ${MECHS})
   if("${MECH}" STREQUAL "chapman")
@@ -18,6 +18,8 @@ foreach(MECH ${MECHS})
     set(NUM_SPEC 12)
   elseif("${MECH}" STREQUAL "saprc99")
     set(NUM_SPEC 82)
+  elseif("${MECH}" STREQUAL "t1")
+    set(NUM_SPEC 210)
   else()
     set(NUM_SPEC 100)
   endif()
@@ -34,13 +36,17 @@ foreach(MECH ${MECHS})
 
   add_test(NAME E2ESolver_${MECH} COMMAND e2e_${MECH}_runner)
 
-  add_test(
-    NAME E2ECompare_${MECH}
-    COMMAND
-      python3 ${CMAKE_CURRENT_SOURCE_DIR}/compare_baselines.py --baseline
-      ${CMAKE_CURRENT_SOURCE_DIR}/data/kpp_baseline_${MECH}.csv --target
-      e2e_output.csv --hpp ${CMAKE_SOURCE_DIR}/mkpp-generated/${MECH}.hpp)
-  set_tests_properties(E2ECompare_${MECH} PROPERTIES DEPENDS E2ESolver_${MECH})
+  # Only add the compare test if we have a KPP baseline CSV for it
+  if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/data/kpp_baseline_${MECH}.csv)
+    add_test(
+      NAME E2ECompare_${MECH}
+      COMMAND
+        python3 ${CMAKE_CURRENT_SOURCE_DIR}/compare_baselines.py --baseline
+        ${CMAKE_CURRENT_SOURCE_DIR}/data/kpp_baseline_${MECH}.csv --target
+        e2e_output.csv --hpp ${CMAKE_SOURCE_DIR}/mkpp-generated/${MECH}.hpp)
+    set_tests_properties(E2ECompare_${MECH} PROPERTIES DEPENDS
+                                                       E2ESolver_${MECH})
+  endif()
 endforeach()
 
 add_executable(benchmark_runner benchmark_runner.cpp)
@@ -60,3 +66,23 @@ target_compile_definitions(
   PRIVATE REFERENCE_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")
 
 add_test(NAME mkpp_scipy_validation COMMAND test_scipy_validation)
+if(MKPP_ENABLE_MICM_COMPARE)
+  add_executable(benchmark_mkpp_vs_micm benchmark_mkpp_vs_micm.cpp)
+  target_include_directories(
+    benchmark_mkpp_vs_micm
+    PRIVATE ${CMAKE_SOURCE_DIR}/mkpp-generated
+    PRIVATE ${CMAKE_BINARY_DIR}/_deps/micm-src/include)
+  target_link_libraries(benchmark_mkpp_vs_micm PRIVATE mkpp_host Kokkos::kokkos
+                                                       micm)
+  add_test(NAME run_benchmark_mkpp_vs_micm COMMAND benchmark_mkpp_vs_micm)
+
+  add_executable(benchmark_mkpp_vs_micm_t1 benchmark_mkpp_vs_micm_t1.cpp)
+  target_include_directories(
+    benchmark_mkpp_vs_micm_t1
+    PRIVATE ${CMAKE_SOURCE_DIR}/mkpp-generated
+    PRIVATE ${CMAKE_BINARY_DIR}
+    PRIVATE ${CMAKE_BINARY_DIR}/_deps/micm-src/include)
+  target_link_libraries(benchmark_mkpp_vs_micm_t1 PRIVATE mkpp_host
+                                                          Kokkos::kokkos micm)
+  add_test(NAME run_benchmark_mkpp_vs_micm_t1 COMMAND benchmark_mkpp_vs_micm_t1)
+endif()

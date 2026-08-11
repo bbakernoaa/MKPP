@@ -1,1 +1,0 @@
-../../.specify/extensions/diataxis/.specify-dev/agent-commands/copilot/speckit.diataxis.diataxis.agent.md

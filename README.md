@@ -1,4 +1,4 @@
-# Multiphase Kinetic PreProcessor (MKPP / FKPP) Engine
+# Multiphase Kinetic PreProcessor (MKPP) Engine
 
 MKPP (Futuristic Kinetic PreProcessor) is a highly optimized, Ahead-Of-Time (AOT) Python compiler that translates atmospheric chemistry mechanisms (defined via OpenAtmos YAML) into Exascale-ready block-sparse Kokkos C++ headers for a Unified Jacobian using SymPy.
 
@@ -26,7 +26,7 @@ ctest
 
 ## Governance
 
-Development on this project is governed by the [FKPP Constitution](.specify/memory/constitution.md). All contributors must adhere to its core principles including:
+Development on this project is governed by the project constitution. All contributors must adhere to its core principles including:
 - Clarity Over Cleverness
 - Defensive Programming
 - Fail Fast, Fail Loudly

@@ -1,0 +1,605 @@
+[
+  {
+    "mechanism": "mechanism",
+    "mechanism_path": "/Users/barry/Documents/MKPP/fixtures/micm-chapman/mechanism.json",
+    "grid_cells": 1000,
+    "timesteps": 100,
+    "dt": 60.0,
+    "structural": {
+      "num_species": 4,
+      "num_reactions": 4,
+      "jacobian_non_zeros": 8,
+      "lu_expressions": 10,
+      "lu_blocks": 3,
+      "header_size_bytes": 23387
+    },
+    "performance": {
+      "mkpp_time_ms": 1.4570839703083038,
+      "reference_time_ms": 3.40662500821054,
+      "speedup": 2.3379743910639093,
+      "throughput_cell_steps_per_sec": 68630224.50164011,
+      "instruction_count": null
+    },
+    "accuracy": {
+      "overall_passed": true,
+      "species_results": [
+        {
+          "species": "O",
+          "computed": 0.9999999545200036,
+          "expected": 0.9999999545200027,
+          "abs_error": 8.881784197001252e-16,
+          "rel_error": 8.881784600944792e-16,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "O2",
+          "computed": 0.21000009473999376,
+          "expected": 0.21000009473999526,
+          "abs_error": 1.4988010832439613e-15,
+          "rel_error": 7.137144795575702e-15,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "O3",
+          "computed": 0.9999999520000028,
+          "expected": 0.9999999520000022,
+          "abs_error": 5.551115123125783e-16,
+          "rel_error": 5.551115389579309e-16,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "M",
+          "computed": 1.0,
+          "expected": 1.0,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        }
+      ]
+    }
+  },
+  {
+    "mechanism": "chapman",
+    "mechanism_path": "/Users/barry/Documents/MKPP/mechanisms/chapman.yaml",
+    "grid_cells": 1000,
+    "timesteps": 100,
+    "dt": 60.0,
+    "structural": {
+      "num_species": 4,
+      "num_reactions": 4,
+      "jacobian_non_zeros": 8,
+      "lu_expressions": 10,
+      "lu_blocks": 3,
+      "header_size_bytes": 23399
+    },
+    "performance": {
+      "mkpp_time_ms": 30.73,
+      "reference_time_ms": 88.93237495794892,
+      "speedup": 2.893992025966447,
+      "throughput_cell_steps_per_sec": 3254149.0400260333,
+      "instruction_count": null
+    },
+    "accuracy": {
+      "overall_passed": true,
+      "species_results": [
+        {
+          "species": "O",
+          "computed": 2.2114876203790543,
+          "expected": 2.2114876203790543,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "O2",
+          "computed": 1.8905380618908385,
+          "expected": 1.8905380618908385,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "O3",
+          "computed": 0.002478751946421466,
+          "expected": 0.002478751946421466,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "M",
+          "computed": 1.0,
+          "expected": 1.0,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        }
+      ]
+    }
+  },
+  {
+    "mechanism": "small_strato",
+    "mechanism_path": "/Users/barry/Documents/MKPP/mechanisms/small_strato.yaml",
+    "grid_cells": 1000,
+    "timesteps": 100,
+    "dt": 60.0,
+    "structural": {
+      "num_species": 7,
+      "num_reactions": 10,
+      "jacobian_non_zeros": 22,
+      "lu_expressions": 25,
+      "lu_blocks": 3,
+      "header_size_bytes": 42257
+    },
+    "performance": {
+      "mkpp_time_ms": 44.53,
+      "reference_time_ms": 1.444541965611279,
+      "speedup": 0.03243974771190836,
+      "throughput_cell_steps_per_sec": 2245677.0716370987,
+      "instruction_count": null
+    },
+    "accuracy": {
+      "overall_passed": true,
+      "species_results": [
+        {
+          "species": "O",
+          "computed": 1.0000003624498088,
+          "expected": 1.0000003624498088,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "O1D",
+          "computed": 0.9999988534009165,
+          "expected": 0.9999988534009165,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "O3",
+          "computed": 0.9999992799553252,
+          "expected": 0.9999992799553252,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "NO",
+          "computed": 1.0000000641036375,
+          "expected": 1.0000000641036375,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "NO2",
+          "computed": 0.9999999358963625,
+          "expected": 0.9999999358963625,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "M",
+          "computed": 1.0,
+          "expected": 1.0,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "O2",
+          "computed": 1.0000015041934687,
+          "expected": 1.0000015041934687,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        }
+      ]
+    }
+  },
+  {
+    "mechanism": "gocart",
+    "mechanism_path": "/Users/barry/Documents/MKPP/mechanisms/gocart.yaml",
+    "grid_cells": 1000,
+    "timesteps": 100,
+    "dt": 60.0,
+    "structural": {
+      "num_species": 26,
+      "num_reactions": 27,
+      "jacobian_non_zeros": 111,
+      "lu_expressions": 177,
+      "lu_blocks": 17,
+      "header_size_bytes": 1045023
+    },
+    "performance": {
+      "mkpp_time_ms": 1464.09,
+      "reference_time_ms": 7.077582995407283,
+      "speedup": 0.004834117434998725,
+      "throughput_cell_steps_per_sec": 68301.81204707362,
+      "instruction_count": null
+    },
+    "accuracy": {
+      "overall_passed": true,
+      "species_results": [
+        {
+          "species": "OH",
+          "computed": 1.1164708796474976,
+          "expected": 1.1164708796474976,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "NO3",
+          "computed": 0.9999999998007233,
+          "expected": 0.9999999998007233,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "H2O2",
+          "computed": 0.9417645279336618,
+          "expected": 0.9417645279336618,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "DMS",
+          "computed": 0.9999999679272279,
+          "expected": 0.9999999679272279,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "SO2",
+          "computed": 0.9999999452846363,
+          "expected": 0.9999999452846363,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "SO4",
+          "computed": 1.0000000867881356,
+          "expected": 1.0000000867881356,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "BC1",
+          "computed": 0.9704455335485082,
+          "expected": 0.9704455335485082,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "BC2",
+          "computed": 1.029554466451492,
+          "expected": 1.029554466451492,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "OC1",
+          "computed": 0.9704455335485082,
+          "expected": 0.9704455335485082,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "OC2",
+          "computed": 1.029554466451492,
+          "expected": 1.029554466451492,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "DUST1",
+          "computed": 1.0,
+          "expected": 1.0,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "DUST2",
+          "computed": 1.0,
+          "expected": 1.0,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "DUST3",
+          "computed": 1.0,
+          "expected": 1.0,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "DUST4",
+          "computed": 1.0,
+          "expected": 1.0,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "DUST5",
+          "computed": 1.0,
+          "expected": 1.0,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "SS1",
+          "computed": 1.0,
+          "expected": 1.0,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "SS2",
+          "computed": 1.0,
+          "expected": 1.0,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "SS3",
+          "computed": 1.0,
+          "expected": 1.0,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "SS4",
+          "computed": 1.0,
+          "expected": 1.0,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "SS5",
+          "computed": 1.0,
+          "expected": 1.0,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "HNO3",
+          "computed": 0.9999999400000017,
+          "expected": 0.9999999400000017,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "NH3",
+          "computed": 1.0,
+          "expected": 1.0,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "NH4a",
+          "computed": 1.0,
+          "expected": 1.0,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "NO3an1",
+          "computed": 1.000000023999999,
+          "expected": 1.000000023999999,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "NO3an2",
+          "computed": 1.0000000180000002,
+          "expected": 1.0000000180000002,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "NO3an3",
+          "computed": 1.0000000180000002,
+          "expected": 1.0000000180000002,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        }
+      ]
+    }
+  },
+  {
+    "mechanism": "carbon",
+    "mechanism_path": "/Users/barry/Documents/MKPP/mechanisms/carbon.yaml",
+    "grid_cells": 1000,
+    "timesteps": 100,
+    "dt": 60.0,
+    "structural": {
+      "num_species": 11,
+      "num_reactions": 5,
+      "jacobian_non_zeros": 19,
+      "lu_expressions": 25,
+      "lu_blocks": 10,
+      "header_size_bytes": 51964
+    },
+    "performance": {
+      "mkpp_time_ms": 26.88,
+      "reference_time_ms": 102.42862498853356,
+      "speedup": 3.8105887272519925,
+      "throughput_cell_steps_per_sec": 3720238.0952380956,
+      "instruction_count": null
+    },
+    "accuracy": {
+      "overall_passed": true,
+      "species_results": [
+        {
+          "species": "CH4",
+          "computed": 1.0,
+          "expected": 1.0,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "CO",
+          "computed": 1.9999999991413862,
+          "expected": 1.9999999991413862,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "PCOfromCH4",
+          "computed": 1.0000000000255396,
+          "expected": 1.0000000000255396,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "PCOfromNMVOC",
+          "computed": 2.000000000000002,
+          "expected": 2.000000000000002,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "LCH4byOH",
+          "computed": 1.0,
+          "expected": 1.0,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "LCH4byCl",
+          "computed": 1.0,
+          "expected": 1.0,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "LCObyOH",
+          "computed": 1.0000000008841554,
+          "expected": 1.0000000008841554,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "FixedOH",
+          "computed": 0.9999999991158444,
+          "expected": 0.9999999991158444,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "FixedCl",
+          "computed": 1.0,
+          "expected": 1.0,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "DummyCH4",
+          "computed": 0.9999999999744601,
+          "expected": 0.9999999999744601,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        },
+        {
+          "species": "DummyNMVOC",
+          "computed": -4.258394917244935e-53,
+          "expected": -4.258394917244935e-53,
+          "abs_error": 0.0,
+          "rel_error": 0.0,
+          "tolerance": 1.0,
+          "passed": true
+        }
+      ]
+    }
+  }
+]

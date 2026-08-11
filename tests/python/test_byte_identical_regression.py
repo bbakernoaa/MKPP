@@ -48,7 +48,8 @@ class TestChapmanByteIdentical:
     """Verify Chapman mechanism produces byte-identical output across generations."""
 
     @pytest.fixture(scope="class")
-    def chapman_mechanism(self):
+    @classmethod
+    def chapman_mechanism(cls):
         """Load the Chapman mechanism."""
         if not CHAPMAN_PATH.exists():
             pytest.skip(f"Chapman mechanism file not found at {CHAPMAN_PATH}")
@@ -122,7 +123,8 @@ class TestGocartByteIdentical:
     """Verify GOCART mechanism produces byte-identical output across generations."""
 
     @pytest.fixture(scope="class")
-    def gocart_mechanism(self):
+    @classmethod
+    def gocart_mechanism(cls):
         """Load the GOCART mechanism."""
         if not GOCART_PATH.exists():
             pytest.skip(f"GOCART mechanism file not found at {GOCART_PATH}")
@@ -190,7 +192,8 @@ class TestChapmanAdjointByteIdentical:
     """Verify Chapman+adjoint produces byte-identical output across generations."""
 
     @pytest.fixture(scope="class")
-    def chapman_mechanism(self):
+    @classmethod
+    def chapman_mechanism(cls):
         """Load the Chapman mechanism."""
         if not CHAPMAN_PATH.exists():
             pytest.skip(f"Chapman mechanism file not found at {CHAPMAN_PATH}")
@@ -276,13 +279,15 @@ class TestCrossMechanismConsistency:
     """Verify consistent output properties across all tested mechanisms."""
 
     @pytest.fixture(scope="class")
-    def chapman_mechanism(self):
+    @classmethod
+    def chapman_mechanism(cls):
         if not CHAPMAN_PATH.exists():
             pytest.skip(f"Chapman mechanism file not found at {CHAPMAN_PATH}")
         return load_mechanism(str(CHAPMAN_PATH))
 
     @pytest.fixture(scope="class")
-    def gocart_mechanism(self):
+    @classmethod
+    def gocart_mechanism(cls):
         if not GOCART_PATH.exists():
             pytest.skip(f"GOCART mechanism file not found at {GOCART_PATH}")
         return load_mechanism(str(GOCART_PATH))

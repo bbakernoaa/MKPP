@@ -17,6 +17,28 @@ from .model import (
 )
 
 
+def _normalize_species_dict(d: Any) -> dict[str, float]:
+    """Normalize MICM/OpenAtmos reactant or product dictionary/list into species -> float yield."""
+    if isinstance(d, list):
+        return {sp: 1.0 for sp in d}
+    if not isinstance(d, dict):
+        return {}
+    res = {}
+    for sp, val in d.items():
+        if isinstance(val, int | float):
+            res[sp] = float(val)
+        elif isinstance(val, dict):
+            res[sp] = float(val.get("yield", 1.0))
+        elif val is None:
+            res[sp] = 1.0
+        else:
+            try:
+                res[sp] = float(val)
+            except (ValueError, TypeError):
+                res[sp] = 1.0
+    return res
+
+
 def parse_mechanism_micm(name: str, data: dict[str, Any]) -> MechanismDefinition:
     """Parse MICM/OpenAtmos standard dictionary into internal model."""
     if "species" not in data or not data["species"]:
@@ -112,8 +134,8 @@ def parse_mechanism_micm(name: str, data: dict[str, Any]) -> MechanismDefinition
             # EQUILIBRIUM is not a kinetic reaction — do NOT add to reactions list
             continue
 
-        reactants = r.get("reactants", {})
-        products = r.get("products", {})
+        reactants = _normalize_species_dict(r.get("reactants", {}))
+        products = _normalize_species_dict(r.get("products", {}))
 
         # Extract all potential rate parameters instead of just A
         # For MICM compliance, parameters can include k0, kinf, Fc, gamma, etc.

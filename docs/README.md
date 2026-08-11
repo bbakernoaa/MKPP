@@ -1,6 +1,6 @@
 # MKPP Documentation
 
-Welcome to the documentation for the **MultiphaseKinetic PreProcessor (MKPP / FKPP)**.
+Welcome to the documentation for the **Multiphase Kinetic PreProcessor (MKPP)**.
 
 Our documentation follows the **Diátaxis framework**, organizing information into four distinct categories based on user needs:
 

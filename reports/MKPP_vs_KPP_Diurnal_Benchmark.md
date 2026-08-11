@@ -1,5 +1,5 @@
 # Comprehensive Benchmark & Architectural Performance Report
-## Futurstic Kinetic PreProcessor (FKPP / MKPP) vs. Legacy KPP
+## Multiphase Kinetic PreProcessor (MKPP) vs. Legacy KPP
 
 **Target Mechanism:** SAPRC-99 (79 Chemical Species, 211 Chemical Reactions)
 **Execution Environment:** macOS ARM64 / Apple Silicon (M-Series), GFortran 14 / Apple Clang C++20 with Kokkos / OpenMP
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-The Futuristic Kinetic PreProcessor (FKPP/MKPP) replaces legacy KPP's runtime loops, dynamic memory allocations, and pointer arrays with Ahead-Of-Time (AOT) Python code generation that emits branchless, vector-friendly Kokkos C++ headers.
+The Multiphase Kinetic PreProcessor (MKPP) replaces legacy KPP's runtime loops, dynamic memory allocations, and pointer arrays with Ahead-Of-Time (AOT) Python code generation that emits branchless, vector-friendly Kokkos C++ headers.
 
 For the full **SAPRC-99 mechanism (79 species)** evaluated across a 24-hour diurnal cycle ($1,000\text{ grid cells} \times 1,440\text{ integration steps} = 1,440,000\text{ total ODE integrations}$):
 
@@ -24,7 +24,7 @@ For the full **SAPRC-99 mechanism (79 species)** evaluated across a 24-hour diur
 | Solver Framework | Implementation | Execution Time (1,000 Cells, 24-hr) | Relative Speedup | Throughput (Cell-Steps/s) |
 | :--- | :--- | :---: | :---: | :---: |
 | **Legacy KPP** | Sparse Fortran 90 (`saprc99_diurnal.exe`) | **184.86 s** | $1.00\times$ (Baseline) | $7.79 \times 10^3$ |
-| **MKPP (FKPP)** | Unrolled AOT C++ Kokkos (`e2e_saprc99_runner`) | **32.17 s** | **5.75x FASTER** | $4.48 \times 10^4$ |
+| **MKPP** | Unrolled AOT C++ Kokkos (`e2e_saprc99_runner`) | **32.17 s** | **5.75x FASTER** | $4.48 \times 10^4$ |
 
 ### Architectural Root Causes for the 5.75x Speedup
 

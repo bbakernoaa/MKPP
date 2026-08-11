@@ -79,6 +79,7 @@ def format_eqn(eqn_str, species_list, state_var="state", use_parentheses=True, k
             sp.Symbol("C_FixedCl"): 1.0,
             sp.Symbol("S_a"): 1.0,
             sp.Symbol("v_gas"): 1.0,
+            sp.Symbol("M_density"): 2.4476e19,
         }
 
         # When keep_env_symbols is False (default), substitute environmental
