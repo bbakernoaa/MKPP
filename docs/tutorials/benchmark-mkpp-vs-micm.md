@@ -72,8 +72,8 @@ Execute the compiled binaries from the command line:
 
 Running the automated script (`.venv/bin/python3 scripts/plot_scaling.py`) will generate these scaling profiles measuring total execution time across varying grid cell layouts:
 
-![Chapman Scaling Plot](../../reports/performance_scaling_chapman.png)
-![T1 Scaling Plot](../../reports/performance_scaling_t1.png)
+![Chapman Scaling Plot](../assets/images/performance_scaling_chapman.png)
+![T1 Scaling Plot](../assets/images/performance_scaling_t1.png)
 
 ### Understanding the Output
 
