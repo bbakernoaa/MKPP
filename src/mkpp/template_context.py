@@ -301,6 +301,18 @@ def build_template_context(
             }
         )
 
+    # State variable hoisting map (reg_idx -> species_name and original_idx)
+    state_hoist_info = []
+    for i in range(N):
+        orig_i = permutation[i] if permutation else i
+        state_hoist_info.append(
+            {
+                "reg_idx": i,
+                "orig_idx": orig_i,
+                "name": mech.species[orig_i].name if orig_i < len(mech.species) else f"Species_{orig_i}",
+            }
+        )
+
     # --- Assemble the flat context dictionary ---
     context: dict[str, Any] = {
         "mechanism_name": mech.name,
@@ -316,6 +328,7 @@ def build_template_context(
         "needed_w": sorted(needed_w),
         "non_zero_jac_set": non_zero_jac_set,
         "blocks": blocks,
+        "state_hoist_info": state_hoist_info,
         "jacobian_entries": jacobian_entries,
         "f_exprs": f_exprs,
         "permutation": permutation,

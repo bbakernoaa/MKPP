@@ -13,6 +13,15 @@
 
   Requirements: 4.6
 #}
+      /**
+       * @brief Evaluates the sparse analytical Jacobian matrix J(i, j) = dF_i / dC_j.
+       * 
+       * @tparam StateView Kokkos View type for species concentrations [NUM_SPECIES].
+       * @tparam JacView Kokkos View type for output 2D Jacobian matrix [NUM_SPECIES x NUM_SPECIES].
+       * @param state Input concentration vector [NUM_SPECIES].
+       * @param J_block Output 2D Jacobian matrix [NUM_SPECIES x NUM_SPECIES].
+       * @param jvals Array of photolysis rate constants [NUM_PHOTOLYSIS].
+       */
       template <class StateView, class JacView>
 {% if has_equilibrium %}
       KOKKOS_INLINE_FUNCTION void compute_jacobian(const StateView& state, JacView& J_block, const double* jvals, const double temp, const double rh) const {
@@ -22,7 +31,9 @@
 {% else %}
       KOKKOS_INLINE_FUNCTION void compute_jacobian(const StateView& state, JacView& J_block, const double* jvals) const {
 {% endif %}
+          // --- Sparse Analytical Jacobian Entries J_block(i, j) ---
 {% for entry in jacobian_entries_state %}
-          J_block({{ entry[0] }}, {{ entry[1] }}) = {{ entry[2] }};
+          // J({{ species[entry[0]].name }}, {{ species[entry[1]].name }}): d(d[{{ species[entry[0]].name }}]/dt) / d[{{ species[entry[1]].name }}]
+          J_block(Species::{{ species[entry[0]].name }}, Species::{{ species[entry[1]].name }}) = {{ entry[2] }};
 {% endfor %}
       }

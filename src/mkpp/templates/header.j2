@@ -48,6 +48,16 @@
 {% endif %}
 namespace mkpp {
   // Pure Kokkos abstractions (no raw pragmas allowed)
+
+  /**
+   * @brief Strongly typed enum for species indexing into state vectors.
+   */
+  enum Species : int {
+{% for sp in species %}
+      {{ sp.name }} = {{ sp.index }}{{ "," if not loop.last else "" }}
+{% endfor %}
+  };
+
 {% if has_equilibrium %}
 
   // Equilibrium meteorological input indices

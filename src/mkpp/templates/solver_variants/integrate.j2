@@ -34,6 +34,14 @@
 {% from "macros/lu_factorize.j2" import emit_lu_factorize %}
 {% from "macros/lu_solve_forward.j2" import emit_forward_sub %}
 {% from "macros/lu_solve_backward.j2" import emit_backward_sub %}
+      /**
+       * @brief Performs adaptive time-stepping Rosenbrock integration over dt_total.
+       * 
+       * @tparam StateView Kokkos View type for species concentrations [NUM_SPECIES].
+       * @param dt_total Total physical time step duration [s].
+       * @param state Input/output species concentration vector [NUM_SPECIES].
+       * @param jvals Array of photolysis rate constants [NUM_PHOTOLYSIS].
+       */
       template <class StateView>
 {% if has_equilibrium %}
       KOKKOS_INLINE_FUNCTION void integrate(double dt_total, StateView& state, const double* jvals, const double temp, const double rh) const {
@@ -56,16 +64,12 @@
           dt = Kokkos::min(dt, dt_total - t);
           const double inv_g_dt = 1.0 / (g * dt);
 
-          // 0. Hoist state values into scalar registers
+          // --- 0. Hoist State Values into Scalar Registers ---
 {% if permutation %}
-          // NOTE: State access uses permuted species ordering
+          // NOTE: State access uses permuted species ordering for RCM bandwidth reduction
 {% endif %}
-{% for i in range(num_species) %}
-{% if permutation %}
-          const double S_{{ i }} = state({{ permutation[i] }});
-{% else %}
-          const double S_{{ i }} = state({{ i }});
-{% endif %}
+{% for info in state_hoist_info %}
+          const double S_{{ info.reg_idx }} = state(Species::{{ info.name }});  // [{{ info.name }}]
 {% endfor %}
 
           // Analytical Jacobian & Iteration Matrix W = inv_g_dt*I - J (sparse)

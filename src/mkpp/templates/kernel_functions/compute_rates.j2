@@ -11,6 +11,15 @@
 
   Requirements: 4.6
 #}
+      /**
+       * @brief Evaluates the rate-of-change vector F(i) = dC_i / dt.
+       * 
+       * @tparam StateView Kokkos View type for species concentrations [NUM_SPECIES].
+       * @tparam RateView Kokkos View type for output rate-of-change vector [NUM_SPECIES].
+       * @param state Input concentration vector [NUM_SPECIES].
+       * @param F_block Output rate-of-change vector [NUM_SPECIES].
+       * @param jvals Array of photolysis rate constants [NUM_PHOTOLYSIS].
+       */
       template <class StateView, class RateView>
 {% if has_equilibrium %}
       KOKKOS_INLINE_FUNCTION void compute_rates(const StateView& state, RateView& F_block, const double* jvals, const double temp, const double rh) const {
@@ -20,7 +29,9 @@
 {% else %}
       KOKKOS_INLINE_FUNCTION void compute_rates(const StateView& state, RateView& F_block, const double* jvals) const {
 {% endif %}
+          // --- Rate-of-Change Vector F_block ---
 {% for expr in rate_exprs_state %}
-          F_block({{ loop.index0 }}) = {{ expr }};
+          // F_block({{ species[loop.index0].name }}): d[{{ species[loop.index0].name }}]/dt
+          F_block(Species::{{ species[loop.index0].name }}) = {{ expr }};
 {% endfor %}
       }

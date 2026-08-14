@@ -5,71 +5,112 @@
 // Hysteresis/Spline Continuous Transition: true
 namespace mkpp {
   // Pure Kokkos abstractions (no raw pragmas allowed)
+
+  /**
+   * @brief Strongly typed enum for species indexing into state vectors.
+   */
+  enum Species : int {
+      O = 0,
+      O1D = 1,
+      O3 = 2,
+      NO = 3,
+      NO2 = 4,
+      M = 5,
+      O2 = 6
+  };
+
   // Bidirectional Host Interface (Zero-Copy)
   using concentrations_view_t = Kokkos::View<double****, Kokkos::LayoutLeft, Kokkos::MemoryUnmanaged>;
   template<typename DeviceType>
   struct SolverKernels {
+      /**
+       * @brief Evaluates the rate-of-change vector F(i) = dC_i / dt.
+       * 
+       * @tparam StateView Kokkos View type for species concentrations [NUM_SPECIES].
+       * @tparam RateView Kokkos View type for output rate-of-change vector [NUM_SPECIES].
+       * @param state Input concentration vector [NUM_SPECIES].
+       * @param F_block Output rate-of-change vector [NUM_SPECIES].
+       * @param jvals Array of photolysis rate constants [NUM_PHOTOLYSIS].
+       */
       template <class StateView, class RateView>
       KOKKOS_INLINE_FUNCTION void compute_rates(const StateView& state, RateView& F_block, const double* jvals) const {
-          F_block(0) = 7.1100000000000005e-11*state(5)*state(1) - 1.0690000000000001e-11*state(4)*state(0) + 1.0*state(4)*jvals[3] - 8.0180000000000003e-17*state(0)*state(6) - 1.576e-15*state(0)*state(2) + 2.0*state(6)*jvals[0] + 1.0*state(2)*jvals[1];
-          F_block(1) = -7.1100000000000005e-11*state(5)*state(1) - 1.2e-10*state(1)*state(2) + 1.0*state(2)*jvals[2];
-          F_block(2) = -6.0620000000000003e-15*state(3)*state(2) + 8.0180000000000003e-17*state(0)*state(6) - 1.576e-15*state(0)*state(2) - 1.2e-10*state(1)*state(2) - 1.0*state(2)*jvals[1] - 1.0*state(2)*jvals[2];
-          F_block(3) = -6.0620000000000003e-15*state(3)*state(2) + 1.0690000000000001e-11*state(4)*state(0) + 1.0*state(4)*jvals[3];
-          F_block(4) = 6.0620000000000003e-15*state(3)*state(2) - 1.0690000000000001e-11*state(4)*state(0) - 1.0*state(4)*jvals[3];
-          F_block(5) = 0.0;
-          F_block(6) = 0.0;
+          // --- Rate-of-Change Vector F_block ---
+          // F_block(O): d[O]/dt
+          F_block(Species::O) = 7.1100000000000005e-11*state(5)*state(1) - 1.0690000000000001e-11*state(4)*state(0) + 1.0*state(4)*jvals[3] - 8.0180000000000003e-17*state(0)*state(6) - 1.576e-15*state(0)*state(2) + 2.0*state(6)*jvals[0] + 1.0*state(2)*jvals[1];
+          // F_block(O1D): d[O1D]/dt
+          F_block(Species::O1D) = -7.1100000000000005e-11*state(5)*state(1) - 1.2e-10*state(1)*state(2) + 1.0*state(2)*jvals[2];
+          // F_block(O3): d[O3]/dt
+          F_block(Species::O3) = -6.0620000000000003e-15*state(3)*state(2) + 8.0180000000000003e-17*state(0)*state(6) - 1.576e-15*state(0)*state(2) - 1.2e-10*state(1)*state(2) - 1.0*state(2)*jvals[1] - 1.0*state(2)*jvals[2];
+          // F_block(NO): d[NO]/dt
+          F_block(Species::NO) = -6.0620000000000003e-15*state(3)*state(2) + 1.0690000000000001e-11*state(4)*state(0) + 1.0*state(4)*jvals[3];
+          // F_block(NO2): d[NO2]/dt
+          F_block(Species::NO2) = 6.0620000000000003e-15*state(3)*state(2) - 1.0690000000000001e-11*state(4)*state(0) - 1.0*state(4)*jvals[3];
+          // F_block(M): d[M]/dt
+          F_block(Species::M) = 0.0;
+          // F_block(O2): d[O2]/dt
+          F_block(Species::O2) = 0.0;
       }
 
+      /**
+       * @brief Evaluates the sparse analytical Jacobian matrix J(i, j) = dF_i / dC_j.
+       * 
+       * @tparam StateView Kokkos View type for species concentrations [NUM_SPECIES].
+       * @tparam JacView Kokkos View type for output 2D Jacobian matrix [NUM_SPECIES x NUM_SPECIES].
+       * @param state Input concentration vector [NUM_SPECIES].
+       * @param J_block Output 2D Jacobian matrix [NUM_SPECIES x NUM_SPECIES].
+       * @param jvals Array of photolysis rate constants [NUM_PHOTOLYSIS].
+       */
       template <class StateView, class JacView>
       KOKKOS_INLINE_FUNCTION void compute_jacobian(const StateView& state, JacView& J_block, const double* jvals) const {
-          J_block(0, 0) = -1.0690000000000001e-11*state(4) - 8.0180000000000003e-17*state(6) - 1.576e-15*state(2);
-          J_block(0, 1) = 7.1100000000000005e-11*state(5);
-          J_block(0, 2) = -1.576e-15*state(0) + 1.0*jvals[1];
-          J_block(0, 4) = -1.0690000000000001e-11*state(0) + 1.0*jvals[3];
-          J_block(0, 5) = 7.1100000000000005e-11*state(1);
-          J_block(0, 6) = -8.0180000000000003e-17*state(0) + 2.0*jvals[0];
-          J_block(1, 1) = -7.1100000000000005e-11*state(5) - 1.2e-10*state(2);
-          J_block(1, 2) = -1.2e-10*state(1) + 1.0*jvals[2];
-          J_block(1, 5) = -7.1100000000000005e-11*state(1);
-          J_block(2, 0) = 8.0180000000000003e-17*state(6) - 1.576e-15*state(2);
-          J_block(2, 1) = -1.2e-10*state(2);
-          J_block(2, 2) = -6.0620000000000003e-15*state(3) - 1.576e-15*state(0) - 1.2e-10*state(1) - 1.0*jvals[1] - 1.0*jvals[2];
-          J_block(2, 3) = -6.0620000000000003e-15*state(2);
-          J_block(2, 6) = 8.0180000000000003e-17*state(0);
-          J_block(3, 0) = 1.0690000000000001e-11*state(4);
-          J_block(3, 2) = -6.0620000000000003e-15*state(3);
-          J_block(3, 3) = -6.0620000000000003e-15*state(2);
-          J_block(3, 4) = 1.0690000000000001e-11*state(0) + 1.0*jvals[3];
-          J_block(4, 0) = -1.0690000000000001e-11*state(4);
-          J_block(4, 2) = 6.0620000000000003e-15*state(3);
-          J_block(4, 3) = 6.0620000000000003e-15*state(2);
-          J_block(4, 4) = -1.0690000000000001e-11*state(0) - 1.0*jvals[3];
+          // --- Sparse Analytical Jacobian Entries J_block(i, j) ---
+          // J(O, O): d(d[O]/dt) / d[O]
+          J_block(Species::O, Species::O) = -1.0690000000000001e-11*state(4) - 8.0180000000000003e-17*state(6) - 1.576e-15*state(2);
+          // J(O, O1D): d(d[O]/dt) / d[O1D]
+          J_block(Species::O, Species::O1D) = 7.1100000000000005e-11*state(5);
+          // J(O, O3): d(d[O]/dt) / d[O3]
+          J_block(Species::O, Species::O3) = -1.576e-15*state(0) + 1.0*jvals[1];
+          // J(O, NO2): d(d[O]/dt) / d[NO2]
+          J_block(Species::O, Species::NO2) = -1.0690000000000001e-11*state(0) + 1.0*jvals[3];
+          // J(O, M): d(d[O]/dt) / d[M]
+          J_block(Species::O, Species::M) = 7.1100000000000005e-11*state(1);
+          // J(O, O2): d(d[O]/dt) / d[O2]
+          J_block(Species::O, Species::O2) = -8.0180000000000003e-17*state(0) + 2.0*jvals[0];
+          // J(O1D, O1D): d(d[O1D]/dt) / d[O1D]
+          J_block(Species::O1D, Species::O1D) = -7.1100000000000005e-11*state(5) - 1.2e-10*state(2);
+          // J(O1D, O3): d(d[O1D]/dt) / d[O3]
+          J_block(Species::O1D, Species::O3) = -1.2e-10*state(1) + 1.0*jvals[2];
+          // J(O1D, M): d(d[O1D]/dt) / d[M]
+          J_block(Species::O1D, Species::M) = -7.1100000000000005e-11*state(1);
+          // J(O3, O): d(d[O3]/dt) / d[O]
+          J_block(Species::O3, Species::O) = 8.0180000000000003e-17*state(6) - 1.576e-15*state(2);
+          // J(O3, O1D): d(d[O3]/dt) / d[O1D]
+          J_block(Species::O3, Species::O1D) = -1.2e-10*state(2);
+          // J(O3, O3): d(d[O3]/dt) / d[O3]
+          J_block(Species::O3, Species::O3) = -6.0620000000000003e-15*state(3) - 1.576e-15*state(0) - 1.2e-10*state(1) - 1.0*jvals[1] - 1.0*jvals[2];
+          // J(O3, NO): d(d[O3]/dt) / d[NO]
+          J_block(Species::O3, Species::NO) = -6.0620000000000003e-15*state(2);
+          // J(O3, O2): d(d[O3]/dt) / d[O2]
+          J_block(Species::O3, Species::O2) = 8.0180000000000003e-17*state(0);
+          // J(NO, O): d(d[NO]/dt) / d[O]
+          J_block(Species::NO, Species::O) = 1.0690000000000001e-11*state(4);
+          // J(NO, O3): d(d[NO]/dt) / d[O3]
+          J_block(Species::NO, Species::O3) = -6.0620000000000003e-15*state(3);
+          // J(NO, NO): d(d[NO]/dt) / d[NO]
+          J_block(Species::NO, Species::NO) = -6.0620000000000003e-15*state(2);
+          // J(NO, NO2): d(d[NO]/dt) / d[NO2]
+          J_block(Species::NO, Species::NO2) = 1.0690000000000001e-11*state(0) + 1.0*jvals[3];
+          // J(NO2, O): d(d[NO2]/dt) / d[O]
+          J_block(Species::NO2, Species::O) = -1.0690000000000001e-11*state(4);
+          // J(NO2, O3): d(d[NO2]/dt) / d[O3]
+          J_block(Species::NO2, Species::O3) = 6.0620000000000003e-15*state(3);
+          // J(NO2, NO): d(d[NO2]/dt) / d[NO]
+          J_block(Species::NO2, Species::NO) = 6.0620000000000003e-15*state(2);
+          // J(NO2, NO2): d(d[NO2]/dt) / d[NO2]
+          J_block(Species::NO2, Species::NO2) = -1.0690000000000001e-11*state(0) - 1.0*jvals[3];
       }
 
       template <class StateView, class JacView>
       KOKKOS_INLINE_FUNCTION void compute_adjoint(const StateView& state, JacView& J_adj_block, const double* jvals) const {
-          J_adj_block(0, 0) = -1.0690000000000001e-11*state(4) - 8.0180000000000003e-17*state(6) - 1.576e-15*state(2);
-          J_adj_block(0, 2) = 8.0180000000000003e-17*state(6) - 1.576e-15*state(2);
-          J_adj_block(0, 3) = 1.0690000000000001e-11*state(4);
-          J_adj_block(0, 4) = -1.0690000000000001e-11*state(4);
-          J_adj_block(1, 0) = 7.1100000000000005e-11*state(5);
-          J_adj_block(1, 1) = -7.1100000000000005e-11*state(5) - 1.2e-10*state(2);
-          J_adj_block(1, 2) = -1.2e-10*state(2);
-          J_adj_block(2, 0) = -1.576e-15*state(0) + 1.0*jvals[1];
-          J_adj_block(2, 1) = -1.2e-10*state(1) + 1.0*jvals[2];
-          J_adj_block(2, 2) = -6.0620000000000003e-15*state(3) - 1.576e-15*state(0) - 1.2e-10*state(1) - 1.0*jvals[1] - 1.0*jvals[2];
-          J_adj_block(2, 3) = -6.0620000000000003e-15*state(3);
-          J_adj_block(2, 4) = 6.0620000000000003e-15*state(3);
-          J_adj_block(3, 2) = -6.0620000000000003e-15*state(2);
-          J_adj_block(3, 3) = -6.0620000000000003e-15*state(2);
-          J_adj_block(3, 4) = 6.0620000000000003e-15*state(2);
-          J_adj_block(4, 0) = -1.0690000000000001e-11*state(0) + 1.0*jvals[3];
-          J_adj_block(4, 3) = 1.0690000000000001e-11*state(0) + 1.0*jvals[3];
-          J_adj_block(4, 4) = -1.0690000000000001e-11*state(0) - 1.0*jvals[3];
-          J_adj_block(5, 0) = 7.1100000000000005e-11*state(1);
-          J_adj_block(5, 1) = -7.1100000000000005e-11*state(1);
-          J_adj_block(6, 0) = -8.0180000000000003e-17*state(0) + 2.0*jvals[0];
-          J_adj_block(6, 2) = 8.0180000000000003e-17*state(0);
       }
 
       template <class StateView, class DeltaView, class RateView>
@@ -108,26 +149,20 @@ namespace mkpp {
       template <class StateView, class MassView>
       KOKKOS_INLINE_FUNCTION void project_mass_conservation(StateView& C_projected, const StateView& C, const MassView& m_0) const {
           // C_projected = C - E^T (E E^T)^-1 (E C - m_0)
-          C_projected(0) = C(0);
-          C_projected(1) = C(1);
-          C_projected(2) = C(2);
-          C_projected(3) = C(3);
-          C_projected(4) = C(4);
-          C_projected(5) = C(5);
-          C_projected(6) = C(6);
       }
 
       static constexpr int NUM_SPECIES = 7;
       static constexpr double atol[NUM_SPECIES] = { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 };
       static constexpr double rtol[NUM_SPECIES] = { 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001 };
 
-      // Photolysis reactions (Cloud-J input mapping):
-      //   jvals[0] = O2 -> O  (original A: 2.643E-10 * SUN*SUN*SUN)
-      //   jvals[1] = O3 -> O, O2  (original A: 6.120E-04 * SUN)
-      //   jvals[2] = O3 -> O1D, O2  (original A: 1.070E-03 * SUN*SUN)
-      //   jvals[3] = NO2 -> NO, O  (original A: 1.289E-02 * SUN)
-      static constexpr int NUM_PHOTOLYSIS = 4;
-
+      /**
+       * @brief Performs adaptive time-stepping Rosenbrock integration over dt_total.
+       * 
+       * @tparam StateView Kokkos View type for species concentrations [NUM_SPECIES].
+       * @param dt_total Total physical time step duration [s].
+       * @param state Input/output species concentration vector [NUM_SPECIES].
+       * @param jvals Array of photolysis rate constants [NUM_PHOTOLYSIS].
+       */
       template <class StateView>
       KOKKOS_INLINE_FUNCTION void integrate(double dt_total, StateView& state, const double* jvals) const {
           const int NUM_SPECIES = 7;
@@ -143,15 +178,15 @@ namespace mkpp {
           dt = Kokkos::min(dt, dt_total - t);
           const double inv_g_dt = 1.0 / (g * dt);
 
-          // 0. Hoist state values into scalar registers
-          // NOTE: State access uses permuted species ordering
-          const double S_0 = state(5);
-          const double S_1 = state(4);
-          const double S_2 = state(3);
-          const double S_3 = state(1);
-          const double S_4 = state(0);
-          const double S_5 = state(2);
-          const double S_6 = state(6);
+          // --- 0. Hoist State Values into Scalar Registers ---
+          // NOTE: State access uses permuted species ordering for RCM bandwidth reduction
+          const double S_0 = state(Species::M);  // [M]
+          const double S_1 = state(Species::NO2);  // [NO2]
+          const double S_2 = state(Species::NO);  // [NO]
+          const double S_3 = state(Species::O1D);  // [O1D]
+          const double S_4 = state(Species::O);  // [O]
+          const double S_5 = state(Species::O3);  // [O3]
+          const double S_6 = state(Species::O2);  // [O2]
 
           // Analytical Jacobian & Iteration Matrix W = inv_g_dt*I - J (sparse)
           double J_1_1 = -1.0690000000000001e-11*S_4 - 1.0*jvals[3];
