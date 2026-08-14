@@ -1,0 +1,9 @@
+[submodule "src/Cloud-J"]
+	path = src/Cloud-J
+	url = https://github.com/bbakernoaa/Cloud-J.git
+[submodule "src/exaero"]
+	path = src/exaero
+	url = https://github.com/bbakernoaa/ex-aero.git
+[submodule "src/isorropialite"]
+	path = src/isorropialite
+	url = https://github.com/bbakernoaa/ISORROPIA-Iite.git
