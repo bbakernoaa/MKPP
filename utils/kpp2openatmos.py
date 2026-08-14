@@ -4,6 +4,17 @@ import re
 import yaml
 
 
+def _negate_c(val_str: str) -> str:
+    cleaned = val_str.strip().replace("e0", "")
+    try:
+        f = float(cleaned)
+        return str(-f)
+    except ValueError:
+        if cleaned.startswith("-"):
+            return cleaned[1:].strip()
+        return f"-({cleaned})"
+
+
 def parse_spc(filepath):
     species = []
     with open(filepath) as f:
@@ -101,7 +112,7 @@ def parse_eqn(filepath):
                     if len(args) >= 2:
                         rxn["A"] = args[0].strip().replace("e0", "")
                         rxn["B"] = 0.0
-                        rxn["C"] = args[1].strip().replace("e0", "")
+                        rxn["C"] = _negate_c(args[1])
                 elif rate_str.startswith("ARR_ac("):
                     args = rate_str.replace("ARR_ac(", "").replace(")", "").split(",")
                     if len(args) >= 2:
@@ -112,7 +123,7 @@ def parse_eqn(filepath):
                     args = rate_str.replace("ARR_abc(", "").replace(")", "").split(",")
                     if len(args) >= 3:
                         rxn["A"] = args[0].strip().replace("e0", "")
-                        rxn["C"] = args[1].strip().replace("e0", "")
+                        rxn["C"] = _negate_c(args[1])
                         rxn["B"] = args[2].strip().replace("e0", "")
                 elif rate_str.startswith("FALL("):
                     args = rate_str.replace("FALL(", "").replace(")", "").split(",")
@@ -120,29 +131,29 @@ def parse_eqn(filepath):
                         rxn["type"] = "TROE"
                         rxn["k0_A"] = args[0].strip().replace("e0", "")
                         rxn["k0_B"] = args[1].strip().replace("e0", "")
-                        rxn["k0_C"] = args[2].strip().replace("e0", "")
+                        rxn["k0_C"] = _negate_c(args[2])
                         rxn["kinf_A"] = args[3].strip().replace("e0", "")
                         rxn["kinf_B"] = args[4].strip().replace("e0", "")
-                        rxn["kinf_C"] = args[5].strip().replace("e0", "")
+                        rxn["kinf_C"] = _negate_c(args[5])
                         rxn["Fc"] = args[6].strip().replace("e0", "")
                 elif rate_str.startswith("EP2("):
                     args = rate_str.replace("EP2(", "").replace(")", "").split(",")
                     if len(args) >= 6:
                         rxn["type"] = "EP2"
                         rxn["A0"] = args[0].strip().replace("e0", "")
-                        rxn["C0"] = args[1].strip().replace("e0", "")
+                        rxn["C0"] = _negate_c(args[1])
                         rxn["A2"] = args[2].strip().replace("e0", "")
-                        rxn["C2"] = args[3].strip().replace("e0", "")
+                        rxn["C2"] = _negate_c(args[3])
                         rxn["A3"] = args[4].strip().replace("e0", "")
-                        rxn["C3"] = args[5].strip().replace("e0", "")
+                        rxn["C3"] = _negate_c(args[5])
                 elif rate_str.startswith("EP3("):
                     args = rate_str.replace("EP3(", "").replace(")", "").split(",")
                     if len(args) >= 4:
                         rxn["type"] = "EP3"
                         rxn["A1"] = args[0].strip().replace("e0", "")
-                        rxn["C1"] = args[1].strip().replace("e0", "")
+                        rxn["C1"] = _negate_c(args[1])
                         rxn["A2"] = args[2].strip().replace("e0", "")
-                        rxn["C2"] = args[3].strip().replace("e0", "")
+                        rxn["C2"] = _negate_c(args[3])
                 elif rate_str.startswith("("):
                     rxn["A"] = rate_str.replace("(", "").replace(")", "").replace("e0", "")
                 else:

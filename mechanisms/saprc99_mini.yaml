@@ -49,7 +49,7 @@ reactions:
     O2: 2.0
   A: '8.00e-12'
   B: 0.0
-  C: '2060.0'
+  C: '-2060.0'
   stiff: true
 - type: ARRHENIUS
   reactants:
@@ -59,7 +59,7 @@ reactions:
     NO2: 1.0
   A: '1.80e-12'
   B: 0.0
-  C: '1370.0'
+  C: '-1370.0'
   stiff: true
 - type: ARRHENIUS
   reactants:
@@ -69,7 +69,7 @@ reactions:
     NO3: 1.0
   A: '1.40e-13'
   B: 0.0
-  C: '2470.0'
+  C: '-2470.0'
   stiff: true
 - type: ARRHENIUS
   reactants:
@@ -79,7 +79,7 @@ reactions:
     NO2: 2.0
   A: '1.80e-11'
   B: 0.0
-  C: '-110.0'
+  C: '110.0'
   stiff: true
 - type: TROE
   reactants:
@@ -89,10 +89,10 @@ reactions:
     N2O5: 1.0
   k0_A: '2.80e-30'
   k0_B: '0.0'
-  k0_C: '-3.50'
+  k0_C: '3.5'
   kinf_A: '2.00e-12'
   kinf_B: '0.0'
-  kinf_C: '0.20'
+  kinf_C: '-0.2'
   Fc: '0.45'
   stiff: true
 - type: TROE
@@ -103,10 +103,10 @@ reactions:
     NO3: 1.0
   k0_A: '1.e-3'
   k0_B: '11000.0'
-  k0_C: '-3.5'
+  k0_C: '3.5'
   kinf_A: '9.7e+14'
   kinf_B: '11080.0'
-  kinf_C: '0.1'
+  kinf_C: '-0.1'
   Fc: '0.45'
   stiff: true
 - type: EP2
@@ -116,11 +116,11 @@ reactions:
   products:
     NO3: 1.0
   A0: '7.20e-15'
-  C0: '-785.0'
+  C0: '785.0'
   A2: '4.10e-16'
-  C2: '-1440.0'
+  C2: '1440.0'
   A3: '1.90e-33'
-  C3: '-725.0'
+  C3: '725.0'
   stiff: true
 - type: EP3
   reactants:
@@ -130,9 +130,9 @@ reactions:
     H2O2: 1.0
     O2: 1.0
   A1: '2.30e-13'
-  C1: '-600.0'
+  C1: '600.0'
   A2: '1.70e-33'
-  C2: '-1000.0'
+  C2: '1000.0'
   stiff: true
 - type: PHOTOLYSIS
   reactants:

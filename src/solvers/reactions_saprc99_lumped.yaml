@@ -16,7 +16,7 @@
     O2: 2.0
   A: '8.00e-12'
   B: 0.0
-  C: '2060.0'
+  C: '-2060.0'
 - type: ARRHENIUS
   reactants:
     O3P: 1.0
@@ -35,7 +35,7 @@
     'NO': 1.0
   A: '6.50e-12'
   B: 0.0
-  C: '- 120.0'
+  C: '120.0'
 - type: TROE
   reactants:
     O3P: 1.0
@@ -44,7 +44,7 @@
     NO3: 1.0
   k0_A: '9.00e-32'
   k0_B: '0.0'
-  k0_C: '-2.00'
+  k0_C: '2.0'
   kinf_A: '2.20e-11'
   kinf_B: '0.0'
   kinf_C: '0.0'
@@ -57,7 +57,7 @@
     NO2: 1.0
   A: '1.80e-12'
   B: 0.0
-  C: '1370.0'
+  C: '-1370.0'
 - type: ARRHENIUS
   reactants:
     O3: 1.0
@@ -66,7 +66,7 @@
     NO3: 1.0
   A: '1.40e-13'
   B: 0.0
-  C: '2470.0'
+  C: '-2470.0'
 - type: ARRHENIUS
   reactants:
     'NO': 1.0
@@ -75,7 +75,7 @@
     NO2: 2.0
   A: '1.80e-11'
   B: 0.0
-  C: '-110.0'
+  C: '110.0'
 - type: ARRHENIUS
   reactants:
     'NO': 2.0
@@ -84,7 +84,7 @@
     NO2: 2.0
   A: '3.30e-39'
   B: 0.0
-  C: '-530.0'
+  C: '530.0'
 - type: TROE
   reactants:
     NO2: 1.0
@@ -93,10 +93,10 @@
     N2O5: 1.0
   k0_A: '2.80e-30'
   k0_B: '0.0'
-  k0_C: '-3.50'
+  k0_C: '3.5'
   kinf_A: '2.00e-12'
   kinf_B: '0.0'
-  kinf_C: '0.20'
+  kinf_C: '-0.2'
   Fc: '0.45'
 - type: TROE
   reactants:
@@ -106,10 +106,10 @@
     NO3: 1.0
   k0_A: '1.e-3'
   k0_B: '11000.0'
-  k0_C: '-3.5'
+  k0_C: '3.5'
   kinf_A: '9.7e+14'
   kinf_B: '11080.0'
-  kinf_C: '0.1'
+  kinf_C: '-0.1'
   Fc: '0.45'
 - type: ARRHENIUS
   reactants:
@@ -127,7 +127,7 @@
     NO2: 1.0
   A: '4.50e-14'
   B: 0.0
-  C: '1260.0'
+  C: '-1260.0'
 - type: PHOTOLYSIS
   reactants:
     NO3: 1.0
@@ -158,7 +158,7 @@
     O3P: 1.0
   A: '2.09e-11'
   B: 0.0
-  C: '-95.0'
+  C: '95.0'
 - type: TROE
   reactants:
     OH: 1.0
@@ -167,10 +167,10 @@
     HONO: 1.0
   k0_A: '7.00e-31'
   k0_B: '0.0'
-  k0_C: '-2.60'
+  k0_C: '2.6'
   kinf_A: '3.60e-11'
   kinf_B: '0.0'
-  kinf_C: '-0.10'
+  kinf_C: '0.1'
   Fc: '0.60'
 - type: PHOTOLYSIS
   reactants:
@@ -189,7 +189,7 @@
     NO2: 1.0
   A: '2.70e-12'
   B: 0.0
-  C: '-260.0'
+  C: '260.0'
 - type: TROE
   reactants:
     OH: 1.0
@@ -198,10 +198,10 @@
     HNO3: 1.0
   k0_A: '2.43e-30'
   k0_B: '0.0'
-  k0_C: '-3.10'
+  k0_C: '3.1'
   kinf_A: '1.67e-11'
   kinf_B: '0.0'
-  kinf_C: '-2.10'
+  kinf_C: '2.1'
   Fc: '0.60'
 - type: ARRHENIUS
   reactants:
@@ -218,11 +218,11 @@
   products:
     NO3: 1.0
   A0: '7.20e-15'
-  C0: '-785.0'
+  C0: '785.0'
   A2: '4.10e-16'
-  C2: '-1440.0'
+  C2: '1440.0'
   A3: '1.90e-33'
-  C3: '-725.0'
+  C3: '725.0'
 - type: PHOTOLYSIS
   reactants:
     HNO3: 1.0
@@ -248,7 +248,7 @@
     HO2: 1.0
   A: '1.90e-12'
   B: 0.0
-  C: '1000.0'
+  C: '-1000.0'
 - type: ARRHENIUS
   reactants:
     HO2: 1.0
@@ -258,7 +258,7 @@
     NO2: 1.0
   A: '3.40e-12'
   B: 0.0
-  C: '-270.0'
+  C: '270.0'
 - type: TROE
   reactants:
     HO2: 1.0
@@ -267,7 +267,7 @@
     HNO4: 1.0
   k0_A: '1.80e-31'
   k0_B: '0.0'
-  k0_C: '-3.20'
+  k0_C: '3.2'
   kinf_A: '4.70e-12'
   kinf_B: '0.0'
   kinf_C: '0.0'
@@ -302,7 +302,7 @@
     NO2: 1.0
   A: '1.50e-12'
   B: 0.0
-  C: '-360.0'
+  C: '360.0'
 - type: ARRHENIUS
   reactants:
     HO2: 1.0
@@ -311,16 +311,16 @@
     OH: 1.0
   A: '1.40e-14'
   B: 0.0
-  C: '600.0'
+  C: '-600.0'
 - type: EP3
   reactants:
     HO2: 2.0
   products:
     H2O2: 1.0
   A1: '2.20e-13'
-  C1: '-600.0'
+  C1: '600.0'
   A2: '1.85e-33'
-  C2: '-980.0'
+  C2: '980.0'
 - type: EP3
   reactants:
     HO2: 2.0
@@ -328,9 +328,9 @@
   products:
     H2O2: 1.0
   A1: '3.08e-34'
-  C1: '-2800.0'
+  C1: '2800.0'
   A2: '2.59e-54'
-  C2: '-3180.0'
+  C2: '3180.0'
 - type: ARRHENIUS
   reactants:
     NO3: 1.0
@@ -347,7 +347,7 @@
     NO2: 2.0
   A: '8.50e-13'
   B: 0.0
-  C: '2450.0'
+  C: '-2450.0'
 - type: PHOTOLYSIS
   reactants:
     H2O2: 1.0
@@ -362,7 +362,7 @@
     HO2: 1.0
   A: '2.90e-12'
   B: 0.0
-  C: '160.0'
+  C: '-160.0'
 - type: ARRHENIUS
   reactants:
     OH: 1.0
@@ -372,7 +372,7 @@
     O2: 1.0
   A: '4.80e-11'
   B: 0.0
-  C: '-250.0'
+  C: '250.0'
 - type: TROE
   reactants:
     OH: 1.0
@@ -382,7 +382,7 @@
     H2SO4: 1.0
   k0_A: '4.00e-31'
   k0_B: '0.0'
-  k0_C: '-3.30'
+  k0_C: '3.3'
   kinf_A: '2.00e-12'
   kinf_B: '0.0'
   kinf_C: '0.0'
@@ -395,7 +395,7 @@
     HO2: 1.0
   A: '7.70e-12'
   B: 0.0
-  C: '2100.0'
+  C: '-2100.0'
 - type: ARRHENIUS
   reactants:
     C_O2: 1.0
@@ -406,7 +406,7 @@
     HO2: 1.0
   A: '2.80e-12'
   B: 0.0
-  C: '-285.0'
+  C: '285.0'
 - type: ARRHENIUS
   reactants:
     C_O2: 1.0
@@ -415,7 +415,7 @@
     COOH: 1.0
   A: '3.80e-13'
   B: 0.0
-  C: '-780.0'
+  C: '780.0'
 - type: ARRHENIUS
   reactants:
     C_O2: 1.0
@@ -434,7 +434,7 @@
     HO2: 1.0
   A: (2.45e-14) + (5.90e-13)
   B: 0.0
-  C: '-710.0'
+  C: '710.0'
 - type: ARRHENIUS
   reactants:
     RO2_R: 1.0
@@ -444,7 +444,7 @@
     HO2: 1.0
   A: '2.70e-12'
   B: 0.0
-  C: '-360.0'
+  C: '360.0'
 - type: ARRHENIUS
   reactants:
     RO2_R: 1.0
@@ -453,7 +453,7 @@
     ROOH: 1.0
   A: '1.90e-13'
   B: 0.0
-  C: '-1300.0'
+  C: '1300.0'
 - type: ARRHENIUS
   reactants:
     RO2_R: 1.0
@@ -485,7 +485,7 @@
     NO2: 1.0
   A: '2.70e-12'
   B: 0.0
-  C: '-360.0'
+  C: '360.0'
 - type: ARRHENIUS
   reactants:
     R2O2: 1.0
@@ -494,7 +494,7 @@
     HO2: 1.0
   A: '1.90e-13'
   B: 0.0
-  C: '-1300.0'
+  C: '1300.0'
 - type: ARRHENIUS
   reactants:
     R2O2: 1.0
@@ -530,7 +530,7 @@
     RNO3: 1.0
   A: '2.70e-12'
   B: 0.0
-  C: '-360.0'
+  C: '360.0'
 - type: ARRHENIUS
   reactants:
     RO2_N: 1.0
@@ -539,7 +539,7 @@
     ROOH: 1.0
   A: '1.90e-13'
   B: 0.0
-  C: '-1300.0'
+  C: '1300.0'
 - type: ARRHENIUS
   reactants:
     RO2_N: 1.0
@@ -592,10 +592,10 @@
     PAN: 1.0
   k0_A: '2.70e-28'
   k0_B: '0.0'
-  k0_C: '-7.10'
+  k0_C: '7.1'
   kinf_A: '1.20e-11'
   kinf_B: '0.0'
-  kinf_C: '-0.90'
+  kinf_C: '0.9'
   Fc: '0.30'
 - type: TROE
   reactants:
@@ -608,7 +608,7 @@
   k0_C: '0.0'
   kinf_A: '4.0e+16'
   kinf_B: '13600.0'
-  kinf_C: '0.'
+  kinf_C: '0.0.'
   Fc: '0.3'
 - type: ARRHENIUS
   reactants:
@@ -619,7 +619,7 @@
     NO2: 1.0
   A: '7.80e-12'
   B: 0.0
-  C: '-300.0'
+  C: '300.0'
 - type: ARRHENIUS
   reactants:
     CCO_O2: 1.0
@@ -630,7 +630,7 @@
     O3: 0.25
   A: '4.30e-13'
   B: 0.0
-  C: '-1040.0'
+  C: '1040.0'
 - type: ARRHENIUS
   reactants:
     CCO_O2: 1.0
@@ -648,7 +648,7 @@
     HCHO: 1.0
   A: '1.80e-12'
   B: 0.0
-  C: '-500.0'
+  C: '500.0'
 - type: ARRHENIUS
   reactants:
     CCO_O2: 1.0
@@ -678,7 +678,7 @@
     C_O2: 2.0
   A: '2.90e-12'
   B: 0.0
-  C: '-500.0'
+  C: '500.0'
 - type: ARRHENIUS
   reactants:
     RCO_O2: 1.0
@@ -696,7 +696,7 @@
     NO2: 1.0
   A: '2.00e+15'
   B: 0.0
-  C: '12800.0'
+  C: '-12800.0'
 - type: ARRHENIUS
   reactants:
     RCO_O2: 1.0
@@ -707,7 +707,7 @@
     RO2_R: 1.0
   A: '1.25e-11'
   B: 0.0
-  C: '-240.0'
+  C: '240.0'
 - type: ARRHENIUS
   reactants:
     RCO_O2: 1.0
@@ -718,7 +718,7 @@
     O3: 0.25
   A: '4.30e-13'
   B: 0.0
-  C: '-1040.0'
+  C: '1040.0'
 - type: ARRHENIUS
   reactants:
     RCO_O2: 1.0
@@ -737,7 +737,7 @@
     HCHO: 1.0
   A: '1.80e-12'
   B: 0.0
-  C: '-500.0'
+  C: '500.0'
 - type: ARRHENIUS
   reactants:
     RCO_O2: 1.0
@@ -770,7 +770,7 @@
     RO2_R: 1.0
   A: '2.90e-12'
   B: 0.0
-  C: '-500.0'
+  C: '500.0'
 - type: ARRHENIUS
   reactants:
     RCO_O2: 2.0
@@ -779,7 +779,7 @@
     RO2_R: 2.0
   A: '2.90e-12'
   B: 0.0
-  C: '-500.0'
+  C: '500.0'
 - type: ARRHENIUS
   reactants:
     BZCO_O2: 1.0
@@ -795,7 +795,7 @@
     NO2: 1.0
   A: '7.90e+16'
   B: 0.0
-  C: '14000.0'
+  C: '-14000.0'
 - type: ARRHENIUS
   reactants:
     BZCO_O2: 1.0
@@ -806,7 +806,7 @@
     R2O2: 1.0
   A: '1.25e-11'
   B: 0.0
-  C: '-240.0'
+  C: '240.0'
 - type: ARRHENIUS
   reactants:
     BZCO_O2: 1.0
@@ -817,7 +817,7 @@
     O3: 0.25
   A: '4.30e-13'
   B: 0.0
-  C: '-1040.0'
+  C: '1040.0'
 - type: ARRHENIUS
   reactants:
     BZCO_O2: 1.0
@@ -836,7 +836,7 @@
     HCHO: 1.0
   A: '1.80e-12'
   B: 0.0
-  C: '-500.0'
+  C: '500.0'
 - type: ARRHENIUS
   reactants:
     BZCO_O2: 1.0
@@ -869,7 +869,7 @@
     R2O2: 1.0
   A: '2.90e-12'
   B: 0.0
-  C: '-500.0'
+  C: '500.0'
 - type: ARRHENIUS
   reactants:
     BZCO_O2: 1.0
@@ -881,7 +881,7 @@
     R2O2: 1.0
   A: '2.90e-12'
   B: 0.0
-  C: '-500.0'
+  C: '500.0'
 - type: ARRHENIUS
   reactants:
     BZCO_O2: 2.0
@@ -890,7 +890,7 @@
     R2O2: 2.0
   A: '2.90e-12'
   B: 0.0
-  C: '-500.0'
+  C: '500.0'
 - type: ARRHENIUS
   reactants:
     MA_RCO3: 1.0
@@ -908,7 +908,7 @@
     NO2: 1.0
   A: '1.60e+16'
   B: 0.0
-  C: '13486.0'
+  C: '-13486.0'
 - type: ARRHENIUS
   reactants:
     MA_RCO3: 1.0
@@ -919,7 +919,7 @@
     CCO_O2: 1.0
   A: '1.25e-11'
   B: 0.0
-  C: '-240.0'
+  C: '240.0'
 - type: ARRHENIUS
   reactants:
     MA_RCO3: 1.0
@@ -930,7 +930,7 @@
     O3: 0.25
   A: '4.30e-13'
   B: 0.0
-  C: '-1040.0'
+  C: '1040.0'
 - type: ARRHENIUS
   reactants:
     MA_RCO3: 1.0
@@ -949,7 +949,7 @@
     HCHO: 1.0
   A: '1.80e-12'
   B: 0.0
-  C: '-500.0'
+  C: '500.0'
 - type: ARRHENIUS
   reactants:
     MA_RCO3: 1.0
@@ -981,7 +981,7 @@
     CCO_O2: 1.0
   A: '2.90e-12'
   B: 0.0
-  C: '-500.0'
+  C: '500.0'
 - type: ARRHENIUS
   reactants:
     MA_RCO3: 1.0
@@ -993,7 +993,7 @@
     RO2_R: 1.0
   A: '2.90e-12'
   B: 0.0
-  C: '-500.0'
+  C: '500.0'
 - type: ARRHENIUS
   reactants:
     MA_RCO3: 1.0
@@ -1005,7 +1005,7 @@
     R2O2: 1.0
   A: '2.90e-12'
   B: 0.0
-  C: '-500.0'
+  C: '500.0'
 - type: ARRHENIUS
   reactants:
     MA_RCO3: 2.0
@@ -1014,7 +1014,7 @@
     CCO_O2: 2.0
   A: '2.90e-12'
   B: 0.0
-  C: '-500.0'
+  C: '500.0'
 - type: ARRHENIUS
   reactants:
     TBU_O: 1.0
@@ -1030,7 +1030,7 @@
     C_O2: 1.0
   A: '7.50e+14'
   B: 0.0
-  C: '8152.0'
+  C: '-8152.0'
 - type: ARRHENIUS
   reactants:
     BZ_O: 1.0
@@ -1039,7 +1039,7 @@
     NPHE: 1.0
   A: '2.30e-11'
   B: 0.0
-  C: '-150.0'
+  C: '150.0'
 - type: ARRHENIUS
   reactants:
     BZ_O: 1.0
@@ -1048,7 +1048,7 @@
     PHEN: 1.0
   A: '1.90e-13'
   B: 0.0
-  C: '-1300.0'
+  C: '1300.0'
 - type: ARRHENIUS
   reactants:
     BZ_O: 1.0
@@ -1064,7 +1064,7 @@
     XC: 6.0
   A: '7.50e+14'
   B: 0.0
-  C: '8152.0'
+  C: '-8152.0'
 - type: ARRHENIUS
   reactants:
     BZNO2_O: 1.0
@@ -1073,7 +1073,7 @@
     NPHE: 1.0
   A: '2.30e-11'
   B: 0.0
-  C: '-150.0'
+  C: '150.0'
 - type: ARRHENIUS
   reactants:
     BZNO2_O: 1.0
@@ -1081,7 +1081,7 @@
     NPHE: 1.0
   A: '1.90e-13'
   B: 0.0
-  C: '-1300.0'
+  C: '1300.0'
 - type: PHOTOLYSIS
   reactants:
     HCHO: 1.0
@@ -1098,7 +1098,7 @@
     CO: 1.0
   A: '8.60e-12'
   B: 0.0
-  C: '-20.0'
+  C: '20.0'
 - type: ARRHENIUS
   reactants:
     HCHO: 1.0
@@ -1107,7 +1107,7 @@
     HOCOO: 1.0
   A: '9.70e-15'
   B: 0.0
-  C: '-625.0'
+  C: '625.0'
 - type: ARRHENIUS
   reactants:
     HOCOO: 1.0
@@ -1116,7 +1116,7 @@
     HCHO: 1.0
   A: '2.40e+12'
   B: 0.0
-  C: '7000.0'
+  C: '-7000.0'
 - type: ARRHENIUS
   reactants:
     HOCOO: 1.0
@@ -1127,7 +1127,7 @@
     HO2: 1.0
   A: '2.80e-12'
   B: 0.0
-  C: '-285.0'
+  C: '285.0'
 - type: ARRHENIUS
   reactants:
     HCHO: 1.0
@@ -1138,7 +1138,7 @@
     CO: 1.0
   A: '2.00e-12'
   B: 0.0
-  C: '2431.0'
+  C: '-2431.0'
 - type: ARRHENIUS
   reactants:
     CCHO: 1.0
@@ -1147,7 +1147,7 @@
     CCO_O2: 1.0
   A: '5.60e-12'
   B: 0.0
-  C: '-310.0'
+  C: '310.0'
 - type: PHOTOLYSIS
   reactants:
     CCHO: 1.0
@@ -1165,7 +1165,7 @@
     CCO_O2: 1.0
   A: '1.40e-12'
   B: 0.0
-  C: '1860.0'
+  C: '-1860.0'
 - type: ARRHENIUS
   reactants:
     RCHO: 1.0
@@ -1195,7 +1195,7 @@
     RCO_O2: 1.0
   A: '1.40e-12'
   B: 0.0
-  C: '1771.0'
+  C: '-1771.0'
 - type: ARRHENIUS
   reactants:
     ACET: 1.0
@@ -1206,7 +1206,7 @@
     R2O2: 1.0
   A: '1.10e-12'
   B: 0.0
-  C: '520.0'
+  C: '-520.0'
 - type: PHOTOLYSIS
   reactants:
     ACET: 1.0
@@ -1228,7 +1228,7 @@
     CCHO: 0.482
     RCHO: 0.37
   A: '1.30e-12'
-  C: '25.0'
+  C: '-25.0'
   B: '2.0'
 - type: PHOTOLYSIS
   reactants:
@@ -1246,7 +1246,7 @@
     HCHO: 1.0
     HO2: 1.0
   A: '3.10e-12'
-  C: '360.0'
+  C: '-360.0'
   B: '2.0'
 - type: ARRHENIUS
   reactants:
@@ -1258,7 +1258,7 @@
     C_O2: 0.65
   A: '2.90e-12'
   B: 0.0
-  C: '-190.0'
+  C: '190.0'
 - type: PHOTOLYSIS
   reactants:
     COOH: 1.0
@@ -1312,7 +1312,7 @@
     RCO_O2: 0.37
   A: '2.80e-12'
   B: 0.0
-  C: '2376.0'
+  C: '-2376.0'
 - type: PHOTOLYSIS
   reactants:
     MGLY: 1.0
@@ -1339,7 +1339,7 @@
     CCO_O2: 1.0
   A: '1.40e-12'
   B: 0.0
-  C: '1895.0'
+  C: '-1895.0'
 - type: PHOTOLYSIS
   reactants:
     BACL: 1.0
@@ -1410,7 +1410,7 @@
     BZCO_O2: 1.0
   A: '1.40e-12'
   B: 0.0
-  C: '1872.0'
+  C: '-1872.0'
 - type: ARRHENIUS
   reactants:
     METHACRO: 1.0
@@ -1424,7 +1424,7 @@
     MA_RCO3: 0.5
   A: '1.86e-11'
   B: 0.0
-  C: '-176.0'
+  C: '176.0'
 - type: ARRHENIUS
   reactants:
     METHACRO: 1.0
@@ -1440,7 +1440,7 @@
     HCOOH: 0.333
   A: '1.36e-15'
   B: 0.0
-  C: '2114.0'
+  C: '-2114.0'
 - type: ARRHENIUS
   reactants:
     METHACRO: 1.0
@@ -1452,7 +1452,7 @@
     MA_RCO3: 0.5
   A: '1.50e-12'
   B: 0.0
-  C: '1726.0'
+  C: '-1726.0'
 - type: ARRHENIUS
   reactants:
     METHACRO: 1.0
@@ -1486,7 +1486,7 @@
     MGLY: 0.3
   A: '4.14e-12'
   B: 0.0
-  C: '-453.0'
+  C: '453.0'
 - type: ARRHENIUS
   reactants:
     MVK: 1.0
@@ -1502,7 +1502,7 @@
     HCOOH: 0.351
   A: '7.51e-16'
   B: 0.0
-  C: '1520.0'
+  C: '-1520.0'
 - type: ARRHENIUS
   reactants:
     MVK: 1.0
@@ -1714,7 +1714,7 @@
     C_O2: 1.0
   A: '2.15e-12'
   B: 0.0
-  C: '1735.0'
+  C: '-1735.0'
 - type: ARRHENIUS
   reactants:
     ETHENE: 1.0
@@ -1725,7 +1725,7 @@
     CCHO: 0.195
   A: '1.96e-12'
   B: 0.0
-  C: '-438.0'
+  C: '438.0'
 - type: ARRHENIUS
   reactants:
     ETHENE: 1.0
@@ -1738,7 +1738,7 @@
     HCOOH: 0.37
   A: '9.14e-15'
   B: 0.0
-  C: '2580.0'
+  C: '-2580.0'
 - type: ARRHENIUS
   reactants:
     ETHENE: 1.0
@@ -1747,7 +1747,7 @@
     RO2_R: 1.0
     RCHO: 1.0
   A: '4.39e-13'
-  C: '2282.0'
+  C: '-2282.0'
   B: '2.0'
 - type: ARRHENIUS
   reactants:
@@ -1763,7 +1763,7 @@
     GLY: 0.009
   A: '1.04e-11'
   B: 0.0
-  C: '792.0'
+  C: '-792.0'
 - type: ARRHENIUS
   reactants:
     ISOPRENE: 1.0
@@ -1778,7 +1778,7 @@
     ISOPROD: 0.357
   A: '2.50e-11'
   B: 0.0
-  C: '-408.0'
+  C: '408.0'
 - type: ARRHENIUS
   reactants:
     ISOPRENE: 1.0
@@ -1798,7 +1798,7 @@
     RCO_OH: 0.15
   A: '7.86e-15'
   B: 0.0
-  C: '1912.0'
+  C: '-1912.0'
 - type: ARRHENIUS
   reactants:
     ISOPRENE: 1.0
@@ -1811,7 +1811,7 @@
     ISOPROD: 0.936
   A: '3.03e-12'
   B: 0.0
-  C: '448.0'
+  C: '-448.0'
 - type: ARRHENIUS
   reactants:
     ISOPRENE: 1.0
@@ -1837,7 +1837,7 @@
     PROD2: 0.276
   A: '1.83e-11'
   B: 0.0
-  C: '-449.0'
+  C: '449.0'
 - type: ARRHENIUS
   reactants:
     TERP_SURR: 1.0
@@ -1861,7 +1861,7 @@
     RCO_OH: 0.189
   A: '1.08e-15'
   B: 0.0
-  C: '821.0'
+  C: '-821.0'
 - type: ARRHENIUS
   reactants:
     TERP_SURR: 1.0
@@ -1875,7 +1875,7 @@
     RNO3: 0.276
   A: '3.66e-12'
   B: 0.0
-  C: '-175.0'
+  C: '175.0'
 - type: ARRHENIUS
   reactants:
     TERP_SURR: 1.0
@@ -1907,7 +1907,7 @@
     CCO_O2: 0.0055
     PROD2: 0.23975
   A: ((((1.37e-12) + (9.87e-12)) + (1.019e-11)) + (5.946e-12)) + (1.112e-11)
-  C: '498.0'
+  C: '-498.0'
   B: '2.0'
 - type: ARRHENIUS
   reactants:
@@ -1929,7 +1929,7 @@
     BACL: 0.0435
   A: (1.81e-12) + (2.640e-11)
   B: 0.0
-  C: '-355.0'
+  C: '355.0'
 - type: ARRHENIUS
   reactants:
     OLE_SURR: 1.0
@@ -1949,7 +1949,7 @@
     ISOPROD: 0.0125
   A: (7.095e-12) + (1.743e-11)
   B: 0.0
-  C: '-451.0'
+  C: '451.0'
 - type: ARRHENIUS
   reactants:
     OLE_SURR: 1.0
@@ -1978,7 +1978,7 @@
     MVK: 0.0095
   A: (2.617e-15) + (5.022e-16)
   B: 0.0
-  C: '1640.0'
+  C: '-1640.0'
 - type: ARRHENIUS
   reactants:
     OLE_SURR: 1.0
@@ -1999,7 +1999,7 @@
     MVK: 0.024
   A: (4.453e-14) + (7.265e-13)
   B: 0.0
-  C: '376.0'
+  C: '-376.0'
 - type: ARRHENIUS
   reactants:
     OLE_SURR: 1.0
@@ -2015,4 +2015,4 @@
     METHACRO: 0.006
   A: (1.074e-11) + (2.085e-11)
   B: 0.0
-  C: '234.0'
+  C: '-234.0'
