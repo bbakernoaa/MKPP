@@ -147,19 +147,19 @@ def _evaluate_reaction_fluxes(mech: MechanismDefinition) -> dict[str, Any]:
             A = parse_sym_or_val(p["A"])
             B = parse_sym_or_val(p.get("B", 0.0))
             C = parse_sym_or_val(p.get("C", 0.0))
-            k_arr = A * (Temp / 300) ** B * sp.exp(-C / Temp)
+            k_arr = A * (Temp / 300) ** B * sp.exp(C / Temp)
             flux = k_arr
 
         elif rtype == "DUMMYTROE":
             k0_A = parse_sym_or_val(p["k0"]["A"])
             k0_B = parse_sym_or_val(p["k0"].get("B", 0.0))
             k0_C = parse_sym_or_val(p["k0"].get("C", 0.0))
-            k0_A * (Temp / 300) ** k0_B * sp.exp(-k0_C / Temp)
+            k0_A * (Temp / 300) ** k0_B * sp.exp(k0_C / Temp)
 
             kinf_A = parse_sym_or_val(p["kinf"]["A"])
             kinf_B = parse_sym_or_val(p["kinf"].get("B", 0.0))
             kinf_C = parse_sym_or_val(p["kinf"].get("C", 0.0))
-            kinf_A * (Temp / 300) ** kinf_B * sp.exp(-kinf_C / Temp)
+            kinf_A * (Temp / 300) ** kinf_B * sp.exp(kinf_C / Temp)
 
             parse_sym_or_val(p.get("Fc", 0.6))
 
@@ -193,8 +193,8 @@ def _evaluate_reaction_fluxes(mech: MechanismDefinition) -> dict[str, Any]:
 
             CF = parse_sym_or_val(p.get("Fc", 0.6))
 
-            K0 = A0 * sp.exp(-C0 / Temp) * (Temp / 300) ** B0
-            K1 = A1 * sp.exp(-C1 / Temp) * (Temp / 300) ** B1
+            K0 = A0 * sp.exp(C0 / Temp) * (Temp / 300) ** B0
+            K1 = A1 * sp.exp(C1 / Temp) * (Temp / 300) ** B1
             K0 = K0 * species_symbols.get("AIR", M_density)
             K_ratio = K0 / K1
             F_broadening = CF ** (1.0 / (1.0 + (sp.log(K_ratio, 10)) ** 2))
@@ -207,9 +207,9 @@ def _evaluate_reaction_fluxes(mech: MechanismDefinition) -> dict[str, Any]:
             C2 = parse_sym_or_val(p.get("C2", 0.0))
             A3 = parse_sym_or_val(p.get("A3", 0.0))
             C3 = parse_sym_or_val(p.get("C3", 0.0))
-            K0 = A0 * sp.exp(-C0 / Temp)
-            K2 = A2 * sp.exp(-C2 / Temp)
-            K3 = A3 * sp.exp(-C3 / Temp) * species_symbols.get("AIR", M_density)
+            K0 = A0 * sp.exp(C0 / Temp)
+            K2 = A2 * sp.exp(C2 / Temp)
+            K3 = A3 * sp.exp(C3 / Temp) * species_symbols.get("AIR", M_density)
             flux = K0 + K3 / (1.0 + K3 / K2)
 
         elif rtype == "EP3":
@@ -217,8 +217,8 @@ def _evaluate_reaction_fluxes(mech: MechanismDefinition) -> dict[str, Any]:
             C1 = parse_sym_or_val(p.get("C1", 0.0))
             A2 = parse_sym_or_val(p.get("A2", 0.0))
             C2 = parse_sym_or_val(p.get("C2", 0.0))
-            K1 = A1 * sp.exp(-C1 / Temp)
-            K2 = A2 * sp.exp(-C2 / Temp)
+            K1 = A1 * sp.exp(C1 / Temp)
+            K2 = A2 * sp.exp(C2 / Temp)
             flux = K1 + K2 * species_symbols.get("AIR", M_density)
 
         elif rtype == "HETEROGENEOUS":
@@ -235,7 +235,7 @@ def _evaluate_reaction_fluxes(mech: MechanismDefinition) -> dict[str, Any]:
             elif "A" in p:
                 A = parse_sym_or_val(p["A"])
                 C = parse_sym_or_val(p.get("C", 0.0))
-                flux = A * sp.exp(-C / Temp)
+                flux = A * sp.exp(C / Temp)
             else:
                 flux = sp.Symbol(f"Rate_{idx}", real=True)
 

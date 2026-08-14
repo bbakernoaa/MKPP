@@ -158,3 +158,38 @@ def test_sympy_explicit_reaction_types():
 
     # Just asserting the script didn't crash and actually processed all 5 types into the matrix.
     assert J.shape == (4, 4)
+
+
+def test_arrhenius_micm_sign_convention():
+    from mkpp.lowering import _evaluate_reaction_fluxes
+    from mkpp.model import PhaseMode, SpeciesDefinition
+    import sympy as sp
+
+    mech = MechanismDefinition(
+        name="sign_test",
+        description="Test Arrhenius sign convention",
+        aerosol_representation=AerosolRepresentation.BULK,
+        species=[SpeciesDefinition(name="A", phase=PhaseMode.GAS), SpeciesDefinition(name="B", phase=PhaseMode.GAS)],
+        phases=[],
+        reactions=[
+            ReactionDefinition(
+                reaction_type="ARRHENIUS",
+                reactants=["A"],
+                products=["B"],
+                rate_expression="",
+                parameters={"A": "2.15e-12", "B": 0.0, "C": -1735.0},
+            )
+        ],
+    )
+
+    built = _evaluate_reaction_fluxes(mech)
+    f_explicit = built["f_explicit"]
+    A_sym = built["species_symbols"]["A"]
+    dydt_B = f_explicit[1]
+    rate_expr = dydt_B / A_sym
+    # Find Temp symbol from free_symbols
+    temp_sym = next(s for s in rate_expr.free_symbols if s.name == "Temp")
+    rate_val = rate_expr.subs({temp_sym: 300.0})
+    expected_val = 2.15e-12 * sp.exp(-1735.0 / 300.0)
+    assert abs(float(rate_val) - float(expected_val)) < 1e-15
+

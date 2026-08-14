@@ -104,7 +104,7 @@ def build_micm_ode_system(mech: Any, env_dict: dict[str, Any] | None = None) -> 
             A = _parse_param(p.get("A", 0.0))
             B = _parse_param(p.get("B", 0.0))
             C = _parse_param(p.get("C", 0.0))
-            k_arr = A * ((T / 300.0) ** B) * np.exp(-C / T)
+            k_arr = A * ((T / 300.0) ** B) * np.exp(C / T)
             rate_constants.append(("ARRHENIUS", k_arr))
 
         elif rtype in ("TROE", "FALLOFF"):
@@ -116,8 +116,8 @@ def build_micm_ode_system(mech: Any, env_dict: dict[str, Any] | None = None) -> 
             A1, B1, C1 = _parse_param(kinf_p.get("A")), _parse_param(kinf_p.get("B")), _parse_param(kinf_p.get("C"))
             Fc = _parse_param(p.get("Fc", 0.6))
 
-            k0 = A0 * np.exp(-C0 / T) * ((T / 300.0) ** B0) * M_density
-            kinf = A1 * np.exp(-C1 / T) * ((T / 300.0) ** B1)
+            k0 = A0 * np.exp(C0 / T) * ((T / 300.0) ** B0) * M_density
+            kinf = A1 * np.exp(C1 / T) * ((T / 300.0) ** B1)
             k_ratio = k0 / (kinf + 1e-30)
             F = Fc ** (1.0 / (1.0 + (np.log10(k_ratio + 1e-30)) ** 2))
             k_troe = (k0 / (1.0 + k_ratio)) * F

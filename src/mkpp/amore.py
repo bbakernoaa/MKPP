@@ -156,7 +156,7 @@ def apply_amore_lumping(mech: MechanismDefinition, rules: dict[str, list[str]]) 
                 A = r.parameters.get("A", "0.0")
                 B = r.parameters.get("B", "0.0")
                 C = r.parameters.get("C", "0.0")
-                expr = f"({A}) * (Temp/300.0)**({B}) * exp(-({C})/Temp)"
+                expr = f"({A}) * (Temp/300.0)**({B}) * exp(({C})/Temp)"
                 full_rate_exprs.append(expr)
 
             base_r.parameters["A"] = f"({' + '.join(full_rate_exprs)}) / {N}.0"
