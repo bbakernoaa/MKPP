@@ -443,7 +443,7 @@ This enables the formulation of a **Unified Jacobian** where gas kinetics, photo
 
 * **Formulation:** The standard temperature-dependent bimolecular or termolecular rate constant.
 
-$$k(T) = A \cdot \left(\frac{T}{300}\right)^B \cdot \exp\left(-\frac{C}{T}\right)$$
+$$k(T) = A \cdot \left(\frac{T}{300}\right)^B \cdot \exp\left(\frac{C}{T}\right)$$
 
 
 * **Physical Drivers:** Driven purely by ambient Temperature ($T$) provided by the `METEO_STRUCT` memory view.

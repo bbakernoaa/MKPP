@@ -22,7 +22,7 @@ reactions:
     parameters:
       A: 1.8e-12
       B: 0.0
-      C: 1370.0
+      C: -1370.0
 ```
 
 ---

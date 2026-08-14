@@ -1,6 +1,7 @@
 #pragma once
 #include <Kokkos_Core.hpp>
 // Generated solver for small_strato
+// SZA Workload Sorted: true
 // Hysteresis/Spline Continuous Transition: true
 namespace mkpp {
   // Pure Kokkos abstractions (no raw pragmas allowed)

@@ -1,6 +1,7 @@
 #pragma once
 #include <Kokkos_Core.hpp>
 // Generated solver for carbon
+// SZA Workload Sorted: true
 namespace mkpp {
   // Pure Kokkos abstractions (no raw pragmas allowed)
   // Bidirectional Host Interface (Zero-Copy)

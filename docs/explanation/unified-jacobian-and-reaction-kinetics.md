@@ -13,20 +13,20 @@ $$R_k = k(T, P, M, \dots) \prod_{j \in \text{reactants}} [C_j]^{s_{j,k}}$$
 where $s_{j,k}$ is the stoichiometric coefficient of reactant $j$.
 
 ### 1.1 ARRHENIUS
-Modified Arrhenius rate laws account for temperature-dependent rate constants:
+Modified Arrhenius rate laws account for temperature-dependent rate constants (aligned with MICM sign conventions):
 
-$$k(T) = A \cdot \left(\frac{T}{300}\right)^B \cdot \exp\left(-\frac{C}{T}\right)$$
+$$k(T) = A \cdot \left(\frac{T}{300}\right)^B \cdot \exp\left(\frac{C}{T}\right)$$
 
 - **`A`**: Pre-exponential factor $[\text{cm}^3/\text{molec/s}$ or $1/\text{s}]$.
 - **`B`**: Temperature dependence exponent $n$.
-- **`C`**: Activation energy parameter $E_a / R$ $[K]$.
+- **`C`**: Activation energy parameter $-E_a / R$ $[K]$ (matching MICM).
 
 ### 1.2 TROE / FALLOFF
 Pressure-dependent unimolecular and recombination reactions use low-pressure ($k_0$) and high-pressure ($k_\infty$) limits:
 
-$$k_0(T) = A_0 \left(\frac{T}{300}\right)^{B_0} \exp\left(-\frac{C_0}{T}\right) \cdot [M]$$
+$$k_0(T) = A_0 \left(\frac{T}{300}\right)^{B_0} \exp\left(\frac{C_0}{T}\right) \cdot [M]$$
 
-$$k_\infty(T) = A_\infty \left(\frac{T}{300}\right)^{B_\infty} \exp\left(-\frac{C_\infty}{T}\right)$$
+$$k_\infty(T) = A_\infty \left(\frac{T}{300}\right)^{B_\infty} \exp\left(\frac{C_\infty}{T}\right)$$
 
 $$P_r = \frac{k_0(T)}{k_\infty(T)}, \quad F = F_c^{\frac{1}{1 + \left(\log_{10} P_r\right)^2}}$$
 

@@ -58,13 +58,13 @@ Each species entry defines physical phase, solver variable mode, and elemental s
 ## 3. Supported Reaction Types & OpenAtmos YAML Examples
 
 ### 3.1 `ARRHENIUS`
-Standard and modified Arrhenius reaction rate laws for gas-phase kinetics.
+Standard and modified Arrhenius reaction rate laws for gas-phase kinetics, aligned with MICM parameter sign conventions.
 
-- **Formula**: $k(T) = A \cdot \left(\frac{T}{300}\right)^B \cdot \exp\left(-\frac{C}{T}\right)$
+- **Formula**: $k(T) = A \cdot \left(\frac{T}{300}\right)^B \cdot \exp\left(\frac{C}{T}\right)$
 - **Parameters**:
   - `A` (*float*, required): Pre-exponential factor $[\text{cm}^3/\text{molec/s}$ or $1/\text{s}]$.
   - `B` (*float*, optional, default `0.0`): Temperature exponent $n$.
-  - `C` (*float*, optional, default `0.0`): Activation energy parameter $E_a / R$ $[K]$.
+  - `C` (*float*, optional, default `0.0`): Activation energy parameter $-E_a / R$ $[K]$ (matching MICM's sign convention).
 
 #### OpenAtmos YAML Entry
 ```yaml
@@ -78,10 +78,10 @@ reactions:
     parameters:
       A: 1.2e-11
       B: 0.0
-      C: 260.0
+      C: -260.0
 ```
 
-- **Explanation**: $A$ sets the collision frequency factor, $B$ accounts for non-exponential temperature scaling, and $C$ represents activation energy $E_a / R$. MKPP lowers this to $k(T) = 1.2 \times 10^{-11} \cdot (T / 300)^0 \cdot \exp(-260 / T)$.
+- **Explanation**: $A$ sets the collision frequency factor, $B$ accounts for non-exponential temperature scaling, and $C$ represents $-E_a / R$. MKPP lowers this to $k(T) = 1.2 \times 10^{-11} \cdot (T / 300)^0 \cdot \exp(-260 / T)$.
 
 ---
 
