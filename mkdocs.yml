@@ -86,6 +86,7 @@ nav:
       - Compile Adjoint & TLM Solvers: how-to/compile-adjoint-and-tlm-solvers.md
   - Reference:
       - C++ & CLI API Reference: reference/aot-solver-api.md
+      - Performance & Profiling Guide: performance.md
       - Reaction Types & YAML Schema: reference/reaction-types-and-yaml-schema.md
       - Python Code API:
           - CLI: reference/api/cli.md

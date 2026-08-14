@@ -1,0 +1,69 @@
+name: Performance Regression Gate
+
+on:
+  pull_request:
+    branches: [ "main", "develop" ]
+  workflow_dispatch:
+
+jobs:
+  perf-regression:
+    name: Callgrind Performance Regression Check
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/bbakernoaa/mkpp-ci-env:latest
+
+    steps:
+      - name: Checkout PR Branch
+        uses: actions/checkout@v4
+        with:
+          path: pr_repo
+
+      - name: Checkout Base Branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.base_ref || 'develop' }}
+          path: base_repo
+
+      - name: Install Valgrind
+        run: |
+          apt-get update && apt-get install -y valgrind
+
+      - name: Mark Git Safe Directory
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE/pr_repo"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE/base_repo"
+
+      - name: Build Base Branch Benchmark Binary
+        run: |
+          cd base_repo
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DMKPP_ENABLE_BENCHMARK=ON -DKokkos_ROOT=/opt/kokkos
+          cmake --build build --target mkpp_bench --parallel
+
+      - name: Build PR Branch Benchmark Binary
+        run: |
+          cd pr_repo
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DMKPP_ENABLE_BENCHMARK=ON -DKokkos_ROOT=/opt/kokkos
+          cmake --build build --target mkpp_bench --parallel
+
+      - name: Profile Base Branch (chapman, t1)
+        run: |
+          mkdir -p /tmp/perf_base /tmp/perf_pr
+          ./pr_repo/scripts/profile_mkpp.sh base_repo/build 2000 5 chapman /tmp/perf_base > /tmp/base_chapman.tsv
+          ./pr_repo/scripts/profile_mkpp.sh base_repo/build 2000 5 t1 /tmp/perf_base > /tmp/base_t1.tsv
+          cat /tmp/base_chapman.tsv > /tmp/base_profile.tsv
+          tail -n +2 /tmp/base_t1.tsv >> /tmp/base_profile.tsv
+          echo "Base Branch Instruction Profile Summary:"
+          cat /tmp/base_profile.tsv
+
+      - name: Profile PR Branch (chapman, t1)
+        run: |
+          ./pr_repo/scripts/profile_mkpp.sh pr_repo/build 2000 5 chapman /tmp/perf_pr > /tmp/pr_chapman.tsv
+          ./pr_repo/scripts/profile_mkpp.sh pr_repo/build 2000 5 t1 /tmp/perf_pr > /tmp/pr_t1.tsv
+          cat /tmp/pr_chapman.tsv > /tmp/pr_profile.tsv
+          tail -n +2 /tmp/pr_t1.tsv >> /tmp/pr_profile.tsv
+          echo "PR Branch Instruction Profile Summary:"
+          cat /tmp/pr_profile.tsv
+
+      - name: Compare Profiles & Check for Regressions
+        run: |
+          python3 ./pr_repo/scripts/compare_profiles.py /tmp/base_profile.tsv /tmp/pr_profile.tsv --tolerance 0.0
