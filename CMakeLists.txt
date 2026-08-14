@@ -29,6 +29,13 @@ option(MKPP_ENABLE_MICM_COMPARE
        "Fetch NCAR/micm and build direct C++ side-by-side comparison benchmark"
        OFF)
 
+option(MKPP_ENABLE_BENCHMARK "Build MKPP benchmark suite" OFF)
+
+if(MKPP_ENABLE_BENCHMARK)
+  include(CheckIncludeFile)
+  add_subdirectory(test/benchmark)
+endif()
+
 if(MKPP_ENABLE_MICM_COMPARE)
   set(CMAKE_CXX_STANDARD
       20

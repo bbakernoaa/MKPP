@@ -62,8 +62,9 @@ def format_eqn(eqn_str, species_list, state_var="state", use_parentheses=True, k
     """
     import sympy as sp
 
-    # 1. Clean up double negatives first because sympy might fail to parse `--` in strings
+    # 1. Clean up double negatives and malformed trailing dots on floats
     s = str(eqn_str).replace("--", "+").replace("^+", "^").replace("**+", "**")
+    s = re.sub(r"(\d+\.\d+)\.+", r"\1", s)
     if s == "0":
         return "0.0"
 
