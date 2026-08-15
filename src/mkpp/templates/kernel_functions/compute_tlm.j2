@@ -15,6 +15,7 @@
 
   Requirements: 4.6
 #}
+#ifdef MKPP_ENABLE_ADJOINT
       template <class StateView, class DeltaView, class RateView>
 {% if has_equilibrium %}
       KOKKOS_INLINE_FUNCTION void compute_tlm(const StateView& state, const DeltaView& delta_C, RateView& dF_block, const double* jvals, const double temp, const double rh) const {
@@ -33,3 +34,4 @@
 {% endfor %}
 {% endfor %}
       }
+#endif

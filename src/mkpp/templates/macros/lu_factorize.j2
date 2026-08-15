@@ -9,21 +9,21 @@
       is_reduction   : if True, reserved for auto-reduction variant (future use)
       annotated_expressions : optional annotated expression data for reduction variant (future use)
 -#}
-{% macro emit_lu_factorize(lu_expressions, blocks=none, is_reduction=false, annotated_expressions=none) %}
+{% macro emit_lu_factorize(lu_expressions, blocks=none, is_reduction=false, annotated_expressions=none, indent="          ") %}
 {% if blocks %}
 {% set ns = namespace(emitted_block_nums=[]) %}
 {% for entry in lu_expressions %}
 {% for block_num in range(blocks | length) %}
 {% if entry.i in blocks[block_num].indices and block_num not in ns.emitted_block_nums %}
 {% set ns.emitted_block_nums = ns.emitted_block_nums + [block_num] %}
-// Block {{ block_num }}: species [{{ blocks[block_num].species_names | join(', ') }}]
+{{ indent }}// Block {{ block_num }}: species [{{ blocks[block_num].species_names | join(', ') }}]
 {% endif %}
 {% endfor %}
-double {{ entry.kind }}_{{ entry.i }}_{{ entry.j }} = {{ entry.expr }};
+{{ indent }}double {{ entry.kind }}_{{ entry.i }}_{{ entry.j }} = {{ entry.expr }};
 {% endfor %}
 {% else %}
 {% for entry in lu_expressions %}
-double {{ entry.kind }}_{{ entry.i }}_{{ entry.j }} = {{ entry.expr }};
+{{ indent }}double {{ entry.kind }}_{{ entry.i }}_{{ entry.j }} = {{ entry.expr }};
 {% endfor %}
 {% endif %}
 {% endmacro %}

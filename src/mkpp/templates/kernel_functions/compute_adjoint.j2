@@ -14,6 +14,7 @@
 
   Requirements: 4.6
 #}
+#ifdef MKPP_ENABLE_ADJOINT
       template <class StateView, class JacView>
 {% if has_equilibrium %}
       KOKKOS_INLINE_FUNCTION void compute_adjoint(const StateView& state, JacView& J_adj_block, const double* jvals, const double temp, const double rh) const {
@@ -23,7 +24,10 @@
 {% else %}
       KOKKOS_INLINE_FUNCTION void compute_adjoint(const StateView& state, JacView& J_adj_block, const double* jvals) const {
 {% endif %}
+          // --- Sparse Analytical Adjoint Jacobian Entries J_adj_block(i, j) = J^T(i, j) ---
 {% for entry in adjoint_entries_state %}
-          J_adj_block({{ entry[0] }}, {{ entry[1] }}) = {{ entry[2] }};
+          // J^T({{ species[entry[0]].name }}, {{ species[entry[1]].name }}): d(d[{{ species[entry[1]].name }}]/dt) / d[{{ species[entry[0]].name }}]
+          J_adj_block(Species::{{ species[entry[0]].name }}, Species::{{ species[entry[1]].name }}) = {{ entry[2] }};
 {% endfor %}
       }
+#endif

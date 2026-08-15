@@ -73,22 +73,7 @@
 {{ emit_w_matrix(needed_w, non_zero_jac_set, "inv_g_h", num_species, is_reduction=false, blocks=blocks, indent="              ") }}
 
               // Symbolic LU Factorization (recomputed at each adjoint step)
-{% if blocks %}
-{% set ns = namespace(emitted_block_nums=[]) %}
-{% for entry in lu_expressions %}
-{% for block_num in range(blocks | length) %}
-{% if entry.i in blocks[block_num].indices and block_num not in ns.emitted_block_nums %}
-{% set ns.emitted_block_nums = ns.emitted_block_nums + [block_num] %}
-              // Block {{ block_num }}: species [{{ blocks[block_num].species_names | join(', ') }}]
-{% endif %}
-{% endfor %}
-              double {{ entry.kind }}_{{ entry.i }}_{{ entry.j }} = {{ entry.expr }};
-{% endfor %}
-{% else %}
-{% for entry in lu_expressions %}
-              double {{ entry.kind }}_{{ entry.i }}_{{ entry.j }} = {{ entry.expr }};
-{% endfor %}
-{% endif %}
+{{ emit_lu_factorize(lu_expressions, blocks=blocks, is_reduction=false, indent="              ") }}
 
               // --- Adjoint stage unrolling (s={{ tableau.stages }} stages, backward) ---
               // Driving vector: lam_k = lambda_{n+1} (constant for this step)

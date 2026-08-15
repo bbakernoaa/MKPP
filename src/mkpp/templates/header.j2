@@ -75,6 +75,7 @@ namespace mkpp {
 {% endfor %}
 {% endif %}
 {% if adjoint_enabled %}
+#ifdef MKPP_ENABLE_ADJOINT
   // Checkpoint buffer for discrete adjoint/TLM integration
   // Recompute-J strategy: only state is stored, Jacobian recomputed from saved state
   struct CheckpointBuffer {
@@ -84,6 +85,7 @@ namespace mkpp {
       double h[MAX_STEPS];
       double state[MAX_STEPS][NUM_SPECIES];  // saved concentrations at step entry
   };
+#endif
 
 {% endif %}
   template<typename DeviceType>
@@ -158,12 +160,14 @@ namespace mkpp {
 
 {% include "solver_variants/integrate_with_reduction.j2" %}
 {% if adjoint_enabled %}
+#ifdef MKPP_ENABLE_ADJOINT
 
 {% include "solver_variants/integrate_fwd_checkpoint.j2" %}
 
 {% include "solver_variants/integrate_adj.j2" %}
 
 {% include "solver_variants/integrate_tlm.j2" %}
+#endif
 {% endif %}
 {% if has_equilibrium and diagnostics_data %}
 

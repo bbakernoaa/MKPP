@@ -254,6 +254,7 @@ def run_compiler(
                 "f_implicit": cached_entry.f_implicit,
                 "f_explicit": cached_entry.f_explicit,
                 "symbolic_lu_plan": cached_entry.lu_plan,
+                "adjoint_matrix": cached_entry.jacobian_matrix.transpose() if cached_entry.jacobian_matrix is not None else None,
             }
             mech.sympy_metadata = sympy_meta
         else:

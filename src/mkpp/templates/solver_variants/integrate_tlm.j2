@@ -26,6 +26,7 @@
 
   Requirements: 4.5
 -#}
+{% from "macros/lu_factorize.j2" import emit_lu_factorize %}
       // Tangent Linear Model: forward propagation of perturbation δC
       // Uses checkpoint buffer from integrate_fwd_checkpoint().
       template <class StateView, class PertView>
@@ -75,22 +76,7 @@
 {% endfor %}
 
               // Symbolic LU Factorization
-{% if blocks %}
-{% set ns = namespace(emitted_block_nums=[]) %}
-{% for entry in lu_expressions %}
-{% for block_num in range(blocks | length) %}
-{% if entry.i in blocks[block_num].indices and block_num not in ns.emitted_block_nums %}
-{% set ns.emitted_block_nums = ns.emitted_block_nums + [block_num] %}
-              // Block {{ block_num }}: [{{ blocks[block_num].species_names | join(', ') }}]
-{% endif %}
-{% endfor %}
-              double {{ entry.kind }}_{{ entry.i }}_{{ entry.j }} = {{ entry.expr }};
-{% endfor %}
-{% else %}
-{% for entry in lu_expressions %}
-              double {{ entry.kind }}_{{ entry.i }}_{{ entry.j }} = {{ entry.expr }};
-{% endfor %}
-{% endif %}
+{{ emit_lu_factorize(lu_expressions, blocks=blocks, is_reduction=false, indent="              ") }}
 
 {% for stage in range(1, tableau.stages + 1) %}
 

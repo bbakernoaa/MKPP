@@ -337,6 +337,7 @@ namespace Kokkos {
             [
                 compiler,
                 "-std=c++17",
+                "-DMKPP_ENABLE_ADJOINT",
                 "-fsyntax-only",
                 "-I",
                 str(tmp_path),

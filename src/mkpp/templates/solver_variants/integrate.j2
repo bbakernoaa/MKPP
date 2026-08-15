@@ -78,22 +78,7 @@
 {% endfor %}
 {{ emit_w_matrix(needed_w, non_zero_jac_set, "inv_g_dt", num_species, is_reduction=false, blocks=none, indent="          ") }}
           // Symbolic Doolittle Sparse LU Factorization
-{% if blocks %}
-{% set blk_ns = namespace(emitted_block_nums=[]) %}
-{% for entry in lu_expressions %}
-{% for block_num in range(blocks | length) %}
-{% if entry.i in blocks[block_num].indices and block_num not in blk_ns.emitted_block_nums %}
-{% set blk_ns.emitted_block_nums = blk_ns.emitted_block_nums + [block_num] %}
-          // Block {{ block_num }}: species [{{ blocks[block_num].species_names | join(', ') }}]
-{% endif %}
-{% endfor %}
-          double {{ entry.kind }}_{{ entry.i }}_{{ entry.j }} = {{ entry.expr }};
-{% endfor %}
-{% else %}
-{% for entry in lu_expressions %}
-          double {{ entry.kind }}_{{ entry.i }}_{{ entry.j }} = {{ entry.expr }};
-{% endfor %}
-{% endif %}
+{{ emit_lu_factorize(lu_expressions, blocks=blocks, is_reduction=false, indent="          ") }}
 {% set ns = namespace(current_F_prefix="", rhs_prefix="") %}
 {% for stage in range(1, tableau.stages + 1) %}
 

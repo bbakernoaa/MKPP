@@ -28,9 +28,9 @@ for MECH in "${MECHANISMS[@]}"; do
     echo "Compiling $MECH..."
     echo "========================================"
     if [ "$MECH" = "mechanisms/saprc99.yaml" ]; then
-        .venv/bin/python -m mkpp.cli compile "$MECH" --test-env "$TEST_ENV" --out "$OUT_DIR" --lump "mechanisms/lumping_rules_saprc99.yaml"
+        .venv/bin/python -m mkpp.cli compile "$MECH" --adjoint --test-env "$TEST_ENV" --out "$OUT_DIR" --lump "mechanisms/lumping_rules_saprc99.yaml"
     else
-        .venv/bin/python -m mkpp.cli compile "$MECH" --test-env "$TEST_ENV" --out "$OUT_DIR"
+        .venv/bin/python -m mkpp.cli compile "$MECH" --adjoint --test-env "$TEST_ENV" --out "$OUT_DIR"
     fi
     if [ $? -ne 0 ]; then
         echo "Error compiling $MECH"

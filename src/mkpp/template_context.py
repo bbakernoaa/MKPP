@@ -393,18 +393,22 @@ def build_template_context(
     context["jacobian_entries_state"] = jacobian_entries_state
 
     adjoint_entries_state = []
-    if sympy_meta and "adjoint_matrix" in sympy_meta:
-        J_adj = sympy_meta["adjoint_matrix"]
-        for i in range(J_adj.shape[0]):
-            for j in range(J_adj.shape[1]):
-                if J_adj[i, j] != 0:
-                    eqn = format_eqn(
-                        J_adj[i, j],
-                        mech.species,
-                        state_var="state",
-                        use_parentheses=True,
-                    )
-                    adjoint_entries_state.append((i, j, eqn))
+    if sympy_meta:
+        J_adj = sympy_meta.get("adjoint_matrix")
+        if J_adj is None and "jacobian_matrix" in sympy_meta and sympy_meta["jacobian_matrix"] is not None:
+            J_adj = sympy_meta["jacobian_matrix"].transpose()
+        if J_adj is not None:
+            for i in range(J_adj.shape[0]):
+                for j in range(J_adj.shape[1]):
+                    if J_adj[i, j] != 0:
+                        eqn = format_eqn(
+                            J_adj[i, j],
+                            mech.species,
+                            state_var="state",
+                            use_parentheses=True,
+                            keep_env_symbols=has_equilibrium,
+                        )
+                        adjoint_entries_state.append((i, j, eqn))
     context["adjoint_entries_state"] = adjoint_entries_state
 
     # --- Mass projector data for project_mass_conservation template ---

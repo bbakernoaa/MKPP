@@ -67,12 +67,8 @@
 {% if permutation %}
           // NOTE: State access uses permuted species ordering
 {% endif %}
-{% for i in range(num_species) %}
-{% if permutation %}
-          const double S_{{ i }} = state({{ permutation[i] }});
-{% else %}
-          const double S_{{ i }} = state({{ i }});
-{% endif %}
+{% for info in state_hoist_info %}
+          const double S_{{ info.reg_idx }} = state(Species::{{ info.name }});  // [{{ info.name }}]
 {% endfor %}
 
           // Analytical Jacobian & Iteration Matrix W = inv_g_dt*I - J (sparse)
@@ -81,7 +77,7 @@
 {% endfor %}
 {{ emit_w_matrix(needed_w, non_zero_jac_set, "inv_g_dt", num_species, is_reduction=false, blocks=blocks, indent="          ") }}
           // Symbolic Doolittle Sparse LU Factorization
-{{ emit_lu_factorize(lu_expressions, blocks=blocks, is_reduction=false) }}
+{{ emit_lu_factorize(lu_expressions, blocks=blocks, is_reduction=false, indent="          ") }}
 {#- === Stage loop (unrolled at template-render time) === -#}
 {% set ns = namespace(current_F_prefix="F1") %}
 {% for stage in range(1, tableau.stages + 1) %}
