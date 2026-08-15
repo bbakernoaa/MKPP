@@ -5,7 +5,7 @@ import re
 import sys
 
 
-def eval_jacobian_eqn(eqn_str, state_list, jvals_list=None):
+def eval_jacobian_eqn(eqn_str, state_list, jvals_list=None, local_vars=None):
     if jvals_list is None:
         jvals_list = [1.0e-5] * 128
     eqn = eqn_str.replace("exp(", "math.exp(")
@@ -21,6 +21,8 @@ def eval_jacobian_eqn(eqn_str, state_list, jvals_list=None):
         "state_list": state_list,
         "jvals_list": jvals_list,
     }
+    if local_vars:
+        eval_globals.update(local_vars)
     try:
         val = eval(eqn, eval_globals)
         return val
@@ -57,10 +59,33 @@ def main():
         if num_sp_match:
             num_species = int(num_sp_match.group(1))
 
+        species_enum_match = re.search(r"enum\s+(?:Species\s*:\s*int|Species)\s*\{(.*?)\};", content, re.DOTALL)
+        species_map = {}
+        if species_enum_match:
+            for line in species_enum_match.group(1).split(","):
+                parts = line.strip().split("=")
+                if len(parts) == 2:
+                    sp_name = parts[0].strip()
+                    sp_idx = int(parts[1].strip())
+                    species_map[sp_name] = sp_idx
+
         state_list = [1.0e10] * max(num_species + 10, 200)
 
-        matches_1d = re.findall(r"J_block\[(\d+)\]\s*=\s*(.+?);", content)
-        matches_2d = re.findall(r"J_block\((\d+),\s*(\d+)\)\s*=\s*(.+?);", content)
+        jac_match = re.search(r"void\s+compute_jacobian\s*\(.*?\)\s*const\s*\{(.*?)\n\s*\}", content, re.DOTALL)
+        jac_body = jac_match.group(1) if jac_match else content
+
+        local_vars = {}
+        for var_match in re.finditer(r"const\s+double\s+([a-zA-Z0-9_]+)\s*=\s*(.+?);", jac_body):
+            var_name = var_match.group(1)
+            var_eqn = var_match.group(2)
+            val = eval_jacobian_eqn(var_eqn, state_list, local_vars=local_vars)
+            local_vars[var_name] = val
+
+        matches_1d = re.findall(r"J_block\[(\d+)\]\s*=\s*(.+?);", jac_body)
+        matches_2d = re.findall(
+            r"J_block\((?:Species::)?([a-zA-Z0-9_]+),\s*(?:Species::)?([a-zA-Z0-9_]+)\)\s*=\s*(.+?);",
+            jac_body,
+        )
 
         if not matches_1d and not matches_2d:
             print("No Jacobian block found in HPP!", file=sys.stderr)
@@ -70,13 +95,14 @@ def main():
         if matches_1d:
             for idx_str, eqn in matches_1d:
                 idx = int(idx_str)
-                val = eval_jacobian_eqn(eqn, state_list)
+                val = eval_jacobian_eqn(eqn, state_list, local_vars=local_vars)
                 computed_J[idx] = val
         else:
             for row_str, col_str, eqn in matches_2d:
-                row, col = int(row_str), int(col_str)
+                row = int(row_str) if row_str.isdigit() else species_map.get(row_str, 0)
+                col = int(col_str) if col_str.isdigit() else species_map.get(col_str, 0)
                 idx = row * num_species + col
-                val = eval_jacobian_eqn(eqn, state_list)
+                val = eval_jacobian_eqn(eqn, state_list, local_vars=local_vars)
                 computed_J[idx] = val
 
         print("Jacobian evaluation complete!")
