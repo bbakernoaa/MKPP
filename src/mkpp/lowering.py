@@ -208,7 +208,14 @@ def _evaluate_reaction_fluxes(mech: MechanismDefinition) -> dict[str, Any]:
                 a = parse_sym_or_val(sub_p.get("A", 0.0))
                 b = parse_sym_or_val(sub_p.get("B", 0.0))
                 c = parse_sym_or_val(sub_p.get("C", 0.0))
-                return a, c, b
+                try:
+                    fb = float(b)
+                    fc = float(c)
+                    if abs(fb) > 100.0 and abs(fc) <= 100.0:
+                        b, c = c, b
+                except Exception:
+                    pass
+                return a, b, c
 
             if "k0" in p and isinstance(p["k0"], dict):
                 A0, B0, C0 = get_troe_sub_params(p["k0"])
@@ -232,8 +239,11 @@ def _evaluate_reaction_fluxes(mech: MechanismDefinition) -> dict[str, Any]:
 
             CF = parse_sym_or_val(p.get("Fc", 0.6))
 
-            K0 = A0 * sp.exp(C0 / Temp) * (Temp / 300) ** B0
-            K1 = A1 * sp.exp(C1 / Temp) * (Temp / 300) ** B1
+            exp_term_0 = sp.exp(-C0 / Temp) if (isinstance(C0, sp.Number) and C0 > 0) else sp.exp(C0 / Temp)
+            exp_term_1 = sp.exp(-C1 / Temp) if (isinstance(C1, sp.Number) and C1 > 0) else sp.exp(C1 / Temp)
+
+            K0 = A0 * exp_term_0 * (Temp / 300) ** B0
+            K1 = A1 * exp_term_1 * (Temp / 300) ** B1
             K0 = K0 * species_symbols.get("AIR", M_density)
             K_ratio = K0 / K1
             F_broadening = CF ** (1.0 / (1.0 + (sp.log(K_ratio, 10)) ** 2))
