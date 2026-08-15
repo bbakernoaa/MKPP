@@ -174,6 +174,9 @@ def template_context_strategy(draw):
     # Rate expressions for compute_rates (state-based)
     rate_exprs_state = [f"-k{i} * state({i})" for i in range(n)]
 
+    # State hoist info for integrate.j2
+    state_hoist_info = [{"reg_idx": i, "name": f"SP{i}"} for i in range(n)]
+
     # Tolerance arrays
     tolerance_arrays = {
         "atol": [100.0] * n,
@@ -227,6 +230,11 @@ def template_context_strategy(draw):
         "rate_exprs_state": rate_exprs_state,
         "jacobian_entries_state": jacobian_entries_state,
         "adjoint_entries_state": adjoint_entries_state,
+        "state_hoist_info": state_hoist_info,
+        "rate_flux_cse": [],
+        "rate_flux_exprs": [],
+        "rate_flux_cse_hoist": [],
+        "rate_flux_exprs_hoist": [],
         "mass_projector_data": None,
         "partition_metadata": None,
         "has_continuous_rxns": False,
