@@ -163,6 +163,7 @@ def valid_template_context(draw):
     f_exprs = [f"-k{i} * S_{i}" for i in range(n)]
     rate_exprs_state = [f"-k{i} * state({i})" for i in range(n)]
     tolerance_arrays = {"atol": [100.0] * n, "rtol": [0.01] * n}
+    state_hoist_info = [{"reg_idx": i, "name": f"SP{i}"} for i in range(n)]
 
     has_photolysis = draw(st.booleans())
     num_photolysis = draw(st.integers(min_value=1, max_value=3)) if has_photolysis else 0
@@ -206,6 +207,11 @@ def valid_template_context(draw):
         "rate_exprs_state": rate_exprs_state,
         "jacobian_entries_state": jacobian_entries_state,
         "adjoint_entries_state": adjoint_entries_state,
+        "state_hoist_info": state_hoist_info,
+        "rate_flux_cse": [],
+        "rate_flux_exprs": [],
+        "rate_flux_cse_hoist": [],
+        "rate_flux_exprs_hoist": [],
         "mass_projector_data": None,
         "partition_metadata": None,
         "has_continuous_rxns": False,

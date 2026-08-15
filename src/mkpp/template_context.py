@@ -354,6 +354,55 @@ def build_template_context(
     context["equilibrium_results"] = sympy_meta.get("equilibrium_results") if sympy_meta else None
     context["mass_projector"] = sympy_meta.get("mass_projector") if sympy_meta else None
 
+    # --- Reaction rate flux vector CSE and expressions ---
+    rate_flux_cse = []
+    rate_flux_exprs = []
+    rate_flux_cse_hoist = []
+    rate_flux_exprs_hoist = []
+    if sympy_meta:
+        raw_cse = sympy_meta.get("rate_flux_cse", [])
+        for sym, expr in raw_cse:
+            eqn = format_eqn(
+                expr,
+                mech.species,
+                state_var="state",
+                use_parentheses=True,
+                keep_env_symbols=has_equilibrium,
+            )
+            rate_flux_cse.append({"symbol": str(sym), "expr": eqn})
+            eqn_hoist = format_eqn(
+                expr,
+                mech.species,
+                state_var="S",
+                use_parentheses=False,
+                keep_env_symbols=has_equilibrium,
+            )
+            rate_flux_cse_hoist.append({"symbol": str(sym), "expr": eqn_hoist})
+
+        raw_exprs = sympy_meta.get("rate_flux_exprs", [])
+        for idx, expr in enumerate(raw_exprs):
+            eqn = format_eqn(
+                expr,
+                mech.species,
+                state_var="state",
+                use_parentheses=True,
+                keep_env_symbols=has_equilibrium,
+            )
+            rate_flux_exprs.append({"index": idx, "expr": eqn})
+            eqn_hoist = format_eqn(
+                expr,
+                mech.species,
+                state_var="S",
+                use_parentheses=False,
+                keep_env_symbols=has_equilibrium,
+            )
+            rate_flux_exprs_hoist.append({"index": idx, "expr": eqn_hoist})
+
+    context["rate_flux_cse"] = rate_flux_cse
+    context["rate_flux_exprs"] = rate_flux_exprs
+    context["rate_flux_cse_hoist"] = rate_flux_cse_hoist
+    context["rate_flux_exprs_hoist"] = rate_flux_exprs_hoist
+
     # --- Kernel function context: state(i)-based expressions ---
     # These use state_var="state" and use_parentheses=True for kernel function templates
     # (compute_rates, compute_jacobian, compute_adjoint, compute_tlm)

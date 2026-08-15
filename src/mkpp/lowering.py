@@ -100,6 +100,44 @@ def prepare_adjoint_and_tlm(mech: MechanismDefinition) -> dict[str, bool]:
     return {"adjoint_ready": True, "tlm_ready": True}
 
 
+def _process_rate_vector_cse(reaction_fluxes: list[sp.Expr]) -> tuple[list[tuple[sp.Symbol, sp.Expr]], list[sp.Expr]]:
+    """
+    Apply SymPy Common Subexpression Elimination (CSE) across reaction rate fluxes.
+    Assigns deterministic `cse_tmp_{n}` names in topological order and applies a
+    reachability filter to drop unreferenced temporaries.
+    """
+    if not reaction_fluxes:
+        return [], []
+
+    replacements, reduced_fluxes = sp.cse(reaction_fluxes, optimizations="basic")
+
+    # Reachability filter: collect all symbols referenced directly or indirectly by reduced_fluxes
+    used_symbols = set()
+    for flux_expr in reduced_fluxes:
+        if isinstance(flux_expr, sp.Basic):
+            used_symbols.update(flux_expr.free_symbols)
+
+    for sym, expr in reversed(replacements):
+        if sym in used_symbols:
+            if isinstance(expr, sp.Basic):
+                used_symbols.update(expr.free_symbols)
+
+    kept_replacements = [item for item in replacements if item[0] in used_symbols]
+
+    # Re-index kept replacements deterministically as cse_tmp_0, cse_tmp_1, ...
+    symbol_map = {sym: sp.Symbol(f"cse_tmp_{idx}", real=True) for idx, (sym, expr) in enumerate(kept_replacements)}
+
+    final_cse = []
+    for idx, (sym, expr) in enumerate(kept_replacements):
+        new_sym = symbol_map[sym]
+        new_expr = expr.subs(symbol_map)
+        final_cse.append((new_sym, new_expr))
+
+    final_reduced_fluxes = [r.subs(symbol_map) if isinstance(r, sp.Basic) else r for r in reduced_fluxes]
+
+    return final_cse, final_reduced_fluxes
+
+
 def _evaluate_reaction_fluxes(mech: MechanismDefinition) -> dict[str, Any]:
     """
     Evaluates reaction rate expressions and builds symbolic implicit/explicit ODE vectors (f_implicit, f_explicit, f_total)
@@ -120,6 +158,7 @@ def _evaluate_reaction_fluxes(mech: MechanismDefinition) -> dict[str, Any]:
 
     photo_idx = 0
     photolysis_reactions = []
+    reaction_fluxes = []
 
     for idx, r in enumerate(mech.reactions):
         rtype = r.reaction_type.upper()
@@ -254,6 +293,8 @@ def _evaluate_reaction_fluxes(mech: MechanismDefinition) -> dict[str, Any]:
             if reactant in species_symbols:
                 flux *= species_symbols[reactant] ** sp.Integer(int(stoich))
 
+        reaction_fluxes.append(flux)
+
         is_implicit = r in blocks["implicit"]
 
         for reactant, stoich in reactants_dict.items():
@@ -327,6 +368,7 @@ def _evaluate_reaction_fluxes(mech: MechanismDefinition) -> dict[str, Any]:
         "c_vector": c_vector,
         "photolysis_count": photo_idx,
         "photolysis_reactions": photolysis_reactions,
+        "reaction_fluxes": reaction_fluxes,
     }
 
 
@@ -340,6 +382,9 @@ def prepare_unified_jacobian(mech: MechanismDefinition) -> dict[str, Any]:
 
     jacobian_matrix = f_total.jacobian(c_vector)
     adjoint_matrix = jacobian_matrix.transpose()
+
+    reaction_fluxes = built.get("reaction_fluxes", [])
+    rate_flux_cse, rate_flux_exprs = _process_rate_vector_cse(reaction_fluxes)
 
     unique_elements = sorted(list(set(elem for s in mech.species for elem in s.elements.keys())))
     if unique_elements:
@@ -367,6 +412,8 @@ def prepare_unified_jacobian(mech: MechanismDefinition) -> dict[str, Any]:
         "element_map": unique_elements,
         "photolysis_count": built["photolysis_count"],
         "photolysis_reactions": built["photolysis_reactions"],
+        "rate_flux_cse": rate_flux_cse,
+        "rate_flux_exprs": rate_flux_exprs,
     }
 
     # ------------------------------------------------------------------

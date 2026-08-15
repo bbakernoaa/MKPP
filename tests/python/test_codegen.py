@@ -125,15 +125,56 @@ def test_sorted_artifact_metadata(tmp_path):
     out_dir = tmp_path / "build"
     results = generate_headers(mech, out_dir=str(out_dir))
 
+def test_sorted_artifact_metadata(tmp_path):
+    # T025: Ensure manifest preserves workload-sorting metadata
+    mech = MechanismDefinition(
+        name="test_mech",
+        description="Test",
+        aerosol_representation=AerosolRepresentation.BULK,
+        species=[],
+        phases=[],
+        reactions=[],
+    )
+    from mkpp.model import PhaseMode, SpeciesDefinition
+
+    mech.species.append(SpeciesDefinition(name="O3", phase=PhaseMode.GAS))
+
+    # Mock the lowering step to inject metadata
+    mech.partition_metadata = {"sza_sorted": True, "micro_blocks": 2}
+
+    out_dir = tmp_path / "build"
+    results = generate_headers(mech, out_dir=str(out_dir))
+
     with open(results["manifest"]) as f:
         manifest = json.load(f)
-
     assert "solver_partition" in manifest
     assert manifest["solver_partition"]["sza_sorted"] is True
 
     with open(results["header"]) as f:
         content = f.read()
     assert "// SZA Workload Sorted: true" in content
+
+
+def test_template_emits_rate_temporaries():
+    from mkpp.parser import load_mechanism
+    from mkpp.lowering import prepare_unified_jacobian
+    from mkpp.template_context import build_template_context
+    from mkpp.template_engine import render_template
+
+    # Chapman mechanism has R_0 rate flux expressions
+    mech = load_mechanism("mechanisms/chapman.yaml")
+    mech.sympy_metadata = prepare_unified_jacobian(mech)
+    ctx = build_template_context(mech)
+    rendered = render_template("header.j2", ctx)
+    assert "R_0" in rendered
+
+    # SAPRC-99 mechanism has both CSE temporaries and R_0 rate fluxes
+    mech_saprc = load_mechanism("mechanisms/saprc99.yaml")
+    mech_saprc.sympy_metadata = prepare_unified_jacobian(mech_saprc)
+    ctx_saprc = build_template_context(mech_saprc)
+    rendered_saprc = render_template("header.j2", ctx_saprc)
+    assert "cse_tmp_0" in rendered_saprc
+    assert "R_0" in rendered_saprc
 
 
 def test_continuous_transition_annotations(tmp_path):

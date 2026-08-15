@@ -192,3 +192,59 @@ def test_arrhenius_micm_sign_convention():
     rate_val = rate_expr.subs({temp_sym: 300.0})
     expected_val = 2.15e-12 * sp.exp(-1735.0 / 300.0)
     assert abs(float(rate_val) - float(expected_val)) < 1e-15
+
+
+def test_rate_vector_hoisting():
+    from mkpp.parser import load_mechanism
+    from mkpp.lowering import prepare_unified_jacobian
+    from mkpp.template_context import build_template_context
+
+    mech = load_mechanism("mechanisms/chapman.yaml")
+    mech.sympy_metadata = prepare_unified_jacobian(mech)
+    ctx = build_template_context(mech)
+
+    assert "rate_flux_exprs" in ctx
+    assert len(ctx["rate_flux_exprs"]) == len(mech.reactions)
+    assert "rate_flux_cse" in ctx
+
+
+def test_cse_no_dead_temporaries():
+    import re
+    from mkpp.parser import load_mechanism
+    from mkpp.lowering import prepare_unified_jacobian
+    from mkpp.template_context import build_template_context
+
+    mech = load_mechanism("mechanisms/chapman.yaml")
+    mech.sympy_metadata = prepare_unified_jacobian(mech)
+    ctx = build_template_context(mech)
+
+    cse_list = ctx["rate_flux_cse"]
+    all_other_exprs = " ".join(
+        [r["expr"] for r in ctx["rate_flux_exprs"]]
+        + ctx["f_exprs"]
+        + [e[2] for e in ctx["jacobian_entries"]]
+    )
+    for cse in cse_list:
+        sym = cse["symbol"]
+        assert re.search(r"\b" + sym + r"\b", all_other_exprs), f"Dead temporary {sym} found!"
+
+
+def test_cse_topological_order():
+    import re
+    from mkpp.parser import load_mechanism
+    from mkpp.lowering import prepare_unified_jacobian
+    from mkpp.template_context import build_template_context
+
+    mech = load_mechanism("mechanisms/chapman.yaml")
+    mech.sympy_metadata = prepare_unified_jacobian(mech)
+    ctx = build_template_context(mech)
+
+    cse_list = ctx["rate_flux_cse"]
+    symbols_so_far = set()
+    for entry in cse_list:
+        sym = entry["symbol"]
+        expr = entry["expr"]
+        refs = re.findall(r"\bcse_tmp_\d+\b", expr)
+        for ref in refs:
+            assert ref in symbols_so_far, f"Forward reference {ref} in {sym} = {expr}"
+        symbols_so_far.add(sym)
