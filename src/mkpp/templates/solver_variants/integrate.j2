@@ -36,7 +36,7 @@
 {% from "macros/lu_solve_backward.j2" import emit_backward_sub %}
       /**
        * @brief Performs adaptive time-stepping Rosenbrock integration over dt_total.
-       * 
+       *
        * @tparam StateView Kokkos View type for species concentrations [NUM_SPECIES].
        * @param dt_total Total physical time step duration [s].
        * @param state Input/output species concentration vector [NUM_SPECIES].
