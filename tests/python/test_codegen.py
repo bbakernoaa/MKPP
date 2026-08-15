@@ -125,27 +125,6 @@ def test_sorted_artifact_metadata(tmp_path):
     out_dir = tmp_path / "build"
     results = generate_headers(mech, out_dir=str(out_dir))
 
-
-def test_sorted_artifact_metadata(tmp_path):
-    # T025: Ensure manifest preserves workload-sorting metadata
-    mech = MechanismDefinition(
-        name="test_mech",
-        description="Test",
-        aerosol_representation=AerosolRepresentation.BULK,
-        species=[],
-        phases=[],
-        reactions=[],
-    )
-    from mkpp.model import PhaseMode, SpeciesDefinition
-
-    mech.species.append(SpeciesDefinition(name="O3", phase=PhaseMode.GAS))
-
-    # Mock the lowering step to inject metadata
-    mech.partition_metadata = {"sza_sorted": True, "micro_blocks": 2}
-
-    out_dir = tmp_path / "build"
-    results = generate_headers(mech, out_dir=str(out_dir))
-
     with open(results["manifest"]) as f:
         manifest = json.load(f)
     assert "solver_partition" in manifest
