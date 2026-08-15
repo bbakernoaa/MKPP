@@ -64,6 +64,72 @@ jobs:
           echo "PR Branch Instruction Profile Summary:"
           cat /tmp/pr_profile.tsv
 
+      - name: Generate SVG Flamegraphs
+        run: |
+          mkdir -p /tmp/flamegraphs
+          python3 ./pr_repo/scripts/generate_flamegraph.py --callgrind /tmp/perf_base/cg_chapman.out --out /tmp/flamegraphs/flamegraph_chapman_base.svg --title "MKPP Chapman Kernel Profile (Base Branch)"
+          python3 ./pr_repo/scripts/generate_flamegraph.py --callgrind /tmp/perf_pr/cg_chapman.out --out /tmp/flamegraphs/flamegraph_chapman_pr.svg --title "MKPP Chapman Kernel Profile (PR Branch)"
+          python3 ./pr_repo/scripts/generate_flamegraph.py --callgrind /tmp/perf_base/cg_t1.out --out /tmp/flamegraphs/flamegraph_t1_base.svg --title "MKPP T1 Kernel Profile (Base Branch)"
+          python3 ./pr_repo/scripts/generate_flamegraph.py --callgrind /tmp/perf_pr/cg_t1.out --out /tmp/flamegraphs/flamegraph_t1_pr.svg --title "MKPP T1 Kernel Profile (PR Branch)"
+
       - name: Compare Profiles & Check for Regressions
         run: |
-          python3 ./pr_repo/scripts/compare_profiles.py /tmp/base_profile.tsv /tmp/pr_profile.tsv --tolerance 0.0
+          python3 -c '
+          import os
+          import sys
+          from pathlib import Path
+
+          sys.path.insert(0, "./pr_repo/scripts")
+          from compare_profiles import parse_summary_file, compare_profiles
+
+          base_file = Path("/tmp/base_profile.tsv")
+          pr_file = Path("/tmp/pr_profile.tsv")
+          tolerance = 0.0
+
+          step_summary = os.environ.get("GITHUB_STEP_SUMMARY")
+          if step_summary:
+              try:
+                  base_data = parse_summary_file(base_file)
+                  pr_data = parse_summary_file(pr_file)
+                  all_mechs = sorted(set(base_data.keys()) | set(pr_data.keys()))
+
+                  with open(step_summary, "a", encoding="utf-8") as f:
+                      f.write("## 📊 MKPP Callgrind Instruction Profile Summary\n\n")
+                      f.write("| Mechanism | Base Instr | PR Instr | Delta | Delta % | Status |\n")
+                      f.write("| :--- | :--- | :--- | :--- | :--- | :--- |\n")
+
+                      for mech in all_mechs:
+                          b_cnt = base_data.get(mech)
+                          p_cnt = pr_data.get(mech)
+                          if b_cnt is not None and p_cnt is not None:
+                              delta = p_cnt - b_cnt
+                              pct = (delta / b_cnt * 100.0) if b_cnt > 0 else 0.0
+                              status = "❌ REGRESSED" if pct > tolerance else "✅ PASS"
+                              f.write(f"| `{mech}` | {b_cnt:,} | {p_cnt:,} | {delta:+d} | {pct:+.2f}% | {status} |\n")
+                          elif p_cnt is not None:
+                              f.write(f"| `{mech}` | N/A | {p_cnt:,} | N/A | N/A | 🆕 NEW |\n")
+                          elif b_cnt is not None:
+                              f.write(f"| `{mech}` | {b_cnt:,} | N/A | N/A | N/A | ⚠️ MISSING |\n")
+
+                      f.write("\n<details>\n<summary><b>🔥 Callgrind Flamegraphs Generated</b></summary>\n\n")
+                      f.write("Interactive SVG Flamegraphs generated and attached as build artifacts:\n")
+                      f.write("- `flamegraph_chapman_base.svg` / `flamegraph_chapman_pr.svg`\n")
+                      f.write("- `flamegraph_t1_base.svg` / `flamegraph_t1_pr.svg`\n\n")
+                      f.write("Download the `performance-flamegraphs` artifact to view interactive flamegraphs in a browser.\n")
+                      f.write("</details>\n\n")
+              except Exception as err:
+                  print(f"Warning: Failed to write GITHUB_STEP_SUMMARY: {err}", file=sys.stderr)
+
+          success = compare_profiles(base_file, pr_file, tolerance=tolerance)
+          sys.exit(0 if success else 1)
+          '
+
+      - name: Upload Performance Flamegraphs & Profiles
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: performance-flamegraphs
+          path: |
+            /tmp/flamegraphs/*.svg
+            /tmp/perf_base/cg_*.out
+            /tmp/perf_pr/cg_*.out

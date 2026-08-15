@@ -13,7 +13,8 @@ The profiling framework consists of:
 2. **Wall-Clock Benchmarking (`scripts/bench_mkpp.sh`)**: Shell driver for measuring integration time and grid-cell throughput (`cell-st/s`).
 3. **Callgrind Instruction Profiling (`scripts/profile_mkpp.sh`)**: Valgrind driver isolating and counting CPU instructions executed strictly during the integration loop.
 4. **Profile Comparison Tool (`scripts/compare_profiles.py`)**: Python tool for comparing baseline vs PR instruction counts against configurable regression tolerance thresholds.
-5. **CI Regression Gate (`.github/workflows/perf-regression.yml`)**: Automated PR workflow running side-by-side instruction comparison.
+5. **Flamegraph Generator (`scripts/generate_flamegraph.py`)**: Python tool converting raw Callgrind profiles into interactive SVG Flamegraphs with hover tooltips and domain-specific color coding.
+6. **CI Regression Gate (`.github/workflows/perf-regression.yml`)**: Automated PR workflow running side-by-side instruction comparison, generating flamegraphs, and publishing step summaries.
 
 ---
 
@@ -174,6 +175,44 @@ Overall Status      : PASS (All mechanisms within tolerance)
 ```
 
 If instruction count increases beyond the `--tolerance` threshold, `compare_profiles.py` marks status as `REGRESSED` and exits with code `1`.
+
+---
+
+## Generating Interactive SVG Flamegraphs (`scripts/generate_flamegraph.py`)
+
+MKPP provides `scripts/generate_flamegraph.py` to parse Callgrind `.out` profiles and render standalone, interactive SVG Flamegraphs for visual hot-path inspection.
+
+### Usage
+
+```bash
+python3 scripts/generate_flamegraph.py --callgrind <callgrind_file.out> --out <output_file.svg> [--title "Title String"]
+```
+
+- **`--callgrind`**: Path to the input Callgrind profile file (e.g., `/tmp/perf/cg_chapman.out`).
+- **`--out`**: Path for the generated interactive SVG Flamegraph file.
+- **`--title`**: Optional title string embedded in the SVG header.
+
+### Step-by-Step Local Generation
+
+```bash
+# 1. Run Callgrind profiling to generate raw .out profile files
+./scripts/profile_mkpp.sh build 2000 5 chapman /tmp/perf
+
+# 2. Render Callgrind profile into an interactive SVG Flamegraph
+python3 scripts/generate_flamegraph.py \
+  --callgrind /tmp/perf/cg_chapman.out \
+  --out /tmp/flamegraph_chapman.svg \
+  --title "MKPP Chapman Kernel Profile"
+```
+
+### Inspecting Flamegraphs
+
+- **Browser Viewing**: Open the generated `.svg` file directly in any web browser (Chrome, Firefox, Safari, Edge) or inside VS Code using an SVG viewer extension.
+- **Hover Tooltips**: Hover over function frames to view the full function signature, exact instruction count, and percentage of total CPU execution time.
+- **Color Scheme**:
+  - **Blue Hues**: Kokkos parallel dispatch and team thread range functions (`Kokkos::TeamPolicy`, etc.).
+  - **Red / Orange Hues**: Rosenbrock solver stages, Jacobian calculations, and sparse LU decomposition routines.
+  - **Warm Palette**: General C++ helper and mechanism rate routines.
 
 ---
 
