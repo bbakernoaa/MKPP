@@ -23,9 +23,17 @@ def _fold_numeric_falloff_powers(code: str) -> str:
 
 
 def _strength_reduce_squares(code: str) -> str:
-    """Replace generated pow(x, 2) terms with explicit multiplication."""
-    term = r"(?:state\(\d+\)|Ynew_\d+|S_\d+)"
-    return re.sub(rf"pow\(({term}), 2\)", r"\1 * \1", code)
+    """Replace generated pow(x, n) terms with explicit multiplication or identity."""
+    term = r"(?:state\(\d+\)|Ynew_\d+|S_\d+|[a-zA-Z_][a-zA-Z0-9_]*)"
+    # pow(x, 2) -> (x * x)
+    code = re.sub(rf"\bpow\(({term}),\s*2(?:\.0)?\)", r"(\1 * \1)", code)
+    # pow(x, 3) -> ((x * x) * x)
+    code = re.sub(rf"\bpow\(({term}),\s*3(?:\.0)?\)", r"((\1 * \1) * \1)", code)
+    # pow(x, 1) -> x
+    code = re.sub(rf"\bpow\(({term}),\s*1(?:\.0)?\)", r"\1", code)
+    # pow(x, 0) -> 1.0
+    code = re.sub(rf"\bpow\(({term}),\s*0(?:\.0)?\)", r"1.0", code)
+    return code
 
 
 def format_eqn(eqn_str, species_list, state_var="state", use_parentheses=True, keep_env_symbols=False):
