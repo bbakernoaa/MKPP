@@ -9,10 +9,10 @@ SVG flamegraph with hover tooltips and domain-specific color coding.
 from __future__ import annotations
 
 import argparse
-from dataclasses import dataclass, field
 import html
-from pathlib import Path
 import sys
+from dataclasses import dataclass, field
+from pathlib import Path
 
 
 @dataclass
@@ -279,9 +279,7 @@ def render_svg(
 
             max_chars = int((w - 6) / 6.5)
             if max_chars >= 3:
-                display_label = (
-                    child.name[: max_chars - 2] + ".." if len(child.name) > max_chars else child.name
-                )
+                display_label = child.name[: max_chars - 2] + ".." if len(child.name) > max_chars else child.name
             else:
                 display_label = ""
 
@@ -291,11 +289,16 @@ def render_svg(
             rect_svg = (
                 f'  <g class="func-frame">\n'
                 f"    <title>{tooltip}</title>\n"
-                f'    <clipPath id="{clip_id}"><rect x="{curr_x:.2f}" y="{y:.2f}" width="{max(0, w - 1):.2f}" height="{frame_h}"/></clipPath>\n'
-                f'    <rect x="{curr_x:.2f}" y="{y:.2f}" width="{max(0, w - 1):.2f}" height="{frame_h}" fill="{color}" stroke="#ffffff" stroke-width="0.5" rx="1"/>\n'
+                f'    <clipPath id="{clip_id}">'
+                f'<rect x="{curr_x:.2f}" y="{y:.2f}" width="{max(0, w - 1):.2f}" height="{frame_h}"/></clipPath>\n'
+                f'    <rect x="{curr_x:.2f}" y="{y:.2f}" width="{max(0, w - 1):.2f}" height="{frame_h}" '
+                f'fill="{color}" stroke="#ffffff" stroke-width="0.5" rx="1"/>\n'
             )
             if display_label:
-                rect_svg += f'    <text x="{curr_x + 3:.2f}" y="{y + 13:.2f}" font-size="11" fill="#111111" clip-path="url(#{clip_id})">{html.escape(display_label)}</text>\n'
+                rect_svg += (
+                    f'    <text x="{curr_x + 3:.2f}" y="{y + 13:.2f}" font-size="11" fill="#111111" '
+                    f'clip-path="url(#{clip_id})">{html.escape(display_label)}</text>\n'
+                )
             rect_svg += "  </g>\n"
 
             rects.append(rect_svg)
@@ -341,9 +344,7 @@ def render_svg(
 
 def main() -> None:
     """CLI entrypoint for generating Flamegraph from Callgrind file."""
-    parser = argparse.ArgumentParser(
-        description="Convert Callgrind profile to interactive SVG Flamegraph."
-    )
+    parser = argparse.ArgumentParser(description="Convert Callgrind profile to interactive SVG Flamegraph.")
     parser.add_argument("--callgrind", required=True, type=Path, help="Path to Callgrind .out file")
     parser.add_argument("--out", required=True, type=Path, help="Path to output SVG flamegraph")
     parser.add_argument(
@@ -363,11 +364,7 @@ def main() -> None:
     summary_total = extract_summary_total(content)
     folded = fold_callstacks(funcs)
 
-    title = (
-        args.title
-        if args.title
-        else f"MKPP Flamegraph - {args.callgrind.stem.replace('cg_', '')}"
-    )
+    title = args.title if args.title else f"MKPP Flamegraph - {args.callgrind.stem.replace('cg_', '')}"
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     render_svg(

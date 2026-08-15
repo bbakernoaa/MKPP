@@ -10,7 +10,7 @@ scripts_dir = repo_root / "scripts"
 if str(scripts_dir) not in sys.path:
     sys.path.insert(0, str(scripts_dir))
 
-import generate_flamegraph  # type: ignore
+import generate_flamegraph  # type: ignore  # noqa: E402
 
 MOCK_CALLGRIND = """# callgrind format
 events: Ir
