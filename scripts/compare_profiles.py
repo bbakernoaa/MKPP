@@ -8,8 +8,8 @@ otherwise exits with code 0.
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
 import sys
+from pathlib import Path
 
 
 def parse_summary_file(filepath: Path) -> dict[str, int]:
@@ -104,9 +104,7 @@ def compare_profiles(
     print("=" * 88)
     print("                      MKPP Instruction Profile Comparison")
     print("=" * 88)
-    print(
-        f"{'Mechanism':<14} {'Base Instr':<18} {'PR Instr':<18} {'Delta':<14} {'Delta %':<10} {'Status':<8}"
-    )
+    print(f"{'Mechanism':<14} {'Base Instr':<18} {'PR Instr':<18} {'Delta':<14} {'Delta %':<10} {'Status':<8}")
     print("-" * 88)
 
     for mech in all_mechs:
@@ -135,9 +133,7 @@ def compare_profiles(
         else:
             status = "PASS"
 
-        print(
-            f"{mech:<14} {base_cnt:<18,d} {pr_cnt:<18,d} {delta_str:<14} {delta_pct:>+7.2f}%   {status:<8}"
-        )
+        print(f"{mech:<14} {base_cnt:<18,d} {pr_cnt:<18,d} {delta_str:<14} {delta_pct:>+7.2f}%   {status:<8}")
 
     print("=" * 88)
     print(f"Tolerance threshold : {tolerance:.2f}%")
@@ -151,9 +147,7 @@ def compare_profiles(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Compare baseline vs PR Callgrind instruction profile summaries."
-    )
+    parser = argparse.ArgumentParser(description="Compare baseline vs PR Callgrind instruction profile summaries.")
     parser.add_argument("base_file", type=Path, help="Path to baseline profile summary file")
     parser.add_argument("pr_file", type=Path, help="Path to PR profile summary file")
     parser.add_argument(

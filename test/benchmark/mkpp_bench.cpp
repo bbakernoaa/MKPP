@@ -36,7 +36,7 @@ using ExecSpace = Kokkos::DefaultExecutionSpace;
 
 /**
  * @brief Kokkos parallel functor executing Rosenbrock integration over grid cells.
- * 
+ *
  * @tparam SolverKernelsType Generated mechanism SolverKernels struct.
  * @tparam IsGocart Boolean flag indicating whether mechanism requires temperature and relative humidity.
  */
@@ -51,7 +51,7 @@ struct IntegrationFunctor {
 
     /**
      * @brief Construct a new Integration Functor object.
-     * 
+     *
      * @param state Multidimensional Kokkos View holding concentrations [cells, species].
      * @param dt Time step size [s].
      * @param jvals Photolysis rates array pointer.
@@ -63,7 +63,7 @@ struct IntegrationFunctor {
 
     /**
      * @brief Kokkos operator executing integration for a single grid cell.
-     * 
+     *
      * @param cell_idx Cell index in grid range.
      */
     KOKKOS_INLINE_FUNCTION
@@ -80,7 +80,7 @@ struct IntegrationFunctor {
 
 /**
  * @brief Runs benchmark integration loop and measures execution performance.
- * 
+ *
  * @tparam SolverKernelsType Generated mechanism SolverKernels type.
  * @tparam IsGocart Boolean flag indicating whether mechanism is GOCART.
  * @param name Name of the mechanism.
@@ -158,7 +158,7 @@ void run_benchmark(const std::string& name, int num_cells, int num_steps, double
 
 /**
  * @brief Main entry point for MKPP benchmark CLI.
- * 
+ *
  * @param argc Command line argument count.
  * @param argv Command line argument values.
  * @return int Exit code (0 for success).

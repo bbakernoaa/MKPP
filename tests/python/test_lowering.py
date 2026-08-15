@@ -161,9 +161,9 @@ def test_sympy_explicit_reaction_types():
 
 
 def test_arrhenius_micm_sign_convention():
+    import sympy as sp
     from mkpp.lowering import _evaluate_reaction_fluxes
     from mkpp.model import PhaseMode, SpeciesDefinition
-    import sympy as sp
 
     mech = MechanismDefinition(
         name="sign_test",
@@ -192,4 +192,3 @@ def test_arrhenius_micm_sign_convention():
     rate_val = rate_expr.subs({temp_sym: 300.0})
     expected_val = 2.15e-12 * sp.exp(-1735.0 / 300.0)
     assert abs(float(rate_val) - float(expected_val)) < 1e-15
-

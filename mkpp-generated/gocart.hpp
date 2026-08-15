@@ -52,7 +52,7 @@ namespace mkpp {
   struct SolverKernels {
       /**
        * @brief Evaluates the rate-of-change vector F(i) = dC_i / dt.
-       * 
+       *
        * @tparam StateView Kokkos View type for species concentrations [NUM_SPECIES].
        * @tparam RateView Kokkos View type for output rate-of-change vector [NUM_SPECIES].
        * @param state Input concentration vector [NUM_SPECIES].
@@ -121,7 +121,7 @@ namespace mkpp {
 
       /**
        * @brief Evaluates the sparse analytical Jacobian matrix J(i, j) = dF_i / dC_j.
-       * 
+       *
        * @tparam StateView Kokkos View type for species concentrations [NUM_SPECIES].
        * @tparam JacView Kokkos View type for output 2D Jacobian matrix [NUM_SPECIES x NUM_SPECIES].
        * @param state Input concentration vector [NUM_SPECIES].
@@ -520,7 +520,7 @@ namespace mkpp {
 
       /**
        * @brief Performs adaptive time-stepping Rosenbrock integration over dt_total.
-       * 
+       *
        * @tparam StateView Kokkos View type for species concentrations [NUM_SPECIES].
        * @param dt_total Total physical time step duration [s].
        * @param state Input/output species concentration vector [NUM_SPECIES].

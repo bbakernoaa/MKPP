@@ -6,11 +6,11 @@ Automated comparison of MKPP Ahead-Of-Time (AOT) Kokkos chemistry solver against
 
 | Mechanism | Species | Reactions | MKPP Time (ms) | Ref Time (ms) | Speedup | Accuracy Status |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| `mechanism` | 4 | 4 | 1.46 | 3.41 | 2.34x | ✅ PASS |
-| `chapman` | 4 | 4 | 30.73 | 88.93 | 2.89x | ✅ PASS |
-| `small_strato` | 7 | 10 | 44.53 | 1.44 | 0.03x | ✅ PASS |
-| `gocart` | 26 | 27 | 1464.09 | 7.08 | 0.00x | ✅ PASS |
-| `carbon` | 11 | 5 | 26.88 | 102.43 | 3.81x | ✅ PASS |
+| `mechanism` | 4 | 4 | 1.22 | 2.35 | 1.93x | ✅ PASS |
+| `chapman` | 4 | 4 | 26.14 | 77.65 | 2.97x | ✅ PASS |
+| `small_strato` | 7 | 10 | 45.49 | 1.33 | 0.03x | ✅ PASS |
+| `gocart` | 26 | 27 | 1410.59 | 7.16 | 0.01x | ✅ PASS |
+| `carbon` | 11 | 5 | 112.47 | 97.60 | 0.87x | ✅ PASS |
 
 ## Detailed Mechanism Results
 
@@ -20,7 +20,7 @@ Automated comparison of MKPP Ahead-Of-Time (AOT) Kokkos chemistry solver against
 - **Grid Cells**: 1,000
 - **Timesteps**: 100 (dt = 60.0 s)
 - **Jacobian Non-Zeros**: 8
-- **Throughput**: 6.86e+07 cell-steps/sec
+- **Throughput**: 8.19e+07 cell-steps/sec
 
 #### Species Accuracy Table
 
@@ -37,7 +37,7 @@ Automated comparison of MKPP Ahead-Of-Time (AOT) Kokkos chemistry solver against
 - **Grid Cells**: 1,000
 - **Timesteps**: 100 (dt = 60.0 s)
 - **Jacobian Non-Zeros**: 8
-- **Throughput**: 3.25e+06 cell-steps/sec
+- **Throughput**: 3.83e+06 cell-steps/sec
 
 #### Species Accuracy Table
 
@@ -54,7 +54,7 @@ Automated comparison of MKPP Ahead-Of-Time (AOT) Kokkos chemistry solver against
 - **Grid Cells**: 1,000
 - **Timesteps**: 100 (dt = 60.0 s)
 - **Jacobian Non-Zeros**: 22
-- **Throughput**: 2.25e+06 cell-steps/sec
+- **Throughput**: 2.20e+06 cell-steps/sec
 
 #### Species Accuracy Table
 
@@ -74,7 +74,7 @@ Automated comparison of MKPP Ahead-Of-Time (AOT) Kokkos chemistry solver against
 - **Grid Cells**: 1,000
 - **Timesteps**: 100 (dt = 60.0 s)
 - **Jacobian Non-Zeros**: 111
-- **Throughput**: 6.83e+04 cell-steps/sec
+- **Throughput**: 7.09e+04 cell-steps/sec
 
 #### Species Accuracy Table
 
@@ -113,7 +113,7 @@ Automated comparison of MKPP Ahead-Of-Time (AOT) Kokkos chemistry solver against
 - **Grid Cells**: 1,000
 - **Timesteps**: 100 (dt = 60.0 s)
 - **Jacobian Non-Zeros**: 19
-- **Throughput**: 3.72e+06 cell-steps/sec
+- **Throughput**: 8.89e+05 cell-steps/sec
 
 #### Species Accuracy Table
 

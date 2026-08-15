@@ -11,13 +11,13 @@
       "jacobian_non_zeros": 8,
       "lu_expressions": 10,
       "lu_blocks": 3,
-      "header_size_bytes": 23387
+      "header_size_bytes": 25872
     },
     "performance": {
-      "mkpp_time_ms": 1.4570839703083038,
-      "reference_time_ms": 3.40662500821054,
-      "speedup": 2.3379743910639093,
-      "throughput_cell_steps_per_sec": 68630224.50164011,
+      "mkpp_time_ms": 1.2206669998704456,
+      "reference_time_ms": 2.352957999391947,
+      "speedup": 1.9276002379368624,
+      "throughput_cell_steps_per_sec": 81922424.38815288,
       "instruction_count": null
     },
     "accuracy": {
@@ -74,13 +74,13 @@
       "jacobian_non_zeros": 8,
       "lu_expressions": 10,
       "lu_blocks": 3,
-      "header_size_bytes": 23399
+      "header_size_bytes": 25884
     },
     "performance": {
-      "mkpp_time_ms": 30.73,
-      "reference_time_ms": 88.93237495794892,
-      "speedup": 2.893992025966447,
-      "throughput_cell_steps_per_sec": 3254149.0400260333,
+      "mkpp_time_ms": 26.14,
+      "reference_time_ms": 77.64674999998533,
+      "speedup": 2.9704188982396835,
+      "throughput_cell_steps_per_sec": 3825554.705432288,
       "instruction_count": null
     },
     "accuracy": {
@@ -137,13 +137,13 @@
       "jacobian_non_zeros": 22,
       "lu_expressions": 25,
       "lu_blocks": 3,
-      "header_size_bytes": 42257
+      "header_size_bytes": 45911
     },
     "performance": {
-      "mkpp_time_ms": 44.53,
-      "reference_time_ms": 1.444541965611279,
-      "speedup": 0.03243974771190836,
-      "throughput_cell_steps_per_sec": 2245677.0716370987,
+      "mkpp_time_ms": 45.49,
+      "reference_time_ms": 1.3254579971544445,
+      "speedup": 0.02913734880532962,
+      "throughput_cell_steps_per_sec": 2198285.337436799,
       "instruction_count": null
     },
     "accuracy": {
@@ -227,13 +227,13 @@
       "jacobian_non_zeros": 111,
       "lu_expressions": 177,
       "lu_blocks": 17,
-      "header_size_bytes": 1045023
+      "header_size_bytes": 1057336
     },
     "performance": {
-      "mkpp_time_ms": 1464.09,
-      "reference_time_ms": 7.077582995407283,
-      "speedup": 0.004834117434998725,
-      "throughput_cell_steps_per_sec": 68301.81204707362,
+      "mkpp_time_ms": 1410.59,
+      "reference_time_ms": 7.158957996580284,
+      "speedup": 0.005075151529913217,
+      "throughput_cell_steps_per_sec": 70892.3216526418,
       "instruction_count": null
     },
     "accuracy": {
@@ -488,13 +488,13 @@
       "jacobian_non_zeros": 19,
       "lu_expressions": 25,
       "lu_blocks": 10,
-      "header_size_bytes": 51964
+      "header_size_bytes": 56591
     },
     "performance": {
-      "mkpp_time_ms": 26.88,
-      "reference_time_ms": 102.42862498853356,
-      "speedup": 3.8105887272519925,
-      "throughput_cell_steps_per_sec": 3720238.0952380956,
+      "mkpp_time_ms": 112.47,
+      "reference_time_ms": 97.59595799914678,
+      "speedup": 0.8677510269329313,
+      "throughput_cell_steps_per_sec": 889125.9891526629,
       "instruction_count": null
     },
     "accuracy": {

@@ -53,7 +53,7 @@ profile_mechanism() {
   local out_file="${out_dir}/cg_${mech}.out"
 
   valgrind --tool=callgrind --instr-atstart=no --callgrind-out-file="${out_file}" \
-    "${bench_bin}" --mechanism "${mech}" --cells "${cells}" --steps "${steps}" &>/devnull
+    "${bench_bin}" --mechanism "${mech}" --cells "${cells}" --steps "${steps}" &>/dev/null
 
   local instr_count
   instr_count=$(extract_instruction_count "${out_file}")
