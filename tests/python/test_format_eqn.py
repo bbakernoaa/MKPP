@@ -1,4 +1,4 @@
-from mkpp.format_eqn import _strength_reduce_squares, format_eqn
+from mkpp.format_eqn import _strength_reduce_squares
 
 
 def test_strength_reduce_powers():

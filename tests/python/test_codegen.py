@@ -125,6 +125,7 @@ def test_sorted_artifact_metadata(tmp_path):
     out_dir = tmp_path / "build"
     results = generate_headers(mech, out_dir=str(out_dir))
 
+
 def test_sorted_artifact_metadata(tmp_path):
     # T025: Ensure manifest preserves workload-sorting metadata
     mech = MechanismDefinition(
@@ -156,8 +157,8 @@ def test_sorted_artifact_metadata(tmp_path):
 
 
 def test_template_emits_rate_temporaries():
-    from mkpp.parser import load_mechanism
     from mkpp.lowering import prepare_unified_jacobian
+    from mkpp.parser import load_mechanism
     from mkpp.template_context import build_template_context
     from mkpp.template_engine import render_template
 

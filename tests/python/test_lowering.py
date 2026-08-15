@@ -195,8 +195,8 @@ def test_arrhenius_micm_sign_convention():
 
 
 def test_rate_vector_hoisting():
-    from mkpp.parser import load_mechanism
     from mkpp.lowering import prepare_unified_jacobian
+    from mkpp.parser import load_mechanism
     from mkpp.template_context import build_template_context
 
     mech = load_mechanism("mechanisms/chapman.yaml")
@@ -210,8 +210,9 @@ def test_rate_vector_hoisting():
 
 def test_cse_no_dead_temporaries():
     import re
-    from mkpp.parser import load_mechanism
+
     from mkpp.lowering import prepare_unified_jacobian
+    from mkpp.parser import load_mechanism
     from mkpp.template_context import build_template_context
 
     mech = load_mechanism("mechanisms/chapman.yaml")
@@ -220,9 +221,7 @@ def test_cse_no_dead_temporaries():
 
     cse_list = ctx["rate_flux_cse"]
     all_other_exprs = " ".join(
-        [r["expr"] for r in ctx["rate_flux_exprs"]]
-        + ctx["f_exprs"]
-        + [e[2] for e in ctx["jacobian_entries"]]
+        [r["expr"] for r in ctx["rate_flux_exprs"]] + ctx["f_exprs"] + [e[2] for e in ctx["jacobian_entries"]]
     )
     for cse in cse_list:
         sym = cse["symbol"]
@@ -231,8 +230,9 @@ def test_cse_no_dead_temporaries():
 
 def test_cse_topological_order():
     import re
-    from mkpp.parser import load_mechanism
+
     from mkpp.lowering import prepare_unified_jacobian
+    from mkpp.parser import load_mechanism
     from mkpp.template_context import build_template_context
 
     mech = load_mechanism("mechanisms/chapman.yaml")
