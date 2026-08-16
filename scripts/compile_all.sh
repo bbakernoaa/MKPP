@@ -1,41 +1,71 @@
 #!/bin/bash
+# ==============================================================================
+# MKPP Mechanism Compilation Script
+#
+# Compiles all atmospheric chemical mechanisms into optimized C++ Kokkos headers
+# with full feature support (Adjoint/TLM, Manifest, Analysis Report, SymPy CSE).
+# ==============================================================================
 
-# Ensure execution from repository root
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-cd "$REPO_ROOT" || exit
+set -euo pipefail
 
-# Activate the virtual environment
-source .venv/bin/activate
-export PYTHONPATH=src
+main() {
+    # Ensure execution from repository root
+    local script_dir
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    local repo_root
+    repo_root="$(cd "${script_dir}/.." && pwd)"
+    cd "${repo_root}" || exit 1
 
-# List of mechanism YAML files
-MECHANISMS=(
-    "mechanisms/chapman.yaml"
-    "mechanisms/small_strato.yaml"
-    "mechanisms/carbon.yaml"
-    "mechanisms/gocart.yaml"
-    "mechanisms/saprc99.yaml"
-    "mechanisms/saprcnov.yaml"
-)
-
-TEST_ENV="tests/integration/e2e_validation/data/env.yaml"
-OUT_DIR="mkpp-generated/"
-
-# Compile each mechanism
-for MECH in "${MECHANISMS[@]}"; do
-    echo "========================================"
-    echo "Compiling $MECH..."
-    echo "========================================"
-    if [ "$MECH" = "mechanisms/saprc99.yaml" ]; then
-        .venv/bin/python -m mkpp.cli compile "$MECH" --adjoint --test-env "$TEST_ENV" --out "$OUT_DIR" --lump "mechanisms/lumping_rules_saprc99.yaml"
-    else
-        .venv/bin/python -m mkpp.cli compile "$MECH" --adjoint --test-env "$TEST_ENV" --out "$OUT_DIR"
+    local python_bin=".venv/bin/python"
+    if [[ ! -f "${python_bin}" ]]; then
+        python_bin="python3"
     fi
-    if [ $? -ne 0 ]; then
-        echo "Error compiling $MECH"
-        exit 1
-    fi
-done
 
-echo "All mechanisms compiled successfully."
+    local test_env="tests/integration/e2e_validation/data/env.yaml"
+    if [[ ! -f "${test_env}" ]]; then
+        test_env="example_env.yaml"
+    fi
+
+    local out_dir="mkpp-generated/"
+    mkdir -p "${out_dir}"
+
+    local mechanisms=(
+        "mechanisms/chapman.yaml"
+        "mechanisms/small_strato.yaml"
+        "mechanisms/carbon.yaml"
+        "mechanisms/gocart.yaml"
+        "mechanisms/saprc99.yaml"
+        "mechanisms/saprcnov.yaml"
+        "mechanisms/saprc99_mini.yaml"
+        "mechanisms/t1.yaml"
+    )
+
+    local mech
+    for mech in "${mechanisms[@]}"; do
+        if [[ ! -f "${mech}" ]]; then
+            echo "WARNING: Mechanism file ${mech} not found, skipping."
+            continue
+        fi
+
+        echo "========================================"
+        echo "Compiling ${mech}..."
+        echo "========================================"
+
+        if ! "${python_bin}" -m mkpp.cli compile "${mech}" \
+            --test-env "${test_env}" \
+            --out "${out_dir}" \
+            --adjoint \
+            --emit-manifest \
+            --report \
+            --verbose; then
+            echo "FATAL ERROR: Failed to compile ${mech}"
+            exit 1
+        fi
+    done
+
+    echo "========================================"
+    echo "All mechanisms compiled successfully."
+    echo "========================================"
+}
+
+main "$@"
