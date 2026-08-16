@@ -111,6 +111,7 @@ jobs:
               - 'src/mkpp/**'
               - 'mechanisms/**'
               - 'mkpp-generated/**'
+              - 'scripts/compile_all.sh'
               - 'pyproject.toml'
               - 'environment.yml'
               - '.github/workflows/ci.yml'
@@ -122,44 +123,24 @@ jobs:
       - name: Regenerate C++ Headers (AOT Compilation)
         if: steps.changes.outputs.codegen == 'true'
         run: |
-          python3 -c "
-          from mkpp.parser import load_mechanism
-          from mkpp.codegen import generate_headers
-          import os
-
-          out_dir = 'mkpp-generated'
-          os.makedirs(out_dir, exist_ok=True)
-
-          mechanisms = [
-              'mechanisms/chapman.yaml',
-              'mechanisms/small_strato.yaml',
-              'mechanisms/gocart.yaml',
-              'mechanisms/carbon.yaml',
-              'mechanisms/saprc99.yaml',
-              'mechanisms/saprcnov.yaml',
-              'mechanisms/t1.yaml',
-          ]
-          for mech_file in mechanisms:
-              if os.path.exists(mech_file):
-                  mech = load_mechanism(mech_file)
-                  generate_headers(mech, out_dir=out_dir, solver_name='ros3')
-                  print(f'  Generated {mech.name}.hpp')
-          "
+          chmod +x ./scripts/compile_all.sh
+          ./scripts/compile_all.sh
 
       - name: Verify Committed Headers Are Up-to-Date
         if: steps.changes.outputs.codegen == 'true'
         run: |
-          if ! git diff --quiet mkpp-generated/*.hpp; then
-            echo "::error::Committed headers in mkpp-generated/ are stale. Please regenerate locally:"
-            echo "::error::  python3 -c \"from mkpp.parser import load_mechanism; from mkpp.codegen import generate_headers; ...\""
+          if ! git diff --quiet mkpp-generated/ || [[ -n "$(git status --porcelain mkpp-generated/)" ]]; then
+            echo "::error::Committed artifacts in mkpp-generated/ are stale or out-of-sync. Please regenerate locally:"
+            echo "::error::  ./scripts/compile_all.sh"
             echo ""
-            echo "Changed files:"
-            git diff --stat mkpp-generated/*.hpp
+            echo "Changed or untracked files:"
+            git status --short mkpp-generated/
+            git diff mkpp-generated/
             echo ""
-            echo "Run 'mkpp compile' or the regeneration script, then commit the updated headers."
+            echo "Run './scripts/compile_all.sh' locally and commit all updated artifacts."
             exit 1
           fi
-          echo "✓ mkpp-generated/ headers are up-to-date with codegen"
+          echo "✓ mkpp-generated/ artifacts are up-to-date with codegen"
 
       - name: Skip Codegen Gate
         if: steps.changes.outputs.codegen != 'true'
