@@ -1,6 +1,6 @@
 # Multiphase Kinetic PreProcessor (MKPP) Engine
 
-MKPP (Futuristic Kinetic PreProcessor) is a highly optimized, Ahead-Of-Time (AOT) Python compiler that translates atmospheric chemistry mechanisms (defined via OpenAtmos YAML) into Exascale-ready block-sparse Kokkos C++ headers for a Unified Jacobian using SymPy.
+MKPP (Multiphase Kinetic PreProcessor) is a highly optimized, Ahead-Of-Time (AOT) Python compiler that translates atmospheric chemistry mechanisms (defined via OpenAtmos YAML) into Exascale-ready block-sparse Kokkos C++ headers for a Unified Jacobian using SymPy.
 
 ## NOAA NWS Office of Modeling and Development
 
