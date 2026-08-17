@@ -7,6 +7,7 @@ dependencies:
   - sympy           # For analytical Jacobian and Adjoint generation
   - networkx        # For Tarjan SCC algorithm and mechanism block/graph analysis
   - pyyaml          # For parsing OpenAtmos/MICM chemistry specs
+  - matplotlib      # For network graph generation in diagnostic reports
   - cmake>=3.24     # C++ Build system
   - ninja           # Fast C++ builder
   - compilers       # Meta-package providing C/C++/Fortran compilers (gcc/g++/gfortran)

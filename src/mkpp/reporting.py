@@ -1,7 +1,13 @@
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import networkx as nx
+
+try:
+    import matplotlib.pyplot as plt
+
+    HAS_MATPLOTLIB = True
+except ImportError:
+    HAS_MATPLOTLIB = False
 
 
 def write_report(mech, sympy_meta, out_dir, suffix=""):
@@ -9,31 +15,34 @@ def write_report(mech, sympy_meta, out_dir, suffix=""):
     out_path.mkdir(parents=True, exist_ok=True)
 
     # 1. Graph Generation
-    G = nx.DiGraph()
-    for r in mech.reactions:
-        for reactant in r.reactants.keys():
-            for product in r.products.keys():
-                if reactant != product:
-                    G.add_edge(reactant, product)
+    if HAS_MATPLOTLIB:
+        G = nx.DiGraph()
+        for r in mech.reactions:
+            for reactant in r.reactants.keys():
+                for product in r.products.keys():
+                    if reactant != product:
+                        G.add_edge(reactant, product)
 
-    plt.figure(figsize=(12, 10))
-    # Use spring layout for better separation
-    pos = nx.spring_layout(G, k=1.5, iterations=50)
+        plt.figure(figsize=(12, 10))
+        # Use spring layout for better separation
+        pos = nx.spring_layout(G, k=1.5, iterations=50)
 
-    # Calculate degree centrality to size nodes
-    degrees = dict(G.degree())
-    node_sizes = [v * 100 for v in degrees.values()]
+        # Calculate degree centrality to size nodes
+        degrees = dict(G.degree())
+        node_sizes = [v * 100 for v in degrees.values()]
 
-    nx.draw_networkx_nodes(G, pos, node_size=node_sizes, node_color="lightblue", alpha=0.7)
-    nx.draw_networkx_edges(G, pos, alpha=0.3, arrows=True)
-    nx.draw_networkx_labels(G, pos, font_size=8, font_weight="bold")
+        nx.draw_networkx_nodes(G, pos, node_size=node_sizes, node_color="lightblue", alpha=0.7)
+        nx.draw_networkx_edges(G, pos, alpha=0.3, arrows=True)
+        nx.draw_networkx_labels(G, pos, font_size=8, font_weight="bold")
 
-    plt.title(f"Chemical Mechanism Topology: {mech.name}")
-    plt.axis("off")
+        plt.title(f"Chemical Mechanism Topology: {mech.name}")
+        plt.axis("off")
 
-    graph_path = out_path / f"network_graph_{mech.name}{suffix}.png"
-    plt.savefig(graph_path, dpi=300, bbox_inches="tight")
-    plt.close()
+        graph_path = out_path / f"network_graph_{mech.name}{suffix}.png"
+        plt.savefig(graph_path, dpi=300, bbox_inches="tight")
+        plt.close()
+    else:
+        print(f"Notice: matplotlib is not installed. Skipping network graph generation for {mech.name}.")
 
     # 2. Stiffness Analytics
     J = sympy_meta.get("jacobian_matrix")
