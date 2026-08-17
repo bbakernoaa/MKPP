@@ -194,7 +194,7 @@ def _evaluate_jacobian_fast(
     temp=temperature_st,
     rh=rh_st,
 )
-@settings(max_examples=100, deadline=None)
+@settings(deadline=None)
 def test_property_11_adjoint_identity_jacobian_level(concentrations, perturbation, adjoint_vec, temp, rh):
     """
     Verify the adjoint identity at the Jacobian level: <J*dC, lam> == <dC, J^T*lam>.
@@ -260,7 +260,7 @@ def test_property_11_adjoint_identity_jacobian_level(concentrations, perturbatio
     rh=rh_st,
     h=timestep_st,
 )
-@settings(max_examples=100, deadline=None)
+@settings(deadline=None)
 def test_property_11_adjoint_identity_forward_euler_step(concentrations, perturbation, adjoint_vec, temp, rh, h):
     """
     Verify the discrete adjoint identity for a forward-Euler time step with
@@ -330,7 +330,7 @@ def test_property_11_adjoint_identity_forward_euler_step(concentrations, perturb
     temp=temperature_st,
     rh=rh_st,
 )
-@settings(max_examples=100, deadline=None)
+@settings(deadline=None)
 def test_property_11_adjoint_matrix_is_transpose(concentrations, temp, rh):
     """
     Verify that the stored adjoint_matrix is exactly J^T for the unified Jacobian

@@ -110,7 +110,7 @@ _LAMBDIFIED_SO4 = sp.lambdify(_SYMBOLS, _C_S, modules="numpy")
 
 
 @given(data=equilibrium_inputs())
-@settings(max_examples=100)
+@settings(deadline=None)
 def test_property_13_charge_balance_bounded(data):
     """
     For any input concentration vector in the valid atmospheric range, the
@@ -165,7 +165,7 @@ def test_property_13_charge_balance_bounded(data):
 
 
 @given(data=ammonia_rich_inputs())
-@settings(max_examples=100)
+@settings(deadline=None)
 def test_property_13_charge_balance_ammonia_rich_regime(data):
     """
     In the ammonia-rich regime (R > 2), the charge balance is approximately

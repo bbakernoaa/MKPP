@@ -278,7 +278,7 @@ def extract_function_names(rendered_code: str) -> set[str]:
 
 
 @given(context=template_context_strategy())
-@settings(max_examples=100, deadline=None)
+@settings(deadline=None)
 def test_property_3_function_signature_preservation(context):
     """
     For any valid Template_Context, rendering `header.j2` and extracting C++

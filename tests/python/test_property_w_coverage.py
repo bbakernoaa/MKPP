@@ -121,7 +121,7 @@ def random_lu_plan(draw, min_n=2, max_n=8):
 
 
 @given(data=random_lu_plan(min_n=2, max_n=8))
-@settings(max_examples=100, deadline=None)
+@settings(deadline=None)
 def test_property_4_w_entry_coverage(data):
     """
     For any LU plan, the set of W_i_j declarations emitted by `w_matrix.j2`

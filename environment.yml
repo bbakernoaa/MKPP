@@ -14,6 +14,7 @@ dependencies:
   - pre-commit      # Git hooks
   - ruff            # Python ultra-fast linting/formatting
   - pytest          # Python AOT compiler test framework
+  - pytest-xdist    # Parallel test executor
   - mkdocs-material # MkDocs Material theme for GitHub Pages documentation
   - mkdocstrings    # Autodoc plugin for Python docstrings
   - mkdocstrings-python

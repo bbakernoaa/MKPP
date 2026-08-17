@@ -123,7 +123,7 @@ def _kinetic_only_mechanism() -> MechanismDefinition:
 
 
 @given(blending=blending_st, width=width_st)
-@settings(max_examples=100, deadline=None)
+@settings(deadline=None)
 def test_property_6_symbolic_differentiability_in_unified_jacobian(blending, width):
     """
     For any equilibrium partition expression produced by the lowering pass,
@@ -186,7 +186,7 @@ def test_property_6_symbolic_differentiability_in_unified_jacobian(blending, wid
 
 
 @given(blending=blending_st, width=width_st)
-@settings(max_examples=100, deadline=None)
+@settings(deadline=None)
 def test_property_7_jacobian_sparsity_superset(blending, width):
     """
     For any mechanism with EQUILIBRIUM reactions, the set of non-zero

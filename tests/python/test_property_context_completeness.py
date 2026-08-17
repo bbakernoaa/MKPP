@@ -183,7 +183,7 @@ REQUIRED_KEYS = [
 
 
 @given(data=mechanism_strategy())
-@settings(max_examples=100, deadline=None)
+@settings(deadline=None)
 def test_property_2_context_completeness_no_undefined_error(data):
     """
     For any valid MechanismDefinition and solver configuration,
@@ -247,7 +247,7 @@ def test_property_2_context_completeness_no_undefined_error(data):
 
 
 @given(data=mechanism_with_blocks_strategy())
-@settings(max_examples=100, deadline=None)
+@settings(deadline=None)
 def test_property_2_blocks_present_when_block_structure_exists(data):
     """
     When the LU plan contains block structure (multiple independent blocks),

@@ -4,9 +4,11 @@ Session-scoped fixtures compute expensive symbolic results ONCE and share
 them across all test files that need them.
 """
 
+import os
 import tempfile
 
 import pytest
+from hypothesis import settings
 from mkpp.model import (
     AerosolRepresentation,
     EquilibriumDefinition,
@@ -15,6 +17,14 @@ from mkpp.model import (
     ReactionDefinition,
     SpeciesDefinition,
 )
+
+# Configure Hypothesis profiles for test performance
+# - default/dev: 25 examples for fast local testing and standard PR CI runs
+# - thorough: 100 examples for deep fuzzing/nightly builds
+DEFAULT_MAX_EXAMPLES = int(os.getenv("HYPOTHESIS_MAX_EXAMPLES", "25"))
+settings.register_profile("default", max_examples=DEFAULT_MAX_EXAMPLES, deadline=None)
+settings.register_profile("thorough", max_examples=100, deadline=None)
+settings.load_profile(os.getenv("HYPOTHESIS_PROFILE", "default"))
 
 
 @pytest.fixture(scope="session")

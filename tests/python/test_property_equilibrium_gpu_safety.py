@@ -161,7 +161,7 @@ def _extract_function_body(code: str, function_name: str) -> str | None:
 
 @pytest.mark.slow
 @given(blending=blending_st, width=width_st)
-@settings(max_examples=100, deadline=None)
+@settings(deadline=None)
 def test_property_8_gpu_code_compliance(blending, width):
     """
     For any generated C++ code fragment for a mechanism with equilibrium,
@@ -240,7 +240,7 @@ def test_property_8_gpu_code_compliance(blending, width):
 
 @pytest.mark.slow
 @given(blending=blending_st, width=width_st)
-@settings(max_examples=100, deadline=None)
+@settings(deadline=None)
 def test_property_9_unrolled_emission(blending, width):
     """
     For any equilibrium system, the emitted equilibrium derivative block

@@ -17,7 +17,25 @@ def _fold_numeric_falloff_powers(code: str) -> str:
         base = float(match.group(1))
         coefficient = float(match.group(2))
         exponent = 1.0 / (1.0 + coefficient / (math.log(10.0) ** 2))
-        return f"{base ** exponent:.17g}"
+        return _clean_float_literals(f"{base ** exponent:g}")
+
+    return pattern.sub(replace, code)
+
+
+def _clean_float_literals(code: str) -> str:
+    """Clean up verbose floating point literals (e.g. 7.9999999999999998e-12 -> 8e-12)."""
+    pattern = re.compile(r"\b(?<![a-zA-Z_])\d+\.\d+(?:[eE][-+]?\d+)?\b")
+
+    def replace(match):
+        val_str = match.group(0)
+        try:
+            val = float(val_str)
+            cleaned = str(val)
+            if "." not in cleaned and "e" not in cleaned and "E" not in cleaned:
+                cleaned += ".0"
+            return cleaned
+        except ValueError:
+            return val_str
 
     return pattern.sub(replace, code)
 
@@ -131,5 +149,6 @@ def format_eqn(eqn_str, species_list, state_var="state", use_parentheses=True, k
     s = re.sub(r"\bRate_(\d+)\b", r"jvals[\1]", s)
 
     s = _strength_reduce_squares(s)
+    s = _clean_float_literals(s)
 
     return s

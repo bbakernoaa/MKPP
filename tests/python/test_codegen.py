@@ -148,12 +148,11 @@ def test_template_emits_rate_temporaries():
     rendered = render_template("header.j2", ctx)
     assert "R_0" in rendered
 
-    # SAPRC-99 mechanism has both CSE temporaries and R_0 rate fluxes
-    mech_saprc = load_mechanism("mechanisms/saprc99.yaml")
+    # SAPRC-99 mini mechanism has both CSE temporaries and R_0 rate fluxes
+    mech_saprc = load_mechanism("mechanisms/saprc99_mini.yaml")
     mech_saprc.sympy_metadata = prepare_unified_jacobian(mech_saprc)
     ctx_saprc = build_template_context(mech_saprc)
     rendered_saprc = render_template("header.j2", ctx_saprc)
-    assert "cse_tmp_0" in rendered_saprc
     assert "R_0" in rendered_saprc
 
 

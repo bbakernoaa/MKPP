@@ -45,11 +45,11 @@ namespace mkpp {
       KOKKOS_INLINE_FUNCTION void compute_rates(const StateView& state, RateView& F_block, const double* jvals) const {
           // --- Rate-of-Change Vector F_block ---
           // F_block(O): d[O]/dt
-          F_block(Species::O) = -6.0e-34*state(3)*state(0)*state(1) - 7.9999999999999998e-12*state(0)*state(2) + 2.0*state(1)*jvals[0] + 1.0*state(2)*jvals[1];
+          F_block(Species::O) = -6e-34*state(3)*state(0)*state(1) - 8e-12*state(0)*state(2) + 2.0*state(1)*jvals[0] + 1.0*state(2)*jvals[1];
           // F_block(O2): d[O2]/dt
           F_block(Species::O2) = 0.0;
           // F_block(O3): d[O3]/dt
-          F_block(Species::O3) = 6.0e-34*state(3)*state(0)*state(1) - 7.9999999999999998e-12*state(0)*state(2) - 1.0*state(2)*jvals[1];
+          F_block(Species::O3) = 6e-34*state(3)*state(0)*state(1) - 8e-12*state(0)*state(2) - 1.0*state(2)*jvals[1];
           // F_block(M): d[M]/dt
           F_block(Species::M) = 0.0;
       }
@@ -67,21 +67,21 @@ namespace mkpp {
       KOKKOS_INLINE_FUNCTION void compute_jacobian(const StateView& state, JacView& J_block, const double* jvals) const {
           // --- Sparse Analytical Jacobian Entries J_block(i, j) ---
           // J(O, O): d(d[O]/dt) / d[O]
-          J_block(Species::O, Species::O) = -6.0e-34*state(3)*state(1) - 7.9999999999999998e-12*state(2);
+          J_block(Species::O, Species::O) = -6e-34*state(3)*state(1) - 8e-12*state(2);
           // J(O, O2): d(d[O]/dt) / d[O2]
-          J_block(Species::O, Species::O2) = -6.0e-34*state(3)*state(0) + 2.0*jvals[0];
+          J_block(Species::O, Species::O2) = -6e-34*state(3)*state(0) + 2.0*jvals[0];
           // J(O, O3): d(d[O]/dt) / d[O3]
-          J_block(Species::O, Species::O3) = -7.9999999999999998e-12*state(0) + 1.0*jvals[1];
+          J_block(Species::O, Species::O3) = -8e-12*state(0) + 1.0*jvals[1];
           // J(O, M): d(d[O]/dt) / d[M]
-          J_block(Species::O, Species::M) = -6.0e-34*state(0)*state(1);
+          J_block(Species::O, Species::M) = -6e-34*state(0)*state(1);
           // J(O3, O): d(d[O3]/dt) / d[O]
-          J_block(Species::O3, Species::O) = 6.0e-34*state(3)*state(1) - 7.9999999999999998e-12*state(2);
+          J_block(Species::O3, Species::O) = 6e-34*state(3)*state(1) - 8e-12*state(2);
           // J(O3, O2): d(d[O3]/dt) / d[O2]
-          J_block(Species::O3, Species::O2) = 6.0e-34*state(3)*state(0);
+          J_block(Species::O3, Species::O2) = 6e-34*state(3)*state(0);
           // J(O3, O3): d(d[O3]/dt) / d[O3]
-          J_block(Species::O3, Species::O3) = -7.9999999999999998e-12*state(0) - 1.0*jvals[1];
+          J_block(Species::O3, Species::O3) = -8e-12*state(0) - 1.0*jvals[1];
           // J(O3, M): d(d[O3]/dt) / d[M]
-          J_block(Species::O3, Species::M) = 6.0e-34*state(0)*state(1);
+          J_block(Species::O3, Species::M) = 6e-34*state(0)*state(1);
       }
 
 #ifdef MKPP_ENABLE_ADJOINT
@@ -89,21 +89,21 @@ namespace mkpp {
       KOKKOS_INLINE_FUNCTION void compute_adjoint(const StateView& state, JacView& J_adj_block, const double* jvals) const {
           // --- Sparse Analytical Adjoint Jacobian Entries J_adj_block(i, j) = J^T(i, j) ---
           // J^T(O, O): d(d[O]/dt) / d[O]
-          J_adj_block(Species::O, Species::O) = -6.0e-34*state(3)*state(1) - 7.9999999999999998e-12*state(2);
+          J_adj_block(Species::O, Species::O) = -6e-34*state(3)*state(1) - 8e-12*state(2);
           // J^T(O, O3): d(d[O3]/dt) / d[O]
-          J_adj_block(Species::O, Species::O3) = 6.0e-34*state(3)*state(1) - 7.9999999999999998e-12*state(2);
+          J_adj_block(Species::O, Species::O3) = 6e-34*state(3)*state(1) - 8e-12*state(2);
           // J^T(O2, O): d(d[O]/dt) / d[O2]
-          J_adj_block(Species::O2, Species::O) = -6.0e-34*state(3)*state(0) + 2.0*jvals[0];
+          J_adj_block(Species::O2, Species::O) = -6e-34*state(3)*state(0) + 2.0*jvals[0];
           // J^T(O2, O3): d(d[O3]/dt) / d[O2]
-          J_adj_block(Species::O2, Species::O3) = 6.0e-34*state(3)*state(0);
+          J_adj_block(Species::O2, Species::O3) = 6e-34*state(3)*state(0);
           // J^T(O3, O): d(d[O]/dt) / d[O3]
-          J_adj_block(Species::O3, Species::O) = -7.9999999999999998e-12*state(0) + 1.0*jvals[1];
+          J_adj_block(Species::O3, Species::O) = -8e-12*state(0) + 1.0*jvals[1];
           // J^T(O3, O3): d(d[O3]/dt) / d[O3]
-          J_adj_block(Species::O3, Species::O3) = -7.9999999999999998e-12*state(0) - 1.0*jvals[1];
+          J_adj_block(Species::O3, Species::O3) = -8e-12*state(0) - 1.0*jvals[1];
           // J^T(M, O): d(d[O]/dt) / d[M]
-          J_adj_block(Species::M, Species::O) = -6.0e-34*state(0)*state(1);
+          J_adj_block(Species::M, Species::O) = -6e-34*state(0)*state(1);
           // J^T(M, O3): d(d[O3]/dt) / d[M]
-          J_adj_block(Species::M, Species::O3) = 6.0e-34*state(0)*state(1);
+          J_adj_block(Species::M, Species::O3) = 6e-34*state(0)*state(1);
       }
 #endif
 
@@ -111,16 +111,16 @@ namespace mkpp {
       template <class StateView, class DeltaView, class RateView>
       KOKKOS_INLINE_FUNCTION void compute_tlm(const StateView& state, const DeltaView& delta_C, RateView& dF_block, const double* jvals) const {
           dF_block(0) = 0.0;
-          dF_block(0) += (-6.0e-34*state(3)*state(1) - 7.9999999999999998e-12*state(2)) * delta_C(0);
-          dF_block(0) += (-6.0e-34*state(3)*state(0) + 2.0*jvals[0]) * delta_C(1);
-          dF_block(0) += (-7.9999999999999998e-12*state(0) + 1.0*jvals[1]) * delta_C(2);
-          dF_block(0) += (-6.0e-34*state(0)*state(1)) * delta_C(3);
+          dF_block(0) += (-6e-34*state(3)*state(1) - 8e-12*state(2)) * delta_C(0);
+          dF_block(0) += (-6e-34*state(3)*state(0) + 2.0*jvals[0]) * delta_C(1);
+          dF_block(0) += (-8e-12*state(0) + 1.0*jvals[1]) * delta_C(2);
+          dF_block(0) += (-6e-34*state(0)*state(1)) * delta_C(3);
           dF_block(1) = 0.0;
           dF_block(2) = 0.0;
-          dF_block(2) += (6.0e-34*state(3)*state(1) - 7.9999999999999998e-12*state(2)) * delta_C(0);
-          dF_block(2) += (6.0e-34*state(3)*state(0)) * delta_C(1);
-          dF_block(2) += (-7.9999999999999998e-12*state(0) - 1.0*jvals[1]) * delta_C(2);
-          dF_block(2) += (6.0e-34*state(0)*state(1)) * delta_C(3);
+          dF_block(2) += (6e-34*state(3)*state(1) - 8e-12*state(2)) * delta_C(0);
+          dF_block(2) += (6e-34*state(3)*state(0)) * delta_C(1);
+          dF_block(2) += (-8e-12*state(0) - 1.0*jvals[1]) * delta_C(2);
+          dF_block(2) += (6e-34*state(0)*state(1)) * delta_C(3);
           dF_block(3) = 0.0;
       }
 #endif
@@ -165,14 +165,14 @@ namespace mkpp {
           const double S_3 = state(Species::M);  // [M]
 
           // Analytical Jacobian & Iteration Matrix W = inv_g_dt*I - J (sparse)
-          double J_1_0 = 6.0e-34*S_3*S_2;
-          double J_1_1 = -7.9999999999999998e-12*S_2 - 1.0*jvals[1];
-          double J_1_2 = 6.0e-34*S_3*S_0 - 7.9999999999999998e-12*S_1;
-          double J_1_3 = 6.0e-34*S_2*S_0;
-          double J_2_0 = -6.0e-34*S_3*S_2 + 2.0*jvals[0];
-          double J_2_1 = -7.9999999999999998e-12*S_2 + 1.0*jvals[1];
-          double J_2_2 = -6.0e-34*S_3*S_0 - 7.9999999999999998e-12*S_1;
-          double J_2_3 = -6.0e-34*S_2*S_0;
+          double J_1_0 = 6e-34*S_3*S_2;
+          double J_1_1 = -8e-12*S_2 - 1.0*jvals[1];
+          double J_1_2 = 6e-34*S_3*S_0 - 8e-12*S_1;
+          double J_1_3 = 6e-34*S_2*S_0;
+          double J_2_0 = -6e-34*S_3*S_2 + 2.0*jvals[0];
+          double J_2_1 = -8e-12*S_2 + 1.0*jvals[1];
+          double J_2_2 = -6e-34*S_3*S_0 - 8e-12*S_1;
+          double J_2_3 = -6e-34*S_2*S_0;
           double W_0_0 = inv_g_dt;
           double W_1_0 = -J_1_0;
           double W_1_1 = inv_g_dt - J_1_1;
@@ -203,8 +203,8 @@ namespace mkpp {
           // --- Stage 1 ---
           // Rate evaluation F1 at S
           double F1_0 = 0.0;
-          double F1_1 = 6.0e-34*S_3*S_2*S_0 - 7.9999999999999998e-12*S_2*S_1 - 1.0*S_1*jvals[1];
-          double F1_2 = -6.0e-34*S_3*S_2*S_0 - 7.9999999999999998e-12*S_2*S_1 + 2.0*S_0*jvals[0] + 1.0*S_1*jvals[1];
+          double F1_1 = 6e-34*S_3*S_2*S_0 - 8e-12*S_2*S_1 - 1.0*S_1*jvals[1];
+          double F1_2 = -6e-34*S_3*S_2*S_0 - 8e-12*S_2*S_1 + 2.0*S_0*jvals[0] + 1.0*S_1*jvals[1];
           double F1_3 = 0.0;
           // Block 0: K1 forward sub [O2, O]
           double y1_0 = F1_0;
@@ -229,8 +229,8 @@ namespace mkpp {
           double Y2_3 = S_3 + K1_3;
           // Rate evaluation F2 at Y2
           double F2_0 = 0.0;
-          double F2_1 = 6.0e-34*Y2_3*Y2_2*Y2_0 - 7.9999999999999998e-12*Y2_2*Y2_1 - 1.0*Y2_1*jvals[1];
-          double F2_2 = -6.0e-34*Y2_3*Y2_2*Y2_0 - 7.9999999999999998e-12*Y2_2*Y2_1 + 2.0*Y2_0*jvals[0] + 1.0*Y2_1*jvals[1];
+          double F2_1 = 6e-34*Y2_3*Y2_2*Y2_0 - 8e-12*Y2_2*Y2_1 - 1.0*Y2_1*jvals[1];
+          double F2_2 = -6e-34*Y2_3*Y2_2*Y2_0 - 8e-12*Y2_2*Y2_1 + 2.0*Y2_0*jvals[0] + 1.0*Y2_1*jvals[1];
           double F2_3 = 0.0;
           // RHS for stage 2
           double rhs2_0 = F2_0 + (-1.0156171083877703 / dt) * K1_0;
@@ -363,8 +363,8 @@ namespace mkpp {
 
           // 1. Stage 1 Rates (F1)
           double F1_0 = 0.0;
-          double F1_1 = 6.0e-34*S_3*S_2*S_0 - 7.9999999999999998e-12*S_2*S_1 - 1.0*S_1*jvals[1];
-          double F1_2 = -6.0e-34*S_3*S_2*S_0 - 7.9999999999999998e-12*S_2*S_1 + 2.0*S_0*jvals[0] + 1.0*S_1*jvals[1];
+          double F1_1 = 6e-34*S_3*S_2*S_0 - 8e-12*S_2*S_1 - 1.0*S_1*jvals[1];
+          double F1_2 = -6e-34*S_3*S_2*S_0 - 8e-12*S_2*S_1 + 2.0*S_0*jvals[0] + 1.0*S_1*jvals[1];
           double F1_3 = 0.0;
 
           // 2. Evaluate importance and update active set
@@ -374,14 +374,14 @@ namespace mkpp {
           active[3] = (Kokkos::fabs(F1_3) / (atol[3] + rtol[3] * Kokkos::fabs(state(3))) >= importance_threshold);
 
           // 3. Analytical Jacobian & Iteration Matrix W (identity for frozen species)
-          double J_1_0 = 6.0e-34*S_3*S_2;
-          double J_1_1 = -7.9999999999999998e-12*S_2 - 1.0*jvals[1];
-          double J_1_2 = 6.0e-34*S_3*S_0 - 7.9999999999999998e-12*S_1;
-          double J_1_3 = 6.0e-34*S_2*S_0;
-          double J_2_0 = -6.0e-34*S_3*S_2 + 2.0*jvals[0];
-          double J_2_1 = -7.9999999999999998e-12*S_2 + 1.0*jvals[1];
-          double J_2_2 = -6.0e-34*S_3*S_0 - 7.9999999999999998e-12*S_1;
-          double J_2_3 = -6.0e-34*S_2*S_0;
+          double J_1_0 = 6e-34*S_3*S_2;
+          double J_1_1 = -8e-12*S_2 - 1.0*jvals[1];
+          double J_1_2 = 6e-34*S_3*S_0 - 8e-12*S_1;
+          double J_1_3 = 6e-34*S_2*S_0;
+          double J_2_0 = -6e-34*S_3*S_2 + 2.0*jvals[0];
+          double J_2_1 = -8e-12*S_2 + 1.0*jvals[1];
+          double J_2_2 = -6e-34*S_3*S_0 - 8e-12*S_1;
+          double J_2_3 = -6e-34*S_2*S_0;
           double W_0_0 = active[0] ? inv_g_dt : 1.0;
           double W_1_0 = (active[1] && active[0]) ? (-J_1_0) : 0.0;
           double W_1_1 = active[1] ? (inv_g_dt - J_1_1) : 1.0;
@@ -432,8 +432,8 @@ namespace mkpp {
           double Y2_3 = S_3 + K1_3;
           // Rate evaluation F2 at Y2
           double F2_0 = 0.0;
-          double F2_1 = 6.0e-34*Y2_3*Y2_2*Y2_0 - 7.9999999999999998e-12*Y2_2*Y2_1 - 1.0*Y2_1*jvals[1];
-          double F2_2 = -6.0e-34*Y2_3*Y2_2*Y2_0 - 7.9999999999999998e-12*Y2_2*Y2_1 + 2.0*Y2_0*jvals[0] + 1.0*Y2_1*jvals[1];
+          double F2_1 = 6e-34*Y2_3*Y2_2*Y2_0 - 8e-12*Y2_2*Y2_1 - 1.0*Y2_1*jvals[1];
+          double F2_2 = -6e-34*Y2_3*Y2_2*Y2_0 - 8e-12*Y2_2*Y2_1 + 2.0*Y2_0*jvals[0] + 1.0*Y2_1*jvals[1];
           double F2_3 = 0.0;
           // RHS for stage 2
           double rhs2_0 = F2_0 + (-1.0156171083877703 / dt) * K1_0;
@@ -569,14 +569,14 @@ namespace mkpp {
           const double S_3 = state(Species::M);  // [M]
 
           // Analytical Jacobian & Iteration Matrix W = inv_g_dt*I - J (sparse)
-          double J_1_0 = 6.0e-34*S_3*S_2;
-          double J_1_1 = -7.9999999999999998e-12*S_2 - 1.0*jvals[1];
-          double J_1_2 = 6.0e-34*S_3*S_0 - 7.9999999999999998e-12*S_1;
-          double J_1_3 = 6.0e-34*S_2*S_0;
-          double J_2_0 = -6.0e-34*S_3*S_2 + 2.0*jvals[0];
-          double J_2_1 = -7.9999999999999998e-12*S_2 + 1.0*jvals[1];
-          double J_2_2 = -6.0e-34*S_3*S_0 - 7.9999999999999998e-12*S_1;
-          double J_2_3 = -6.0e-34*S_2*S_0;
+          double J_1_0 = 6e-34*S_3*S_2;
+          double J_1_1 = -8e-12*S_2 - 1.0*jvals[1];
+          double J_1_2 = 6e-34*S_3*S_0 - 8e-12*S_1;
+          double J_1_3 = 6e-34*S_2*S_0;
+          double J_2_0 = -6e-34*S_3*S_2 + 2.0*jvals[0];
+          double J_2_1 = -8e-12*S_2 + 1.0*jvals[1];
+          double J_2_2 = -6e-34*S_3*S_0 - 8e-12*S_1;
+          double J_2_3 = -6e-34*S_2*S_0;
           // Block 0: species [O2, O]
           double W_0_0 = inv_g_dt;
           // Block 1: species [O3]
@@ -610,8 +610,8 @@ namespace mkpp {
           // --- Stage 1 ---
           // Rate evaluation F1 at S
           double F1_0 = 0.0;
-          double F1_1 = 6.0e-34*S_3*S_2*S_0 - 7.9999999999999998e-12*S_2*S_1 - 1.0*S_1*jvals[1];
-          double F1_2 = -6.0e-34*S_3*S_2*S_0 - 7.9999999999999998e-12*S_2*S_1 + 2.0*S_0*jvals[0] + 1.0*S_1*jvals[1];
+          double F1_1 = 6e-34*S_3*S_2*S_0 - 8e-12*S_2*S_1 - 1.0*S_1*jvals[1];
+          double F1_2 = -6e-34*S_3*S_2*S_0 - 8e-12*S_2*S_1 + 2.0*S_0*jvals[0] + 1.0*S_1*jvals[1];
           double F1_3 = 0.0;
           // Block 0: K1 forward sub [O2, O]
           double y1_0 = F1_0;
@@ -638,8 +638,8 @@ namespace mkpp {
           double Y2_3 = S_3 + K1_3;
           // Rate evaluation F2 at Y2
           double F2_0 = 0.0;
-          double F2_1 = 6.0e-34*Y2_3*Y2_2*Y2_0 - 7.9999999999999998e-12*Y2_2*Y2_1 - 1.0*Y2_1*jvals[1];
-          double F2_2 = -6.0e-34*Y2_3*Y2_2*Y2_0 - 7.9999999999999998e-12*Y2_2*Y2_1 + 2.0*Y2_0*jvals[0] + 1.0*Y2_1*jvals[1];
+          double F2_1 = 6e-34*Y2_3*Y2_2*Y2_0 - 8e-12*Y2_2*Y2_1 - 1.0*Y2_1*jvals[1];
+          double F2_2 = -6e-34*Y2_3*Y2_2*Y2_0 - 8e-12*Y2_2*Y2_1 + 2.0*Y2_0*jvals[0] + 1.0*Y2_1*jvals[1];
           double F2_3 = 0.0;
           // RHS for stage 2
           double rhs2_0 = F2_0 + (-1.0156171083877703 / dt) * K1_0;
@@ -777,14 +777,14 @@ namespace mkpp {
               const double S_3 = chk.state[step][3];
 
               // Recompute Jacobian at checkpointed state (recompute-J strategy, D1)
-              double J_1_0 = 6.0e-34*S_3*S_2;
-              double J_1_1 = -7.9999999999999998e-12*S_2 - 1.0*jvals[1];
-              double J_1_2 = 6.0e-34*S_3*S_0 - 7.9999999999999998e-12*S_1;
-              double J_1_3 = 6.0e-34*S_2*S_0;
-              double J_2_0 = -6.0e-34*S_3*S_2 + 2.0*jvals[0];
-              double J_2_1 = -7.9999999999999998e-12*S_2 + 1.0*jvals[1];
-              double J_2_2 = -6.0e-34*S_3*S_0 - 7.9999999999999998e-12*S_1;
-              double J_2_3 = -6.0e-34*S_2*S_0;
+              double J_1_0 = 6e-34*S_3*S_2;
+              double J_1_1 = -8e-12*S_2 - 1.0*jvals[1];
+              double J_1_2 = 6e-34*S_3*S_0 - 8e-12*S_1;
+              double J_1_3 = 6e-34*S_2*S_0;
+              double J_2_0 = -6e-34*S_3*S_2 + 2.0*jvals[0];
+              double J_2_1 = -8e-12*S_2 + 1.0*jvals[1];
+              double J_2_2 = -6e-34*S_3*S_0 - 8e-12*S_1;
+              double J_2_3 = -6e-34*S_2*S_0;
 
               // Form iteration matrix W = (1/(gamma*h))*I - J
               // Block 0: species [O2, O]
@@ -932,14 +932,14 @@ namespace mkpp {
               const double S_3 = chk.state[step][3];
 
               // Recompute Jacobian at checkpointed state (recompute-J strategy, D1)
-              double J_1_0 = 6.0e-34*S_3*S_2;
-              double J_1_1 = -7.9999999999999998e-12*S_2 - 1.0*jvals[1];
-              double J_1_2 = 6.0e-34*S_3*S_0 - 7.9999999999999998e-12*S_1;
-              double J_1_3 = 6.0e-34*S_2*S_0;
-              double J_2_0 = -6.0e-34*S_3*S_2 + 2.0*jvals[0];
-              double J_2_1 = -7.9999999999999998e-12*S_2 + 1.0*jvals[1];
-              double J_2_2 = -6.0e-34*S_3*S_0 - 7.9999999999999998e-12*S_1;
-              double J_2_3 = -6.0e-34*S_2*S_0;
+              double J_1_0 = 6e-34*S_3*S_2;
+              double J_1_1 = -8e-12*S_2 - 1.0*jvals[1];
+              double J_1_2 = 6e-34*S_3*S_0 - 8e-12*S_1;
+              double J_1_3 = 6e-34*S_2*S_0;
+              double J_2_0 = -6e-34*S_3*S_2 + 2.0*jvals[0];
+              double J_2_1 = -8e-12*S_2 + 1.0*jvals[1];
+              double J_2_2 = -6e-34*S_3*S_0 - 8e-12*S_1;
+              double J_2_3 = -6e-34*S_2*S_0;
 
               // Form iteration matrix W = inv_g_h*I - J
               double W_0_0 = inv_g_h;

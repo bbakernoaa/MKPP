@@ -53,25 +53,25 @@ namespace mkpp {
           // F_block(CH4): d[CH4]/dt
           F_block(Species::CH4) = 0.0;
           // F_block(CO): d[CO]/dt
-          F_block(Species::CO) = 38199.012000000002 - 7.3679649000000001e-14*state(1);
+          F_block(Species::CO) = 38199.012 - 7.3679649e-14*state(1);
           // F_block(PCOfromCH4): d[PCOfromCH4]/dt
-          F_block(Species::PCOfromCH4) = 4.2566445999999996e-15;
+          F_block(Species::PCOfromCH4) = 4.2566446e-15;
           // F_block(PCOfromNMVOC): d[PCOfromNMVOC]/dt
-          F_block(Species::PCOfromNMVOC) = 38199.012000000002;
+          F_block(Species::PCOfromNMVOC) = 38199.012;
           // F_block(LCH4byOH): d[LCH4byOH]/dt
-          F_block(Species::LCH4byOH) = 6.6007061575166499e-15*state(0);
+          F_block(Species::LCH4byOH) = 6.60070615751665e-15*state(0);
           // F_block(LCH4byCl): d[LCH4byCl]/dt
           F_block(Species::LCH4byCl) = 1.0315008299507354e-13*state(0);
           // F_block(LCObyOH): d[LCObyOH]/dt
-          F_block(Species::LCObyOH) = 7.3679649000000001e-14*state(1);
+          F_block(Species::LCObyOH) = 7.3679649e-14*state(1);
           // F_block(FixedOH): d[FixedOH]/dt
-          F_block(Species::FixedOH) = -6.6007061575166499e-15*state(0) - 7.3679649000000001e-14*state(1);
+          F_block(Species::FixedOH) = -6.60070615751665e-15*state(0) - 7.3679649e-14*state(1);
           // F_block(FixedCl): d[FixedCl]/dt
           F_block(Species::FixedCl) = -1.0315008299507354e-13*state(0);
           // F_block(DummyCH4): d[DummyCH4]/dt
-          F_block(Species::DummyCH4) = -4.2566445999999996e-15;
+          F_block(Species::DummyCH4) = -4.2566446e-15;
           // F_block(DummyNMVOC): d[DummyNMVOC]/dt
-          F_block(Species::DummyNMVOC) = -38199.012000000002;
+          F_block(Species::DummyNMVOC) = -38199.012;
       }
 
       /**
@@ -87,43 +87,43 @@ namespace mkpp {
       KOKKOS_INLINE_FUNCTION void compute_jacobian(const StateView& state, JacView& J_block, const double* jvals) const {
           // --- Sparse Analytical Jacobian Entries J_block(i, j) ---
           // J(CO, CO): d(d[CO]/dt) / d[CO]
-          J_block(Species::CO, Species::CO) = -7.3679649000000001e-14;
+          J_block(Species::CO, Species::CO) = -7.3679649e-14;
           // J(CO, FixedOH): d(d[CO]/dt) / d[FixedOH]
-          J_block(Species::CO, Species::FixedOH) = -7.3679649000000001e-14*state(1);
+          J_block(Species::CO, Species::FixedOH) = -7.3679649e-14*state(1);
           // J(CO, DummyCH4): d(d[CO]/dt) / d[DummyCH4]
-          J_block(Species::CO, Species::DummyCH4) = 4.2566445999999996e-15;
+          J_block(Species::CO, Species::DummyCH4) = 4.2566446e-15;
           // J(CO, DummyNMVOC): d(d[CO]/dt) / d[DummyNMVOC]
-          J_block(Species::CO, Species::DummyNMVOC) = 38199.012000000002;
+          J_block(Species::CO, Species::DummyNMVOC) = 38199.012;
           // J(PCOfromCH4, DummyCH4): d(d[PCOfromCH4]/dt) / d[DummyCH4]
-          J_block(Species::PCOfromCH4, Species::DummyCH4) = 4.2566445999999996e-15;
+          J_block(Species::PCOfromCH4, Species::DummyCH4) = 4.2566446e-15;
           // J(PCOfromNMVOC, DummyNMVOC): d(d[PCOfromNMVOC]/dt) / d[DummyNMVOC]
-          J_block(Species::PCOfromNMVOC, Species::DummyNMVOC) = 38199.012000000002;
+          J_block(Species::PCOfromNMVOC, Species::DummyNMVOC) = 38199.012;
           // J(LCH4byOH, CH4): d(d[LCH4byOH]/dt) / d[CH4]
-          J_block(Species::LCH4byOH, Species::CH4) = 6.6007061575166499e-15;
+          J_block(Species::LCH4byOH, Species::CH4) = 6.60070615751665e-15;
           // J(LCH4byOH, FixedOH): d(d[LCH4byOH]/dt) / d[FixedOH]
-          J_block(Species::LCH4byOH, Species::FixedOH) = 6.6007061575166499e-15*state(0);
+          J_block(Species::LCH4byOH, Species::FixedOH) = 6.60070615751665e-15*state(0);
           // J(LCH4byCl, CH4): d(d[LCH4byCl]/dt) / d[CH4]
           J_block(Species::LCH4byCl, Species::CH4) = 1.0315008299507354e-13;
           // J(LCH4byCl, FixedCl): d(d[LCH4byCl]/dt) / d[FixedCl]
           J_block(Species::LCH4byCl, Species::FixedCl) = 1.0315008299507354e-13*state(0);
           // J(LCObyOH, CO): d(d[LCObyOH]/dt) / d[CO]
-          J_block(Species::LCObyOH, Species::CO) = 7.3679649000000001e-14;
+          J_block(Species::LCObyOH, Species::CO) = 7.3679649e-14;
           // J(LCObyOH, FixedOH): d(d[LCObyOH]/dt) / d[FixedOH]
-          J_block(Species::LCObyOH, Species::FixedOH) = 7.3679649000000001e-14*state(1);
+          J_block(Species::LCObyOH, Species::FixedOH) = 7.3679649e-14*state(1);
           // J(FixedOH, CH4): d(d[FixedOH]/dt) / d[CH4]
-          J_block(Species::FixedOH, Species::CH4) = -6.6007061575166499e-15;
+          J_block(Species::FixedOH, Species::CH4) = -6.60070615751665e-15;
           // J(FixedOH, CO): d(d[FixedOH]/dt) / d[CO]
-          J_block(Species::FixedOH, Species::CO) = -7.3679649000000001e-14;
+          J_block(Species::FixedOH, Species::CO) = -7.3679649e-14;
           // J(FixedOH, FixedOH): d(d[FixedOH]/dt) / d[FixedOH]
-          J_block(Species::FixedOH, Species::FixedOH) = -6.6007061575166499e-15*state(0) - 7.3679649000000001e-14*state(1);
+          J_block(Species::FixedOH, Species::FixedOH) = -6.60070615751665e-15*state(0) - 7.3679649e-14*state(1);
           // J(FixedCl, CH4): d(d[FixedCl]/dt) / d[CH4]
           J_block(Species::FixedCl, Species::CH4) = -1.0315008299507354e-13;
           // J(FixedCl, FixedCl): d(d[FixedCl]/dt) / d[FixedCl]
           J_block(Species::FixedCl, Species::FixedCl) = -1.0315008299507354e-13*state(0);
           // J(DummyCH4, DummyCH4): d(d[DummyCH4]/dt) / d[DummyCH4]
-          J_block(Species::DummyCH4, Species::DummyCH4) = -4.2566445999999996e-15;
+          J_block(Species::DummyCH4, Species::DummyCH4) = -4.2566446e-15;
           // J(DummyNMVOC, DummyNMVOC): d(d[DummyNMVOC]/dt) / d[DummyNMVOC]
-          J_block(Species::DummyNMVOC, Species::DummyNMVOC) = -38199.012000000002;
+          J_block(Species::DummyNMVOC, Species::DummyNMVOC) = -38199.012;
       }
 
 #ifdef MKPP_ENABLE_ADJOINT
@@ -131,43 +131,43 @@ namespace mkpp {
       KOKKOS_INLINE_FUNCTION void compute_adjoint(const StateView& state, JacView& J_adj_block, const double* jvals) const {
           // --- Sparse Analytical Adjoint Jacobian Entries J_adj_block(i, j) = J^T(i, j) ---
           // J^T(CH4, LCH4byOH): d(d[LCH4byOH]/dt) / d[CH4]
-          J_adj_block(Species::CH4, Species::LCH4byOH) = 6.6007061575166499e-15;
+          J_adj_block(Species::CH4, Species::LCH4byOH) = 6.60070615751665e-15;
           // J^T(CH4, LCH4byCl): d(d[LCH4byCl]/dt) / d[CH4]
           J_adj_block(Species::CH4, Species::LCH4byCl) = 1.0315008299507354e-13;
           // J^T(CH4, FixedOH): d(d[FixedOH]/dt) / d[CH4]
-          J_adj_block(Species::CH4, Species::FixedOH) = -6.6007061575166499e-15;
+          J_adj_block(Species::CH4, Species::FixedOH) = -6.60070615751665e-15;
           // J^T(CH4, FixedCl): d(d[FixedCl]/dt) / d[CH4]
           J_adj_block(Species::CH4, Species::FixedCl) = -1.0315008299507354e-13;
           // J^T(CO, CO): d(d[CO]/dt) / d[CO]
-          J_adj_block(Species::CO, Species::CO) = -7.3679649000000001e-14;
+          J_adj_block(Species::CO, Species::CO) = -7.3679649e-14;
           // J^T(CO, LCObyOH): d(d[LCObyOH]/dt) / d[CO]
-          J_adj_block(Species::CO, Species::LCObyOH) = 7.3679649000000001e-14;
+          J_adj_block(Species::CO, Species::LCObyOH) = 7.3679649e-14;
           // J^T(CO, FixedOH): d(d[FixedOH]/dt) / d[CO]
-          J_adj_block(Species::CO, Species::FixedOH) = -7.3679649000000001e-14;
+          J_adj_block(Species::CO, Species::FixedOH) = -7.3679649e-14;
           // J^T(FixedOH, CO): d(d[CO]/dt) / d[FixedOH]
-          J_adj_block(Species::FixedOH, Species::CO) = -7.3679649000000001e-14*state(1);
+          J_adj_block(Species::FixedOH, Species::CO) = -7.3679649e-14*state(1);
           // J^T(FixedOH, LCH4byOH): d(d[LCH4byOH]/dt) / d[FixedOH]
-          J_adj_block(Species::FixedOH, Species::LCH4byOH) = 6.6007061575166499e-15*state(0);
+          J_adj_block(Species::FixedOH, Species::LCH4byOH) = 6.60070615751665e-15*state(0);
           // J^T(FixedOH, LCObyOH): d(d[LCObyOH]/dt) / d[FixedOH]
-          J_adj_block(Species::FixedOH, Species::LCObyOH) = 7.3679649000000001e-14*state(1);
+          J_adj_block(Species::FixedOH, Species::LCObyOH) = 7.3679649e-14*state(1);
           // J^T(FixedOH, FixedOH): d(d[FixedOH]/dt) / d[FixedOH]
-          J_adj_block(Species::FixedOH, Species::FixedOH) = -6.6007061575166499e-15*state(0) - 7.3679649000000001e-14*state(1);
+          J_adj_block(Species::FixedOH, Species::FixedOH) = -6.60070615751665e-15*state(0) - 7.3679649e-14*state(1);
           // J^T(FixedCl, LCH4byCl): d(d[LCH4byCl]/dt) / d[FixedCl]
           J_adj_block(Species::FixedCl, Species::LCH4byCl) = 1.0315008299507354e-13*state(0);
           // J^T(FixedCl, FixedCl): d(d[FixedCl]/dt) / d[FixedCl]
           J_adj_block(Species::FixedCl, Species::FixedCl) = -1.0315008299507354e-13*state(0);
           // J^T(DummyCH4, CO): d(d[CO]/dt) / d[DummyCH4]
-          J_adj_block(Species::DummyCH4, Species::CO) = 4.2566445999999996e-15;
+          J_adj_block(Species::DummyCH4, Species::CO) = 4.2566446e-15;
           // J^T(DummyCH4, PCOfromCH4): d(d[PCOfromCH4]/dt) / d[DummyCH4]
-          J_adj_block(Species::DummyCH4, Species::PCOfromCH4) = 4.2566445999999996e-15;
+          J_adj_block(Species::DummyCH4, Species::PCOfromCH4) = 4.2566446e-15;
           // J^T(DummyCH4, DummyCH4): d(d[DummyCH4]/dt) / d[DummyCH4]
-          J_adj_block(Species::DummyCH4, Species::DummyCH4) = -4.2566445999999996e-15;
+          J_adj_block(Species::DummyCH4, Species::DummyCH4) = -4.2566446e-15;
           // J^T(DummyNMVOC, CO): d(d[CO]/dt) / d[DummyNMVOC]
-          J_adj_block(Species::DummyNMVOC, Species::CO) = 38199.012000000002;
+          J_adj_block(Species::DummyNMVOC, Species::CO) = 38199.012;
           // J^T(DummyNMVOC, PCOfromNMVOC): d(d[PCOfromNMVOC]/dt) / d[DummyNMVOC]
-          J_adj_block(Species::DummyNMVOC, Species::PCOfromNMVOC) = 38199.012000000002;
+          J_adj_block(Species::DummyNMVOC, Species::PCOfromNMVOC) = 38199.012;
           // J^T(DummyNMVOC, DummyNMVOC): d(d[DummyNMVOC]/dt) / d[DummyNMVOC]
-          J_adj_block(Species::DummyNMVOC, Species::DummyNMVOC) = -38199.012000000002;
+          J_adj_block(Species::DummyNMVOC, Species::DummyNMVOC) = -38199.012;
       }
 #endif
 
@@ -176,34 +176,34 @@ namespace mkpp {
       KOKKOS_INLINE_FUNCTION void compute_tlm(const StateView& state, const DeltaView& delta_C, RateView& dF_block, const double* jvals) const {
           dF_block(0) = 0.0;
           dF_block(1) = 0.0;
-          dF_block(1) += (-7.3679649000000001e-14) * delta_C(1);
-          dF_block(1) += (-7.3679649000000001e-14*state(1)) * delta_C(7);
-          dF_block(1) += (4.2566445999999996e-15) * delta_C(9);
-          dF_block(1) += (38199.012000000002) * delta_C(10);
+          dF_block(1) += (-7.3679649e-14) * delta_C(1);
+          dF_block(1) += (-7.3679649e-14*state(1)) * delta_C(7);
+          dF_block(1) += (4.2566446e-15) * delta_C(9);
+          dF_block(1) += (38199.012) * delta_C(10);
           dF_block(2) = 0.0;
-          dF_block(2) += (4.2566445999999996e-15) * delta_C(9);
+          dF_block(2) += (4.2566446e-15) * delta_C(9);
           dF_block(3) = 0.0;
-          dF_block(3) += (38199.012000000002) * delta_C(10);
+          dF_block(3) += (38199.012) * delta_C(10);
           dF_block(4) = 0.0;
-          dF_block(4) += (6.6007061575166499e-15) * delta_C(0);
-          dF_block(4) += (6.6007061575166499e-15*state(0)) * delta_C(7);
+          dF_block(4) += (6.60070615751665e-15) * delta_C(0);
+          dF_block(4) += (6.60070615751665e-15*state(0)) * delta_C(7);
           dF_block(5) = 0.0;
           dF_block(5) += (1.0315008299507354e-13) * delta_C(0);
           dF_block(5) += (1.0315008299507354e-13*state(0)) * delta_C(8);
           dF_block(6) = 0.0;
-          dF_block(6) += (7.3679649000000001e-14) * delta_C(1);
-          dF_block(6) += (7.3679649000000001e-14*state(1)) * delta_C(7);
+          dF_block(6) += (7.3679649e-14) * delta_C(1);
+          dF_block(6) += (7.3679649e-14*state(1)) * delta_C(7);
           dF_block(7) = 0.0;
-          dF_block(7) += (-6.6007061575166499e-15) * delta_C(0);
-          dF_block(7) += (-7.3679649000000001e-14) * delta_C(1);
-          dF_block(7) += (-6.6007061575166499e-15*state(0) - 7.3679649000000001e-14*state(1)) * delta_C(7);
+          dF_block(7) += (-6.60070615751665e-15) * delta_C(0);
+          dF_block(7) += (-7.3679649e-14) * delta_C(1);
+          dF_block(7) += (-6.60070615751665e-15*state(0) - 7.3679649e-14*state(1)) * delta_C(7);
           dF_block(8) = 0.0;
           dF_block(8) += (-1.0315008299507354e-13) * delta_C(0);
           dF_block(8) += (-1.0315008299507354e-13*state(0)) * delta_C(8);
           dF_block(9) = 0.0;
-          dF_block(9) += (-4.2566445999999996e-15) * delta_C(9);
+          dF_block(9) += (-4.2566446e-15) * delta_C(9);
           dF_block(10) = 0.0;
-          dF_block(10) += (-38199.012000000002) * delta_C(10);
+          dF_block(10) += (-38199.012) * delta_C(10);
       }
 #endif
 
@@ -254,21 +254,21 @@ namespace mkpp {
           const double S_10 = state(Species::FixedCl);  // [FixedCl]
 
           // Analytical Jacobian & Iteration Matrix W = inv_g_dt*I - J (sparse)
-          double J_0_2 = 38199.012000000002;
-          double J_1_3 = 4.2566445999999996e-15;
-          double J_2_2 = -38199.012000000002;
-          double J_3_3 = -4.2566445999999996e-15;
-          double J_4_2 = 38199.012000000002;
-          double J_4_3 = 4.2566445999999996e-15;
-          double J_4_4 = -7.3679649000000001e-14;
-          double J_4_6 = -7.3679649000000001e-14*S_4;
-          double J_5_4 = 7.3679649000000001e-14;
-          double J_5_6 = 7.3679649000000001e-14*S_4;
-          double J_6_4 = -7.3679649000000001e-14;
-          double J_6_6 = -6.6007061575166499e-15*S_8 - 7.3679649000000001e-14*S_4;
-          double J_6_8 = -6.6007061575166499e-15;
-          double J_7_6 = 6.6007061575166499e-15*S_8;
-          double J_7_8 = 6.6007061575166499e-15;
+          double J_0_2 = 38199.012;
+          double J_1_3 = 4.2566446e-15;
+          double J_2_2 = -38199.012;
+          double J_3_3 = -4.2566446e-15;
+          double J_4_2 = 38199.012;
+          double J_4_3 = 4.2566446e-15;
+          double J_4_4 = -7.3679649e-14;
+          double J_4_6 = -7.3679649e-14*S_4;
+          double J_5_4 = 7.3679649e-14;
+          double J_5_6 = 7.3679649e-14*S_4;
+          double J_6_4 = -7.3679649e-14;
+          double J_6_6 = -6.60070615751665e-15*S_8 - 7.3679649e-14*S_4;
+          double J_6_8 = -6.60070615751665e-15;
+          double J_7_6 = 6.60070615751665e-15*S_8;
+          double J_7_8 = 6.60070615751665e-15;
           double J_9_8 = 1.0315008299507354e-13;
           double J_9_10 = 1.0315008299507354e-13*S_8;
           double J_10_8 = -1.0315008299507354e-13;
@@ -339,14 +339,14 @@ namespace mkpp {
 
           // --- Stage 1 ---
           // Rate evaluation F1 at S
-          double F1_0 = 38199.012000000002;
-          double F1_1 = 4.2566445999999996e-15;
-          double F1_2 = -38199.012000000002;
-          double F1_3 = -4.2566445999999996e-15;
-          double F1_4 = 38199.012000000002 - 7.3679649000000001e-14*S_4;
-          double F1_5 = 7.3679649000000001e-14*S_4;
-          double F1_6 = -6.6007061575166499e-15*S_8 - 7.3679649000000001e-14*S_4;
-          double F1_7 = 6.6007061575166499e-15*S_8;
+          double F1_0 = 38199.012;
+          double F1_1 = 4.2566446e-15;
+          double F1_2 = -38199.012;
+          double F1_3 = -4.2566446e-15;
+          double F1_4 = 38199.012 - 7.3679649e-14*S_4;
+          double F1_5 = 7.3679649e-14*S_4;
+          double F1_6 = -6.60070615751665e-15*S_8 - 7.3679649e-14*S_4;
+          double F1_7 = 6.60070615751665e-15*S_8;
           double F1_8 = 0.0;
           double F1_9 = 1.0315008299507354e-13*S_8;
           double F1_10 = -1.0315008299507354e-13*S_8;
@@ -407,14 +407,14 @@ namespace mkpp {
           double Y2_9 = S_9 + K1_9;
           double Y2_10 = S_10 + K1_10;
           // Rate evaluation F2 at Y2
-          double F2_0 = 38199.012000000002;
-          double F2_1 = 4.2566445999999996e-15;
-          double F2_2 = -38199.012000000002;
-          double F2_3 = -4.2566445999999996e-15;
-          double F2_4 = 38199.012000000002 - 7.3679649000000001e-14*Y2_4;
-          double F2_5 = 7.3679649000000001e-14*Y2_4;
-          double F2_6 = -6.6007061575166499e-15*Y2_8 - 7.3679649000000001e-14*Y2_4;
-          double F2_7 = 6.6007061575166499e-15*Y2_8;
+          double F2_0 = 38199.012;
+          double F2_1 = 4.2566446e-15;
+          double F2_2 = -38199.012;
+          double F2_3 = -4.2566446e-15;
+          double F2_4 = 38199.012 - 7.3679649e-14*Y2_4;
+          double F2_5 = 7.3679649e-14*Y2_4;
+          double F2_6 = -6.60070615751665e-15*Y2_8 - 7.3679649e-14*Y2_4;
+          double F2_7 = 6.60070615751665e-15*Y2_8;
           double F2_8 = 0.0;
           double F2_9 = 1.0315008299507354e-13*Y2_8;
           double F2_10 = -1.0315008299507354e-13*Y2_8;
@@ -695,14 +695,14 @@ namespace mkpp {
           const double S_10 = state(8);
 
           // 1. Stage 1 Rates (F1)
-          double F1_0 = 38199.012000000002;
-          double F1_1 = 4.2566445999999996e-15;
-          double F1_2 = -38199.012000000002;
-          double F1_3 = -4.2566445999999996e-15;
-          double F1_4 = 38199.012000000002 - 7.3679649000000001e-14*S_4;
-          double F1_5 = 7.3679649000000001e-14*S_4;
-          double F1_6 = -6.6007061575166499e-15*S_8 - 7.3679649000000001e-14*S_4;
-          double F1_7 = 6.6007061575166499e-15*S_8;
+          double F1_0 = 38199.012;
+          double F1_1 = 4.2566446e-15;
+          double F1_2 = -38199.012;
+          double F1_3 = -4.2566446e-15;
+          double F1_4 = 38199.012 - 7.3679649e-14*S_4;
+          double F1_5 = 7.3679649e-14*S_4;
+          double F1_6 = -6.60070615751665e-15*S_8 - 7.3679649e-14*S_4;
+          double F1_7 = 6.60070615751665e-15*S_8;
           double F1_8 = 0.0;
           double F1_9 = 1.0315008299507354e-13*S_8;
           double F1_10 = -1.0315008299507354e-13*S_8;
@@ -721,21 +721,21 @@ namespace mkpp {
           active[10] = (Kokkos::fabs(F1_10) / (atol[10] + rtol[10] * Kokkos::fabs(state(8))) >= importance_threshold);
 
           // 3. Analytical Jacobian & Iteration Matrix W (identity for frozen species)
-          double J_0_2 = 38199.012000000002;
-          double J_1_3 = 4.2566445999999996e-15;
-          double J_2_2 = -38199.012000000002;
-          double J_3_3 = -4.2566445999999996e-15;
-          double J_4_2 = 38199.012000000002;
-          double J_4_3 = 4.2566445999999996e-15;
-          double J_4_4 = -7.3679649000000001e-14;
-          double J_4_6 = -7.3679649000000001e-14*S_4;
-          double J_5_4 = 7.3679649000000001e-14;
-          double J_5_6 = 7.3679649000000001e-14*S_4;
-          double J_6_4 = -7.3679649000000001e-14;
-          double J_6_6 = -6.6007061575166499e-15*S_8 - 7.3679649000000001e-14*S_4;
-          double J_6_8 = -6.6007061575166499e-15;
-          double J_7_6 = 6.6007061575166499e-15*S_8;
-          double J_7_8 = 6.6007061575166499e-15;
+          double J_0_2 = 38199.012;
+          double J_1_3 = 4.2566446e-15;
+          double J_2_2 = -38199.012;
+          double J_3_3 = -4.2566446e-15;
+          double J_4_2 = 38199.012;
+          double J_4_3 = 4.2566446e-15;
+          double J_4_4 = -7.3679649e-14;
+          double J_4_6 = -7.3679649e-14*S_4;
+          double J_5_4 = 7.3679649e-14;
+          double J_5_6 = 7.3679649e-14*S_4;
+          double J_6_4 = -7.3679649e-14;
+          double J_6_6 = -6.60070615751665e-15*S_8 - 7.3679649e-14*S_4;
+          double J_6_8 = -6.60070615751665e-15;
+          double J_7_6 = 6.60070615751665e-15*S_8;
+          double J_7_8 = 6.60070615751665e-15;
           double J_9_8 = 1.0315008299507354e-13;
           double J_9_10 = 1.0315008299507354e-13*S_8;
           double J_10_8 = -1.0315008299507354e-13;
@@ -854,14 +854,14 @@ namespace mkpp {
           double Y2_9 = S_9 + K1_9;
           double Y2_10 = S_10 + K1_10;
           // Rate evaluation F2 at Y2
-          double F2_0 = 38199.012000000002;
-          double F2_1 = 4.2566445999999996e-15;
-          double F2_2 = -38199.012000000002;
-          double F2_3 = -4.2566445999999996e-15;
-          double F2_4 = 38199.012000000002 - 7.3679649000000001e-14*Y2_4;
-          double F2_5 = 7.3679649000000001e-14*Y2_4;
-          double F2_6 = -6.6007061575166499e-15*Y2_8 - 7.3679649000000001e-14*Y2_4;
-          double F2_7 = 6.6007061575166499e-15*Y2_8;
+          double F2_0 = 38199.012;
+          double F2_1 = 4.2566446e-15;
+          double F2_2 = -38199.012;
+          double F2_3 = -4.2566446e-15;
+          double F2_4 = 38199.012 - 7.3679649e-14*Y2_4;
+          double F2_5 = 7.3679649e-14*Y2_4;
+          double F2_6 = -6.60070615751665e-15*Y2_8 - 7.3679649e-14*Y2_4;
+          double F2_7 = 6.60070615751665e-15*Y2_8;
           double F2_8 = 0.0;
           double F2_9 = 1.0315008299507354e-13*Y2_8;
           double F2_10 = -1.0315008299507354e-13*Y2_8;
@@ -1139,21 +1139,21 @@ namespace mkpp {
           const double S_10 = state(Species::FixedCl);  // [FixedCl]
 
           // Analytical Jacobian & Iteration Matrix W = inv_g_dt*I - J (sparse)
-          double J_0_2 = 38199.012000000002;
-          double J_1_3 = 4.2566445999999996e-15;
-          double J_2_2 = -38199.012000000002;
-          double J_3_3 = -4.2566445999999996e-15;
-          double J_4_2 = 38199.012000000002;
-          double J_4_3 = 4.2566445999999996e-15;
-          double J_4_4 = -7.3679649000000001e-14;
-          double J_4_6 = -7.3679649000000001e-14*S_4;
-          double J_5_4 = 7.3679649000000001e-14;
-          double J_5_6 = 7.3679649000000001e-14*S_4;
-          double J_6_4 = -7.3679649000000001e-14;
-          double J_6_6 = -6.6007061575166499e-15*S_8 - 7.3679649000000001e-14*S_4;
-          double J_6_8 = -6.6007061575166499e-15;
-          double J_7_6 = 6.6007061575166499e-15*S_8;
-          double J_7_8 = 6.6007061575166499e-15;
+          double J_0_2 = 38199.012;
+          double J_1_3 = 4.2566446e-15;
+          double J_2_2 = -38199.012;
+          double J_3_3 = -4.2566446e-15;
+          double J_4_2 = 38199.012;
+          double J_4_3 = 4.2566446e-15;
+          double J_4_4 = -7.3679649e-14;
+          double J_4_6 = -7.3679649e-14*S_4;
+          double J_5_4 = 7.3679649e-14;
+          double J_5_6 = 7.3679649e-14*S_4;
+          double J_6_4 = -7.3679649e-14;
+          double J_6_6 = -6.60070615751665e-15*S_8 - 7.3679649e-14*S_4;
+          double J_6_8 = -6.60070615751665e-15;
+          double J_7_6 = 6.60070615751665e-15*S_8;
+          double J_7_8 = 6.60070615751665e-15;
           double J_9_8 = 1.0315008299507354e-13;
           double J_9_10 = 1.0315008299507354e-13*S_8;
           double J_10_8 = -1.0315008299507354e-13;
@@ -1234,14 +1234,14 @@ namespace mkpp {
 
           // --- Stage 1 ---
           // Rate evaluation F1 at S
-          double F1_0 = 38199.012000000002;
-          double F1_1 = 4.2566445999999996e-15;
-          double F1_2 = -38199.012000000002;
-          double F1_3 = -4.2566445999999996e-15;
-          double F1_4 = 38199.012000000002 - 7.3679649000000001e-14*S_4;
-          double F1_5 = 7.3679649000000001e-14*S_4;
-          double F1_6 = -6.6007061575166499e-15*S_8 - 7.3679649000000001e-14*S_4;
-          double F1_7 = 6.6007061575166499e-15*S_8;
+          double F1_0 = 38199.012;
+          double F1_1 = 4.2566446e-15;
+          double F1_2 = -38199.012;
+          double F1_3 = -4.2566446e-15;
+          double F1_4 = 38199.012 - 7.3679649e-14*S_4;
+          double F1_5 = 7.3679649e-14*S_4;
+          double F1_6 = -6.60070615751665e-15*S_8 - 7.3679649e-14*S_4;
+          double F1_7 = 6.60070615751665e-15*S_8;
           double F1_8 = 0.0;
           double F1_9 = 1.0315008299507354e-13*S_8;
           double F1_10 = -1.0315008299507354e-13*S_8;
@@ -1304,14 +1304,14 @@ namespace mkpp {
           double Y2_9 = S_9 + K1_9;
           double Y2_10 = S_10 + K1_10;
           // Rate evaluation F2 at Y2
-          double F2_0 = 38199.012000000002;
-          double F2_1 = 4.2566445999999996e-15;
-          double F2_2 = -38199.012000000002;
-          double F2_3 = -4.2566445999999996e-15;
-          double F2_4 = 38199.012000000002 - 7.3679649000000001e-14*Y2_4;
-          double F2_5 = 7.3679649000000001e-14*Y2_4;
-          double F2_6 = -6.6007061575166499e-15*Y2_8 - 7.3679649000000001e-14*Y2_4;
-          double F2_7 = 6.6007061575166499e-15*Y2_8;
+          double F2_0 = 38199.012;
+          double F2_1 = 4.2566446e-15;
+          double F2_2 = -38199.012;
+          double F2_3 = -4.2566446e-15;
+          double F2_4 = 38199.012 - 7.3679649e-14*Y2_4;
+          double F2_5 = 7.3679649e-14*Y2_4;
+          double F2_6 = -6.60070615751665e-15*Y2_8 - 7.3679649e-14*Y2_4;
+          double F2_7 = 6.60070615751665e-15*Y2_8;
           double F2_8 = 0.0;
           double F2_9 = 1.0315008299507354e-13*Y2_8;
           double F2_10 = -1.0315008299507354e-13*Y2_8;
@@ -1598,21 +1598,21 @@ namespace mkpp {
               const double S_10 = chk.state[step][10];
 
               // Recompute Jacobian at checkpointed state (recompute-J strategy, D1)
-              double J_0_2 = 38199.012000000002;
-              double J_1_3 = 4.2566445999999996e-15;
-              double J_2_2 = -38199.012000000002;
-              double J_3_3 = -4.2566445999999996e-15;
-              double J_4_2 = 38199.012000000002;
-              double J_4_3 = 4.2566445999999996e-15;
-              double J_4_4 = -7.3679649000000001e-14;
-              double J_4_6 = -7.3679649000000001e-14*S_4;
-              double J_5_4 = 7.3679649000000001e-14;
-              double J_5_6 = 7.3679649000000001e-14*S_4;
-              double J_6_4 = -7.3679649000000001e-14;
-              double J_6_6 = -6.6007061575166499e-15*S_8 - 7.3679649000000001e-14*S_4;
-              double J_6_8 = -6.6007061575166499e-15;
-              double J_7_6 = 6.6007061575166499e-15*S_8;
-              double J_7_8 = 6.6007061575166499e-15;
+              double J_0_2 = 38199.012;
+              double J_1_3 = 4.2566446e-15;
+              double J_2_2 = -38199.012;
+              double J_3_3 = -4.2566446e-15;
+              double J_4_2 = 38199.012;
+              double J_4_3 = 4.2566446e-15;
+              double J_4_4 = -7.3679649e-14;
+              double J_4_6 = -7.3679649e-14*S_4;
+              double J_5_4 = 7.3679649e-14;
+              double J_5_6 = 7.3679649e-14*S_4;
+              double J_6_4 = -7.3679649e-14;
+              double J_6_6 = -6.60070615751665e-15*S_8 - 7.3679649e-14*S_4;
+              double J_6_8 = -6.60070615751665e-15;
+              double J_7_6 = 6.60070615751665e-15*S_8;
+              double J_7_8 = 6.60070615751665e-15;
               double J_9_8 = 1.0315008299507354e-13;
               double J_9_10 = 1.0315008299507354e-13*S_8;
               double J_10_8 = -1.0315008299507354e-13;
@@ -1941,21 +1941,21 @@ namespace mkpp {
               const double S_10 = chk.state[step][10];
 
               // Recompute Jacobian at checkpointed state (recompute-J strategy, D1)
-              double J_0_2 = 38199.012000000002;
-              double J_1_3 = 4.2566445999999996e-15;
-              double J_2_2 = -38199.012000000002;
-              double J_3_3 = -4.2566445999999996e-15;
-              double J_4_2 = 38199.012000000002;
-              double J_4_3 = 4.2566445999999996e-15;
-              double J_4_4 = -7.3679649000000001e-14;
-              double J_4_6 = -7.3679649000000001e-14*S_4;
-              double J_5_4 = 7.3679649000000001e-14;
-              double J_5_6 = 7.3679649000000001e-14*S_4;
-              double J_6_4 = -7.3679649000000001e-14;
-              double J_6_6 = -6.6007061575166499e-15*S_8 - 7.3679649000000001e-14*S_4;
-              double J_6_8 = -6.6007061575166499e-15;
-              double J_7_6 = 6.6007061575166499e-15*S_8;
-              double J_7_8 = 6.6007061575166499e-15;
+              double J_0_2 = 38199.012;
+              double J_1_3 = 4.2566446e-15;
+              double J_2_2 = -38199.012;
+              double J_3_3 = -4.2566446e-15;
+              double J_4_2 = 38199.012;
+              double J_4_3 = 4.2566446e-15;
+              double J_4_4 = -7.3679649e-14;
+              double J_4_6 = -7.3679649e-14*S_4;
+              double J_5_4 = 7.3679649e-14;
+              double J_5_6 = 7.3679649e-14*S_4;
+              double J_6_4 = -7.3679649e-14;
+              double J_6_6 = -6.60070615751665e-15*S_8 - 7.3679649e-14*S_4;
+              double J_6_8 = -6.60070615751665e-15;
+              double J_7_6 = 6.60070615751665e-15*S_8;
+              double J_7_8 = 6.60070615751665e-15;
               double J_9_8 = 1.0315008299507354e-13;
               double J_9_10 = 1.0315008299507354e-13*S_8;
               double J_10_8 = -1.0315008299507354e-13;
