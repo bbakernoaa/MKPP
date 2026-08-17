@@ -1,5 +1,5 @@
-name: T1_Mechanism
-description: T1 mechanism imported from NCAR/music-box ts1 example
+name: TS1_Mechanism
+description: TS1 mechanism imported from NCAR/music-box ts1 example
 species:
 - name: ALKNIT
 - name: BZOOH

@@ -28,9 +28,9 @@ namespace mech_saprc99 {
 #include "saprc99.hpp"
 }  // namespace mech_saprc99
 
-namespace mech_t1 {
-#include "t1.hpp"
-}  // namespace mech_t1
+namespace mech_ts1 {
+#include "ts1.hpp"
+}  // namespace mech_ts1
 
 using ExecSpace = Kokkos::DefaultExecutionSpace;
 
@@ -185,7 +185,7 @@ int main(int argc, char* argv[]) {
             } else if (arg == "-h" || arg == "--help") {
                 std::cout << "Usage: " << argv[0] << " [options]\n"
                           << "Options:\n"
-                          << "  --mechanism chapman|gocart|saprc99|t1 (default: chapman)\n"
+                          << "  --mechanism chapman|gocart|saprc99|ts1 (default: chapman)\n"
                           << "  --cells N                             (default: 10000)\n"
                           << "  --steps N                             (default: 30)\n"
                           << "  --dt DT                               (default: 60.0)\n";
@@ -200,10 +200,10 @@ int main(int argc, char* argv[]) {
             run_benchmark<mech_gocart::mkpp::SolverKernels<ExecSpace>, true>("gocart", num_cells, num_steps, dt);
         } else if (mechanism == "saprc99") {
             run_benchmark<mech_saprc99::mkpp::SolverKernels<ExecSpace>, false>("saprc99", num_cells, num_steps, dt);
-        } else if (mechanism == "t1") {
-            run_benchmark<mech_t1::mkpp::SolverKernels<ExecSpace>, false>("t1", num_cells, num_steps, dt);
+        } else if (mechanism == "ts1") {
+            run_benchmark<mech_ts1::mkpp::SolverKernels<ExecSpace>, false>("ts1", num_cells, num_steps, dt);
         } else {
-            std::cerr << "FATAL ERROR: Unknown mechanism '" << mechanism << "'. Supported: chapman, gocart, saprc99, t1\n";
+            std::cerr << "FATAL ERROR: Unknown mechanism '" << mechanism << "'. Supported: chapman, gocart, saprc99, ts1\n";
             exit_code = 1;
         }
     }

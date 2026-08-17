@@ -37,7 +37,7 @@ main() {
         "mechanisms/saprc99.yaml"
         "mechanisms/saprcnov.yaml"
         "mechanisms/saprc99_mini.yaml"
-        "mechanisms/t1.yaml"
+        "mechanisms/ts1.yaml"
     )
 
     local mech

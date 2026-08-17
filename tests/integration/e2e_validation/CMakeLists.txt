@@ -5,7 +5,7 @@ if(NOT TARGET mkpp_host)
                    ${CMAKE_BINARY_DIR}/mkpp_host)
 endif()
 
-set(MECHS "chapman" "small_strato" "carbon" "t1")
+set(MECHS "chapman" "small_strato" "carbon" "ts1")
 
 foreach(MECH ${MECHS})
   if("${MECH}" STREQUAL "chapman")
@@ -18,7 +18,7 @@ foreach(MECH ${MECHS})
     set(NUM_SPEC 12)
   elseif("${MECH}" STREQUAL "saprc99")
     set(NUM_SPEC 82)
-  elseif("${MECH}" STREQUAL "t1")
+  elseif("${MECH}" STREQUAL "ts1")
     set(NUM_SPEC 210)
   else()
     set(NUM_SPEC 100)
@@ -76,13 +76,14 @@ if(MKPP_ENABLE_MICM_COMPARE)
                                                        micm)
   add_test(NAME run_benchmark_mkpp_vs_micm COMMAND benchmark_mkpp_vs_micm)
 
-  add_executable(benchmark_mkpp_vs_micm_t1 benchmark_mkpp_vs_micm_t1.cpp)
+  add_executable(benchmark_mkpp_vs_micm_ts1 benchmark_mkpp_vs_micm_ts1.cpp)
   target_include_directories(
-    benchmark_mkpp_vs_micm_t1
+    benchmark_mkpp_vs_micm_ts1
     PRIVATE ${CMAKE_SOURCE_DIR}/mkpp-generated
     PRIVATE ${CMAKE_BINARY_DIR}
     PRIVATE ${CMAKE_BINARY_DIR}/_deps/micm-src/include)
-  target_link_libraries(benchmark_mkpp_vs_micm_t1 PRIVATE mkpp_host
-                                                          Kokkos::kokkos micm)
-  add_test(NAME run_benchmark_mkpp_vs_micm_t1 COMMAND benchmark_mkpp_vs_micm_t1)
+  target_link_libraries(benchmark_mkpp_vs_micm_ts1 PRIVATE mkpp_host
+                                                           Kokkos::kokkos micm)
+  add_test(NAME run_benchmark_mkpp_vs_micm_ts1
+           COMMAND benchmark_mkpp_vs_micm_ts1)
 endif()

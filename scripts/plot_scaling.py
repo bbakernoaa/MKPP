@@ -82,11 +82,11 @@ run_both(
     "reports/performance_scaling_chapman.png",
 )
 
-# For T1, use 10 steps so it completes in a reasonable time for 10k cells
+# For TS1, use 10 steps so it completes in a reasonable time for 10k cells
 run_both(
-    "./build/tests/integration/e2e_validation/benchmark_mkpp_vs_micm_t1",
+    "./build/tests/integration/e2e_validation/benchmark_mkpp_vs_micm_ts1",
     1000,
     10,
-    "T1 Mechanism (210 spec, 547 rxn)",
-    "reports/performance_scaling_t1.png",
+    "TS1 Mechanism (210 spec, 547 rxn)",
+    "reports/performance_scaling_ts1.png",
 )

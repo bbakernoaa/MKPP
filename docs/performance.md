@@ -38,7 +38,7 @@ The `mkpp_bench` executable accepts the following arguments:
 
 | Argument | Description | Default | Allowed Values |
 | :--- | :--- | :--- | :--- |
-| `--mechanism` | Mechanism solver to benchmark | `chapman` | `chapman`, `gocart`, `saprc99`, `t1` |
+| `--mechanism` | Mechanism solver to benchmark | `chapman` | `chapman`, `gocart`, `saprc99`, `ts1` |
 | `--cells` | Number of independent grid cells | `1000` | Positive integer |
 | `--steps` | Number of integration steps per cell | `10` | Positive integer |
 
@@ -93,7 +93,7 @@ Mechanism   Cells   Steps   TotalTime_ms    IntegrationTime_ms  Throughput_cell_
 chapman     2000    5       1.674           1.253               7980845.97
 gocart      2000    5       2.105           1.520               6578947.37
 saprc99     2000    5       5.820           4.910               2036659.88
-t1          2000    5       8.430           7.120               1404494.38
+ts1          2000    5       8.430           7.120               1404494.38
 ```
 
 ---
@@ -115,7 +115,7 @@ Wall-clock timing fluctuates due to CPU frequency scaling, thread scheduling, an
 - **`build_dir`**: Directory containing `mkpp_bench` (default: `build`).
 - **`cells`**: Grid cell count (default: `2000`).
 - **`steps`**: Integration step count (default: `5`).
-- **`mechanism`**: Target mechanism (`chapman`, `gocart`, `saprc99`, `t1`, or `all`).
+- **`mechanism`**: Target mechanism (`chapman`, `gocart`, `saprc99`, `ts1`, or `all`).
 - **`out_dir`**: Directory for Callgrind output files (default: `/tmp`).
 
 ### Example Run
@@ -130,7 +130,7 @@ Mechanism   Cells   Steps   InstructionCount
 chapman     2000    5       12450123
 gocart      2000    5       28910450
 saprc99     2000    5       85120300
-t1          2000    5       142300100
+ts1          2000    5       142300100
 ```
 
 This also generates raw Callgrind output files (`cg_chapman.out`, `cg_gocart.out`, etc.) in the target output directory.

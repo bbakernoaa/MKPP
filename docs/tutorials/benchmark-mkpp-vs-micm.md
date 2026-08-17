@@ -64,8 +64,8 @@ Execute the compiled binaries from the command line:
 # Run Chapman Benchmark (4 species, 4 reactions)
 ./build/tests/integration/e2e_validation/benchmark_mkpp_vs_micm
 
-# Run T1 Mechanism Benchmark (210 species, 547 reactions)
-./build/tests/integration/e2e_validation/benchmark_mkpp_vs_micm_t1
+# Run TS1 Mechanism Benchmark (210 species, 547 reactions)
+./build/tests/integration/e2e_validation/benchmark_mkpp_vs_micm_ts1
 ```
 
 ### Generated Scaling Performance
@@ -73,7 +73,7 @@ Execute the compiled binaries from the command line:
 Running the automated script (`.venv/bin/python3 scripts/plot_scaling.py`) will generate these scaling profiles measuring total execution time across varying grid cell layouts:
 
 ![Chapman Scaling Plot](../assets/images/performance_scaling_chapman.png)
-![T1 Scaling Plot](../assets/images/performance_scaling_t1.png)
+![TS1 Scaling Plot](../assets/images/performance_scaling_ts1.png)
 
 ### Understanding the Output
 
@@ -93,10 +93,10 @@ Throughput (cell-st/s)      1.05e+07          1.03e+06          --
 ==========================================================================
 ```
 
-#### 2. T1 Mechanism (210 Species, 547 Reactions, 1,000 cells x 10 steps)
+#### 2. TS1 Mechanism (210 Species, 547 Reactions, 1,000 cells x 10 steps)
 ```text
 ==========================================================================
-      Direct C++ Benchmark: MKPP vs NCAR/MICM (T1 Mechanism)
+      Direct C++ Benchmark: MKPP vs NCAR/MICM (TS1 Mechanism)
 ==========================================================================
 Species    : 210
 Reactions  : 547
@@ -104,11 +104,11 @@ Grid Cells : 1000
 Timesteps  : 10
 Step Size  : 60 s
 
-Building MICM T1 Solver (210 species, 547 reactions)... done (4.85 ms)
+Building MICM TS1 Solver (210 species, 547 reactions)... done (4.85 ms)
 
-Running MICM T1 Benchmark... done (1842.56 ms)
+Running MICM TS1 Benchmark... done (1842.56 ms)
 
-Running MKPP T1 Benchmark... done (413.13 ms)
+Running MKPP TS1 Benchmark... done (413.13 ms)
 
 Metric                      MKPP C++ (AOT)    MICM C++          Speedup
 --------------------------------------------------------------------------------

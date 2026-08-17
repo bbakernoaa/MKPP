@@ -84,11 +84,11 @@ main() {
 
   local mechanisms=()
   if [[ "${mechanism}" == "all" ]]; then
-    mechanisms=("chapman" "gocart" "saprc99" "t1")
-  elif [[ "${mechanism}" =~ ^(chapman|gocart|saprc99|t1)$ ]]; then
+    mechanisms=("chapman" "gocart" "saprc99" "ts1")
+  elif [[ "${mechanism}" =~ ^(chapman|gocart|saprc99|ts1)$ ]]; then
     mechanisms=("${mechanism}")
   else
-    echo "FATAL ERROR: Invalid mechanism '${mechanism}'. Allowed: all, chapman, gocart, saprc99, t1." >&2
+    echo "FATAL ERROR: Invalid mechanism '${mechanism}'. Allowed: all, chapman, gocart, saprc99, ts1." >&2
     exit 1
   fi
 

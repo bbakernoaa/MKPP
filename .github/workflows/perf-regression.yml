@@ -45,22 +45,22 @@ jobs:
           cmake -B build -DCMAKE_BUILD_TYPE=Release -DMKPP_ENABLE_BENCHMARK=ON -DKokkos_ROOT=/opt/kokkos
           cmake --build build --target mkpp_bench --parallel
 
-      - name: Profile Base Branch (chapman, t1)
+      - name: Profile Base Branch (chapman, ts1)
         run: |
           mkdir -p /tmp/perf_base /tmp/perf_pr
           ./pr_repo/scripts/profile_mkpp.sh base_repo/build 2000 5 chapman /tmp/perf_base > /tmp/base_chapman.tsv
-          ./pr_repo/scripts/profile_mkpp.sh base_repo/build 2000 5 t1 /tmp/perf_base > /tmp/base_t1.tsv
+          ./pr_repo/scripts/profile_mkpp.sh base_repo/build 2000 5 ts1 /tmp/perf_base > /tmp/base_ts1.tsv
           cat /tmp/base_chapman.tsv > /tmp/base_profile.tsv
-          tail -n +2 /tmp/base_t1.tsv >> /tmp/base_profile.tsv
+          tail -n +2 /tmp/base_ts1.tsv >> /tmp/base_profile.tsv
           echo "Base Branch Instruction Profile Summary:"
           cat /tmp/base_profile.tsv
 
-      - name: Profile PR Branch (chapman, t1)
+      - name: Profile PR Branch (chapman, ts1)
         run: |
           ./pr_repo/scripts/profile_mkpp.sh pr_repo/build 2000 5 chapman /tmp/perf_pr > /tmp/pr_chapman.tsv
-          ./pr_repo/scripts/profile_mkpp.sh pr_repo/build 2000 5 t1 /tmp/perf_pr > /tmp/pr_t1.tsv
+          ./pr_repo/scripts/profile_mkpp.sh pr_repo/build 2000 5 ts1 /tmp/perf_pr > /tmp/pr_ts1.tsv
           cat /tmp/pr_chapman.tsv > /tmp/pr_profile.tsv
-          tail -n +2 /tmp/pr_t1.tsv >> /tmp/pr_profile.tsv
+          tail -n +2 /tmp/pr_ts1.tsv >> /tmp/pr_profile.tsv
           echo "PR Branch Instruction Profile Summary:"
           cat /tmp/pr_profile.tsv
 
@@ -69,8 +69,8 @@ jobs:
           mkdir -p /tmp/flamegraphs
           python3 ./pr_repo/scripts/generate_flamegraph.py --callgrind /tmp/perf_base/cg_chapman.out --out /tmp/flamegraphs/flamegraph_chapman_base.svg --title "MKPP Chapman Kernel Profile (Base Branch)"
           python3 ./pr_repo/scripts/generate_flamegraph.py --callgrind /tmp/perf_pr/cg_chapman.out --out /tmp/flamegraphs/flamegraph_chapman_pr.svg --title "MKPP Chapman Kernel Profile (PR Branch)"
-          python3 ./pr_repo/scripts/generate_flamegraph.py --callgrind /tmp/perf_base/cg_t1.out --out /tmp/flamegraphs/flamegraph_t1_base.svg --title "MKPP T1 Kernel Profile (Base Branch)"
-          python3 ./pr_repo/scripts/generate_flamegraph.py --callgrind /tmp/perf_pr/cg_t1.out --out /tmp/flamegraphs/flamegraph_t1_pr.svg --title "MKPP T1 Kernel Profile (PR Branch)"
+          python3 ./pr_repo/scripts/generate_flamegraph.py --callgrind /tmp/perf_base/cg_ts1.out --out /tmp/flamegraphs/flamegraph_ts1_base.svg --title "MKPP TS1 Kernel Profile (Base Branch)"
+          python3 ./pr_repo/scripts/generate_flamegraph.py --callgrind /tmp/perf_pr/cg_ts1.out --out /tmp/flamegraphs/flamegraph_ts1_pr.svg --title "MKPP TS1 Kernel Profile (PR Branch)"
 
       - name: Compare Profiles & Check for Regressions
         run: |

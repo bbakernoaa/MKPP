@@ -5,24 +5,24 @@
 #include <iostream>
 #include <cstdlib>
 
-// Generated MICM C++ T1 Solver
-#include "generated_micm_t1.hpp"
+// Generated MICM C++ TS1 Solver
+#include "generated_micm_ts1.hpp"
 
-// Generated MKPP AOT T1 Solver
-#include "t1.hpp"
+// Generated MKPP AOT TS1 Solver
+#include "ts1.hpp"
 
 using ExecSpace = Kokkos::DefaultExecutionSpace;
 
 // ---------------------------------------------------------------------------
-// MKPP T1 Functor
+// MKPP TS1 Functor
 // ---------------------------------------------------------------------------
-struct MKPPT1Functor {
+struct MKPPTS1Functor {
     using ViewType = Kokkos::View<double**, Kokkos::LayoutLeft, typename ExecSpace::memory_space>;
     ViewType m_state;
     double m_dt;
     const double* m_jvals;
 
-    MKPPT1Functor(ViewType state, double dt, const double* jvals)
+    MKPPTS1Functor(ViewType state, double dt, const double* jvals)
         : m_state(state), m_dt(dt), m_jvals(jvals) {}
 
     KOKKOS_INLINE_FUNCTION
@@ -34,7 +34,7 @@ struct MKPPT1Functor {
 };
 
 // ---------------------------------------------------------------------------
-// Direct C++ T1 Benchmark Entry Point
+// Direct C++ TS1 Benchmark Entry Point
 // ---------------------------------------------------------------------------
 int main(int argc, char* argv[]) {
     Kokkos::initialize(argc, argv);
@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
         }
 
         std::cout << "==========================================================================" << std::endl;
-        std::cout << "      Direct C++ Benchmark: MKPP vs NCAR/MICM (T1 Mechanism)            " << std::endl;
+        std::cout << "      Direct C++ Benchmark: MKPP vs NCAR/MICM (TS1 Mechanism)            " << std::endl;
         std::cout << "==========================================================================" << std::endl;
         std::cout << "Species    : " << num_species << std::endl;
         std::cout << "Reactions  : 547" << std::endl;
@@ -60,10 +60,10 @@ int main(int argc, char* argv[]) {
         std::cout << "Timesteps  : " << num_steps << std::endl;
         std::cout << "Step Size  : " << dt << " s\n" << std::endl;
 
-        // 1. Build MICM T1 Solver
-        std::cout << "Building MICM T1 Solver (210 species, 547 reactions)..." << std::flush;
+        // 1. Build MICM TS1 Solver
+        std::cout << "Building MICM TS1 Solver (210 species, 547 reactions)..." << std::flush;
         auto start_build_micm = std::chrono::high_resolution_clock::now();
-        auto micm_solver = build_micm_t1_solver();
+        auto micm_solver = build_micm_ts1_solver();
         auto end_build_micm = std::chrono::high_resolution_clock::now();
         double micm_build_ms = std::chrono::duration<double, std::milli>(end_build_micm - start_build_micm).count();
         std::cout << " done (" << micm_build_ms << " ms)\n" << std::endl;
@@ -82,7 +82,7 @@ int main(int argc, char* argv[]) {
             s.variables_[cell] = init_conc;
         }
 
-        std::cout << "Running MICM T1 Benchmark..." << std::flush;
+        std::cout << "Running MICM TS1 Benchmark..." << std::flush;
         auto start_micm = std::chrono::high_resolution_clock::now();
 
         for (int step = 0; step < num_steps; ++step) {
@@ -115,15 +115,15 @@ int main(int argc, char* argv[]) {
 
         // 4. Warmup MKPP
         Kokkos::parallel_for("warmup", Kokkos::RangePolicy<ExecSpace>(0, num_cells),
-                             MKPPT1Functor(mkpp_state, dt, mkpp_jvals.data()));
+                             MKPPTS1Functor(mkpp_state, dt, mkpp_jvals.data()));
         Kokkos::fence();
 
         // 5. Benchmark MKPP
-        std::cout << "Running MKPP T1 Benchmark..." << std::flush;
+        std::cout << "Running MKPP TS1 Benchmark..." << std::flush;
         auto start_mkpp = std::chrono::high_resolution_clock::now();
         for (int step = 0; step < num_steps; ++step) {
             Kokkos::parallel_for("step", Kokkos::RangePolicy<ExecSpace>(0, num_cells),
-                                 MKPPT1Functor(mkpp_state, dt, mkpp_jvals.data()));
+                                 MKPPTS1Functor(mkpp_state, dt, mkpp_jvals.data()));
         }
         Kokkos::fence();
         auto end_mkpp = std::chrono::high_resolution_clock::now();
