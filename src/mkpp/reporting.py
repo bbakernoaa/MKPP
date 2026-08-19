@@ -92,72 +92,6 @@ def write_report(mech, sympy_meta, out_dir, suffix=""):
             f.write("- **Graph Topology Status**: Mechanism contains cyclically dependent fast radicals. Tarjan SCC was applied.\n")
         f.write("\n")
 
-        if hasattr(mech, "amore_metadata") and mech.amore_metadata:
-            meta = mech.amore_metadata
-            f.write("## AMORE Auto-Lumping Summary\n")
-            f.write(f"- **Explicit Species Collapsed**: {len(meta['pruned_explicits'])}\n")
-            f.write(f"- **Surrogates Added**: {len(meta['surrogates_added'])}\n")
-            f.write(f"- **Redundant Reactions Merged**: {meta['total_collapsed']}\n\n")
-            f.write("### Target Surrogates\n")
-            f.write(f"{', '.join(meta['surrogates_added'])}\n\n")
-
-            f.write("### Lumping Mapping Table\n")
-            f.write("| Explicit Species | Mapped Surrogate |\n")
-            f.write("|------------------|------------------|\n")
-            for explicit, surrogate in meta.get("mapping", {}).items():
-                if explicit in meta["pruned_explicits"]:
-                    f.write(f"| `{explicit}` | `{surrogate}` |\n")
-            f.write("\n")
-
-            import yaml
-
-            spc_yaml = out_path / f"species_{mech.name}{suffix}.yaml"
-            rxn_yaml = out_path / f"reactions_{mech.name}{suffix}.yaml"
-
-            with open(spc_yaml, "w") as fy:
-                yaml.dump([{"name": s.name} for s in mech.species], fy, sort_keys=False)
-            with open(rxn_yaml, "w") as fy:
-                yaml_data = []
-                for rxn in mech.reactions:
-                    d = {
-                        "type": rxn.reaction_type,
-                        "reactants": rxn.reactants,
-                        "products": rxn.products,
-                    }
-                    d.update(rxn.parameters)
-                    yaml_data.append(d)
-                yaml.dump(yaml_data, fy, sort_keys=False)
-
-            f.write("### Reduced Mechanism Definitions\n")
-            f.write(f"- Download the lumped species config: [{spc_yaml.name}]({spc_yaml.name})\n")
-            f.write(f"- Download the lumped reactions config: [{rxn_yaml.name}]({rxn_yaml.name})\n\n")
-
-        if hasattr(mech, "amore_metadata") and mech.amore_metadata:
-            f.write("### Lumped Reaction Parameters\n")
-            f.write(
-                "When explicit paths were collapsed, their kinetic parameters were aggregated into the following effective rates ($A_{eff}$):\n\n"
-            )
-            f.write("```yaml\n")
-            import yaml
-
-            surrogates = mech.amore_metadata["surrogates_added"]
-            for rxn in mech.reactions:
-                has_surrogate = False
-                for r in rxn.reactants:
-                    if r in surrogates:
-                        has_surrogate = True
-                for p in rxn.products:
-                    if p in surrogates:
-                        has_surrogate = True
-                if has_surrogate:
-                    d = {
-                        "type": rxn.reaction_type,
-                        "reactants": rxn.reactants,
-                        "products": rxn.products,
-                    }
-                    d.update(rxn.parameters)
-                    yaml.dump([d], f, sort_keys=False)
-            f.write("```\n\n")
         f.write("## Generated SymPy Rate Expressions\n")
         f.write("Below are the exact algebraic AST expressions evaluated by SymPy for the Unified Jacobian.\n\n")
         f.write("```text\n")
@@ -197,7 +131,7 @@ def write_report(mech, sympy_meta, out_dir, suffix=""):
         f.write("### Warnings\n")
         warnings = []
         if len(mech.species) > 50:
-            warnings.append("Mechanism exceeds 50 species. Consider running with `--lump` to auto-reduce.")
+            warnings.append("Mechanism exceeds 50 species.")
         if type_counts.get("TROE", 0) > 0 or type_counts.get("EP2", 0) > 0 or type_counts.get("EP3", 0) > 0:
             warnings.append(
                 "Mechanism contains complex pressure-dependent or empirical falloff rates which expand the AST depth significantly."

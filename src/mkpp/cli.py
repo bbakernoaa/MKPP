@@ -161,7 +161,6 @@ def run_compiler(
     enable_drgep: bool = False,
     drgep_threshold: float = 0.05,
     report: bool = False,
-    lump_path: str | None = None,
     verbose: bool = False,
     dry_run: bool = False,
     no_cache: bool = False,
@@ -189,7 +188,7 @@ def run_compiler(
         if enable_drgep:
             raise CompilationError(
                 stage="validation",
-                message="DRGEP is not supported. Use AMORE lumping via --lump instead.",
+                message="DRGEP is not supported.",
             )
 
         # --- Parsing stage ---
@@ -282,33 +281,6 @@ def run_compiler(
 
         generate_headers(mech, out_dir=out_dir, suffix="", solver_name=solver_name, adjoint=adjoint)
 
-        if lump_path:
-            from .amore import apply_amore_lumping
-
-            with open(lump_path) as fl:
-                rules = yaml.safe_load(fl)
-
-            mech_lumped = load_mechanism(mech_path)
-            mech_lumped = apply_amore_lumping(mech_lumped, rules)
-
-            blocks_l = partition_reactions(mech_lumped)
-            mech_lumped.partition_metadata = blocks_l.get("metadata")
-            prepare_adjoint_and_tlm(mech_lumped)
-            mech_lumped.sympy_metadata = prepare_unified_jacobian(mech_lumped)
-
-            generate_headers(
-                mech_lumped,
-                out_dir=out_dir,
-                suffix="_lumped",
-                solver_name=solver_name,
-                adjoint=adjoint,
-            )
-
-            if report:
-                from .reporting import write_report
-
-                write_report(mech_lumped, mech_lumped.sympy_metadata, out_dir, suffix="_lumped")
-
         if report:
             from .reporting import write_report
 
@@ -346,11 +318,10 @@ def main(args=None):
     compile_parser.add_argument("--strict", action="store_true", help="Enable strict schema validation")
     compile_parser.add_argument("--emit-manifest", action="store_true", help="Emit metadata manifest alongside headers")
     compile_parser.add_argument("--report", action="store_true", help="Generate full mechanism analysis report and graph")
-    compile_parser.add_argument("--lump", type=str, help="Path to AMORE lumping rules YAML file")
     compile_parser.add_argument(
         "--drgep",
         action="store_true",
-        help="Reject compilation: DRGEP not supported. Use --lump instead.",
+        help="Reject compilation: DRGEP not supported.",
     )
     compile_parser.add_argument(
         "--drgep-threshold",
@@ -405,7 +376,6 @@ def main(args=None):
             enable_drgep=getattr(parsed_args, "drgep", False),
             drgep_threshold=getattr(parsed_args, "drgep_threshold", 0.05),
             report=getattr(parsed_args, "report", False),
-            lump_path=getattr(parsed_args, "lump", None),
             verbose=getattr(parsed_args, "verbose", False),
             dry_run=getattr(parsed_args, "dry_run", False),
             no_cache=getattr(parsed_args, "no_cache", False),

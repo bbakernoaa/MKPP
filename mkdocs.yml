@@ -93,7 +93,6 @@ nav:
           - Parser: reference/api/parser.md
           - Lowering & Calculus: reference/api/lowering.md
           - Code Generation: reference/api/codegen.md
-          - AMORE Lumping: reference/api/amore.md
   - Explanation:
       - End-to-End Compiler Pipeline: explanation/mkpp-end-to-end-architecture.md
       - AOT Symbolic LU Architecture: explanation/aot-symbolic-lu-architecture.md
