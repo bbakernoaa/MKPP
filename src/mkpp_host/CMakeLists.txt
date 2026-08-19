@@ -10,3 +10,12 @@ target_include_directories(
   mkpp_host INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
                       $<INSTALL_INTERFACE:include>)
 target_link_libraries(mkpp_host INTERFACE Kokkos::kokkos)
+
+if(MKPP_ENABLE_KOKKOS_KERNELS)
+  if(TARGET KokkosKernels::kokkoskernels)
+    target_link_libraries(mkpp_host INTERFACE KokkosKernels::kokkoskernels)
+  elseif(TARGET kokkoskernels)
+    target_link_libraries(mkpp_host INTERFACE kokkoskernels)
+  endif()
+  target_compile_definitions(mkpp_host INTERFACE MKPP_HAS_KOKKOS_KERNELS)
+endif()

@@ -19,10 +19,14 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -e .
 mkdir build && cd build
-cmake ..
+cmake .. -DMKPP_ENABLE_KOKKOS_KERNELS=ON
 ninja
 ctest
 ```
+
+### Compiler CLI Options
+- `--simd-backend {native,kokkos_batched}`: Select SIMD vector engine backend for `Wide<W>` (default: `native`). `kokkos_batched` uses KokkosKernels 5.0+ hardware-tuned SIMD vector wrappers.
+- `--batch-width <W>`: Set SIMD vector lane width (e.g. 4, 8, 16).
 
 ## Governance
 

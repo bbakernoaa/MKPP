@@ -3,6 +3,25 @@ project(MKPP_Root CXX)
 
 find_package(Kokkos REQUIRED)
 
+option(MKPP_ENABLE_KOKKOS_KERNELS
+       "Enable KokkosKernels integration for batched computations" OFF)
+
+if(MKPP_ENABLE_KOKKOS_KERNELS)
+  find_package(KokkosKernels 5.0 QUIET)
+  if(NOT KokkosKernels_FOUND)
+    find_package(KokkosKernels QUIET)
+  endif()
+  if(NOT KokkosKernels_FOUND)
+    include(FetchContent)
+    FetchContent_Declare(
+      kokkos-kernels
+      GIT_REPOSITORY https://github.com/kokkos/kokkos-kernels.git
+      GIT_TAG 5.0.0)
+    FetchContent_MakeAvailable(kokkos-kernels)
+  endif()
+  add_compile_definitions(MKPP_HAS_KOKKOS_KERNELS)
+endif()
+
 add_subdirectory(src/mkpp_host)
 
 # ---------------------------------------------------------------------------

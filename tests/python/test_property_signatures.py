@@ -243,6 +243,7 @@ def template_context_strategy(draw):
         "diagnostics_data": None,
         "suffix": "",
         "annotated_expressions": None,
+        "simd_backend": "native",
     }
 
     # Include adjoint-specific context

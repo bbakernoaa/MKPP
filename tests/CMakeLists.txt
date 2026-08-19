@@ -1,1 +1,2 @@
+add_subdirectory(contract)
 add_subdirectory(integration/e2e_validation)

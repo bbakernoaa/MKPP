@@ -66,6 +66,13 @@ target_compile_definitions(
   PRIVATE REFERENCE_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")
 
 add_test(NAME mkpp_scipy_validation COMMAND test_scipy_validation)
+
+add_executable(test_e2e_batched test_e2e_batched.cpp)
+target_include_directories(test_e2e_batched
+                           PRIVATE ${CMAKE_SOURCE_DIR}/mkpp-generated)
+target_link_libraries(test_e2e_batched PRIVATE mkpp_host Kokkos::kokkos
+                                               GTest::gtest)
+add_test(NAME test_e2e_batched COMMAND test_e2e_batched)
 if(MKPP_ENABLE_MICM_COMPARE)
   add_executable(benchmark_mkpp_vs_micm benchmark_mkpp_vs_micm.cpp)
   target_include_directories(

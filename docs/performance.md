@@ -48,6 +48,32 @@ The `mkpp_bench` executable accepts the following arguments:
 ./build/test/benchmark/mkpp_bench --mechanism chapman --cells 2000 --steps 5
 ```
 
+---
+
+## KokkosKernels Batched Engine Integration
+
+MKPP supports hardware-accelerated batched linear algebra and SIMD operations via KokkosKernels 5.0+ (`KokkosBatched`).
+
+### Enabling KokkosKernels
+
+Configure CMake with `-DMKPP_ENABLE_KOKKOS_KERNELS=ON`:
+
+```bash
+cmake -B build -DMKPP_ENABLE_KOKKOS_KERNELS=ON -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j
+```
+
+### Codegen SIMD Backend Option
+
+When compiling chemistry mechanisms, pass `--simd-backend kokkos_batched` to leverage `KokkosBatched::Vector` for `Wide<W>` SIMD vector storage:
+
+```bash
+python3 -m mkpp compile mechanisms/chapman.yaml \
+  --test-env example_env.yaml \
+  --simd-backend kokkos_batched \
+  --out mkpp-generated/
+```
+
 Sample output:
 ```text
 ================================================================================

@@ -75,6 +75,7 @@ def generate_headers(
     solver_name: str = "ros3",
     adjoint: bool = False,
     generate_host_api: bool = False,
+    simd_backend: str = "native",
 ) -> dict[str, str]:
     """Emit the Kokkos headers and manifest artifact."""
     if not mech or not mech.species:
@@ -84,7 +85,7 @@ def generate_headers(
     out_path.mkdir(parents=True, exist_ok=True)
 
     # 1. Build template context (handles all data preparation)
-    context = build_template_context(mech, solver_name, adjoint=adjoint)
+    context = build_template_context(mech, solver_name, adjoint=adjoint, simd_backend=simd_backend)
     # Add suffix to context for filename generation
     context["suffix"] = suffix
 
@@ -107,6 +108,7 @@ def generate_headers(
     manifest = {
         "mechanism": mech.name,
         "aerosol_representation": mech.aerosol_representation.value,
+        "simd_backend": simd_backend,
         "checksum": hashlib.sha256(mech.name.encode()).hexdigest(),
         "artifacts": [
             {"kind": "header", "file": header_path.name},

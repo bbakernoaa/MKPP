@@ -39,6 +39,12 @@
 #}
 #pragma once
 #include <Kokkos_Core.hpp>
+{% if simd_backend == "kokkos_batched" %}
+#ifndef MKPP_HAS_KOKKOS_KERNELS
+#error "MKPP headers compiled with --simd-backend kokkos_batched require KokkosKernels. Please reconfigure CMake with -DMKPP_ENABLE_KOKKOS_KERNELS=ON."
+#endif
+#include <KokkosBatched_Vector.hpp>
+{% endif %}
 // Generated solver for {{ mechanism_name }}
 {% if partition_metadata and partition_metadata.get is defined and partition_metadata.get("sza_sorted") %}
 // SZA Workload Sorted: true

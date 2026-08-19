@@ -167,6 +167,7 @@ def run_compiler(
     solver: str = "ros3",
     adjoint: bool = False,
     migrate_equilibrium_flag: bool = False,
+    simd_backend: str = "native",
 ) -> None:
     """Orchestrate the compilation pipeline."""
 
@@ -279,7 +280,7 @@ def run_compiler(
         # --- Code generation stage ---
         _verbose_log("codegen", f"Generating headers to {out_dir}", verbose)
 
-        generate_headers(mech, out_dir=out_dir, suffix="", solver_name=solver_name, adjoint=adjoint)
+        generate_headers(mech, out_dir=out_dir, suffix="", solver_name=solver_name, adjoint=adjoint, simd_backend=simd_backend)
 
         if report:
             from .reporting import write_report
@@ -363,6 +364,12 @@ def main(args=None):
         help="Rewrite mechanism YAML replacing PHASE_CHANGE blocks for NH4/NO3/SO4 "
         "species with an equivalent EQUILIBRIUM declaration (deprecated migration tool)",
     )
+    compile_parser.add_argument(
+        "--simd-backend",
+        choices=["native", "kokkos_batched"],
+        default="native",
+        help="SIMD vector engine backend for Wide<W> (default: native)",
+    )
 
     parsed_args = parser.parse_args(args)
 
@@ -382,6 +389,7 @@ def main(args=None):
             solver=parsed_args.solver,
             adjoint=parsed_args.adjoint,
             migrate_equilibrium_flag=parsed_args.migrate_equilibrium,
+            simd_backend=parsed_args.simd_backend,
         )
         sys.exit(0)
 

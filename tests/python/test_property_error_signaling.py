@@ -220,6 +220,7 @@ def valid_template_context(draw):
         "diagnostics_data": None,
         "suffix": "",
         "annotated_expressions": None,
+        "simd_backend": "native",
     }
 
     if adjoint_enabled:

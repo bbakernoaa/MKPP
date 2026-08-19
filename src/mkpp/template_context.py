@@ -19,6 +19,7 @@ def build_template_context(
     lu_plan: SymbolicLUPlan | None = None,
     sympy_meta: dict | None = None,
     adjoint: bool = False,
+    simd_backend: str = "native",
 ) -> dict[str, Any]:
     """Assemble all data needed for Jinja2 template rendering.
 
@@ -337,6 +338,7 @@ def build_template_context(
         "has_photolysis": has_photolysis,
         "num_photolysis": num_photolysis,
         "tolerance_arrays": tolerance_arrays,
+        "simd_backend": simd_backend,
     }
 
     # Conditionally include adjoint-specific data
