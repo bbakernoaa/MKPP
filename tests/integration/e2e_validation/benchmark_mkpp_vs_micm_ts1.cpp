@@ -38,6 +38,7 @@ struct MKPPTS1Functor {
 // ---------------------------------------------------------------------------
 int main(int argc, char* argv[]) {
     Kokkos::initialize(argc, argv);
+    int exit_code = 0;
     {
         int num_cells = 1000;
         int num_steps = 10;
@@ -82,6 +83,17 @@ int main(int argc, char* argv[]) {
             s.variables_[cell] = init_conc;
         }
 
+        micm_solver.UpdateStateParameters(s);
+
+        // Warmup MICM
+        micm_solver.Solve(dt, s);
+
+        // Re-initialize MICM state for benchmark
+        for (int cell = 0; cell < num_cells; ++cell) {
+            s.variables_[cell] = init_conc;
+        }
+        micm_solver.UpdateStateParameters(s);
+
         std::cout << "Running MICM TS1 Benchmark..." << std::flush;
         auto start_micm = std::chrono::high_resolution_clock::now();
 
@@ -105,8 +117,8 @@ int main(int argc, char* argv[]) {
         Kokkos::deep_copy(mkpp_jvals, h_jvals);
 
         for (int i = 0; i < num_cells; ++i) {
-            for (int s = 0; s < num_species; ++s) {
-                h_state(i, s) = 0.0;
+            for (int spec = 0; spec < num_species; ++spec) {
+                h_state(i, spec) = 0.0;
             }
             h_state(i, 10) = 1.9e19; // N2
             h_state(i, 4)  = 5.1e18; // O2
@@ -116,6 +128,17 @@ int main(int argc, char* argv[]) {
         // 4. Warmup MKPP
         Kokkos::parallel_for("warmup", Kokkos::RangePolicy<ExecSpace>(0, num_cells),
                              MKPPTS1Functor(mkpp_state, dt, mkpp_jvals.data()));
+        Kokkos::fence();
+
+        // Re-initialize MKPP state for benchmark
+        for (int i = 0; i < num_cells; ++i) {
+            for (int spec = 0; spec < num_species; ++spec) {
+                h_state(i, spec) = 0.0;
+            }
+            h_state(i, 10) = 1.9e19; // N2
+            h_state(i, 4)  = 5.1e18; // O2
+        }
+        Kokkos::deep_copy(mkpp_state, h_state);
         Kokkos::fence();
 
         // 5. Benchmark MKPP
@@ -130,7 +153,24 @@ int main(int argc, char* argv[]) {
         double mkpp_time_ms = std::chrono::duration<double, std::milli>(end_mkpp - start_mkpp).count();
         std::cout << " done (" << mkpp_time_ms << " ms)\n" << std::endl;
 
-        // 6. Results
+        // 6. Parity Verification
+        Kokkos::deep_copy(h_state, mkpp_state);
+
+        double max_abs_err = 0.0;
+        double max_rel_err = 0.0;
+
+        for (int cell = 0; cell < num_cells; ++cell) {
+            for (int spec = 0; spec < num_species; ++spec) {
+                double val_mkpp = h_state(cell, spec);
+                double val_micm = s.variables_[cell][spec];
+                double abs_err = std::abs(val_mkpp - val_micm);
+                double rel_err = abs_err / std::max(1.0e-12, std::abs(val_micm));
+                max_abs_err = std::max(max_abs_err, abs_err);
+                max_rel_err = std::max(max_rel_err, rel_err);
+            }
+        }
+
+        // 7. Results
         std::cout << std::left << std::setw(28) << "Metric"
                   << std::left << std::setw(18) << "MKPP C++ (AOT)"
                   << std::left << std::setw(18) << "MICM C++"
@@ -150,8 +190,25 @@ int main(int argc, char* argv[]) {
                   << std::left << std::setw(18) << std::scientific << std::setprecision(2) << micm_throughput
                   << "--" << std::endl;
 
+        std::cout << std::left << std::setw(28) << "Max Abs Error"
+                  << std::left << std::setw(18) << std::scientific << std::setprecision(3) << max_abs_err
+                  << "--                --" << std::endl;
+        std::cout << std::left << std::setw(28) << "Max Rel Error"
+                  << std::left << std::setw(18) << std::scientific << std::setprecision(3) << max_rel_err
+                  << "--                --" << std::endl;
+
         std::cout << "==========================================================================" << std::endl;
+
+        const double parity_threshold = 0.05; // 5.0% max relative error
+        if (max_rel_err > parity_threshold) {
+            std::cerr << "FATAL ERROR: TS1 parity check failed: max relative error "
+                      << max_rel_err << " exceeds threshold " << parity_threshold << "." << std::endl;
+            exit_code = 1;
+        } else {
+            std::cout << "SUCCESS: TS1 parity check passed (max rel error "
+                      << max_rel_err << " <= " << parity_threshold << ")." << std::endl;
+        }
     }
     Kokkos::finalize();
-    return 0;
+    return exit_code;
 }

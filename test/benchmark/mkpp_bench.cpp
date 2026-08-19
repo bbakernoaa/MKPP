@@ -1,9 +1,10 @@
 /**
  * @file mkpp_bench.cpp
- * @brief Unified C++ performance and instruction profiling benchmark executable for MKPP.
+ * @brief Unified C++ performance and instruction profiling benchmark executable for MKPP using the mkpp_host interface.
  */
 
 #include <Kokkos_Core.hpp>
+#include <mkpp_host/mechanism_manager.hpp>
 
 #include <chrono>
 #include <cstdlib>
@@ -16,81 +17,21 @@
 #include <valgrind/callgrind.h>
 #endif
 
-namespace mech_chapman {
-#include "chapman.hpp"
-}  // namespace mech_chapman
-
-namespace mech_gocart {
-#include "gocart.hpp"
-}  // namespace mech_gocart
-
-namespace mech_saprc99 {
-#include "saprc99.hpp"
-}  // namespace mech_saprc99
-
-namespace mech_ts1 {
-#include "ts1.hpp"
-}  // namespace mech_ts1
-
 using ExecSpace = Kokkos::DefaultExecutionSpace;
 
-/**
- * @brief Kokkos parallel functor executing Rosenbrock integration over grid cells.
- *
- * @tparam SolverKernelsType Generated mechanism SolverKernels struct.
- * @tparam IsGocart Boolean flag indicating whether mechanism requires temperature and relative humidity.
- */
-template <typename SolverKernelsType, bool IsGocart = false>
-struct IntegrationFunctor {
-    using ViewType = Kokkos::View<double**, Kokkos::LayoutLeft, typename ExecSpace::memory_space>;
-    ViewType m_state;
-    double m_dt;
-    const double* m_jvals;
-    double m_temp;
-    double m_rh;
-
-    /**
-     * @brief Construct a new Integration Functor object.
-     *
-     * @param state Multidimensional Kokkos View holding concentrations [cells, species].
-     * @param dt Time step size [s].
-     * @param jvals Photolysis rates array pointer.
-     * @param temp Ambient temperature [K] (used for GOCART).
-     * @param rh Relative humidity [fraction] (used for GOCART).
-     */
-    IntegrationFunctor(ViewType state, double dt, const double* jvals, double temp = 288.15, double rh = 0.5)
-        : m_state(state), m_dt(dt), m_jvals(jvals), m_temp(temp), m_rh(rh) {}
-
-    /**
-     * @brief Kokkos operator executing integration for a single grid cell.
-     *
-     * @param cell_idx Cell index in grid range.
-     */
-    KOKKOS_INLINE_FUNCTION
-    void operator()(const int cell_idx) const {
-        auto sub_state = Kokkos::subview(m_state, cell_idx, Kokkos::ALL());
-        SolverKernelsType solver;
-        if constexpr (IsGocart) {
-            solver.integrate(m_dt, sub_state, m_jvals, m_temp, m_rh);
-        } else {
-            solver.integrate(m_dt, sub_state, m_jvals);
-        }
-    }
-};
-
-/**
- * @brief Runs benchmark integration loop and measures execution performance.
- *
- * @tparam SolverKernelsType Generated mechanism SolverKernels type.
- * @tparam IsGocart Boolean flag indicating whether mechanism is GOCART.
- * @param name Name of the mechanism.
- * @param num_cells Number of grid cells.
- * @param num_steps Number of integration time steps.
- * @param dt Time step size [s].
- */
-template <typename SolverKernelsType, bool IsGocart = false>
 void run_benchmark(const std::string& name, int num_cells, int num_steps, double dt) {
-    const int num_species = SolverKernelsType::NUM_SPECIES;
+    if (!mkpp::host::MechanismRegistry::has_mechanism(name)) {
+        auto list = mkpp::host::MechanismRegistry::get_registered_mechanisms();
+        std::string supported = "";
+        for (size_t i = 0; i < list.size(); ++i) {
+            supported += list[i] + (i + 1 < list.size() ? ", " : "");
+        }
+        std::cerr << "FATAL ERROR: Unknown mechanism '" << name << "'. Supported: " << supported << "\n";
+        std::exit(1);
+    }
+
+    auto info = mkpp::host::MechanismRegistry::get_info(name);
+    const int num_species = info.num_species;
 
     using ViewType = Kokkos::View<double**, Kokkos::LayoutLeft, typename ExecSpace::memory_space>;
     ViewType state("state", num_cells, num_species);
@@ -112,11 +53,18 @@ void run_benchmark(const std::string& name, int num_cells, int num_steps, double
     }
     Kokkos::deep_copy(state, host_state);
 
-    IntegrationFunctor<SolverKernelsType, IsGocart> functor(state, dt, jvals_dev.data());
+    mkpp::host::HostExecutionParams params;
+    params.dt = dt;
+    params.jvals = jvals_dev.data();
+    params.steps = 1;
+    params.temp = 288.15;
+    params.rh = 0.5;
 
-    // Warmup step
-    Kokkos::parallel_for("warmup", Kokkos::RangePolicy<ExecSpace>(0, num_cells), functor);
+    // Warmup step via mkpp_host
+    mkpp::host::MechanismRegistry::execute(name, state, params);
     Kokkos::fence();
+
+    params.steps = num_steps;
 
     // Start benchmark & Callgrind instrumentation
     auto start = std::chrono::high_resolution_clock::now();
@@ -126,10 +74,8 @@ void run_benchmark(const std::string& name, int num_cells, int num_steps, double
     CALLGRIND_TOGGLE_COLLECT;
 #endif
 
-    for (int step = 0; step < num_steps; ++step) {
-        Kokkos::parallel_for("integrate", Kokkos::RangePolicy<ExecSpace>(0, num_cells), functor);
-        Kokkos::fence();
-    }
+    mkpp::host::MechanismRegistry::execute(name, state, params);
+    Kokkos::fence();
 
 #ifdef MKPP_USE_CALLGRIND
     CALLGRIND_TOGGLE_COLLECT;
@@ -172,6 +118,12 @@ int main(int argc, char* argv[]) {
         int num_steps = 30;
         double dt = 60.0;
 
+        auto registered = mkpp::host::MechanismRegistry::get_registered_mechanisms();
+        std::string supported_str = "";
+        for (size_t i = 0; i < registered.size(); ++i) {
+            supported_str += registered[i] + (i + 1 < registered.size() ? "|" : "");
+        }
+
         for (int i = 1; i < argc; ++i) {
             std::string arg = argv[i];
             if (arg == "--mechanism" && i + 1 < argc) {
@@ -185,7 +137,7 @@ int main(int argc, char* argv[]) {
             } else if (arg == "-h" || arg == "--help") {
                 std::cout << "Usage: " << argv[0] << " [options]\n"
                           << "Options:\n"
-                          << "  --mechanism chapman|gocart|saprc99|ts1 (default: chapman)\n"
+                          << "  --mechanism " << supported_str << " (default: chapman)\n"
                           << "  --cells N                             (default: 10000)\n"
                           << "  --steps N                             (default: 30)\n"
                           << "  --dt DT                               (default: 60.0)\n";
@@ -194,17 +146,15 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        if (mechanism == "chapman") {
-            run_benchmark<mech_chapman::mkpp::SolverKernels<ExecSpace>, false>("chapman", num_cells, num_steps, dt);
-        } else if (mechanism == "gocart") {
-            run_benchmark<mech_gocart::mkpp::SolverKernels<ExecSpace>, true>("gocart", num_cells, num_steps, dt);
-        } else if (mechanism == "saprc99") {
-            run_benchmark<mech_saprc99::mkpp::SolverKernels<ExecSpace>, false>("saprc99", num_cells, num_steps, dt);
-        } else if (mechanism == "ts1") {
-            run_benchmark<mech_ts1::mkpp::SolverKernels<ExecSpace>, false>("ts1", num_cells, num_steps, dt);
-        } else {
-            std::cerr << "FATAL ERROR: Unknown mechanism '" << mechanism << "'. Supported: chapman, gocart, saprc99, ts1\n";
+        if (!mkpp::host::MechanismRegistry::has_mechanism(mechanism)) {
+            std::string supported = "";
+            for (size_t i = 0; i < registered.size(); ++i) {
+                supported += registered[i] + (i + 1 < registered.size() ? ", " : "");
+            }
+            std::cerr << "FATAL ERROR: Unknown mechanism '" << mechanism << "'. Supported: " << supported << "\n";
             exit_code = 1;
+        } else {
+            run_benchmark(mechanism, num_cells, num_steps, dt);
         }
     }
     Kokkos::finalize();

@@ -9,7 +9,7 @@ import yaml
 from .codegen import generate_headers
 from .lowering import partition_reactions
 from .model import CompilationError
-from .parser import load_mechanism
+from .parser import load_environment, load_mechanism
 from .validation import sanitize_path, validate_mechanism, validate_mpi_safety
 
 # Species that belong to the NH4/NO3/SO4 equilibrium system
@@ -195,8 +195,14 @@ def run_compiler(
         # --- Parsing stage ---
         _verbose_log("parsing", f"Loading mechanism from {mech_path}", verbose)
 
-        with open(env_path) as f:
-            env_config = yaml.safe_load(f) or {}
+        env = load_environment(env_path)
+        env_config = {
+            "temperature": env.temperature,
+            "pressure": env.pressure,
+            "air_density": env.air_density,
+            "relative_humidity": env.relative_humidity,
+            "initial_concentrations": env.initial_concentrations,
+        }
 
         validate_mpi_safety(env_config)
 

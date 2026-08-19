@@ -98,6 +98,36 @@ Evaluated across a 24-hour diurnal cycle against native Fortran KPP with identic
 | **10,000** | $14,400,000$ | $32.72\text{ s}$ | $4.40 \times 10^5$ | **Linear ($10\times$ throughput)** |
 | **100,000** | $144,000,000$ | $33.98\text{ s}$ | $4.24 \times 10^6$ | **Linear ($100\times$ throughput)** |
 
+---
+
+## 3. Unified C++ Benchmark Suite (`mkpp_bench`)
+
+The C++ benchmark harness `mkpp_bench` utilizes the unified `mkpp_host` mechanism manager and dispatcher to benchmark any generated chemical mechanism at runtime without requiring re-compilation.
+
+### Usage
+
+```bash
+# Build the benchmark executable
+cmake -B build -S . -DMKPP_ENABLE_BENCHMARK=ON
+cmake --build build --target mkpp_bench
+
+# Run benchmark for a specific mechanism
+./build/test/benchmark/mkpp_bench --mechanism chapman --cells 10000 --steps 30
+
+# Switch mechanisms at runtime
+./build/test/benchmark/mkpp_bench --mechanism gocart --cells 10000 --steps 30
+./build/test/benchmark/mkpp_bench --mechanism saprc99 --cells 10000 --steps 30
+./build/test/benchmark/mkpp_bench --mechanism ts1 --cells 10000 --steps 30
+./build/test/benchmark/mkpp_bench --mechanism carbon --cells 10000 --steps 30
+```
+
+### CLI Options
+
+- `--mechanism <name>`: Chemical mechanism identifier (`chapman`, `gocart`, `saprc99`, `ts1`, `carbon`, `small_strato`, `saprcnov`, `saprc99_mini`). Default: `chapman`.
+- `--cells <N>`: Number of grid cells. Default: `10000`.
+- `--steps <N>`: Number of integration timesteps. Default: `30`.
+- `--dt <seconds>`: Timestep size in seconds. Default: `60.0`.
+
 *Scaling Insight*: Scaling grid cells from 1,000 to 100,000 ($100\times$ workload increase) keeps total runtime near-constant ($\approx 33\text{ seconds}$), scaling throughput up to **$4.24 \times 10^6\text{ cell-steps/second}$** due to contiguous `Kokkos::LayoutLeft` vectorization and 0-byte local stack overhead.
 
 ---

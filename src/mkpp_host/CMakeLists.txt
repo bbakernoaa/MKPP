@@ -7,8 +7,10 @@ add_library(mkpp_host INTERFACE)
 add_library(MKPP::mkpp_host ALIAS mkpp_host)
 
 target_include_directories(
-  mkpp_host INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-                      $<INSTALL_INTERFACE:include>)
+  mkpp_host
+  INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+            $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/mkpp-generated>
+            $<INSTALL_INTERFACE:include>)
 target_link_libraries(mkpp_host INTERFACE Kokkos::kokkos)
 
 if(MKPP_ENABLE_KOKKOS_KERNELS)

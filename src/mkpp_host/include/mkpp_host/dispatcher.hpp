@@ -14,6 +14,30 @@ enum CellErrorCode : int {
     ERR_NUMERICAL_FAILURE = 4
 };
 
+/// @brief Runtime execution parameters for host integration dispatch.
+struct HostExecutionParams {
+    double dt{60.0};              ///< Integration timestep size in seconds
+    const double* jvals{nullptr}; ///< Pointer to Cloud-J photolysis rate array
+    double temp{288.15};          ///< Temperature in Kelvin (used for mechanisms like GOCART)
+    double rh{0.5};               ///< Relative humidity fraction (used for mechanisms like GOCART)
+    int steps{1};                 ///< Number of integration timesteps
+};
+
+/// @brief Helper trait function invoking solver integration with matching argument signature.
+template <typename SolverKernelsType, typename SubStateView>
+KOKKOS_INLINE_FUNCTION void integrate_cell(SolverKernelsType& solver,
+                                           const HostExecutionParams& params,
+                                           SubStateView sub_state) {
+    static const double default_jvals[512] = {0.0};
+    const double* jvals_ptr = params.jvals ? params.jvals : default_jvals;
+
+    if constexpr (requires { solver.integrate(params.dt, sub_state, jvals_ptr, params.temp, params.rh); }) {
+        solver.integrate(params.dt, sub_state, jvals_ptr, params.temp, params.rh);
+    } else {
+        solver.integrate(params.dt, sub_state, jvals_ptr);
+    }
+}
+
 template <typename MemorySpace = Kokkos::DefaultExecutionSpace::memory_space>
 struct BatchErrorStatus {
     using memory_space = MemorySpace;
@@ -98,6 +122,31 @@ struct TiledCellTimeIntegrator {
         SolverKernelsType solver;
         auto sub_state = Kokkos::subview(m_state, cell_idx, Kokkos::ALL(), 0, 0);
         for (int step = 0; step < m_steps; ++step) { solver.integrate(m_dt, sub_state, m_jvals); }
+    }
+};
+
+template <typename SolverKernelsType, typename StateViewType>
+struct ParamsTiledCellIntegrator {
+    StateViewType m_state;
+    HostExecutionParams m_params;
+
+    ParamsTiledCellIntegrator(StateViewType s, const HostExecutionParams& params)
+        : m_state(s), m_params(params) {}
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(const int cell_idx) const {
+        SolverKernelsType solver;
+        if constexpr (StateViewType::rank() == 4) {
+            auto sub_state = Kokkos::subview(m_state, cell_idx, Kokkos::ALL(), 0, 0);
+            for (int step = 0; step < m_params.steps; ++step) {
+                integrate_cell(solver, m_params, sub_state);
+            }
+        } else {
+            auto sub_state = Kokkos::subview(m_state, cell_idx, Kokkos::ALL());
+            for (int step = 0; step < m_params.steps; ++step) {
+                integrate_cell(solver, m_params, sub_state);
+            }
+        }
     }
 };
 

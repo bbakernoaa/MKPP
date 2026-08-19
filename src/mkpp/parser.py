@@ -7,6 +7,7 @@ import yaml
 from .model import (
     AerosolRepresentation,
     CompilationError,
+    EnvironmentDefinition,
     EquilibriumDefinition,
     MechanismDefinition,
     PhaseDefinition,
@@ -15,6 +16,31 @@ from .model import (
     SolverMode,
     SpeciesDefinition,
 )
+
+
+def detect_config_format(source: str | Path) -> str:
+    """Detect whether a configuration source is JSON or YAML.
+
+    First checks file extension (.json -> json, .yaml/.yml -> yaml).
+    If extension is missing or unrecognised, inspects leading content characters.
+    """
+    p = Path(source)
+    if p.suffix.lower() == ".json":
+        return "json"
+    if p.suffix.lower() in (".yaml", ".yml"):
+        return "yaml"
+
+    try:
+        if p.exists() and p.is_file():
+            content = p.read_text(encoding="utf-8").strip()
+        else:
+            content = str(source).strip()
+        if content.startswith("{") or content.startswith("["):
+            return "json"
+    except Exception:
+        pass
+
+    return "yaml"
 
 
 def _normalize_species_dict(d: Any) -> dict[str, float]:
@@ -41,14 +67,20 @@ def _normalize_species_dict(d: Any) -> dict[str, float]:
 
 def parse_mechanism_micm(name: str, data: dict[str, Any]) -> MechanismDefinition:
     """Parse MICM/OpenAtmos standard dictionary into internal model."""
-    if "species" not in data or not data["species"]:
-        raise ValueError("MICM data must define at least one species")
+    if not isinstance(data, dict) or "species" not in data or not data["species"]:
+        raise CompilationError(
+            stage="parsing",
+            message="OpenAtmos v1 data must define at least one species",
+        )
 
     species = []
     for s in data.get("species", []):
+        if not isinstance(s, dict) or not s.get("name"):
+            raise CompilationError(
+                stage="parsing",
+                message="Species in OpenAtmos v1 mechanism must have a name",
+            )
         sp_name = s.get("name")
-        if not sp_name:
-            raise ValueError("Species must have a name")
         # Default to GAS if not specified in basic MICM
         phase = PhaseMode.GAS
         sp_type = str(s.get("type", "")).lower()
@@ -211,11 +243,98 @@ def parse_mechanism_micm(name: str, data: dict[str, Any]) -> MechanismDefinition
     )
 
 
-def load_mechanism(path: str) -> MechanismDefinition:
+def load_mechanism(path: str | Path) -> MechanismDefinition:
+    """Load an OpenAtmos v1 chemical mechanism from a JSON or YAML file."""
     p = Path(path)
-    with open(p) as f:
-        if p.suffix in [".yaml", ".yml"]:
-            data = yaml.safe_load(f)
-        else:
-            data = json.load(f)
+    if not p.exists():
+        raise FileNotFoundError(f"Mechanism configuration file not found: {p}")
+
+    fmt = detect_config_format(p)
+    try:
+        with open(p, encoding="utf-8") as f:
+            if fmt == "json":
+                data = json.load(f)
+            else:
+                data = yaml.safe_load(f)
+    except json.JSONDecodeError as e:
+        raise CompilationError(
+            stage="parsing",
+            message=f"JSON syntax error in mechanism file '{p}': line {e.lineno}, column {e.colno} ({e.msg})",
+            yaml_location=f"{p}:{e.lineno}:{e.colno}",
+        ) from e
+    except yaml.YAMLError as e:
+        loc = str(p)
+        if hasattr(e, "problem_mark") and e.problem_mark is not None:
+            loc = f"{p}:{e.problem_mark.line + 1}:{e.problem_mark.column + 1}"
+        raise CompilationError(
+            stage="parsing",
+            message=f"YAML syntax error in mechanism file '{p}': {e}",
+            yaml_location=loc,
+        ) from e
+
+    if not isinstance(data, dict):
+        raise CompilationError(
+            stage="parsing",
+            message=f"Mechanism configuration file '{p}' must contain a key-value dictionary",
+            yaml_location=str(p),
+        )
+
     return parse_mechanism_micm(p.stem, data)
+
+
+def load_environment(path: str | Path) -> EnvironmentDefinition:
+    """Load an OpenAtmos v1 environmental configuration from a JSON or YAML file."""
+    p = Path(path)
+    if not p.exists():
+        raise FileNotFoundError(f"Environment configuration file not found: {p}")
+
+    fmt = detect_config_format(p)
+    try:
+        with open(p, encoding="utf-8") as f:
+            if fmt == "json":
+                data = json.load(f)
+            else:
+                data = yaml.safe_load(f)
+    except json.JSONDecodeError as e:
+        raise CompilationError(
+            stage="parsing",
+            message=f"JSON syntax error in environment file '{p}': line {e.lineno}, column {e.colno} ({e.msg})",
+            yaml_location=f"{p}:{e.lineno}:{e.colno}",
+        ) from e
+    except yaml.YAMLError as e:
+        loc = str(p)
+        if hasattr(e, "problem_mark") and e.problem_mark is not None:
+            loc = f"{p}:{e.problem_mark.line + 1}:{e.problem_mark.column + 1}"
+        raise CompilationError(
+            stage="parsing",
+            message=f"YAML syntax error in environment file '{p}': {e}",
+            yaml_location=loc,
+        ) from e
+
+    if not isinstance(data, dict):
+        raise CompilationError(
+            stage="parsing",
+            message=f"Environment configuration file '{p}' must contain a key-value dictionary",
+            yaml_location=str(p),
+        )
+
+    env_block = data.get("environment", data.get("meteorology", data))
+
+    temp = float(env_block.get("temperature", env_block.get("T", 298.15)))
+    press = float(env_block.get("pressure", env_block.get("P", 101325.0)))
+    air_dens = float(env_block.get("air_density", env_block.get("M", 2.46e19)))
+    rh = float(env_block.get("relative_humidity", env_block.get("RH", 0.5)))
+
+    init_conc = data.get("initial_concentrations", data.get("initial_conditions", data.get("concentrations", {})))
+    if not isinstance(init_conc, dict):
+        init_conc = {}
+
+    normalized_init = {str(k): float(v) for k, v in init_conc.items() if isinstance(v, int | float | str)}
+
+    return EnvironmentDefinition(
+        temperature=temp,
+        pressure=press,
+        air_density=air_dens,
+        relative_humidity=rh,
+        initial_concentrations=normalized_init,
+    )
