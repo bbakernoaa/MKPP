@@ -56,6 +56,7 @@ main() {
             --out "${out_dir}" \
             --adjoint \
             --emit-manifest \
+            --host-api \
             --report \
             --verbose; then
             echo "FATAL ERROR: Failed to compile ${mech}"

@@ -33,7 +33,25 @@ install(
   DIRECTORY mkpp-generated/
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/mkpp
   FILES_MATCHING
-  PATTERN "*.hpp")
+  PATTERN "*.hpp"
+  PATTERN "*.h"
+  PATTERN "*.f90")
+
+if(TARGET mkpp_c_api)
+  install(
+    TARGETS mkpp_c_api
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
+
+if(TARGET mkpp_fortran)
+  install(
+    TARGETS mkpp_fortran
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
 
 # ---------------------------------------------------------------------------
 # Testing (guarded behind BUILD_TESTING)

@@ -168,6 +168,7 @@ def run_compiler(
     adjoint: bool = False,
     migrate_equilibrium_flag: bool = False,
     simd_backend: str = "native",
+    generate_host_api: bool = False,
 ) -> None:
     """Orchestrate the compilation pipeline."""
 
@@ -286,7 +287,15 @@ def run_compiler(
         # --- Code generation stage ---
         _verbose_log("codegen", f"Generating headers to {out_dir}", verbose)
 
-        generate_headers(mech, out_dir=out_dir, suffix="", solver_name=solver_name, adjoint=adjoint, simd_backend=simd_backend)
+        generate_headers(
+            mech,
+            out_dir=out_dir,
+            suffix="",
+            solver_name=solver_name,
+            adjoint=adjoint,
+            generate_host_api=generate_host_api,
+            simd_backend=simd_backend,
+        )
 
         if report:
             from .reporting import write_report
@@ -376,6 +385,12 @@ def main(args=None):
         default="native",
         help="SIMD vector engine backend for Wide<W> (default: native)",
     )
+    compile_parser.add_argument(
+        "--host-api",
+        action="store_true",
+        default=False,
+        help="Generate C, C++, and Fortran host API headers and C wrapper source",
+    )
 
     parsed_args = parser.parse_args(args)
 
@@ -396,6 +411,7 @@ def main(args=None):
             adjoint=parsed_args.adjoint,
             migrate_equilibrium_flag=parsed_args.migrate_equilibrium,
             simd_backend=parsed_args.simd_backend,
+            generate_host_api=parsed_args.host_api,
         )
         sys.exit(0)
 
