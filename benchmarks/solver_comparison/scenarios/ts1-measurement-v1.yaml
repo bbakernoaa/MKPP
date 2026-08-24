@@ -1,0 +1,1990 @@
+schema_version: 1
+scenario_id: ts1-measurement-v1
+version: 1.0.0
+mechanism:
+  id: ts1
+  version: 1.0.0
+  sha256: 4390f37f0b0dedf38c6644986c7b972152b52bd4c3fba83f399035945771a997
+role: measurement
+initial_state:
+  ALKNIT:
+    value: 8.72e-10
+    unit: mol m-3
+  BZOOH:
+    value: 2.68e-11
+    unit: mol m-3
+  C6H5OOH:
+    value: 4.2e-10
+    unit: mol m-3
+  COF2:
+    value: 5.24e-11
+    unit: mol m-3
+  O2:
+    value: 8.90261411
+    unit: mol m-3
+  COFCL:
+    value: 7.92e-12
+    unit: mol m-3
+  HF:
+    value: 1.81e-11
+    unit: mol m-3
+  F:
+    value: 3.89e-28
+    unit: mol m-3
+  BENZO2:
+    value: 2.09e-13
+    unit: mol m-3
+  BZOO:
+    value: 8.81e-13
+    unit: mol m-3
+  N2:
+    value: 33.1007671
+    unit: mol m-3
+  E90:
+    value: 1.0e-15
+    unit: mol m-3
+  NH_5:
+    value: 1.0e-15
+    unit: mol m-3
+  NH_50:
+    value: 1.0e-15
+    unit: mol m-3
+  ST80_25:
+    value: 1.0e-15
+    unit: mol m-3
+  PAN:
+    value: 4.25e-08
+    unit: mol m-3
+  MVK:
+    value: 2.61e-08
+    unit: mol m-3
+  MACROOH:
+    value: 1.21e-09
+    unit: mol m-3
+  SOAG0:
+    value: 3.33e-11
+    unit: mol m-3
+  SOAG1:
+    value: 2.14e-10
+    unit: mol m-3
+  SOAG2:
+    value: 1.4e-09
+    unit: mol m-3
+  SOAG3:
+    value: 4.27e-09
+    unit: mol m-3
+  SOAG4:
+    value: 2.25e-08
+    unit: mol m-3
+  soa4_a1:
+    value: 1.0e-15
+    unit: mol m-3
+  soa5_a1:
+    value: 1.0e-15
+    unit: mol m-3
+  soa5_a2:
+    value: 1.0e-15
+    unit: mol m-3
+  soa3_a1:
+    value: 1.0e-15
+    unit: mol m-3
+  soa2_a1:
+    value: 1.0e-15
+    unit: mol m-3
+  soa1_a1:
+    value: 1.0e-15
+    unit: mol m-3
+  soa1_a2:
+    value: 1.0e-15
+    unit: mol m-3
+  soa2_a2:
+    value: 1.0e-15
+    unit: mol m-3
+  soa3_a2:
+    value: 1.0e-15
+    unit: mol m-3
+  soa4_a2:
+    value: 1.0e-15
+    unit: mol m-3
+  ISOPNITB:
+    value: 1.05e-09
+    unit: mol m-3
+  SO3:
+    value: 1.75e-17
+    unit: mol m-3
+  OCS:
+    value: 1.96e-08
+    unit: mol m-3
+  SO:
+    value: 1.22e-20
+    unit: mol m-3
+  S:
+    value: 1.1e-26
+    unit: mol m-3
+  BCARYO2VBS:
+    value: 1.0e-15
+    unit: mol m-3
+  SF6:
+    value: 1.0e-15
+    unit: mol m-3
+  sink:
+    value: 1.0e-30
+    unit: mol m-3
+  H:
+    value: 9.67e-18
+    unit: mol m-3
+  MEK:
+    value: 1.04e-08
+    unit: mol m-3
+  MTERP:
+    value: 1.09e-09
+    unit: mol m-3
+  N2O5:
+    value: 1.0e-11
+    unit: mol m-3
+  HCN:
+    value: 1.9e-08
+    unit: mol m-3
+  SVOC:
+    value: 1.98e-10
+    unit: mol m-3
+  ISOPNO3:
+    value: 5.35e-13
+    unit: mol m-3
+  RO2:
+    value: 7.13e-12
+    unit: mol m-3
+  PHENO2:
+    value: 2.54e-13
+    unit: mol m-3
+  BENZO2VBS:
+    value: 1.0e-15
+    unit: mol m-3
+  IVOC:
+    value: 2.06e-09
+    unit: mol m-3
+  TERPNIT:
+    value: 8.28e-10
+    unit: mol m-3
+  ISOPO2VBS:
+    value: 1.0e-15
+    unit: mol m-3
+  IVOCO2VBS:
+    value: 1.0e-15
+    unit: mol m-3
+  HNO3:
+    value: 1.04e-07
+    unit: mol m-3
+  ACBZO2:
+    value: 3.54e-13
+    unit: mol m-3
+  CH3COOOH:
+    value: 7.19e-09
+    unit: mol m-3
+  SO2:
+    value: 6.15e-08
+    unit: mol m-3
+  MTERPO2VBS:
+    value: 1.0e-15
+    unit: mol m-3
+  CH4:
+    value: 7.03e-05
+    unit: mol m-3
+  CH3CL:
+    value: 2.07e-08
+    unit: mol m-3
+  CH3CO3:
+    value: 8.32e-11
+    unit: mol m-3
+  C6H5O2:
+    value: 6.23e-12
+    unit: mol m-3
+  TERPROD1:
+    value: 1.68e-09
+    unit: mol m-3
+  HYAC:
+    value: 4.88e-08
+    unit: mol m-3
+  HPALD:
+    value: 3.56e-10
+    unit: mol m-3
+  TOLUO2VBS:
+    value: 1.0e-15
+    unit: mol m-3
+  H2O:
+    value: 0.746
+    unit: mol m-3
+  NO2:
+    value: 6.37e-08
+    unit: mol m-3
+  EOOH:
+    value: 3.56e-09
+    unit: mol m-3
+  NTERPOOH:
+    value: 9.37e-11
+    unit: mol m-3
+  XYLEO2VBS:
+    value: 1.0e-15
+    unit: mol m-3
+  CCL4:
+    value: 2.96e-09
+    unit: mol m-3
+  CF2CLBR:
+    value: 1.24e-10
+    unit: mol m-3
+  CF3BR:
+    value: 1.26e-10
+    unit: mol m-3
+  CFC11:
+    value: 8.5e-09
+    unit: mol m-3
+  CFC113:
+    value: 2.66e-09
+    unit: mol m-3
+  CFC114:
+    value: 6.19e-10
+    unit: mol m-3
+  CFC115:
+    value: 3.29e-10
+    unit: mol m-3
+  CFC12:
+    value: 1.92e-08
+    unit: mol m-3
+  CH2BR2:
+    value: 4.32e-11
+    unit: mol m-3
+  CH3BR:
+    value: 2.37e-10
+    unit: mol m-3
+  CH3CCL3:
+    value: 5.55e-11
+    unit: mol m-3
+  'NO':
+    value: 1.47e-08
+    unit: mol m-3
+  BR:
+    value: 3.67e-14
+    unit: mol m-3
+  BRCL:
+    value: 9.18e-19
+    unit: mol m-3
+  BRO:
+    value: 1.95e-13
+    unit: mol m-3
+  BRONO2:
+    value: 1.22e-11
+    unit: mol m-3
+  CL:
+    value: 1.07e-15
+    unit: mol m-3
+  CL2:
+    value: 1.01e-16
+    unit: mol m-3
+  CL2O2:
+    value: 1.89e-23
+    unit: mol m-3
+  CLO:
+    value: 8.06e-14
+    unit: mol m-3
+  CLONO2:
+    value: 4.09e-11
+    unit: mol m-3
+  HCOOH:
+    value: 8.79e-09
+    unit: mol m-3
+  HBR:
+    value: 4.48e-11
+    unit: mol m-3
+  HOBR:
+    value: 1.65e-12
+    unit: mol m-3
+  HOCL:
+    value: 2.11e-12
+    unit: mol m-3
+  N:
+    value: 1.0e-15
+    unit: mol m-3
+  BIGENE:
+    value: 6.59e-10
+    unit: mol m-3
+  C2H4:
+    value: 2.51e-08
+    unit: mol m-3
+  C2H5O2:
+    value: 1.55e-12
+    unit: mol m-3
+  CH3COCHO:
+    value: 1.95e-08
+    unit: mol m-3
+  CH3COCH3:
+    value: 7.37e-08
+    unit: mol m-3
+  O:
+    value: 2.85e-14
+    unit: mol m-3
+  OCLO:
+    value: 7.68e-19
+    unit: mol m-3
+  O1D:
+    value: 1.53e-19
+    unit: mol m-3
+  PHENO:
+    value: 1.0e-12
+    unit: mol m-3
+  HCFC141B:
+    value: 9.29e-10
+    unit: mol m-3
+  HCFC142B:
+    value: 8.24e-10
+    unit: mol m-3
+  HCFC22:
+    value: 9.07e-09
+    unit: mol m-3
+  DMS:
+    value: 1.74e-10
+    unit: mol m-3
+  C2H5OH:
+    value: 2.75e-08
+    unit: mol m-3
+  HCL:
+    value: 8.17e-10
+    unit: mol m-3
+  BEPOMUC:
+    value: 5.4e-12
+    unit: mol m-3
+  CHBR3:
+    value: 3.87e-11
+    unit: mol m-3
+  H2402:
+    value: 1.52e-11
+    unit: mol m-3
+  CO2:
+    value: 0.0156
+    unit: mol m-3
+  BZALD:
+    value: 4.7e-10
+    unit: mol m-3
+  BENZENE:
+    value: 2.67e-09
+    unit: mol m-3
+  C3H7O2:
+    value: 2.31e-12
+    unit: mol m-3
+  CH3O2:
+    value: 3.34e-10
+    unit: mol m-3
+  BCARY:
+    value: 5.04e-12
+    unit: mol m-3
+  BIGALD:
+    value: 1.33e-11
+    unit: mol m-3
+  BIGALD2:
+    value: 6.58e-11
+    unit: mol m-3
+  BIGALD3:
+    value: 6.83e-11
+    unit: mol m-3
+  BIGALD4:
+    value: 7.34e-10
+    unit: mol m-3
+  BIGALK:
+    value: 1.9e-08
+    unit: mol m-3
+  H2O2:
+    value: 7.36e-08
+    unit: mol m-3
+  C2H5OOH:
+    value: 7.99e-11
+    unit: mol m-3
+  C2H6:
+    value: 2.93e-08
+    unit: mol m-3
+  C3H8:
+    value: 9.7e-09
+    unit: mol m-3
+  C3H6:
+    value: 2.42e-09
+    unit: mol m-3
+  CH2O:
+    value: 2.44e-07
+    unit: mol m-3
+  CH3CN:
+    value: 4.66e-09
+    unit: mol m-3
+  C2H2:
+    value: 2.13e-08
+    unit: mol m-3
+  CH3OH:
+    value: 2.74e-07
+    unit: mol m-3
+  CH3OOH:
+    value: 1.69e-08
+    unit: mol m-3
+  CRESOL:
+    value: 1.06e-10
+    unit: mol m-3
+  ENEO2:
+    value: 7.98e-12
+    unit: mol m-3
+  MACRO2:
+    value: 1.09e-10
+    unit: mol m-3
+  ISOPAO2:
+    value: 1.39e-10
+    unit: mol m-3
+  MALO2:
+    value: 1.07e-13
+    unit: mol m-3
+  ISOPBO2:
+    value: 9.08e-11
+    unit: mol m-3
+  MCO3:
+    value: 9.23e-12
+    unit: mol m-3
+  MDIALO2:
+    value: 1.61e-13
+    unit: mol m-3
+  MEKO2:
+    value: 2.81e-12
+    unit: mol m-3
+  EO2:
+    value: 4.04e-11
+    unit: mol m-3
+  EO:
+    value: 9.93e-18
+    unit: mol m-3
+  GLYOXAL:
+    value: 1.25e-08
+    unit: mol m-3
+  MPAN:
+    value: 3.11e-09
+    unit: mol m-3
+  NC4CH2OH:
+    value: 7.3e-13
+    unit: mol m-3
+  ISOPOOH:
+    value: 4.68e-09
+    unit: mol m-3
+  GLYALD:
+    value: 4.58e-08
+    unit: mol m-3
+  HO2:
+    value: 1.69e-09
+    unit: mol m-3
+  HOCH2OO:
+    value: 1.07e-13
+    unit: mol m-3
+  H2:
+    value: 1.93e-05
+    unit: mol m-3
+  HYDRALD:
+    value: 1.49e-08
+    unit: mol m-3
+  ISOP:
+    value: 1.23e-08
+    unit: mol m-3
+  NTERPO2:
+    value: 9.18e-13
+    unit: mol m-3
+  TOLO2:
+    value: 3.23e-12
+    unit: mol m-3
+  TERP2O2:
+    value: 2.15e-11
+    unit: mol m-3
+  XYLENO2:
+    value: 4.98e-12
+    unit: mol m-3
+  TERPO2:
+    value: 1.29e-11
+    unit: mol m-3
+  XYLOLO2:
+    value: 4.62e-13
+    unit: mol m-3
+  PBZNIT:
+    value: 1.78e-10
+    unit: mol m-3
+  XYLENES:
+    value: 2.82e-09
+    unit: mol m-3
+  PO2:
+    value: 1.46e-11
+    unit: mol m-3
+  TOLUENE:
+    value: 4.88e-09
+    unit: mol m-3
+  XO2:
+    value: 1.12e-10
+    unit: mol m-3
+  XOOH:
+    value: 7.93e-09
+    unit: mol m-3
+  TERPROD2:
+    value: 3.81e-09
+    unit: mol m-3
+  MEKOOH:
+    value: 6.15e-11
+    unit: mol m-3
+  MACR:
+    value: 1.06e-08
+    unit: mol m-3
+  HONITR:
+    value: 6.79e-09
+    unit: mol m-3
+  ISOPNITA:
+    value: 1.62e-09
+    unit: mol m-3
+  ISOPNOOH:
+    value: 9.16e-11
+    unit: mol m-3
+  IEPOX:
+    value: 5.84e-09
+    unit: mol m-3
+  ONITR:
+    value: 2.67e-09
+    unit: mol m-3
+  H2SO4:
+    value: 2.27e-11
+    unit: mol m-3
+  N2O:
+    value: 1.27e-05
+    unit: mol m-3
+  NO3:
+    value: 9.32e-12
+    unit: mol m-3
+  OH:
+    value: 2.52e-11
+    unit: mol m-3
+  PHENOOH:
+    value: 9.15e-12
+    unit: mol m-3
+  PHENOL:
+    value: 9.49e-11
+    unit: mol m-3
+  XYLOL:
+    value: 9.92e-11
+    unit: mol m-3
+  ROOH:
+    value: 4.4e-10
+    unit: mol m-3
+  O3:
+    value: 2.49e-06
+    unit: mol m-3
+  TERPOOH:
+    value: 2.46e-10
+    unit: mol m-3
+  TOLOOH:
+    value: 9.69e-11
+    unit: mol m-3
+  XYLENOOH:
+    value: 1.5e-10
+    unit: mol m-3
+  XYLOLOOH:
+    value: 1.31e-11
+    unit: mol m-3
+  CO:
+    value: 3.25e-06
+    unit: mol m-3
+  CH3COOH:
+    value: 8.2e-09
+    unit: mol m-3
+  CH3CHO:
+    value: 2.51e-08
+    unit: mol m-3
+  BIGALD1:
+    value: 6.47e-11
+    unit: mol m-3
+  ALKOOH:
+    value: 3.79e-10
+    unit: mol m-3
+  DICARBO2:
+    value: 1.55e-13
+    unit: mol m-3
+  BENZOOH:
+    value: 5.78e-12
+    unit: mol m-3
+  ALKO2:
+    value: 1.39e-11
+    unit: mol m-3
+  HO2NO2:
+    value: 7.99e-10
+    unit: mol m-3
+  C3H7OOH:
+    value: 7.87e-11
+    unit: mol m-3
+  NH3:
+    value: 7.59e-08
+    unit: mol m-3
+  TERP2OOH:
+    value: 5.96e-10
+    unit: mol m-3
+  POOH:
+    value: 9.24e-10
+    unit: mol m-3
+  NOA:
+    value: 5.46e-09
+    unit: mol m-3
+  NC4CHO:
+    value: 3.67e-11
+    unit: mol m-3
+  TEPOMUC:
+    value: 2.21e-10
+    unit: mol m-3
+  NH4:
+    value: 1.0e-15
+    unit: mol m-3
+  M:
+    value: 42.39340054163681
+    unit: mol m-3
+environment:
+  temperature:
+    value: 287.45
+    unit: K
+  pressure:
+    value: 101319.9
+    unit: Pa
+forcing:
+  jterpnit:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 5.95e-06
+    - time_seconds: 300.0
+      value: 6.2475e-06
+    - time_seconds: 600.0
+      value: 5.95e-06
+  jo2_b:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.4e-28
+    - time_seconds: 300.0
+      value: 1.47e-28
+    - time_seconds: 600.0
+      value: 1.4e-28
+  jmgly:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 0.00014
+    - time_seconds: 300.0
+      value: 0.000147
+    - time_seconds: 600.0
+      value: 0.00014
+  jxylenooh:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 5.95e-06
+    - time_seconds: 300.0
+      value: 6.2475e-06
+    - time_seconds: 600.0
+      value: 5.95e-06
+  jch4_b:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0
+    - time_seconds: 300.0
+      value: 1.05
+    - time_seconds: 600.0
+      value: 1.0
+  jterp2ooh:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 5.95e-06
+    - time_seconds: 300.0
+      value: 6.2475e-06
+    - time_seconds: 600.0
+      value: 5.95e-06
+  jbrono2_a:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 0.00127
+    - time_seconds: 300.0
+      value: 0.0013335
+    - time_seconds: 600.0
+      value: 0.00127
+  jbigald4:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 6.03e-05
+    - time_seconds: 300.0
+      value: 6.3315e-05
+    - time_seconds: 600.0
+      value: 6.03e-05
+  jsoa3_a2:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-20
+    - time_seconds: 300.0
+      value: 1.05e-20
+    - time_seconds: 600.0
+      value: 1.0e-20
+  jbro:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 0.0407
+    - time_seconds: 300.0
+      value: 0.042735
+    - time_seconds: 600.0
+      value: 0.0407
+  jtepomuc:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 0.00101
+    - time_seconds: 300.0
+      value: 0.0010605
+    - time_seconds: 600.0
+      value: 0.00101
+  jcof2:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 3.3e-25
+    - time_seconds: 300.0
+      value: 3.465e-25
+    - time_seconds: 600.0
+      value: 3.3e-25
+  jch2o_b:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 4.92e-05
+    - time_seconds: 300.0
+      value: 5.1660000000000003e-05
+    - time_seconds: 600.0
+      value: 4.92e-05
+  jbrono2_b:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 0.000224
+    - time_seconds: 300.0
+      value: 0.0002352
+    - time_seconds: 600.0
+      value: 0.000224
+  jno:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-08
+    - time_seconds: 300.0
+      value: 1.0500000000000001e-08
+    - time_seconds: 600.0
+      value: 1.0e-08
+  jh2o_b:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0
+    - time_seconds: 300.0
+      value: 1.05
+    - time_seconds: 600.0
+      value: 1.0
+  jc3h7ooh:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 5.95e-06
+    - time_seconds: 300.0
+      value: 6.2475e-06
+    - time_seconds: 600.0
+      value: 5.95e-06
+  jcfc113:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 2.6e-24
+    - time_seconds: 300.0
+      value: 2.73e-24
+    - time_seconds: 600.0
+      value: 2.6e-24
+  jccl4:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.28e-23
+    - time_seconds: 300.0
+      value: 1.344e-23
+    - time_seconds: 600.0
+      value: 1.28e-23
+  jnoa:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 3.47e-05
+    - time_seconds: 300.0
+      value: 3.6435000000000006e-05
+    - time_seconds: 600.0
+      value: 3.47e-05
+  jh2so4:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 3.1e-10
+    - time_seconds: 300.0
+      value: 3.255e-10
+    - time_seconds: 600.0
+      value: 3.1e-10
+  jmacr_b:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 2.77e-06
+    - time_seconds: 300.0
+      value: 2.9085e-06
+    - time_seconds: 600.0
+      value: 2.77e-06
+  jnterpooh:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 5.95e-06
+    - time_seconds: 300.0
+      value: 6.2475e-06
+    - time_seconds: 600.0
+      value: 5.95e-06
+  jrooh:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 5.95e-06
+    - time_seconds: 300.0
+      value: 6.2475e-06
+    - time_seconds: 600.0
+      value: 5.95e-06
+  jhbr:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 2.55e-23
+    - time_seconds: 300.0
+      value: 2.6775e-23
+    - time_seconds: 600.0
+      value: 2.55e-23
+  jpooh:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 5.95e-06
+    - time_seconds: 300.0
+      value: 6.2475e-06
+    - time_seconds: 600.0
+      value: 5.95e-06
+  jsoa2_a2:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-20
+    - time_seconds: 300.0
+      value: 1.05e-20
+    - time_seconds: 600.0
+      value: 1.0e-20
+  jhyac:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 2.47e-06
+    - time_seconds: 300.0
+      value: 2.5935000000000002e-06
+    - time_seconds: 600.0
+      value: 2.47e-06
+  jhcfc142b:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 3.98e-26
+    - time_seconds: 300.0
+      value: 4.1790000000000003e-26
+    - time_seconds: 600.0
+      value: 3.98e-26
+  jh2o2:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 7.98e-06
+    - time_seconds: 300.0
+      value: 8.379e-06
+    - time_seconds: 600.0
+      value: 7.98e-06
+  joclo:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 0.0726
+    - time_seconds: 300.0
+      value: 0.07623
+    - time_seconds: 600.0
+      value: 0.0726
+  jsoa5_a2:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-20
+    - time_seconds: 300.0
+      value: 1.05e-20
+    - time_seconds: 600.0
+      value: 1.0e-20
+  jmacr_a:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 2.77e-06
+    - time_seconds: 300.0
+      value: 2.9085e-06
+    - time_seconds: 600.0
+      value: 2.77e-06
+  jbenzooh:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 5.95e-06
+    - time_seconds: 300.0
+      value: 6.2475e-06
+    - time_seconds: 600.0
+      value: 5.95e-06
+  jn2o5_b:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 3.76e-09
+    - time_seconds: 300.0
+      value: 3.948000000000001e-09
+    - time_seconds: 600.0
+      value: 3.76e-09
+  jso:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 2.58e-22
+    - time_seconds: 300.0
+      value: 2.7090000000000003e-22
+    - time_seconds: 600.0
+      value: 2.58e-22
+  jisopnooh:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 5.95e-06
+    - time_seconds: 300.0
+      value: 6.2475e-06
+    - time_seconds: 600.0
+      value: 5.95e-06
+  jalkooh:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 5.95e-06
+    - time_seconds: 300.0
+      value: 6.2475e-06
+    - time_seconds: 600.0
+      value: 5.95e-06
+  jsoa1_a1:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-20
+    - time_seconds: 300.0
+      value: 1.05e-20
+    - time_seconds: 600.0
+      value: 1.0e-20
+  jeooh:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 5.95e-06
+    - time_seconds: 300.0
+      value: 6.2475e-06
+    - time_seconds: 600.0
+      value: 5.95e-06
+  jbrcl:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 0.0112
+    - time_seconds: 300.0
+      value: 0.01176
+    - time_seconds: 600.0
+      value: 0.0112
+  jisopooh:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 5.95e-06
+    - time_seconds: 300.0
+      value: 6.2475e-06
+    - time_seconds: 600.0
+      value: 5.95e-06
+  jc6h5ooh:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 5.95e-06
+    - time_seconds: 300.0
+      value: 6.2475e-06
+    - time_seconds: 600.0
+      value: 5.95e-06
+  jcfc114:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 2.09e-25
+    - time_seconds: 300.0
+      value: 2.1945e-25
+    - time_seconds: 600.0
+      value: 2.09e-25
+  jho2no2_b:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.72e-05
+    - time_seconds: 300.0
+      value: 1.8060000000000003e-05
+    - time_seconds: 600.0
+      value: 1.72e-05
+  jpan:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 9.69e-07
+    - time_seconds: 300.0
+      value: 1.01745e-06
+    - time_seconds: 600.0
+      value: 9.69e-07
+  jo3_b:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 0.000449
+    - time_seconds: 300.0
+      value: 0.00047145000000000005
+    - time_seconds: 600.0
+      value: 0.000449
+  jcf2cl2:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 2.5e-24
+    - time_seconds: 300.0
+      value: 2.625e-24
+    - time_seconds: 600.0
+      value: 2.5e-24
+  jno3_b:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 0.0124
+    - time_seconds: 300.0
+      value: 0.01302
+    - time_seconds: 600.0
+      value: 0.0124
+  jbigald2:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 0.00201
+    - time_seconds: 300.0
+      value: 0.0021105
+    - time_seconds: 600.0
+      value: 0.00201
+  jho2no2_a:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.71e-06
+    - time_seconds: 300.0
+      value: 1.7955e-06
+    - time_seconds: 600.0
+      value: 1.71e-06
+  jch3br:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 9.35e-16
+    - time_seconds: 300.0
+      value: 9.8175e-16
+    - time_seconds: 600.0
+      value: 9.35e-16
+  jclono2_b:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-05
+    - time_seconds: 300.0
+      value: 1.0500000000000001e-05
+    - time_seconds: 600.0
+      value: 1.0e-05
+  jglyoxal:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 0.00014
+    - time_seconds: 300.0
+      value: 0.000147
+    - time_seconds: 600.0
+      value: 0.00014
+  jo3_a:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 5.13e-05
+    - time_seconds: 300.0
+      value: 5.3865e-05
+    - time_seconds: 600.0
+      value: 5.13e-05
+  jn2o5_a:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 5.54e-05
+    - time_seconds: 300.0
+      value: 5.817e-05
+    - time_seconds: 600.0
+      value: 5.54e-05
+  jhpald:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 6.03e-05
+    - time_seconds: 300.0
+      value: 6.3315e-05
+    - time_seconds: 600.0
+      value: 6.03e-05
+  jbzooh:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 5.95e-06
+    - time_seconds: 300.0
+      value: 6.2475e-06
+    - time_seconds: 600.0
+      value: 5.95e-06
+  jcl2o2:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 0.00198
+    - time_seconds: 300.0
+      value: 0.002079
+    - time_seconds: 600.0
+      value: 0.00198
+  jalknit:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 5.95e-06
+    - time_seconds: 300.0
+      value: 6.2475e-06
+    - time_seconds: 600.0
+      value: 5.95e-06
+  jbigald:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 0.00201
+    - time_seconds: 300.0
+      value: 0.0021105
+    - time_seconds: 600.0
+      value: 0.00201
+  jsoa5_a1:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-20
+    - time_seconds: 300.0
+      value: 1.05e-20
+    - time_seconds: 600.0
+      value: 1.0e-20
+  jmvk:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 5.2e-06
+    - time_seconds: 300.0
+      value: 5.46e-06
+    - time_seconds: 600.0
+      value: 5.2e-06
+  jso3:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 2.36e-07
+    - time_seconds: 300.0
+      value: 2.478e-07
+    - time_seconds: 600.0
+      value: 2.36e-07
+  jchbr3:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.81e-06
+    - time_seconds: 300.0
+      value: 1.9005e-06
+    - time_seconds: 600.0
+      value: 1.81e-06
+  jterprd2:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 7.18e-06
+    - time_seconds: 300.0
+      value: 7.539e-06
+    - time_seconds: 600.0
+      value: 7.18e-06
+  jmek:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.25e-06
+    - time_seconds: 300.0
+      value: 1.3125000000000001e-06
+    - time_seconds: 600.0
+      value: 1.25e-06
+  jacet:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.25e-06
+    - time_seconds: 300.0
+      value: 1.3125000000000001e-06
+    - time_seconds: 600.0
+      value: 1.25e-06
+  jcf2clbr:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 6.95e-09
+    - time_seconds: 300.0
+      value: 7.2975000000000005e-09
+    - time_seconds: 600.0
+      value: 6.95e-09
+  jh2o_c:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0
+    - time_seconds: 300.0
+      value: 1.05
+    - time_seconds: 600.0
+      value: 1.0
+  jxylolooh:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 5.95e-06
+    - time_seconds: 300.0
+      value: 6.2475e-06
+    - time_seconds: 600.0
+      value: 5.95e-06
+  jso2:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.18e-22
+    - time_seconds: 300.0
+      value: 1.239e-22
+    - time_seconds: 600.0
+      value: 1.18e-22
+  jmekooh:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 5.95e-06
+    - time_seconds: 300.0
+      value: 6.2475e-06
+    - time_seconds: 600.0
+      value: 5.95e-06
+  jphenooh:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 5.95e-06
+    - time_seconds: 300.0
+      value: 6.2475e-06
+    - time_seconds: 600.0
+      value: 5.95e-06
+  jsoa4_a1:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-20
+    - time_seconds: 300.0
+      value: 1.05e-20
+    - time_seconds: 600.0
+      value: 1.0e-20
+  jno2:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 0.0101
+    - time_seconds: 300.0
+      value: 0.010605
+    - time_seconds: 600.0
+      value: 0.0101
+  jbigald3:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 0.00201
+    - time_seconds: 300.0
+      value: 0.0021105
+    - time_seconds: 600.0
+      value: 0.00201
+  jch2br2:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.15e-09
+    - time_seconds: 300.0
+      value: 1.2075e-09
+    - time_seconds: 600.0
+      value: 1.15e-09
+  jhf:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0
+    - time_seconds: 300.0
+      value: 1.05
+    - time_seconds: 600.0
+      value: 1.0
+  jbepomuc:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 0.00101
+    - time_seconds: 300.0
+      value: 0.0010605
+    - time_seconds: 600.0
+      value: 0.00101
+  jn2o:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 9.25e-25
+    - time_seconds: 300.0
+      value: 9.7125e-25
+    - time_seconds: 600.0
+      value: 9.25e-25
+  jch2o_a:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 3.47e-05
+    - time_seconds: 300.0
+      value: 3.6435000000000006e-05
+    - time_seconds: 600.0
+      value: 3.47e-05
+  jhcfc22:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 8.55e-27
+    - time_seconds: 300.0
+      value: 8.9775e-27
+    - time_seconds: 600.0
+      value: 8.55e-27
+  jnc4cho:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 3.47e-05
+    - time_seconds: 300.0
+      value: 3.6435000000000006e-05
+    - time_seconds: 600.0
+      value: 3.47e-05
+  jhonitr:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 3.47e-05
+    - time_seconds: 300.0
+      value: 3.6435000000000006e-05
+    - time_seconds: 600.0
+      value: 3.47e-05
+  jxooh:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 5.95e-06
+    - time_seconds: 300.0
+      value: 6.2475e-06
+    - time_seconds: 600.0
+      value: 5.95e-06
+  jch4_a:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0
+    - time_seconds: 300.0
+      value: 1.05
+    - time_seconds: 600.0
+      value: 1.0
+  jhobr:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 0.00237
+    - time_seconds: 300.0
+      value: 0.0024885000000000003
+    - time_seconds: 600.0
+      value: 0.00237
+  jno3_a:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 0.199
+    - time_seconds: 300.0
+      value: 0.20895000000000002
+    - time_seconds: 600.0
+      value: 0.199
+  jh2o_a:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 8.96e-31
+    - time_seconds: 300.0
+      value: 9.408e-31
+    - time_seconds: 600.0
+      value: 8.96e-31
+  jch3co3h:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 2.23e-06
+    - time_seconds: 300.0
+      value: 2.3415e-06
+    - time_seconds: 600.0
+      value: 2.23e-06
+  jonitr:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 7.18e-06
+    - time_seconds: 300.0
+      value: 7.539e-06
+    - time_seconds: 600.0
+      value: 7.18e-06
+  jterpooh:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 5.95e-06
+    - time_seconds: 300.0
+      value: 6.2475e-06
+    - time_seconds: 600.0
+      value: 5.95e-06
+  jcl2:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 0.00252
+    - time_seconds: 300.0
+      value: 0.0026460000000000003
+    - time_seconds: 600.0
+      value: 0.00252
+  jch3cho:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 7.18e-06
+    - time_seconds: 300.0
+      value: 7.539e-06
+    - time_seconds: 600.0
+      value: 7.18e-06
+  jbigald1:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 0.00141
+    - time_seconds: 300.0
+      value: 0.0014805
+    - time_seconds: 600.0
+      value: 0.00141
+  jhno3:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 8.54e-07
+    - time_seconds: 300.0
+      value: 8.967e-07
+    - time_seconds: 600.0
+      value: 8.54e-07
+  jc2h5ooh:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 5.95e-06
+    - time_seconds: 300.0
+      value: 6.2475e-06
+    - time_seconds: 600.0
+      value: 5.95e-06
+  jco2:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 5.28e-30
+    - time_seconds: 300.0
+      value: 5.544e-30
+    - time_seconds: 600.0
+      value: 5.28e-30
+  jcfc115:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.23e-26
+    - time_seconds: 300.0
+      value: 1.2915e-26
+    - time_seconds: 600.0
+      value: 1.23e-26
+  jhcfc141b:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 4.36e-24
+    - time_seconds: 300.0
+      value: 4.5780000000000006e-24
+    - time_seconds: 600.0
+      value: 4.36e-24
+  jterprd1:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 7.18e-06
+    - time_seconds: 300.0
+      value: 7.539e-06
+    - time_seconds: 600.0
+      value: 7.18e-06
+  jmpan:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 9.69e-07
+    - time_seconds: 300.0
+      value: 1.01745e-06
+    - time_seconds: 600.0
+      value: 9.69e-07
+  jclono2_a:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 4.59e-05
+    - time_seconds: 300.0
+      value: 4.8195e-05
+    - time_seconds: 600.0
+      value: 4.59e-05
+  jsoa3_a1:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-20
+    - time_seconds: 300.0
+      value: 1.05e-20
+    - time_seconds: 600.0
+      value: 1.0e-20
+  jsoa4_a2:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-20
+    - time_seconds: 300.0
+      value: 1.05e-20
+    - time_seconds: 600.0
+      value: 1.0e-20
+  jcf3br:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.45e-12
+    - time_seconds: 300.0
+      value: 1.5225000000000002e-12
+    - time_seconds: 600.0
+      value: 1.45e-12
+  jch3cl:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 4.68e-25
+    - time_seconds: 300.0
+      value: 4.914e-25
+    - time_seconds: 600.0
+      value: 4.68e-25
+  jhcl:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 6.59e-25
+    - time_seconds: 300.0
+      value: 6.9195e-25
+    - time_seconds: 600.0
+      value: 6.59e-25
+  jtolooh:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 5.95e-06
+    - time_seconds: 300.0
+      value: 6.2475e-06
+    - time_seconds: 600.0
+      value: 5.95e-06
+  jch3ccl3:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.79e-23
+    - time_seconds: 300.0
+      value: 1.8795e-23
+    - time_seconds: 600.0
+      value: 1.79e-23
+  jsoa2_a1:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-20
+    - time_seconds: 300.0
+      value: 1.05e-20
+    - time_seconds: 600.0
+      value: 1.0e-20
+  jglyald:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 6.18e-06
+    - time_seconds: 300.0
+      value: 6.489e-06
+    - time_seconds: 600.0
+      value: 6.18e-06
+  jocs:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 6.18e-12
+    - time_seconds: 300.0
+      value: 6.489e-12
+    - time_seconds: 600.0
+      value: 6.18e-12
+  jsf6:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-20
+    - time_seconds: 300.0
+      value: 1.05e-20
+    - time_seconds: 600.0
+      value: 1.0e-20
+  jhocl:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 0.000304
+    - time_seconds: 300.0
+      value: 0.0003192
+    - time_seconds: 600.0
+      value: 0.000304
+  jch3ooh:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 5.95e-06
+    - time_seconds: 300.0
+      value: 6.2475e-06
+    - time_seconds: 600.0
+      value: 5.95e-06
+  jclo:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 0.00024
+    - time_seconds: 300.0
+      value: 0.000252
+    - time_seconds: 600.0
+      value: 0.00024
+  jcofcl:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 2.3e-24
+    - time_seconds: 300.0
+      value: 2.4150000000000003e-24
+    - time_seconds: 600.0
+      value: 2.3e-24
+  jo2_a:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0
+    - time_seconds: 300.0
+      value: 1.05
+    - time_seconds: 600.0
+      value: 1.0
+  jh2402:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 3.68e-09
+    - time_seconds: 300.0
+      value: 3.864e-09
+    - time_seconds: 600.0
+      value: 3.68e-09
+  jsoa1_a2:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-20
+    - time_seconds: 300.0
+      value: 1.05e-20
+    - time_seconds: 600.0
+      value: 1.0e-20
+  jcfcl3:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.38e-23
+    - time_seconds: 300.0
+      value: 1.4490000000000002e-23
+    - time_seconds: 600.0
+      value: 1.38e-23
+integration:
+  start_seconds: 0.0
+  horizon_seconds: 600.0
+  checkpoints_seconds:
+  - 60.0
+  - 300.0
+  - 600.0
+  forcing_boundaries_seconds:
+  - 0.0
+  - 300.0
+  - 600.0
+workload:
+  cells:
+  - 1
+  - 10
+  - 100
+  - 1000
+  ensemble_seed: 2718
+accuracy:
+  rtol: 1.0e-06
+  atol_by_species:
+    ALKNIT: 8.72e-18
+    BZOOH: 2.68e-19
+    C6H5OOH: 4.2e-18
+    COF2: 5.240000000000001e-19
+    O2: 8.90261411e-08
+    COFCL: 7.92e-20
+    HF: 1.8100000000000001e-19
+    F: 1.0e-30
+    BENZO2: 2.09e-21
+    BZOO: 8.81e-21
+    N2: 3.31007671e-07
+    E90: 1.0000000000000001e-23
+    NH_5: 1.0000000000000001e-23
+    NH_50: 1.0000000000000001e-23
+    ST80_25: 1.0000000000000001e-23
+    PAN: 4.2499999999999995e-16
+    MVK: 2.61e-16
+    MACROOH: 1.21e-17
+    SOAG0: 3.33e-19
+    SOAG1: 2.14e-18
+    SOAG2: 1.4e-17
+    SOAG3: 4.27e-17
+    SOAG4: 2.25e-16
+    soa4_a1: 1.0000000000000001e-23
+    soa5_a1: 1.0000000000000001e-23
+    soa5_a2: 1.0000000000000001e-23
+    soa3_a1: 1.0000000000000001e-23
+    soa2_a1: 1.0000000000000001e-23
+    soa1_a1: 1.0000000000000001e-23
+    soa1_a2: 1.0000000000000001e-23
+    soa2_a2: 1.0000000000000001e-23
+    soa3_a2: 1.0000000000000001e-23
+    soa4_a2: 1.0000000000000001e-23
+    ISOPNITB: 1.0500000000000001e-17
+    SO3: 1.75e-25
+    OCS: 1.96e-16
+    SO: 1.22e-28
+    S: 1.0e-30
+    BCARYO2VBS: 1.0000000000000001e-23
+    SF6: 1.0000000000000001e-23
+    sink: 1.0e-30
+    H: 9.67e-26
+    MEK: 1.04e-16
+    MTERP: 1.09e-17
+    N2O5: 1.0e-19
+    HCN: 1.9e-16
+    SVOC: 1.98e-18
+    ISOPNO3: 5.350000000000001e-21
+    RO2: 7.13e-20
+    PHENO2: 2.5399999999999998e-21
+    BENZO2VBS: 1.0000000000000001e-23
+    IVOC: 2.0599999999999998e-17
+    TERPNIT: 8.28e-18
+    ISOPO2VBS: 1.0000000000000001e-23
+    IVOCO2VBS: 1.0000000000000001e-23
+    HNO3: 1.0400000000000001e-15
+    ACBZO2: 3.54e-21
+    CH3COOOH: 7.190000000000001e-17
+    SO2: 6.15e-16
+    MTERPO2VBS: 1.0000000000000001e-23
+    CH4: 7.03e-13
+    CH3CL: 2.07e-16
+    CH3CO3: 8.32e-19
+    C6H5O2: 6.23e-20
+    TERPROD1: 1.68e-17
+    HYAC: 4.88e-16
+    HPALD: 3.56e-18
+    TOLUO2VBS: 1.0000000000000001e-23
+    H2O: 7.46e-09
+    NO2: 6.37e-16
+    EOOH: 3.56e-17
+    NTERPOOH: 9.37e-19
+    XYLEO2VBS: 1.0000000000000001e-23
+    CCL4: 2.96e-17
+    CF2CLBR: 1.2400000000000001e-18
+    CF3BR: 1.26e-18
+    CFC11: 8.5e-17
+    CFC113: 2.66e-17
+    CFC114: 6.19e-18
+    CFC115: 3.2900000000000002e-18
+    CFC12: 1.9200000000000001e-16
+    CH2BR2: 4.32e-19
+    CH3BR: 2.37e-18
+    CH3CCL3: 5.55e-19
+    'NO': 1.47e-16
+    BR: 3.67e-22
+    BRCL: 9.18e-27
+    BRO: 1.95e-21
+    BRONO2: 1.22e-19
+    CL: 1.07e-23
+    CL2: 1.01e-24
+    CL2O2: 1.0e-30
+    CLO: 8.06e-22
+    CLONO2: 4.0900000000000005e-19
+    HCOOH: 8.79e-17
+    HBR: 4.48e-19
+    HOBR: 1.65e-20
+    HOCL: 2.1100000000000002e-20
+    N: 1.0000000000000001e-23
+    BIGENE: 6.59e-18
+    C2H4: 2.51e-16
+    C2H5O2: 1.55e-20
+    CH3COCHO: 1.95e-16
+    CH3COCH3: 7.37e-16
+    O: 2.85e-22
+    OCLO: 7.68e-27
+    O1D: 1.5300000000000001e-27
+    PHENO: 1.0e-20
+    HCFC141B: 9.29e-18
+    HCFC142B: 8.240000000000001e-18
+    HCFC22: 9.07e-17
+    DMS: 1.74e-18
+    C2H5OH: 2.7500000000000003e-16
+    HCL: 8.17e-18
+    BEPOMUC: 5.4e-20
+    CHBR3: 3.87e-19
+    H2402: 1.52e-19
+    CO2: 1.56e-10
+    BZALD: 4.7000000000000004e-18
+    BENZENE: 2.67e-17
+    C3H7O2: 2.3100000000000003e-20
+    CH3O2: 3.34e-18
+    BCARY: 5.0400000000000006e-20
+    BIGALD: 1.33e-19
+    BIGALD2: 6.58e-19
+    BIGALD3: 6.83e-19
+    BIGALD4: 7.340000000000001e-18
+    BIGALK: 1.9e-16
+    H2O2: 7.36e-16
+    C2H5OOH: 7.99e-19
+    C2H6: 2.9300000000000003e-16
+    C3H8: 9.7e-17
+    C3H6: 2.42e-17
+    CH2O: 2.4400000000000002e-15
+    CH3CN: 4.66e-17
+    C2H2: 2.1299999999999999e-16
+    CH3OH: 2.74e-15
+    CH3OOH: 1.6899999999999999e-16
+    CRESOL: 1.06e-18
+    ENEO2: 7.98e-20
+    MACRO2: 1.09e-18
+    ISOPAO2: 1.3900000000000001e-18
+    MALO2: 1.07e-21
+    ISOPBO2: 9.080000000000001e-19
+    MCO3: 9.230000000000001e-20
+    MDIALO2: 1.61e-21
+    MEKO2: 2.81e-20
+    EO2: 4.04e-19
+    EO: 9.930000000000001e-26
+    GLYOXAL: 1.2499999999999999e-16
+    MPAN: 3.1099999999999996e-17
+    NC4CH2OH: 7.3e-21
+    ISOPOOH: 4.6800000000000004e-17
+    GLYALD: 4.58e-16
+    HO2: 1.69e-17
+    HOCH2OO: 1.07e-21
+    H2: 1.93e-13
+    HYDRALD: 1.49e-16
+    ISOP: 1.23e-16
+    NTERPO2: 9.179999999999999e-21
+    TOLO2: 3.23e-20
+    TERP2O2: 2.15e-19
+    XYLENO2: 4.9800000000000004e-20
+    TERPO2: 1.29e-19
+    XYLOLO2: 4.62e-21
+    PBZNIT: 1.78e-18
+    XYLENES: 2.82e-17
+    PO2: 1.46e-19
+    TOLUENE: 4.88e-17
+    XO2: 1.12e-18
+    XOOH: 7.93e-17
+    TERPROD2: 3.81e-17
+    MEKOOH: 6.15e-19
+    MACR: 1.0600000000000001e-16
+    HONITR: 6.79e-17
+    ISOPNITA: 1.62e-17
+    ISOPNOOH: 9.16e-19
+    IEPOX: 5.84e-17
+    ONITR: 2.67e-17
+    H2SO4: 2.2700000000000002e-19
+    N2O: 1.2700000000000001e-13
+    NO3: 9.32e-20
+    OH: 2.5200000000000004e-19
+    PHENOOH: 9.15e-20
+    PHENOL: 9.490000000000001e-19
+    XYLOL: 9.92e-19
+    ROOH: 4.4e-18
+    O3: 2.49e-14
+    TERPOOH: 2.46e-18
+    TOLOOH: 9.69e-19
+    XYLENOOH: 1.5000000000000001e-18
+    XYLOLOOH: 1.3100000000000002e-19
+    CO: 3.25e-14
+    CH3COOH: 8.200000000000001e-17
+    CH3CHO: 2.51e-16
+    BIGALD1: 6.469999999999999e-19
+    ALKOOH: 3.79e-18
+    DICARBO2: 1.55e-21
+    BENZOOH: 5.78e-20
+    ALKO2: 1.3900000000000002e-19
+    HO2NO2: 7.99e-18
+    C3H7OOH: 7.87e-19
+    NH3: 7.59e-16
+    TERP2OOH: 5.96e-18
+    POOH: 9.24e-18
+    NOA: 5.4599999999999996e-17
+    NC4CHO: 3.67e-19
+    TEPOMUC: 2.21e-18
+    NH4: 1.0000000000000001e-23
+    M: 4.239340054163681e-07
+  positivity_policy: nonnegative_with_scaled_roundoff
+  conservation_checks: []
+reference:
+  implementation: scipy-radau
+  max_refinements: 3

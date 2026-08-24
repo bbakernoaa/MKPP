@@ -58,7 +58,9 @@
           const double max_growth = 6.0;
           const double min_shrink = 0.2;
           double t = 0.0;
-          double dt = Kokkos::fmin(dt_total, 1.0);  // conservative initial step
+          // Match MICM's default initial Rosenbrock step: 1e-6 of the
+          // chemistry interval, with the interval itself as h_max.
+          double dt = dt_total * 1.0e-6;
 
           while (t < dt_total) {
           dt = Kokkos::min(dt, dt_total - t);
@@ -221,7 +223,9 @@
           {
               double Ynew_i = S_{{ i }} + {{ m_expr }};
               double ymax = Kokkos::fmax(Kokkos::fabs(state({{ state_idx }})), Kokkos::fabs(Ynew_i));
-              double sci = atol[{{ i }}] + rtol[{{ i }}] * ymax;
+              // Tolerances are stored in physical species order, while the
+              // generated scalar registers may use the RCM permutation.
+              double sci = atol[{{ state_idx }}] + rtol[{{ state_idx }}] * ymax;
               double yerr_i = {{ e_expr }};
               err_norm_sq += (yerr_i / sci) * (yerr_i / sci);
           }

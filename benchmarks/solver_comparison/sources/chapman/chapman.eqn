@@ -1,0 +1,6 @@
+#EQUATIONS { Canonical four-reaction Chapman benchmark chemistry }
+
+<R1> O2       = 2 O      : J1;
+<R2> O + O2 + M = O3 + M : 6.0e-34;
+<R3> O3       = O + O2   : J3;
+<R4> O + O3   = 2 O2     : 8.0e-12;

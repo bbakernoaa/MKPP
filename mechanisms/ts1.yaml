@@ -215,7 +215,7 @@ reactions:
 - type: ARRHENIUS
   A: 1204428.152
   B: 0.0
-  C: -500.0
+  C: 500.0
   D: 300.0
   E: 0.0
   reactants:
@@ -231,7 +231,7 @@ reactions:
 - type: ARRHENIUS
   A: 2288413.4888
   B: 0.0
-  C: -200.0
+  C: 200.0
   D: 300.0
   E: 0.0
   reactants:
@@ -244,7 +244,7 @@ reactions:
 - type: ARRHENIUS
   A: 873210.4102
   B: 0.0
-  C: -220.0
+  C: 220.0
   D: 300.0
   E: 0.0
   reactants:
@@ -257,7 +257,7 @@ reactions:
 - type: ARRHENIUS
   A: 20475278.584
   B: 0.0
-  C: 1600.0
+  C: -1600.0
   D: 300.0
   E: 0.0
   reactants:
@@ -271,7 +271,7 @@ reactions:
 - type: ARRHENIUS
   A: 451660.55700000003
   B: 0.0
-  C: -700.0
+  C: 700.0
   D: 300.0
   E: 0.0
   reactants:
@@ -288,7 +288,7 @@ reactions:
 - type: ARRHENIUS
   A: 782878.2988
   B: 0.0
-  C: 1770.0
+  C: -1770.0
   D: 300.0
   E: 0.0
   reactants:
@@ -314,7 +314,7 @@ reactions:
 - type: ARRHENIUS
   A: 4877934.0156
   B: 0.0
-  C: -270.0
+  C: 270.0
   D: 300.0
   E: 0.0
   reactants:
@@ -341,7 +341,7 @@ reactions:
 - type: ARRHENIUS
   A: 127669.384112
   B: 0.0
-  C: -1300.0
+  C: 1300.0
   D: 300.0
   E: 0.0
   reactants:
@@ -358,7 +358,7 @@ reactions:
 - type: ARRHENIUS
   A: 1746420.8204
   B: 0.0
-  C: -500.0
+  C: 500.0
   D: 300.0
   E: 0.0
   reactants:
@@ -370,7 +370,7 @@ reactions:
 - type: ARRHENIUS
   A: 98160894.388
   B: 0.0
-  C: -60.0
+  C: 60.0
   D: 300.0
   E: 0.0
   reactants:
@@ -382,7 +382,7 @@ reactions:
 - type: ARRHENIUS
   A: 361328.4456
   B: 0.0
-  C: -230.0
+  C: 230.0
   D: 300.0
   E: 0.0
   reactants:
@@ -395,7 +395,7 @@ reactions:
 - type: ARRHENIUS
   A: 7226568.9120000005
   B: 0.0
-  C: -440.0
+  C: 440.0
   D: 300.0
   E: 0.0
   reactants:
@@ -438,7 +438,7 @@ reactions:
 - type: ARRHENIUS
   A: 2288413.4888
   B: 0.0
-  C: -200.0
+  C: 200.0
   D: 300.0
   E: 0.0
   reactants:
@@ -476,7 +476,7 @@ reactions:
 - type: ARRHENIUS
   A: 1565756.5976
   B: 0.0
-  C: -365.0
+  C: 365.0
   D: 300.0
   E: 0.0
   reactants:
@@ -491,7 +491,7 @@ reactions:
 - type: ARRHENIUS
   A: 1565756.5976
   B: 0.0
-  C: -365.0
+  C: 365.0
   D: 300.0
   E: 0.0
   reactants:
@@ -523,7 +523,7 @@ reactions:
 - type: ARRHENIUS
   A: 225830.27850000001
   B: 0.0
-  C: 40.0
+  C: -40.0
   D: 300.0
   E: 0.0
   reactants:
@@ -550,7 +550,7 @@ reactions:
 - type: ARRHENIUS
   A: 1385092.3747999999
   B: 0.0
-  C: 170.0
+  C: -170.0
   D: 300.0
   E: 0.0
   reactants:
@@ -562,7 +562,7 @@ reactions:
 - type: ARRHENIUS
   A: 2288413.4888
   B: 0.0
-  C: -200.0
+  C: 200.0
   D: 300.0
   E: 0.0
   reactants:
@@ -586,7 +586,7 @@ reactions:
 - type: ARRHENIUS
   A: 15296237.5304
   B: 0.0
-  C: -410.0
+  C: 410.0
   D: 300.0
   E: 0.0
   reactants:
@@ -609,7 +609,7 @@ reactions:
 - type: ARRHENIUS
   A: 379.39486788
   B: 0.0
-  C: 580.0
+  C: -580.0
   D: 300.0
   E: 0.0
   reactants:
@@ -627,7 +627,7 @@ reactions:
 - type: ARRHENIUS
   A: 1204428.152
   B: 0.0
-  C: -500.0
+  C: 500.0
   D: 300.0
   E: 0.0
   reactants:
@@ -642,7 +642,7 @@ reactions:
 - type: ARRHENIUS
   A: 1180339.58896
   B: 0.0
-  C: 1200.0
+  C: -1200.0
   D: 300.0
   E: 0.0
   reactants:
@@ -656,7 +656,7 @@ reactions:
 - type: ARRHENIUS
   A: 2649741.9343999997
   B: 0.0
-  C: -180.0
+  C: 180.0
   D: 300.0
   E: 0.0
   reactants:
@@ -675,7 +675,7 @@ reactions:
 - type: ARRHENIUS
   A: 1204428.152
   B: 0.0
-  C: -500.0
+  C: 500.0
   D: 300.0
   E: 0.0
   reactants:
@@ -691,7 +691,7 @@ reactions:
 - type: ARRHENIUS
   A: 903.321114
   B: 0.0
-  C: 2100.0
+  C: -2100.0
   D: 300.0
   E: 0.0
   reactants:
@@ -709,7 +709,7 @@ reactions:
 - type: ARRHENIUS
   A: 2288413.4888
   B: 0.0
-  C: -200.0
+  C: 200.0
   D: 300.0
   E: 0.0
   reactants:
@@ -721,7 +721,7 @@ reactions:
 - type: ARRHENIUS
   A: 2788251.1718800003
   B: 0.0
-  C: -350.0
+  C: 350.0
   D: 300.0
   E: 0.0
   reactants:
@@ -734,7 +734,7 @@ reactions:
 - type: ARRHENIUS
   A: 165608.87089999998
   B: 0.0
-  C: -1300.0
+  C: 1300.0
   D: 300.0
   E: 0.0
   reactants:
@@ -751,7 +751,7 @@ reactions:
 - type: ARRHENIUS
   A: 722656.8912
   B: 0.0
-  C: -490.0
+  C: 490.0
   D: 300.0
   E: 0.0
   reactants:
@@ -763,7 +763,7 @@ reactions:
 - type: ARRHENIUS
   A: 1987306.4508
   B: 0.0
-  C: 3150.0
+  C: -3150.0
   D: 300.0
   E: 0.0
   reactants:
@@ -776,7 +776,7 @@ reactions:
 - type: ARRHENIUS
   A: 1565756.5976
   B: 0.0
-  C: -265.0
+  C: 265.0
   D: 300.0
   E: 0.0
   reactants:
@@ -815,7 +815,7 @@ reactions:
 - type: ARRHENIUS
   A: 505859.82383999997
   B: 0.0
-  C: -830.0
+  C: 830.0
   D: 300.0
   E: 0.0
   reactants:
@@ -842,7 +842,7 @@ reactions:
 - type: ARRHENIUS
   A: 987631.08464
   B: 0.0
-  C: 1520.0
+  C: -1520.0
   D: 300.0
   E: 0.0
   reactants:
@@ -881,7 +881,7 @@ reactions:
 - type: ARRHENIUS
   A: 451660.55700000003
   B: 0.0
-  C: -700.0
+  C: 700.0
   D: 300.0
   E: 0.0
   reactants:
@@ -894,7 +894,7 @@ reactions:
 - type: ARRHENIUS
   A: 15296237.5304
   B: 0.0
-  C: -410.0
+  C: 410.0
   D: 300.0
   E: 0.0
   reactants:
@@ -920,7 +920,7 @@ reactions:
 - type: ARRHENIUS
   A: 873210.4102
   B: 0.0
-  C: -220.0
+  C: 220.0
   D: 300.0
   E: 0.0
   reactants:
@@ -932,7 +932,7 @@ reactions:
 - type: ARRHENIUS
   A: 84309970.64
   B: 0.0
-  C: 470.0
+  C: -470.0
   D: 300.0
   E: 0.0
   reactants:
@@ -945,7 +945,7 @@ reactions:
 - type: ARRHENIUS
   A: 301107.038
   B: 0.0
-  C: -400.0
+  C: 400.0
   D: 300.0
   E: 0.0
   reactants:
@@ -961,7 +961,7 @@ reactions:
 - type: ARRHENIUS
   A: 258952.05268
   B: 0.0
-  C: -1040.0
+  C: 1040.0
   D: 300.0
   E: 0.0
   reactants:
@@ -978,7 +978,7 @@ reactions:
 - type: ARRHENIUS
   A: 301107.038
   B: 0.0
-  C: -400.0
+  C: 400.0
   D: 300.0
   E: 0.0
   reactants:
@@ -993,7 +993,7 @@ reactions:
 - type: ARRHENIUS
   A: 6624354.836
   B: 0.0
-  C: 280.0
+  C: -280.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1005,7 +1005,7 @@ reactions:
 - type: ARRHENIUS
   A: 451660.55700000003
   B: 0.0
-  C: -700.0
+  C: 700.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1017,7 +1017,7 @@ reactions:
 - type: ARRHENIUS
   A: 722656.8912
   B: 0.0
-  C: -490.0
+  C: 490.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1032,7 +1032,7 @@ reactions:
 - type: ARRHENIUS
   A: 4612959.82216
   B: 0.0
-  C: 1020.0
+  C: -1020.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1059,7 +1059,7 @@ reactions:
 - type: ARRHENIUS
   A: 451660.55700000003
   B: 0.0
-  C: -700.0
+  C: 700.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1071,7 +1071,7 @@ reactions:
 - type: ARRHENIUS
   A: 7226568.9120000005
   B: 0.0
-  C: -440.0
+  C: 440.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1083,7 +1083,7 @@ reactions:
 - type: ARRHENIUS
   A: 915365.39552
   B: 0.0
-  C: -200.0
+  C: 200.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1096,7 +1096,7 @@ reactions:
 - type: ARRHENIUS
   A: 4817712.608
   B: 0.0
-  C: 2060.0
+  C: -2060.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1120,7 +1120,7 @@ reactions:
 - type: ARRHENIUS
   A: 43359413.471999995
   B: 0.0
-  C: 70.0
+  C: -70.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1133,7 +1133,7 @@ reactions:
 - type: ARRHENIUS
   A: 32519.560103999996
   B: 0.0
-  C: -870.0
+  C: 870.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1145,7 +1145,7 @@ reactions:
 - type: ARRHENIUS
   A: 1565756.5976
   B: 0.0
-  C: -365.0
+  C: 365.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1159,7 +1159,7 @@ reactions:
 - type: ARRHENIUS
   A: 10839853.367999999
   B: 0.0
-  C: -180.0
+  C: 180.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1172,7 +1172,7 @@ reactions:
 - type: ARRHENIUS
   A: 114420.67444
   B: 0.0
-  C: -520.0
+  C: 520.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1185,7 +1185,7 @@ reactions:
 - type: ARRHENIUS
   A: 1385092.3747999999
   B: 0.0
-  C: -530.0
+  C: 530.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1198,7 +1198,7 @@ reactions:
 - type: ARRHENIUS
   A: 2890627.5648
   B: 0.0
-  C: -120.0
+  C: 120.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1228,7 +1228,7 @@ reactions:
 - type: ARRHENIUS
   A: 3854170.0864
   B: 0.0
-  C: -290.0
+  C: 290.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1241,7 +1241,7 @@ reactions:
 - type: ARRHENIUS
   A: 481771.2608
   B: 0.0
-  C: -700.0
+  C: 700.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1253,7 +1253,7 @@ reactions:
 - type: ARRHENIUS
   A: 18066422.28
   B: 0.0
-  C: -200.0
+  C: 200.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1266,7 +1266,7 @@ reactions:
 - type: ARRHENIUS
   A: 1023763.9292
   B: 0.0
-  C: -352.0
+  C: 352.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1280,7 +1280,7 @@ reactions:
 - type: ARRHENIUS
   A: 5781255.1296
   B: 0.0
-  C: -360.0
+  C: 360.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1307,7 +1307,7 @@ reactions:
 - type: ARRHENIUS
   A: 11442067.444
   B: 0.0
-  C: -230.0
+  C: 230.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1333,7 +1333,7 @@ reactions:
 - type: ARRHENIUS
   A: 3312177.418
   B: 0.0
-  C: -200.0
+  C: 200.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1390,7 +1390,7 @@ reactions:
 - type: ARRHENIUS
   A: 96354.25216
   B: 0.0
-  C: 2280.0
+  C: -2280.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1403,7 +1403,7 @@ reactions:
 - type: ARRHENIUS
   A: 2288413.4888
   B: 0.0
-  C: -200.0
+  C: 200.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1440,7 +1440,7 @@ reactions:
 - type: ARRHENIUS
   A: 1565756.5976
   B: 0.0
-  C: -365.0
+  C: 365.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1457,7 +1457,7 @@ reactions:
 - type: ARRHENIUS
   A: 1565756.5976
   B: 0.0
-  C: -365.0
+  C: 365.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1484,7 +1484,7 @@ reactions:
 - type: ARRHENIUS
   A: 4516605.57
   B: 0.0
-  C: -290.0
+  C: 290.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1497,7 +1497,7 @@ reactions:
 - type: ARRHENIUS
   A: 8430997.064
   B: 0.0
-  C: -270.0
+  C: 270.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1510,7 +1510,7 @@ reactions:
 - type: ARRHENIUS
   A: 451660.55700000003
   B: 0.0
-  C: -700.0
+  C: 700.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1523,7 +1523,7 @@ reactions:
 - type: ARRHENIUS
   A: 451660.55700000003
   B: 0.0
-  C: -700.0
+  C: 700.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1535,7 +1535,7 @@ reactions:
 - type: ARRHENIUS
   A: 258952.05268
   B: 0.0
-  C: -1040.0
+  C: 1040.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1553,7 +1553,7 @@ reactions:
 - type: ARRHENIUS
   A: 1565756.5976
   B: 0.0
-  C: -365.0
+  C: 365.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1596,7 +1596,7 @@ reactions:
 - type: ARRHENIUS
   A: 481771.2608
   B: 0.0
-  C: -700.0
+  C: 700.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1608,7 +1608,7 @@ reactions:
 - type: ARRHENIUS
   A: 1686199.4128
   B: 0.0
-  C: 1800.0
+  C: -1800.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1634,7 +1634,7 @@ reactions:
 - type: ARRHENIUS
   A: 1475424.4862
   B: 0.0
-  C: 1775.0
+  C: -1775.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1647,7 +1647,7 @@ reactions:
 - type: ARRHENIUS
   A: 1625978.0051999998
   B: 0.0
-  C: -350.0
+  C: 350.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1664,7 +1664,7 @@ reactions:
 - type: ARRHENIUS
   A: 28906275.648000002
   B: 0.0
-  C: -250.0
+  C: 250.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1688,7 +1688,7 @@ reactions:
 - type: ARRHENIUS
   A: 903321.1140000001
   B: 0.0
-  C: -230.0
+  C: 230.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1714,7 +1714,7 @@ reactions:
 - type: ARRHENIUS
   A: 4456384.1624
   B: 0.0
-  C: -270.0
+  C: 270.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1727,7 +1727,7 @@ reactions:
 - type: ARRHENIUS
   A: 2529299.1192
   B: 0.0
-  C: -180.0
+  C: 180.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1767,7 +1767,7 @@ reactions:
 - type: ARRHENIUS
   A: 7226.568912
   B: 0.0
-  C: 2630.0
+  C: -2630.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1793,7 +1793,7 @@ reactions:
 - type: ARRHENIUS
   A: 722656.8912
   B: 0.0
-  C: 330.0
+  C: -330.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1806,7 +1806,7 @@ reactions:
 - type: ARRHENIUS
   A: 12646495.595999999
   B: 0.0
-  C: 2200.0
+  C: -2200.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1819,7 +1819,7 @@ reactions:
 - type: ARRHENIUS
   A: 481771.2608
   B: 0.0
-  C: -700.0
+  C: 700.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1831,7 +1831,7 @@ reactions:
 - type: ARRHENIUS
   A: 2487144.13388
   B: 0.0
-  C: -452.0
+  C: 452.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1857,7 +1857,7 @@ reactions:
 - type: ARRHENIUS
   A: 451660.55700000003
   B: 0.0
-  C: -700.0
+  C: 700.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1883,7 +1883,7 @@ reactions:
 - type: ARRHENIUS
   A: 1824708.65028
   B: 0.0
-  C: 446.0
+  C: -446.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1898,7 +1898,7 @@ reactions:
 - type: ARRHENIUS
   A: 2288413.4888
   B: 0.0
-  C: -200.0
+  C: 200.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1913,7 +1913,7 @@ reactions:
 - type: ARRHENIUS
   A: 3071291.7876
   B: 0.0
-  C: -210.0
+  C: 210.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1926,7 +1926,7 @@ reactions:
 - type: ARRHENIUS
   A: 2288413.4888
   B: 0.0
-  C: -200.0
+  C: 200.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1938,7 +1938,7 @@ reactions:
 - type: ARRHENIUS
   A: 3191734.6028
   B: 0.0
-  C: -360.0
+  C: 360.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1952,7 +1952,7 @@ reactions:
 - type: ARRHENIUS
   A: 2071616.42144
   B: 0.0
-  C: -260.0
+  C: 260.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1965,7 +1965,7 @@ reactions:
 - type: ARRHENIUS
   A: 752767.595
   B: 0.0
-  C: 1600.0
+  C: -1600.0
   D: 300.0
   E: 0.0
   reactants:
@@ -1978,7 +1978,7 @@ reactions:
 - type: ARRHENIUS
   A: 1385092.3747999999
   B: 0.0
-  C: -260.0
+  C: 260.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2009,7 +2009,7 @@ reactions:
 - type: ARRHENIUS
   A: 2529299.1192
   B: 0.0
-  C: -180.0
+  C: 180.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2024,7 +2024,7 @@ reactions:
 - type: ARRHENIUS
   A: 451660.55700000003
   B: 0.0
-  C: -700.0
+  C: 700.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2041,7 +2041,7 @@ reactions:
 - type: ARRHENIUS
   A: 6022.14076
   B: 0.0
-  C: 490.0
+  C: -490.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2066,7 +2066,7 @@ reactions:
 - type: ARRHENIUS
   A: 78287.82988
   B: 0.0
-  C: -360.0
+  C: 360.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2092,7 +2092,7 @@ reactions:
 - type: ARRHENIUS
   A: 2288413.4888
   B: 0.0
-  C: -200.0
+  C: 200.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2104,7 +2104,7 @@ reactions:
 - type: ARRHENIUS
   A: 2529299.1192
   B: 0.0
-  C: -180.0
+  C: 180.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2149,7 +2149,7 @@ reactions:
 - type: ARRHENIUS
   A: 19873064.508
   B: 0.0
-  C: -55.0
+  C: 55.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2162,7 +2162,7 @@ reactions:
 - type: ARRHENIUS
   A: 14453.137824
   B: 0.0
-  C: -460.0
+  C: 460.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2175,7 +2175,7 @@ reactions:
 - type: ARRHENIUS
   A: 1565756.5976
   B: 0.0
-  C: -290.0
+  C: 290.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2188,7 +2188,7 @@ reactions:
 - type: ARRHENIUS
   A: 4516605.57
   B: 0.0
-  C: -290.0
+  C: 290.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2218,7 +2218,7 @@ reactions:
 - type: ARRHENIUS
   A: 843099.7064
   B: 0.0
-  C: 1860.0
+  C: -1860.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2232,7 +2232,7 @@ reactions:
 - type: ARRHENIUS
   A: 12646495.595999999
   B: 0.0
-  C: -100.0
+  C: 100.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2245,7 +2245,7 @@ reactions:
 - type: ARRHENIUS
   A: 1746420.8204
   B: 0.0
-  C: 345.0
+  C: -345.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2258,7 +2258,7 @@ reactions:
 - type: ARRHENIUS
   A: 301107.038
   B: 0.0
-  C: -400.0
+  C: 400.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2277,7 +2277,7 @@ reactions:
 - type: ARRHENIUS
   A: 2288413.4888
   B: 0.0
-  C: -200.0
+  C: 200.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2303,7 +2303,7 @@ reactions:
 - type: ARRHENIUS
   A: 1565756.5976
   B: 0.0
-  C: -365.0
+  C: 365.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2322,7 +2322,7 @@ reactions:
 - type: ARRHENIUS
   A: 2288413.4888
   B: 0.0
-  C: -200.0
+  C: 200.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2347,7 +2347,7 @@ reactions:
 - type: ARRHENIUS
   A: 361328.4456
   B: 0.0
-  C: 2058.0
+  C: -2058.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2361,7 +2361,7 @@ reactions:
 - type: ARRHENIUS
   A: 4516605.57
   B: 0.0
-  C: -290.0
+  C: 290.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2376,7 +2376,7 @@ reactions:
 - type: ARRHENIUS
   A: 451660.55700000003
   B: 0.0
-  C: -700.0
+  C: 700.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2401,7 +2401,7 @@ reactions:
 - type: ARRHENIUS
   A: 2400000000000.0
   B: 0.0
-  C: 7000.0
+  C: -7000.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2413,7 +2413,7 @@ reactions:
 - type: ARRHENIUS
   A: 246907.77116
   B: 0.0
-  C: -290.0
+  C: 290.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2426,7 +2426,7 @@ reactions:
 - type: ARRHENIUS
   A: 301107.038
   B: 0.0
-  C: -400.0
+  C: 400.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2442,7 +2442,7 @@ reactions:
 - type: ARRHENIUS
   A: 843099.7064
   B: 0.0
-  C: 2000.0
+  C: -2000.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2468,7 +2468,7 @@ reactions:
 - type: ARRHENIUS
   A: 27942733.1264
   B: 0.0
-  C: -20.0
+  C: 20.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2481,7 +2481,7 @@ reactions:
 - type: ARRHENIUS
   A: 11201181.8136
   B: 0.0
-  C: -175.0
+  C: 175.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2493,7 +2493,7 @@ reactions:
 - type: ARRHENIUS
   A: 72265689.12
   B: 0.0
-  C: 430.0
+  C: -430.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2506,7 +2506,7 @@ reactions:
 - type: ARRHENIUS
   A: 5841.4765372
   B: 0.0
-  C: -625.0
+  C: 625.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2559,7 +2559,7 @@ reactions:
 - type: ARRHENIUS
   A: 12224945.742800001
   B: 0.0
-  C: 1100.0
+  C: -1100.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2573,7 +2573,7 @@ reactions:
 - type: ARRHENIUS
   A: 541992.6684
   B: 0.0
-  C: 360.0
+  C: -360.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2598,7 +2598,7 @@ reactions:
 - type: ARRHENIUS
   A: 1987306.4508
   B: 0.0
-  C: 115.0
+  C: -115.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2612,7 +2612,7 @@ reactions:
 - type: ARRHENIUS
   A: 210774.9266
   B: 0.0
-  C: 1370.0
+  C: -1370.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2624,7 +2624,7 @@ reactions:
 - type: ARRHENIUS
   A: 21679706.735999998
   B: 0.0
-  C: 375.0
+  C: -375.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2637,7 +2637,7 @@ reactions:
 - type: ARRHENIUS
   A: 2529299.1192
   B: 0.0
-  C: -180.0
+  C: 180.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2652,7 +2652,7 @@ reactions:
 - type: ARRHENIUS
   A: 4155277.1244
   B: 0.0
-  C: 230.0
+  C: -230.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2678,7 +2678,7 @@ reactions:
 - type: ARRHENIUS
   A: 9153653.9552
   B: 0.0
-  C: -200.0
+  C: 200.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2692,7 +2692,7 @@ reactions:
 - type: ARRHENIUS
   A: 1746420.8204
   B: 0.0
-  C: -300.0
+  C: 300.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2706,7 +2706,7 @@ reactions:
 - type: ARRHENIUS
   A: 2288413.4888
   B: 0.0
-  C: -200.0
+  C: 200.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2730,7 +2730,7 @@ reactions:
 - type: ARRHENIUS
   A: 258952.05268
   B: 0.0
-  C: -1040.0
+  C: 1040.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2754,7 +2754,7 @@ reactions:
 - type: ARRHENIUS
   A: 12947602.634
   B: 0.0
-  C: -110.0
+  C: 110.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2796,7 +2796,7 @@ reactions:
 - type: ARRHENIUS
   A: 1565756.5976
   B: 0.0
-  C: -365.0
+  C: 365.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2813,7 +2813,7 @@ reactions:
 - type: ARRHENIUS
   A: 1625978.0051999998
   B: 0.0
-  C: -360.0
+  C: 360.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2830,7 +2830,7 @@ reactions:
 - type: ARRHENIUS
   A: 2529299.1192
   B: 0.0
-  C: -180.0
+  C: 180.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2858,7 +2858,7 @@ reactions:
 - type: ARRHENIUS
   A: 16861994.128
   B: 0.0
-  C: -85.0
+  C: 85.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2871,7 +2871,7 @@ reactions:
 - type: ARRHENIUS
   A: 4275719.9396
   B: 0.0
-  C: 1270.0
+  C: -1270.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2884,7 +2884,7 @@ reactions:
 - type: ARRHENIUS
   A: 3793948.6788000003
   B: 0.0
-  C: 800.0
+  C: -800.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2897,7 +2897,7 @@ reactions:
 - type: ARRHENIUS
   A: 1806642.2280000001
   B: 0.0
-  C: 500.0
+  C: -500.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2910,7 +2910,7 @@ reactions:
 - type: ARRHENIUS
   A: 843099.7064
   B: 0.0
-  C: 1900.0
+  C: -1900.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2923,7 +2923,7 @@ reactions:
 - type: ARRHENIUS
   A: 481771.2608
   B: 0.0
-  C: -700.0
+  C: 700.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2935,7 +2935,7 @@ reactions:
 - type: ARRHENIUS
   A: 2890627.5648
   B: 0.0
-  C: 310.0
+  C: -310.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2948,7 +2948,7 @@ reactions:
 - type: ARRHENIUS
   A: 1625978.0051999998
   B: 0.0
-  C: -360.0
+  C: 360.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2967,7 +2967,7 @@ reactions:
 - type: ARRHENIUS
   A: 6323.247797999999
   B: 0.0
-  C: 2000.0
+  C: -2000.0
   D: 300.0
   E: 0.0
   reactants:
@@ -2994,7 +2994,7 @@ reactions:
 - type: ARRHENIUS
   A: 258952.05268
   B: 0.0
-  C: -1040.0
+  C: 1040.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3007,7 +3007,7 @@ reactions:
 - type: ARRHENIUS
   A: 451660.55700000003
   B: 0.0
-  C: -700.0
+  C: 700.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3024,7 +3024,7 @@ reactions:
 - type: ARRHENIUS
   A: 3553063.0484
   B: 0.0
-  C: -225.0
+  C: 225.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3036,7 +3036,7 @@ reactions:
 - type: ARRHENIUS
   A: 96354252.16
   B: 0.0
-  C: 260.0
+  C: -260.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3076,7 +3076,7 @@ reactions:
 - type: ARRHENIUS
   A: 23004577.7032
   B: 0.0
-  C: 2000.0
+  C: -2000.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3102,7 +3102,7 @@ reactions:
 - type: ARRHENIUS
   A: 270996.3342
   B: 0.0
-  C: -610.0
+  C: 610.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3176,7 +3176,7 @@ reactions:
 - type: ARRHENIUS
   A: 15657565.976
   B: 0.0
-  C: -330.0
+  C: 330.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3189,7 +3189,7 @@ reactions:
 - type: ARRHENIUS
   A: 2770184.7495999997
   B: 0.0
-  C: -530.0
+  C: 530.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3218,7 +3218,7 @@ reactions:
 - type: ARRHENIUS
   A: 2047527.8584
   B: 0.0
-  C: 130.0
+  C: -130.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3245,7 +3245,7 @@ reactions:
 - type: ARRHENIUS
   A: 18969.743393999997
   B: 0.0
-  C: -920.0
+  C: 920.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3271,7 +3271,7 @@ reactions:
 - type: ARRHENIUS
   A: 18066422.28
   B: 0.0
-  C: 2450.0
+  C: -2450.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3283,7 +3283,7 @@ reactions:
 - type: ARRHENIUS
   A: 782878.2988
   B: 0.0
-  C: -640.0
+  C: 640.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3321,7 +3321,7 @@ reactions:
 - type: ARRHENIUS
   A: 2529299.1192
   B: 0.0
-  C: -180.0
+  C: 180.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3341,7 +3341,7 @@ reactions:
 - type: ARRHENIUS
   A: 855143.98792
   B: 0.0
-  C: 1150.0
+  C: -1150.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3370,7 +3370,7 @@ reactions:
 - type: ARRHENIUS
   A: 451660.55700000003
   B: 0.0
-  C: -700.0
+  C: 700.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3382,7 +3382,7 @@ reactions:
 - type: ARRHENIUS
   A: 2288413.4888
   B: 0.0
-  C: -200.0
+  C: 200.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3411,7 +3411,7 @@ reactions:
 - type: ARRHENIUS
   A: 517904.10536
   B: 0.0
-  C: -700.0
+  C: 700.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3445,7 +3445,7 @@ reactions:
 - type: ARRHENIUS
   A: 1204428.152
   B: 0.0
-  C: -500.0
+  C: 500.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3462,7 +3462,7 @@ reactions:
 - type: ARRHENIUS
   A: 13850923.748000002
   B: 0.0
-  C: -200.0
+  C: 200.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3477,7 +3477,7 @@ reactions:
 - type: ARRHENIUS
   A: 451660.55700000003
   B: 0.0
-  C: -700.0
+  C: 700.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3492,7 +3492,7 @@ reactions:
 - type: ARRHENIUS
   A: 2047527.8584
   B: 0.0
-  C: 1100.0
+  C: -1100.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3505,7 +3505,7 @@ reactions:
 - type: ARRHENIUS
   A: 1385092.3747999999
   B: 0.0
-  C: 193.0
+  C: -193.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3532,7 +3532,7 @@ reactions:
 - type: ARRHENIUS
   A: 451660.55700000003
   B: 0.0
-  C: -700.0
+  C: 700.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3558,7 +3558,7 @@ reactions:
 - type: ARRHENIUS
   A: 13850923.748000002
   B: 0.0
-  C: 200.0
+  C: -200.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3571,7 +3571,7 @@ reactions:
 - type: ARRHENIUS
   A: 10237639.292
   B: 0.0
-  C: -125.0
+  C: 125.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3583,7 +3583,7 @@ reactions:
 - type: ARRHENIUS
   A: 451660.55700000003
   B: 0.0
-  C: -700.0
+  C: 700.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3595,7 +3595,7 @@ reactions:
 - type: ARRHENIUS
   A: 469726.97928
   B: 0.0
-  C: 1050.0
+  C: -1050.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3607,7 +3607,7 @@ reactions:
 - type: ARRHENIUS
   A: 1023763.9292
   B: 0.0
-  C: 940.0
+  C: -940.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3620,7 +3620,7 @@ reactions:
 - type: ARRHENIUS
   A: 72265.68912
   B: 0.0
-  C: 2450.0
+  C: -2450.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3633,7 +3633,7 @@ reactions:
 - type: ARRHENIUS
   A: 18367529.318
   B: 0.0
-  C: 2270.0
+  C: -2270.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3646,7 +3646,7 @@ reactions:
 - type: ARRHENIUS
   A: 3914.391494
   B: 0.0
-  C: 1900.0
+  C: -1900.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3667,7 +3667,7 @@ reactions:
 - type: ARRHENIUS
   A: 1565756.5976
   B: 0.0
-  C: -365.0
+  C: 365.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3698,7 +3698,7 @@ reactions:
 - type: ARRHENIUS
   A: 43720741.9176
   B: 0.0
-  C: -20.0
+  C: 20.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3724,7 +3724,7 @@ reactions:
 - type: ARRHENIUS
   A: 1625978.0051999998
   B: 0.0
-  C: -360.0
+  C: 360.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3741,7 +3741,7 @@ reactions:
 - type: ARRHENIUS
   A: 1565756.5976
   B: 0.0
-  C: -365.0
+  C: 365.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3758,7 +3758,7 @@ reactions:
 - type: ARRHENIUS
   A: 10237639.292
   B: 0.0
-  C: -250.0
+  C: 250.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3771,7 +3771,7 @@ reactions:
 - type: ARRHENIUS
   A: 5299483.868799999
   B: 0.0
-  C: -260.0
+  C: 260.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3784,7 +3784,7 @@ reactions:
 - type: ARRHENIUS
   A: 180664.2228
   B: 0.0
-  C: -460.0
+  C: 460.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3796,7 +3796,7 @@ reactions:
 - type: ARRHENIUS
   A: 761.5897659983209
   B: 0.0
-  C: -920.0
+  C: 920.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3810,7 +3810,7 @@ reactions:
 - type: ARRHENIUS
   A: 152.3179531996642
   B: 0.0
-  C: -2660.0
+  C: 2660.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3824,7 +3824,7 @@ reactions:
 - type: ARRHENIUS
   A: 0.642096108110429
   B: 0.0
-  C: -3120.0
+  C: 3120.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3840,7 +3840,7 @@ reactions:
 - type: ARRHENIUS
   A: 277018.47495999996
   B: 0.0
-  C: 1156.0
+  C: -1156.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3888,7 +3888,7 @@ reactions:
 - type: ARRHENIUS
   A: 554036.9499199999
   B: 0.0
-  C: 1560.0
+  C: -1560.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3915,7 +3915,7 @@ reactions:
 - type: ARRHENIUS
   A: 2288413.4888
   B: 0.0
-  C: -200.0
+  C: 200.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3955,7 +3955,7 @@ reactions:
 - type: ARRHENIUS
   A: 1625978.0051999998
   B: 0.0
-  C: -360.0
+  C: 360.0
   D: 300.0
   E: 0.0
   reactants:
@@ -3988,7 +3988,7 @@ reactions:
 - type: ARRHENIUS
   A: 258952.05268
   B: 0.0
-  C: -1040.0
+  C: 1040.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4004,7 +4004,7 @@ reactions:
 - type: ARRHENIUS
   A: 283040.61572
   B: 0.0
-  C: -1220.0
+  C: 1220.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4018,7 +4018,7 @@ reactions:
 - type: ARRHENIUS
   A: 65039120.208000004
   B: 0.0
-  C: -105.0
+  C: 105.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4043,7 +4043,7 @@ reactions:
 - type: ARRHENIUS
   A: 1746420.8204
   B: 0.0
-  C: -220.0
+  C: 220.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4069,7 +4069,7 @@ reactions:
 - type: ARRHENIUS
   A: 3613284.4560000002
   B: 0.0
-  C: -400.0
+  C: 400.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4082,7 +4082,7 @@ reactions:
 - type: ARRHENIUS
   A: 5534347.35844
   B: 0.0
-  C: 630.0
+  C: -630.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4109,7 +4109,7 @@ reactions:
 - type: ARRHENIUS
   A: 6022140.76
   B: 0.0
-  C: 3300.0
+  C: -3300.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4136,7 +4136,7 @@ reactions:
 - type: ARRHENIUS
   A: 10237639.292
   B: 0.0
-  C: 800.0
+  C: -800.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4150,7 +4150,7 @@ reactions:
 - type: ARRHENIUS
   A: 2709963.3419999997
   B: 0.0
-  C: -460.0
+  C: 460.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4163,7 +4163,7 @@ reactions:
 - type: ARRHENIUS
   A: 246907.77116
   B: 0.0
-  C: -750.0
+  C: 750.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4176,7 +4176,7 @@ reactions:
 - type: ARRHENIUS
   A: 1625978.0051999998
   B: 0.0
-  C: -360.0
+  C: 360.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4190,7 +4190,7 @@ reactions:
 - type: ARRHENIUS
   A: 100.09465495977932
   B: 0.0
-  C: -720.0
+  C: 720.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4203,7 +4203,7 @@ reactions:
 - type: ARRHENIUS
   A: 379.39486788
   B: 0.0
-  C: 580.0
+  C: -580.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4227,7 +4227,7 @@ reactions:
 - type: ARRHENIUS
   A: 6624354.836
   B: 0.0
-  C: 980.0
+  C: -980.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4253,7 +4253,7 @@ reactions:
 - type: ARRHENIUS
   A: 43359.413472
   B: 0.0
-  C: 1070.0
+  C: -1070.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4291,7 +4291,7 @@ reactions:
 - type: ARRHENIUS
   A: 9635425.216
   B: 0.0
-  C: 780.0
+  C: -780.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4304,7 +4304,7 @@ reactions:
 - type: ARRHENIUS
   A: 1385092.3747999999
   B: 0.0
-  C: 193.0
+  C: -193.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4319,7 +4319,7 @@ reactions:
 - type: ARRHENIUS
   A: 301107.038
   B: 0.0
-  C: -400.0
+  C: 400.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4338,7 +4338,7 @@ reactions:
 - type: ARRHENIUS
   A: 481771.2608
   B: 0.0
-  C: -700.0
+  C: 700.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4350,7 +4350,7 @@ reactions:
 - type: ARRHENIUS
   A: 3.082625243326537e-05
   B: 0.0
-  C: -6540.0
+  C: 6540.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4375,7 +4375,7 @@ reactions:
 - type: ARRHENIUS
   A: 1686199.4128
   B: 0.0
-  C: -300.0
+  C: 300.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4405,7 +4405,7 @@ reactions:
 - type: ARRHENIUS
   A: 451660.55700000003
   B: 0.0
-  C: -700.0
+  C: 700.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4417,7 +4417,7 @@ reactions:
 - type: ARRHENIUS
   A: 1565756.5976
   B: 0.0
-  C: -365.0
+  C: 365.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4434,7 +4434,7 @@ reactions:
 - type: ARRHENIUS
   A: 156575.65976
   B: 0.0
-  C: -1300.0
+  C: 1300.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4451,7 +4451,7 @@ reactions:
 - type: ARRHENIUS
   A: 2529299.1192
   B: 0.0
-  C: -180.0
+  C: 180.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4465,7 +4465,7 @@ reactions:
 - type: ARRHENIUS
   A: 451660.55700000003
   B: 0.0
-  C: -700.0
+  C: 700.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4477,7 +4477,7 @@ reactions:
 - type: ARRHENIUS
   A: 4516605.57
   B: 0.0
-  C: -290.0
+  C: 290.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4493,7 +4493,7 @@ reactions:
 - type: ARRHENIUS
   A: 451660.55700000003
   B: 0.0
-  C: -700.0
+  C: 700.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4536,7 +4536,7 @@ reactions:
 - type: ARRHENIUS
   A: 427571.99396
   B: 0.0
-  C: -500.0
+  C: 500.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4553,7 +4553,7 @@ reactions:
 - type: ARRHENIUS
   A: 451660.55700000003
   B: 0.0
-  C: -700.0
+  C: 700.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4592,7 +4592,7 @@ reactions:
 - type: ARRHENIUS
   A: 258952.05268
   B: 0.0
-  C: -1040.0
+  C: 1040.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4608,7 +4608,7 @@ reactions:
 - type: ARRHENIUS
   A: 2288413.4888
   B: 0.0
-  C: -200.0
+  C: 200.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4621,7 +4621,7 @@ reactions:
 - type: ARRHENIUS
   A: 160000000000.0
   B: 0.0
-  C: 4150.0
+  C: -4150.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4633,7 +4633,7 @@ reactions:
 - type: ARRHENIUS
   A: 6323.247797999999
   B: 0.0
-  C: 2000.0
+  C: -2000.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4654,7 +4654,7 @@ reactions:
 - type: ARRHENIUS
   A: 30712.917876
   B: 0.0
-  C: -693.0
+  C: 693.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4666,7 +4666,7 @@ reactions:
 - type: ARRHENIUS
   A: 1824708.65028
   B: 0.0
-  C: 446.0
+  C: -446.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4729,7 +4729,7 @@ reactions:
 - type: ARRHENIUS
   A: 1600000000.0
   B: 0.0
-  C: 8300.0
+  C: -8300.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4741,7 +4741,7 @@ reactions:
 - type: ARRHENIUS
   A: 451660.55700000003
   B: 0.0
-  C: -700.0
+  C: 700.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4768,7 +4768,7 @@ reactions:
 - type: ARRHENIUS
   A: 8792325.5096
   B: 0.0
-  C: 1040.0
+  C: -1040.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4800,7 +4800,7 @@ reactions:
 - type: ARRHENIUS
   A: 1565756.5976
   B: 0.0
-  C: -365.0
+  C: 365.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4815,7 +4815,7 @@ reactions:
 - type: ARRHENIUS
   A: 11201181.8136
   B: 0.0
-  C: -175.0
+  C: 175.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4827,7 +4827,7 @@ reactions:
 - type: ARRHENIUS
   A: 1204428.152
   B: 0.0
-  C: -500.0
+  C: 500.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4846,7 +4846,7 @@ reactions:
 - type: ARRHENIUS
   A: 3312177.418
   B: 0.0
-  C: -125.0
+  C: 125.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4860,7 +4860,7 @@ reactions:
 - type: ARRHENIUS
   A: 11442067.444
   B: 0.0
-  C: -215.0
+  C: 215.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4873,7 +4873,7 @@ reactions:
 - type: ARRHENIUS
   A: 511.8819646
   B: 0.0
-  C: 1520.0
+  C: -1520.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4893,7 +4893,7 @@ reactions:
 - type: ARRHENIUS
   A: 48779340.156
   B: 0.0
-  C: 30.0
+  C: -30.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4907,7 +4907,7 @@ reactions:
 - type: ARRHENIUS
   A: 301107.038
   B: 0.0
-  C: 424.0
+  C: -424.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4919,7 +4919,7 @@ reactions:
 - type: ARRHENIUS
   A: 1023763.9292
   B: 0.0
-  C: -352.0
+  C: 352.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4935,7 +4935,7 @@ reactions:
 - type: ARRHENIUS
   A: 602214.076
   B: 0.0
-  C: 1590.0
+  C: -1590.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4947,7 +4947,7 @@ reactions:
 - type: ARRHENIUS
   A: 451660.55700000003
   B: 0.0
-  C: -700.0
+  C: 700.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4964,7 +4964,7 @@ reactions:
 - type: ARRHENIUS
   A: 1806642.2280000001
   B: 0.0
-  C: 1500.0
+  C: -1500.0
   D: 300.0
   E: 0.0
   reactants:
@@ -4989,7 +4989,7 @@ reactions:
 - type: ARRHENIUS
   A: 572103.3722
   B: 0.0
-  C: -550.0
+  C: 550.0
   D: 300.0
   E: 0.0
   reactants:
@@ -5002,7 +5002,7 @@ reactions:
 - type: ARRHENIUS
   A: 1204428.152
   B: 0.0
-  C: 840.0
+  C: -840.0
   D: 300.0
   E: 0.0
   reactants:
@@ -5040,7 +5040,7 @@ reactions:
 - type: ARRHENIUS
   A: 1083985.3368
   B: 0.0
-  C: 250.0
+  C: -250.0
   D: 300.0
   E: 0.0
   reactants:
@@ -5067,7 +5067,7 @@ reactions:
 - type: ARRHENIUS
   A: 11442.067444
   B: 0.0
-  C: -706.0
+  C: 706.0
   D: 300.0
   E: 0.0
   reactants:
@@ -5079,7 +5079,7 @@ reactions:
 - type: ARRHENIUS
   A: 84309970.64
   B: 0.0
-  C: 500.0
+  C: -500.0
   D: 300.0
   E: 0.0
   reactants:
@@ -5092,7 +5092,7 @@ reactions:
 - type: ARRHENIUS
   A: 1023763.9292
   B: 0.0
-  C: 710.0
+  C: -710.0
   D: 300.0
   E: 0.0
   reactants:
@@ -5104,7 +5104,7 @@ reactions:
 - type: ARRHENIUS
   A: 2920738.2686
   B: 0.0
-  C: 850.0
+  C: -850.0
   D: 300.0
   E: 0.0
   reactants:
@@ -5117,7 +5117,7 @@ reactions:
 - type: ARRHENIUS
   A: 2167970.6736
   B: 0.0
-  C: 840.0
+  C: -840.0
   D: 300.0
   E: 0.0
   reactants:
@@ -5130,7 +5130,7 @@ reactions:
 - type: ARRHENIUS
   A: 2649741.9343999997
   B: 0.0
-  C: -180.0
+  C: 180.0
   D: 300.0
   E: 0.0
   reactants:
@@ -5147,7 +5147,7 @@ reactions:
 - type: ARRHENIUS
   A: 9635425.216
   B: 0.0
-  C: 4570.0
+  C: -4570.0
   D: 300.0
   E: 0.0
   reactants:
@@ -5160,7 +5160,7 @@ reactions:
 - type: ARRHENIUS
   A: 3492841.6408
   B: 0.0
-  C: 1500.0
+  C: -1500.0
   D: 300.0
   E: 0.0
   reactants:
@@ -5185,7 +5185,7 @@ reactions:
 - type: ARRHENIUS
   A: 451660.55700000003
   B: 0.0
-  C: -700.0
+  C: 700.0
   D: 300.0
   E: 0.0
   reactants:
@@ -5197,7 +5197,7 @@ reactions:
 - type: ARRHENIUS
   A: 3914391.494
   B: 0.0
-  C: -135.0
+  C: 135.0
   D: 300.0
   E: 0.0
   reactants:

@@ -166,8 +166,8 @@ def _evaluate_reaction_fluxes(mech: MechanismDefinition) -> dict[str, Any]:
         flux = sp.Integer(0)
 
         if rtype == "PHOTOLYSIS":
-            if "A" not in p:
-                raise ValueError(f"PHOTOLYSIS reaction {idx} missing 'A' parameter (J-rate).")
+            # OpenAtmos/MUSICA photolysis rates are supplied as named forcing;
+            # the optional A field is only a legacy YAML placeholder.
             flux = sp.Symbol(f"J_{photo_idx}", real=True, nonnegative=True)
             photolysis_reactions.append(
                 {
@@ -175,7 +175,7 @@ def _evaluate_reaction_fluxes(mech: MechanismDefinition) -> dict[str, Any]:
                     "reaction_idx": idx,
                     "reactants": r.reactants,
                     "products": r.products,
-                    "original_A": str(p["A"]),
+                    "original_A": str(p.get("A", 1.0)),
                 }
             )
             photo_idx += 1

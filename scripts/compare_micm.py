@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """Automated Comparison & Validation Script: MKPP vs MICM / OpenAtmos Reference.
 
-This script parses OpenAtmos / MICM mechanism definitions (JSON/YAML), performs
-AOT compilation, runs high-precision stiff ODE integration (SciPy Radau/BDF),
-and benchmarks execution performance and instruction counts (Callgrind)
-against MICM-compatible reference kinetics.
+This legacy diagnostic parses mechanism definitions, performs AOT compilation,
+and runs an independent high-precision SciPy reference.  It does not execute
+MICM and must never be used to publish an MICM-versus-MKPP speedup.
 
 Usage:
     python scripts/compare_micm.py --mechanism fixtures/micm-chapman/mechanism.json
@@ -211,7 +210,7 @@ def run_micm_comparison(
         generated_header_path = gen_result["header"]
         header_size_bytes = os.path.getsize(generated_header_path)
 
-    # 3. High-Precision Stiff ODE Reference (SciPy Radau / MICM Solver)
+    # 3. Independent high-precision stiff ODE reference (not MICM)
     ode_fun = build_micm_ode_system(mech, env_dict)
 
     # Initial conditions
@@ -263,16 +262,17 @@ def run_micm_comparison(
                     except ValueError:
                         pass
 
-    # If compiled runner not present or skipped, perform Python-side benchmark
+    # A missing native result is fatal.  Substituting another integrator, or
+    # copying the independent reference trajectory, would fabricate evidence.
     if mkpp_kernel_ms is None:
-        mkpp_start = time.perf_counter()
-        # Direct stiff step simulation using RK45 / Rosenbrock surrogate
-        sol_mkpp = solve_ivp(ode_fun, t_span, y0, method="BDF", t_eval=t_eval, rtol=1e-6, atol=1e-6)
-        mkpp_kernel_ms = (time.perf_counter() - mkpp_start) * 1000.0
-        mkpp_final = sol_mkpp.y[:, -1]
-    else:
-        # Final state from reference comparison
-        mkpp_final = ref_final.copy()  # For compiled C++ runner
+        raise RuntimeError(
+            "FATAL ERROR: a real MKPP runner result is required; "
+            "this legacy diagnostic has no fallback solver"
+        )
+    raise RuntimeError(
+        "FATAL ERROR: the legacy MKPP runner does not emit named checkpoint state; "
+        "use mkpp-compare-solvers"
+    )
 
     # 5. Callgrind Profiling (Instruction Count) if requested
     instructions_count = None
@@ -414,7 +414,7 @@ def generate_markdown_report(results: list[dict[str, Any]]) -> str:
     lines = [
         "# MKPP vs MICM / OpenAtmos Comparison Report",
         "",
-        "Automated comparison of MKPP Ahead-Of-Time (AOT) Kokkos chemistry solver against MICM-compatible reference kinetics.",
+        "Legacy diagnostic of MKPP AOT metadata against an independent SciPy reference; this is not an MICM comparison.",
         "",
         "## Summary",
         "",

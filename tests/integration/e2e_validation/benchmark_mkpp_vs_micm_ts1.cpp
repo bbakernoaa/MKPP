@@ -1,8 +1,10 @@
 #include <Kokkos_Core.hpp>
 
 #include <chrono>
+#include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <cstdlib>
 
 // Generated MICM C++ TS1 Solver
@@ -117,8 +119,8 @@ int main(int argc, char* argv[]) {
         Kokkos::deep_copy(mkpp_jvals, h_jvals);
 
         for (int i = 0; i < num_cells; ++i) {
-            for (int spec = 0; spec < num_species; ++spec) {
-                h_state(i, spec) = 0.0;
+            for (int native_index = 0; native_index < num_species; ++native_index) {
+                h_state(i, native_index) = 0.0;
             }
             h_state(i, 10) = 1.9e19; // N2
             h_state(i, 4)  = 5.1e18; // O2
@@ -132,8 +134,8 @@ int main(int argc, char* argv[]) {
 
         // Re-initialize MKPP state for benchmark
         for (int i = 0; i < num_cells; ++i) {
-            for (int spec = 0; spec < num_species; ++spec) {
-                h_state(i, spec) = 0.0;
+            for (int native_index = 0; native_index < num_species; ++native_index) {
+                h_state(i, native_index) = 0.0;
             }
             h_state(i, 10) = 1.9e19; // N2
             h_state(i, 4)  = 5.1e18; // O2
@@ -159,16 +161,11 @@ int main(int argc, char* argv[]) {
         double max_abs_err = 0.0;
         double max_rel_err = 0.0;
 
-        for (int cell = 0; cell < num_cells; ++cell) {
-            for (int spec = 0; spec < num_species; ++spec) {
-                double val_mkpp = h_state(cell, spec);
-                double val_micm = s.variables_[cell][spec];
-                double abs_err = std::abs(val_mkpp - val_micm);
-                double rel_err = abs_err / std::max(1.0e-12, std::abs(val_micm));
-                max_abs_err = std::max(max_abs_err, abs_err);
-                max_rel_err = std::max(max_rel_err, rel_err);
-            }
-        }
+        // This diagnostic cannot prove a canonical name mapping for the old
+        // generated MKPP header, so it deliberately withholds trajectory parity.
+        // The solver-comparison TS1 runner loads the audited binding instead.
+        max_abs_err = std::numeric_limits<double>::quiet_NaN();
+        max_rel_err = std::numeric_limits<double>::quiet_NaN();
 
         // 7. Results
         std::cout << std::left << std::setw(28) << "Metric"
@@ -200,7 +197,7 @@ int main(int argc, char* argv[]) {
         std::cout << "==========================================================================" << std::endl;
 
         const double parity_threshold = 0.05; // 5.0% max relative error
-        if (max_rel_err > parity_threshold) {
+        if (!std::isfinite(max_rel_err) || max_rel_err > parity_threshold) {
             std::cerr << "FATAL ERROR: TS1 parity check failed: max relative error "
                       << max_rel_err << " exceeds threshold " << parity_threshold << "." << std::endl;
             exit_code = 1;

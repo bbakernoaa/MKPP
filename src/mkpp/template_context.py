@@ -250,8 +250,10 @@ def build_template_context(
             )
 
     # --- Tolerance arrays ---
-    default_atol = 1.0  # molecules/cm3 (conservative default)
-    default_rtol = 1e-4  # 0.01% relative tolerance
+    # Match MICM's default solver controls for an equivalent comparison.
+    # Per-species metadata remains the higher-priority override.
+    default_atol = 1.0e-3
+    default_rtol = 1.0e-6
 
     # Start with defaults
     atol_values = [default_atol] * N

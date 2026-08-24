@@ -46,7 +46,15 @@ def detect_config_format(source: str | Path) -> str:
 def _normalize_species_dict(d: Any) -> dict[str, float]:
     """Normalize MICM/OpenAtmos reactant or product dictionary/list into species -> float yield."""
     if isinstance(d, list):
-        return {sp: 1.0 for sp in d}
+        result: dict[str, float] = {}
+        for item in d:
+            if isinstance(item, str):
+                result[item] = 1.0
+            elif isinstance(item, dict):
+                name = item.get("species name", item.get("name"))
+                if name:
+                    result[str(name)] = float(item.get("coefficient", item.get("yield", 1.0)))
+        return result
     if not isinstance(d, dict):
         return {}
     res = {}
@@ -65,7 +73,9 @@ def _normalize_species_dict(d: Any) -> dict[str, float]:
     return res
 
 
-def parse_mechanism_micm(name: str, data: dict[str, Any]) -> MechanismDefinition:
+def parse_mechanism_micm(
+    name: str, data: dict[str, Any], *, convert_openatmos_activation_energy: bool = False
+) -> MechanismDefinition:
     """Parse MICM/OpenAtmos standard dictionary into internal model."""
     if not isinstance(data, dict) or "species" not in data or not data["species"]:
         raise CompilationError(
@@ -108,6 +118,29 @@ def parse_mechanism_micm(name: str, data: dict[str, Any]) -> MechanismDefinition
 
     reactions = []
     equilibrium_reactions: list[EquilibriumDefinition] = []
+
+    def micm_signed_parameters(raw: dict[str, Any]) -> dict[str, Any]:
+        """Match musica/MICM's signed activation-energy representation.
+
+        The OpenAtmos JSON serialisation carries positive activation energies;
+        musica converts them to MICM's signed ``exp(C / T)`` convention when it
+        constructs an Arrhenius or Troe object.  MKPP lowers the latter form,
+        so apply the same conversion before symbolic rate/Jacobian generation.
+        """
+        converted = dict(raw)
+        for key in ("C", "k0_C", "kinf_C", "C0", "C1", "C2", "C3"):
+            value = converted.get(key)
+            if isinstance(value, (int, float)):
+                converted[key] = -float(value)
+        for key in ("k0", "kinf"):
+            value = converted.get(key)
+            if isinstance(value, dict):
+                nested = dict(value)
+                if isinstance(nested.get("C"), (int, float)):
+                    nested["C"] = -float(nested["C"])
+                converted[key] = nested
+        return converted
+
 
     for r in data.get("reactions", []):
         rtype = r.get("type", "UNKNOWN")
@@ -175,6 +208,8 @@ def parse_mechanism_micm(name: str, data: dict[str, Any]) -> MechanismDefinition
         for k, v in r.items():
             if k not in ("type", "reactants", "products", "stiff", "continuous_transition"):
                 parameters[k] = v
+        if convert_openatmos_activation_energy:
+            parameters = micm_signed_parameters(parameters)
 
         # Maintain backwards compat for the simple tests
         base_rate = str(r.get("A", ""))
@@ -187,7 +222,9 @@ def parse_mechanism_micm(name: str, data: dict[str, Any]) -> MechanismDefinition
                 rate_expression=base_rate,
                 parameters=parameters,
                 stiff=r.get("stiff", False),
-                continuous_transition=r.get("continuous_transition", False),
+                # OpenAtmos/MUSICA photolysis entries are continuous by definition;
+                # older YAML mechanisms may opt out explicitly.
+                continuous_transition=r.get("continuous_transition", rtype.upper() == "PHOTOLYSIS"),
             )
         )
 
@@ -279,7 +316,9 @@ def load_mechanism(path: str | Path) -> MechanismDefinition:
             yaml_location=str(p),
         )
 
-    return parse_mechanism_micm(p.stem, data)
+    return parse_mechanism_micm(
+        p.stem, data, convert_openatmos_activation_energy=detect_config_format(p) == "json"
+    )
 
 
 def load_environment(path: str | Path) -> EnvironmentDefinition:

@@ -1,0 +1,38 @@
+schema_version: 1
+mechanism_id: ts1
+canonical_source:
+  repository: https://github.com/NCAR/musica.git
+  revision: 3c98ecdefd875658f211f51f26afa1f71a6a085d
+  configuration_version: "1.0.0"
+  files:
+    - upstream_path: configs/v1/ts1/ts1.json
+      vendored_path: benchmarks/solver_comparison/sources/ts1/musica-config/ts1.json
+      sha256: 4390f37f0b0dedf38c6644986c7b972152b52bd4c3fba83f399035945771a997
+    - upstream_path: configs/v1/ts1/initial_conditions.csv
+      vendored_path: benchmarks/solver_comparison/sources/ts1/musica-config/initial_conditions.csv
+      sha256: 58db29256362fcd7fd60d47fe3d463c566dfbe14c000757202393fa7a28a9253
+  observed_content:
+    species: 210
+    reactions: 547
+  fixed_species_evidence:
+    M:
+      role: ideal_air_density
+      unit: mol m-3
+      pressure_pa: 101319.9
+      temperature_k: 287.45
+      boltzmann_constant_j_k: 1.380649e-23
+      avogadro_constant_mol_inverse: 6.02214076e23
+      formula: pressure_pa / ((boltzmann_constant_j_k * avogadro_constant_mol_inverse) * temperature_k)
+      binary64_value: 42.39340054163681
+      micm_evidence: include/micm/system/conditions.hpp Conditions::CalculateIdealAirDensity
+micm_importer:
+  repository: https://github.com/NCAR/micm.git
+  revision: 97ac9e5d8aadd345c242722ee8274d71dfe0f73e
+  upstream_path: test/benchmark/import_ts1.py
+  vendored_path: benchmarks/solver_comparison/sources/ts1/micm-importer/import_ts1.py
+  sha256: a45b228baf518dde6d0e2112fbb24ffd69f1e670babf6b8c8ecbb5114d0cb015
+generation:
+  source_directory: benchmarks/solver_comparison/sources/ts1/musica-config
+  importer: benchmarks/solver_comparison/sources/ts1/micm-importer/import_ts1.py
+  output_kind: generated_micm_cpp_header
+  canonical_source_policy: generated output is binding evidence, not canonical chemistry
