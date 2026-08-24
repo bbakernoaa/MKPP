@@ -16,7 +16,8 @@ dependencies = [
     "jinja2>=3.1,<4",
     "networkx>=3.1,<4",
     "matplotlib>=3.5",
-    "pytest-xdist>=3.0"
+    "pytest-xdist>=3.0",
+    "jsonschema>=4.21,<5"
 ]
 
 [project.optional-dependencies]
@@ -24,9 +25,13 @@ docs = [
     "mkdocs-material>=9.5",
     "mkdocstrings[python]>=0.25",
 ]
+solver-comparison = [
+    "musica==0.16.5",
+]
 
 [project.scripts]
 mkpp = "mkpp.cli:main"
+mkpp-compare-solvers = "mkpp.benchmark.cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

@@ -68,12 +68,15 @@ option(MKPP_ENABLE_MICM_COMPARE
 
 option(MKPP_ENABLE_BENCHMARK "Build MKPP benchmark suite" OFF)
 
+option(MKPP_ENABLE_SOLVER_COMPARISON
+       "Build governed MICM, KPP, and MKPP comparison runners" OFF)
+
 if(MKPP_ENABLE_BENCHMARK)
   include(CheckIncludeFile)
   add_subdirectory(test/benchmark)
 endif()
 
-if(MKPP_ENABLE_MICM_COMPARE)
+if(MKPP_ENABLE_MICM_COMPARE OR MKPP_ENABLE_SOLVER_COMPARISON)
   set(CMAKE_CXX_STANDARD
       20
       CACHE STRING "C++ standard")
@@ -82,8 +85,14 @@ if(MKPP_ENABLE_MICM_COMPARE)
   FetchContent_Declare(
     micm
     GIT_REPOSITORY https://github.com/NCAR/micm.git
-    GIT_TAG main)
+    # Audited comparison-subject revision. Never use a moving branch here.
+    GIT_TAG 97ac9e5d8aadd345c242722ee8274d71dfe0f73e)
   FetchContent_MakeAvailable(micm)
+endif()
+
+if(MKPP_ENABLE_SOLVER_COMPARISON)
+  enable_language(Fortran OPTIONAL)
+  add_subdirectory(benchmarks/solver_comparison/runners)
 endif()
 
 if(BUILD_TESTING)

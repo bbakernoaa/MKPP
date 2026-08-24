@@ -88,3 +88,4 @@ docs/superpowers/
 kpp*/
 .github/agents/
 .github/prompts/
+.agents/
