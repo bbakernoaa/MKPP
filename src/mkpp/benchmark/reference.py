@@ -75,9 +75,7 @@ def build_reference_tolerance_pairs(
     for _ in range(max_refinements):
         r2_rtol = max(_MIN_EFFECTIVE_RTOL, r1_rtol / 10.0)
         if r2_rtol >= r1_rtol:
-            raise HigherPrecisionRequired(
-                "reference tolerance floor 5e-14 prevents a stricter R2; higher precision is required"
-            )
+            raise HigherPrecisionRequired("reference tolerance floor 5e-14 prevents a stricter R2; higher precision is required")
         r2_atols = {species: atol / 10.0 for species, atol in r1_atols.items()}
         pairs.append(ReferenceTolerancePair(r1_rtol, r2_rtol, dict(r1_atols), dict(r2_atols)))
         r1_rtol = r2_rtol
@@ -104,9 +102,7 @@ def integration_segments(
     return tuple(zip(points[:-1], points[1:], strict=True))
 
 
-def _validate_trajectory_pair(
-    r1: ReferenceTrajectory, r2: ReferenceTrajectory, atols: Mapping[str, float]
-) -> None:
+def _validate_trajectory_pair(r1: ReferenceTrajectory, r2: ReferenceTrajectory, atols: Mapping[str, float]) -> None:
     if not r1 or set(r1) != set(r2):
         raise ValueError("reference checkpoint sets must be non-empty and identical")
     for checkpoint, r1_state in r1.items():
@@ -173,9 +169,7 @@ def qualify_reference_attempts(
     diagnostics: list[str] = []
     selected: int | None = None
     for index in range(len(attempts) - 1):
-        comparison = assess_reference_convergence(
-            attempts[index], attempts[index + 1], atol_by_species, subject_rtol
-        )
+        comparison = assess_reference_convergence(attempts[index], attempts[index + 1], atol_by_species, subject_rtol)
         comparisons.append(comparison)
         if comparison.qualified:
             selected = index + 1

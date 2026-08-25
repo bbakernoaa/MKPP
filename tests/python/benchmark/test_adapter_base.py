@@ -3,7 +3,6 @@
 from dataclasses import FrozenInstanceError
 
 import pytest
-
 from mkpp.benchmark.adapters.base import (
     AdapterError,
     AdapterProbe,

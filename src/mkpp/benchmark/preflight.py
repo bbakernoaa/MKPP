@@ -133,7 +133,5 @@ def verify_asset_hash(path: Path, expected_sha256: str) -> str:
 
     observed = digest.hexdigest()
     if observed != expected_sha256:
-        raise PreflightError(
-            f"sha256 mismatch for asset '{path}': expected {expected_sha256}, observed {observed}"
-        )
+        raise PreflightError(f"sha256 mismatch for asset '{path}': expected {expected_sha256}, observed {observed}")
     return observed

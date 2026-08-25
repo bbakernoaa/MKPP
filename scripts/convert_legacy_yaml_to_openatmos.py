@@ -21,10 +21,7 @@ import yaml
 
 
 def _terms(values: Mapping[str, Any]) -> list[dict[str, Any]]:
-    return [
-        {"species name": str(name), "coefficient": float(coefficient)}
-        for name, coefficient in values.items()
-    ]
+    return [{"species name": str(name), "coefficient": float(coefficient)} for name, coefficient in values.items()]
 
 
 def convert(document: Mapping[str, Any], source_name: str, source_sha256: str) -> dict[str, Any]:

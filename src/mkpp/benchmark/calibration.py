@@ -49,10 +49,7 @@ class FrozenConfiguration:
 
 
 def _validate_context(context: CalibrationContext) -> None:
-    if (
-        context.calibration_scenario_id == context.measurement_scenario_id
-        or context.calibration_seed == context.measurement_seed
-    ):
+    if context.calibration_scenario_id == context.measurement_scenario_id or context.calibration_seed == context.measurement_seed:
         raise ValueError("calibration and measurement scenarios and seeds must be disjoint")
 
 
@@ -89,11 +86,7 @@ def select_equal_accuracy_configuration(
 
     medians = {candidate.configuration_id: statistics.median(candidate.paired_block_times_ms) for candidate in eligible}
     fastest_median = min(medians.values())
-    tied = [
-        candidate
-        for candidate in eligible
-        if medians[candidate.configuration_id] <= fastest_median * 1.02
-    ]
+    tied = [candidate for candidate in eligible if medians[candidate.configuration_id] <= fastest_median * 1.02]
     selected = min(
         tied,
         key=lambda candidate: (

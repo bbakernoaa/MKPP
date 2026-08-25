@@ -120,9 +120,7 @@ def reactant_list(components) -> str:
 
 
 def product_list(components) -> str:
-    return ", ".join(
-        f"micm::StoichSpecies{{ {species_expression(c.name)}, {number(c.coefficient)} }}" for c in components
-    )
+    return ", ".join(f"micm::StoichSpecies{{ {species_expression(c.name)}, {number(c.coefficient)} }}" for c in components)
 
 
 def rate_constant_expression(reaction) -> str:
@@ -133,22 +131,18 @@ def rate_constant_expression(reaction) -> str:
     if isinstance(reaction, Troe):
         fields = ", ".join(f".{p}_ = {number(getattr(reaction, p))}" for p in TROE_PARAMETERS)
         return f"micm::TroeRateConstantParameters{{ {fields} }}"
-    if isinstance(reaction, (Photolysis, UserDefined)):
+    if isinstance(reaction, Photolysis | UserDefined):
         # micm represents both as a user-defined rate looked up by label.
         return (
-            "micm::UserDefinedRateConstantParameters{{ .label_ = {}, .scaling_factor_ = {} }}".format(
-                cxx_string(reaction.name), number(reaction.scaling_factor)
-            )
+            "micm::UserDefinedRateConstantParameters{ "
+            f".label_ = {cxx_string(reaction.name)}, "
+            f".scaling_factor_ = {number(reaction.scaling_factor)} }}"
         )
     if isinstance(reaction, Surface):
         return (
-            "micm::SurfaceRateConstantParameters{{ .label_ = {},"
-            " .phase_species_ = PhaseSpeciesByName(gas_phase, {}),"
-            " .reaction_probability_ = {} }}".format(
-                cxx_string(reaction.name),
-                cxx_string(reaction.gas_phase_species.name),
-                number(reaction.reaction_probability),
-            )
+            f"micm::SurfaceRateConstantParameters{{ .label_ = {cxx_string(reaction.name)},"
+            f" .phase_species_ = PhaseSpeciesByName(gas_phase, {cxx_string(reaction.gas_phase_species.name)}),"
+            f" .reaction_probability_ = {number(reaction.reaction_probability)} }}"
         )
     raise SystemExit(
         f"the benchmark cannot represent a {type(reaction).__name__} reaction; "
@@ -194,7 +188,7 @@ def gas_phase_function(mechanism) -> list[str]:
     ]
 
     for species in mechanism.species:
-        lines.append(f"    {{")
+        lines.append("    {")
         lines.append(f"      auto species = {new_species_expression(species.name)};")
         if species.molecular_weight_kg_mol is not None:
             lines.append(
@@ -304,7 +298,7 @@ def forcing_schedule_function(scenario: dict) -> list[str]:
         "    template<class State>",
         "    static void ApplyForcingSegment(State& state, micm::Index num_cells, micm::Index segment)",
         "    {",
-        "      if (segment >= kForcingSegmentCount) throw std::out_of_range(\"TS1 forcing segment\");",
+        '      if (segment >= kForcingSegmentCount) throw std::out_of_range("TS1 forcing segment");',
         "      std::vector<micm::Real> cells(num_cells);",
         "      auto parameter = [&](const char* label, micm::Real value)",
         "      {",
@@ -329,7 +323,7 @@ def custom_parameter_labels(mechanism) -> list[str]:
     """
     labels = []
     for reaction in mechanism.reactions:
-        if isinstance(reaction, (Photolysis, UserDefined)):
+        if isinstance(reaction, Photolysis | UserDefined):
             labels.append(reaction.name)
         elif isinstance(reaction, Surface):
             labels.append(f"{reaction.name}.effective radius [m]")
@@ -460,7 +454,7 @@ def main() -> int:
         "          return phase_species;",
         "        }",
         "      }",
-        "      throw std::runtime_error(\"ts1: no species named '\" + std::string(name) + \"' in the phase\");",
+        '      throw std::runtime_error("ts1: no species named \'" + std::string(name) + "\' in the phase");',
         "    }",
         "",
         "    /// @brief Find a species by name in the phase. A reaction must use the",

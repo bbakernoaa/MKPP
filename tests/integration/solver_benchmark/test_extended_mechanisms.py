@@ -9,9 +9,7 @@ ROOT = Path(__file__).resolve().parents[3]
 
 
 def mechanism(name: str) -> dict[str, object]:
-    return json.loads(
-        (ROOT / "mechanisms" / "openatmos" / name / "mechanism.json").read_text(encoding="utf-8")
-    )
+    return json.loads((ROOT / "mechanisms" / "openatmos" / name / "mechanism.json").read_text(encoding="utf-8"))
 
 
 def test_small_strato_preserves_background_species_and_sun_photolysis() -> None:
@@ -37,12 +35,8 @@ def test_saprc99_source_declares_supported_complex_rate_laws_and_fixed_backgroun
 
 
 def test_generated_micm_bindings_are_sourced_from_openatmos_and_keep_ep_lambdas() -> None:
-    small_strato = (ROOT / "benchmarks/solver_comparison/runners/micm/generated/small_strato.hpp").read_text(
-        encoding="utf-8"
-    )
-    saprc99 = (ROOT / "benchmarks/solver_comparison/runners/micm/generated/saprc99.hpp").read_text(
-        encoding="utf-8"
-    )
+    small_strato = (ROOT / "benchmarks/solver_comparison/runners/micm/generated/small_strato.hpp").read_text(encoding="utf-8")
+    saprc99 = (ROOT / "benchmarks/solver_comparison/runners/micm/generated/saprc99.hpp").read_text(encoding="utf-8")
     assert "Generated from canonical OpenAtmos JSON" in small_strato
     assert "Generated from canonical OpenAtmos JSON" in saprc99
     assert "LambdaRateConstantParameters" in saprc99

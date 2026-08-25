@@ -134,17 +134,16 @@ def parse_mechanism_micm(
         converted = dict(raw)
         for key in ("C", "k0_C", "kinf_C", "C0", "C1", "C2", "C3"):
             value = converted.get(key)
-            if isinstance(value, (int, float)):
+            if isinstance(value, int | float):
                 converted[key] = -float(value)
         for key in ("k0", "kinf"):
             value = converted.get(key)
             if isinstance(value, dict):
                 nested = dict(value)
-                if isinstance(nested.get("C"), (int, float)):
+                if isinstance(nested.get("C"), int | float):
                     nested["C"] = -float(nested["C"])
                 converted[key] = nested
         return converted
-
 
     for r in data.get("reactions", []):
         rtype = r.get("type", "UNKNOWN")

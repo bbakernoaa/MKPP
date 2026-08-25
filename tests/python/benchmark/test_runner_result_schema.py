@@ -5,7 +5,6 @@ from __future__ import annotations
 from copy import deepcopy
 
 import pytest
-
 from mkpp.benchmark.schema import SchemaValidationError, validate_runner_result
 
 SHA_A = "a" * 64

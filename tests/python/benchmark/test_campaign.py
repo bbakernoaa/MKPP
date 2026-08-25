@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pytest
-
 from mkpp.benchmark.models import (
     BuildProvenance,
     CampaignStatus,
@@ -30,9 +29,28 @@ def run(
     identity = HashIdentity("chapman", "v1", "b" * 64)
     resources = ResourcePolicy("host", "cpu", cores, threads, "core", "local")
     return SolverRun(
-        "campaign", f"{solver.value}-{block}", block, 1, 0, matching_key, solver,
-        identity, identity, identity, BuildProvenance("c" * 64, (), "cc", (), "double"), resources,
-        boundary, 10, elapsed, "steady", True, "none", (), (), (), RunStatus.SUCCESS,
+        "campaign",
+        f"{solver.value}-{block}",
+        block,
+        1,
+        0,
+        matching_key,
+        solver,
+        identity,
+        identity,
+        identity,
+        BuildProvenance("c" * 64, (), "cc", (), "double"),
+        resources,
+        boundary,
+        10,
+        elapsed,
+        "steady",
+        True,
+        "none",
+        (),
+        (),
+        (),
+        RunStatus.SUCCESS,
     )
 
 

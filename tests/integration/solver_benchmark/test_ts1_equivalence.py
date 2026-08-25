@@ -8,7 +8,6 @@ from pathlib import Path
 
 import pytest
 import yaml
-
 from mkpp.benchmark.accuracy import assess_trajectory_accuracy
 from mkpp.benchmark.admission import ChemistryObservation, compare_chemistry
 
@@ -60,9 +59,7 @@ def _observation(scale: float = 1.0) -> ChemistryObservation:
         ("mkpp", MKPP_RUNNER, ("mkpp", "MechanismRegistry", "execute")),
     ],
 )
-def test_ts1_uses_real_native_solver_paths(
-    solver: str, source_path: Path, identity_tokens: tuple[str, ...]
-) -> None:
+def test_ts1_uses_real_native_solver_paths(solver: str, source_path: Path, identity_tokens: tuple[str, ...]) -> None:
     assert source_path.is_file(), f"missing real {solver} runner"
     source = source_path.read_text(encoding="utf-8")
     for token in identity_tokens:

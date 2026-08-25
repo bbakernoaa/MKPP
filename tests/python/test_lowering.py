@@ -1,5 +1,4 @@
 import pytest
-
 from mkpp.lowering import partition_reactions, prepare_adjoint_and_tlm
 from mkpp.model import AerosolRepresentation, MechanismDefinition, ReactionDefinition
 
@@ -163,7 +162,6 @@ def test_sympy_explicit_reaction_types():
 
 def test_arrhenius_micm_sign_convention():
     import sympy as sp
-
     from mkpp.lowering import _evaluate_reaction_fluxes
     from mkpp.model import PhaseMode, SpeciesDefinition
 
@@ -198,7 +196,6 @@ def test_arrhenius_micm_sign_convention():
 
 def test_troe_micm_sign_convention():
     import sympy as sp
-
     from mkpp.lowering import _evaluate_reaction_fluxes
     from mkpp.model import PhaseMode, SpeciesDefinition
 

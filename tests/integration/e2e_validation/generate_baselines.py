@@ -6,7 +6,6 @@ import subprocess
 from pathlib import Path
 
 
-
 def generate_kpp_baseline(mech_name, kpp_dir, out_dir):
     run_dir = Path(f"kpp_run_{mech_name}")
     run_dir.mkdir(exist_ok=True)

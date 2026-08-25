@@ -484,10 +484,7 @@ def build_template_context(
         for chunk_index, chunk in enumerate(_chunk(rate_exprs_state, 32))
     ]
     context["compiled_jacobian_chunks"] = [
-        [
-            {"row": row, "column": column, "expr": _raw_pointer_expression(expression)}
-            for row, column, expression in chunk
-        ]
+        [{"row": row, "column": column, "expr": _raw_pointer_expression(expression)} for row, column, expression in chunk]
         for chunk in _chunk(jacobian_entries_state, 256)
     ]
 
@@ -508,18 +505,14 @@ def build_template_context(
         expression = re.sub(r"\by_(\d+)\b", r"work[\1]", expression)
         return re.sub(r"\bx_(\d+)\b", r"solution[\1]", expression)
 
-    compiled_lu_expressions = [
-        {**entry, "expr": _lu_expression(entry["expr"])} for entry in lu_expressions
-    ]
+    compiled_lu_expressions = [{**entry, "expr": _lu_expression(entry["expr"])} for entry in lu_expressions]
     context["compiled_lu_expressions"] = compiled_lu_expressions
     context["compiled_lu_chunks"] = _chunk(compiled_lu_expressions, 256)
     context["compiled_forward_steps"] = [
-        {"index": step["i"], "expr": _forward_expression(step["raw_expr"])}
-        for step in forward_sub_steps
+        {"index": step["i"], "expr": _forward_expression(step["raw_expr"])} for step in forward_sub_steps
     ]
     context["compiled_backward_steps"] = [
-        {"index": step["i"], "expr": _backward_expression(step["raw_expr"])}
-        for step in backward_sub_steps
+        {"index": step["i"], "expr": _backward_expression(step["raw_expr"])} for step in backward_sub_steps
     ]
 
     adjoint_entries_state = []

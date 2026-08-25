@@ -69,9 +69,7 @@ def validate_runner_result(document: Mapping[str, Any]) -> Mapping[str, Any]:
 
     timing = document["timing"]
     if timing["boundary"] == "steady_state_solve" and not timing["synchronized"]:
-        raise SchemaValidationError(
-            "timing.synchronized: steady-state solve timing must include completion synchronization"
-        )
+        raise SchemaValidationError("timing.synchronized: steady-state solve timing must include completion synchronization")
 
     for name, counter in document["work"].items():
         if not counter["available"] and not counter.get("reason", "").strip():

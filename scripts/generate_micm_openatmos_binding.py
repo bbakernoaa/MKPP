@@ -31,27 +31,39 @@ def _terms(values: Sequence[Mapping[str, Any]], products: bool) -> str:
     rendered = []
     for term in values:
         species, coefficient = str(term["species name"]), _number(term.get("coefficient", 1.0))
-        rendered.append(
-            f"micm::StoichSpecies{{ {_species(species)}, {coefficient} }}" if products else _species(species)
-        )
+        rendered.append(f"micm::StoichSpecies{{ {_species(species)}, {coefficient} }}" if products else _species(species))
     return ", ".join(rendered)
 
 
 def _rate(reaction: Mapping[str, Any]) -> str:
     rate_type = str(reaction["type"]).upper()
     if rate_type == "ARRHENIUS":
-        return "micm::ArrheniusRateConstantParameters{ " + ", ".join(
-            f".{key}_ = {_number(reaction.get(key), default)}"
-            for key, default in (("A", 1.0), ("B", 0.0), ("C", 0.0), ("D", 300.0), ("E", 0.0))
-        ) + " }"
-    if rate_type == "TROE":
-        return "micm::TroeRateConstantParameters{ " + ", ".join(
-            f".{key}_ = {_number(reaction.get(key), default)}"
-            for key, default in (
-                ("k0_A", 1.0), ("k0_B", 0.0), ("k0_C", 0.0), ("kinf_A", 1.0),
-                ("kinf_B", 0.0), ("kinf_C", 0.0), ("Fc", 0.6), ("N", 1.0),
+        return (
+            "micm::ArrheniusRateConstantParameters{ "
+            + ", ".join(
+                f".{key}_ = {_number(reaction.get(key), default)}"
+                for key, default in (("A", 1.0), ("B", 0.0), ("C", 0.0), ("D", 300.0), ("E", 0.0))
             )
-        ) + " }"
+            + " }"
+        )
+    if rate_type == "TROE":
+        return (
+            "micm::TroeRateConstantParameters{ "
+            + ", ".join(
+                f".{key}_ = {_number(reaction.get(key), default)}"
+                for key, default in (
+                    ("k0_A", 1.0),
+                    ("k0_B", 0.0),
+                    ("k0_C", 0.0),
+                    ("kinf_A", 1.0),
+                    ("kinf_B", 0.0),
+                    ("kinf_C", 0.0),
+                    ("Fc", 0.6),
+                    ("N", 1.0),
+                )
+            )
+            + " }"
+        )
     if rate_type == "PHOTOLYSIS":
         return f"micm::UserDefinedRateConstantParameters{{ .label_ = {_quoted(str(reaction['name']))} }}"
     if rate_type in {"EP2", "EP3"}:
@@ -80,15 +92,28 @@ def render(document: Mapping[str, Any], namespace: str) -> str:
     """Render a header whose process definitions are a direct OpenAtmos projection."""
 
     lines = [
-        "// Generated from canonical OpenAtmos JSON. Do not edit.", "#pragma once", "",
-        "#include <micm/CPU.hpp>", "#include <cmath>", "#include <stdexcept>", "#include <string>",
-        "#include <string_view>", "#include <vector>", "", f"namespace bench::{namespace} {{", "",
+        "// Generated from canonical OpenAtmos JSON. Do not edit.",
+        "#pragma once",
+        "",
+        "#include <micm/CPU.hpp>",
+        "#include <cmath>",
+        "#include <stdexcept>",
+        "#include <string>",
+        "#include <string_view>",
+        "#include <vector>",
+        "",
+        f"namespace bench::{namespace} {{",
+        "",
         "inline const micm::PhaseSpecies& PhaseSpeciesByName(const micm::Phase& phase, std::string_view name) {",
         "  for (const auto& value : phase.phase_species_) if (value.species_.name_ == name) return value;",
-        "  throw std::runtime_error(\"OpenAtmos binding species lookup failed: \" + std::string(name));", "}",
+        '  throw std::runtime_error("OpenAtmos binding species lookup failed: " + std::string(name));',
+        "}",
         "inline const micm::Species& SpeciesByName(const micm::Phase& phase, std::string_view name) {",
-        "  return PhaseSpeciesByName(phase, name).species_;", "}", "",
-        "inline micm::Phase CreateGasPhase() {", "  std::vector<micm::PhaseSpecies> species;",
+        "  return PhaseSpeciesByName(phase, name).species_;",
+        "}",
+        "",
+        "inline micm::Phase CreateGasPhase() {",
+        "  std::vector<micm::PhaseSpecies> species;",
     ]
     for entry in document["species"]:
         name = str(entry["name"])
@@ -97,16 +122,20 @@ def render(document: Mapping[str, Any], namespace: str) -> str:
             lines.append("    value.SetThirdBody();")
         lines.append("    species.emplace_back(value); }")
     lines += [
-        "  return micm::Phase{\"gas\", species};", "}", "",
+        '  return micm::Phase{"gas", species};',
+        "}",
+        "",
         "inline std::vector<micm::Process> CreateProcesses(const micm::Phase& gas_phase) {",
-        "  std::vector<micm::Process> processes;", f"  processes.reserve({len(document['reactions'])});",
+        "  std::vector<micm::Process> processes;",
+        f"  processes.reserve({len(document['reactions'])});",
     ]
     for reaction in document["reactions"]:
         lines += [
             "  processes.push_back(micm::ChemicalReactionBuilder()",
             f"    .SetReactants({{ {_terms(reaction['reactants'], False)} }})",
             f"    .SetProducts({{ {_terms(reaction['products'], True)} }})",
-            f"    .SetRateConstant({_rate(reaction)})", ".SetPhase(gas_phase).Build());",
+            f"    .SetRateConstant({_rate(reaction)})",
+            ".SetPhase(gas_phase).Build());",
         ]
     lines += ["  return processes;", "}", "", f"}}  // namespace bench::{namespace}", ""]
     return "\n".join(lines)

@@ -9,6 +9,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
+
 def _openatmos(name: str) -> dict:
     source = ROOT / "mechanisms" / "openatmos" / name / "mechanism.json"
     return json.loads(source.read_text(encoding="utf-8"))

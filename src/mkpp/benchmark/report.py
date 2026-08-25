@@ -192,9 +192,7 @@ def validate_ts1_report(document: Mapping[str, Any]) -> Mapping[str, Any]:
     forbidden_phrases = ("three-way", "three solvers")
     for claim in claims:
         normalized = str(claim).lower()
-        if any(phrase in normalized for phrase in forbidden_phrases) or re.search(
-            r"(?<!m)\bkpp\b", normalized
-        ):
+        if any(phrase in normalized for phrase in forbidden_phrases) or re.search(r"(?<!m)\bkpp\b", normalized):
             raise ValueError("TS1 cannot make a three-way or KPP claim")
     return document
 

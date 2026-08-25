@@ -5,7 +5,6 @@ from __future__ import annotations
 from copy import deepcopy
 
 import pytest
-
 from mkpp.benchmark.manifest import validate_manifest
 
 SHA_A = "a" * 64
@@ -50,9 +49,7 @@ def ts1_manifest() -> dict:
         "schema_version": 1,
         "mechanism_id": "ts1",
         "version": "1.0.0",
-        "canonical_source": [
-            {"path": "sources/ts1/ts1.json", "revision": "musica-ts1-v1", "sha256": SHA_A}
-        ],
+        "canonical_source": [{"path": "sources/ts1/ts1.json", "revision": "musica-ts1-v1", "sha256": SHA_A}],
         "canonical_species": species,
         "reactions": reactions,
         "chemistry_sha256": SHA_B,
@@ -108,18 +105,14 @@ def test_ts1_rejects_wrong_reaction_count(ts1_manifest: dict) -> None:
 def test_ts1_active_species_maps_are_bijective(ts1_manifest: dict) -> None:
     manifest = _without_reaction_contract(ts1_manifest)
     active = [species["id"] for species in manifest["canonical_species"] if species["role"] == "active"]
-    manifest["bindings"]["micm"]["species_map"][active[1]] = manifest["bindings"]["micm"][
-        "species_map"
-    ][active[0]]
+    manifest["bindings"]["micm"]["species_map"][active[1]] = manifest["bindings"]["micm"]["species_map"][active[0]]
 
     with pytest.raises(ValueError, match="bijective|mapping"):
         validate_manifest(manifest)
 
 
 @pytest.mark.parametrize(("field", "value"), [("role", "background"), ("phase", "")])
-def test_ts1_rejects_invalid_species_role_or_phase(
-    ts1_manifest: dict, field: str, value: str
-) -> None:
+def test_ts1_rejects_invalid_species_role_or_phase(ts1_manifest: dict, field: str, value: str) -> None:
     manifest = _without_reaction_contract(ts1_manifest)
     manifest["canonical_species"][0][field] = value
 

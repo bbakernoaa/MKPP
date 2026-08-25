@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pytest
-
 from mkpp.benchmark.statistics import (
     bootstrap_median_interval,
     paired_ratio_summary,

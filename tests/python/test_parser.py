@@ -2,7 +2,6 @@ import json
 import time
 
 import pytest
-
 from mkpp.model import CompilationError
 from mkpp.parser import (
     detect_config_format,

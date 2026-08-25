@@ -67,17 +67,13 @@ def _validate_species(manifest: Mapping[str, Any]) -> tuple[set[str], set[str]]:
             _require_text(name, f"{location}.aliases")
             owner = all_names.get(name)
             if owner is not None:
-                raise SchemaValidationError(
-                    f"{location}.aliases: alias/name {name!r} collides with canonical species {owner!r}"
-                )
+                raise SchemaValidationError(f"{location}.aliases: alias/name {name!r} collides with canonical species {owner!r}")
             all_names[name] = species_id
 
     return canonical_ids, active_ids
 
 
-def _validate_bindings(
-    manifest: Mapping[str, Any], canonical_ids: set[str], active_ids: set[str]
-) -> None:
+def _validate_bindings(manifest: Mapping[str, Any], canonical_ids: set[str], active_ids: set[str]) -> None:
     bindings = manifest["bindings"]
     required_solvers = set(manifest["required_solvers"])
     missing = required_solvers - set(bindings)
@@ -103,14 +99,10 @@ def _validate_bindings(
         species_map = binding["species_map"]
         unknown_species = set(species_map) - canonical_ids
         if unknown_species:
-            raise SchemaValidationError(
-                f"{location}.species_map: unknown canonical species: {', '.join(sorted(unknown_species))}"
-            )
+            raise SchemaValidationError(f"{location}.species_map: unknown canonical species: {', '.join(sorted(unknown_species))}")
         missing_active = active_ids - set(species_map)
         if missing_active:
-            raise SchemaValidationError(
-                f"{location}.species_map: missing active species: {', '.join(sorted(missing_active))}"
-            )
+            raise SchemaValidationError(f"{location}.species_map: missing active species: {', '.join(sorted(missing_active))}")
         active_native = [species_map[species_id] for species_id in sorted(active_ids)]
         if any(not isinstance(name, str) or not name.strip() for name in active_native):
             raise SchemaValidationError(f"{location}.species_map: native species names must be non-empty")
@@ -119,9 +111,7 @@ def _validate_bindings(
 
         photolysis_map = binding["photolysis_map"]
         if set(photolysis_map) != photolysis_ids:
-            raise SchemaValidationError(
-                f"{location}.photolysis_map: mapping keys must exactly match named photolysis inputs"
-            )
+            raise SchemaValidationError(f"{location}.photolysis_map: mapping keys must exactly match named photolysis inputs")
         native_photolysis = list(photolysis_map.values())
         if any(not isinstance(name, str) or not name.strip() for name in native_photolysis):
             raise SchemaValidationError(f"{location}.photolysis_map: native names must be non-empty")
@@ -141,9 +131,7 @@ def _validate_reactions(manifest: Mapping[str, Any], canonical_ids: set[str]) ->
             for term_index, term in enumerate(reaction[side]):
                 species_id = term["species_id"]
                 if species_id not in canonical_ids:
-                    raise SchemaValidationError(
-                        f"{location}.{side}.{term_index}: unknown canonical species {species_id!r}"
-                    )
+                    raise SchemaValidationError(f"{location}.{side}.{term_index}: unknown canonical species {species_id!r}")
 
 
 def validate_manifest(document: Mapping[str, Any]) -> Mapping[str, Any]:

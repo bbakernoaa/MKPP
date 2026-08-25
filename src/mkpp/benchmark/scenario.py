@@ -113,19 +113,14 @@ def forcing_segments(document: Mapping[str, Any]) -> tuple[ForcingSegment, ...]:
         if "constant" in definition:
             constants[name] = float(definition["constant"])
         else:
-            values_by_name[name] = {
-                float(point["time_seconds"]): float(point["value"])
-                for point in definition["points"]
-            }
+            values_by_name[name] = {float(point["time_seconds"]): float(point["value"]) for point in definition["points"]}
 
     segments: list[ForcingSegment] = []
     for segment_start, segment_end in zip(boundaries[:-1], boundaries[1:], strict=True):
         values = dict(constants)
         for name, points in values_by_name.items():
             if segment_start not in points:
-                raise SchemaValidationError(
-                    f"forcing.{name}: missing value at forcing boundary {segment_start:g}"
-                )
+                raise SchemaValidationError(f"forcing.{name}: missing value at forcing boundary {segment_start:g}")
             values[name] = points[segment_start]
         segments.append(ForcingSegment(float(segment_start), float(segment_end), values))
     return tuple(segments)
@@ -188,9 +183,7 @@ def validate_scenario(document: Mapping[str, Any]) -> Mapping[str, Any]:
         if len(state) != 210:
             raise SchemaValidationError("TS1 initial_state must contain exactly 210 named species")
         background = {"O2", "N2", "M", "S004", "S010"}
-        active_nonzero = sum(
-            quantity["value"] > 0.0 for name, quantity in state.items() if name not in background
-        )
+        active_nonzero = sum(quantity["value"] > 0.0 for name, quantity in state.items() if name not in background)
         if active_nonzero < 8:
             raise SchemaValidationError("TS1 requires a nontrivial state with at least 8 active species")
         # TS1 has two scientifically distinct O3 photolysis channels; never
@@ -198,16 +191,13 @@ def validate_scenario(document: Mapping[str, Any]) -> Mapping[str, Any]:
         required_forcing = {"jno2", "jo3_a", "jo3_b"}
         missing_forcing = required_forcing - set(document["forcing"])
         if missing_forcing:
-            raise SchemaValidationError(
-                f"TS1 photolysis forcing is incomplete: missing {sorted(missing_forcing)}"
-            )
+            raise SchemaValidationError(f"TS1 photolysis forcing is incomplete: missing {sorted(missing_forcing)}")
     boundaries = set(document["integration"]["forcing_boundaries_seconds"])
     checkpoints = set(document["integration"]["checkpoints_seconds"])
     missing_checkpoints = boundaries - {start} - checkpoints
     if missing_checkpoints:
         raise SchemaValidationError(
-            "integration checkpoints must include every forcing boundary; "
-            f"missing={sorted(missing_checkpoints)}"
+            "integration checkpoints must include every forcing boundary; " f"missing={sorted(missing_checkpoints)}"
         )
     _require_text(document["reference"]["implementation"], "reference.implementation")
     return document

@@ -6,7 +6,6 @@ import sys
 from pathlib import Path
 
 import pytest
-
 from mkpp.benchmark.adapters.base import PreparedAdapterRun
 from mkpp.benchmark.models import SolverId
 from mkpp.benchmark.orchestrator import NativeRunnerError, invoke_json_runner
@@ -55,11 +54,7 @@ def test_timeout_is_fatal_and_names_solver(tmp_path: Path) -> None:
 
 def test_environment_is_extended_without_losing_required_process_state(tmp_path: Path) -> None:
     result = valid_runner_result()
-    source = (
-        "import json, os\n"
-        "assert os.environ['BENCHMARK_SENTINEL'] == 'present'\n"
-        f"print(json.dumps({result!r}))\n"
-    )
+    source = "import json, os\n" "assert os.environ['BENCHMARK_SENTINEL'] == 'present'\n" f"print(json.dumps({result!r}))\n"
     prepared = PreparedAdapterRun(
         request=None,  # type: ignore[arg-type]
         command=(sys.executable, str(tmp_path / "runner.py")),

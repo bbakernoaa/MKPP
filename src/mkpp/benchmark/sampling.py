@@ -105,9 +105,7 @@ def collect_paired_blocks(
                 else:
                     records_by_solver[solver] = record
             if failed:
-                invalid_records.extend(
-                    records_by_solver.get(solver) for solver in order
-                )
+                invalid_records.extend(records_by_solver.get(solver) for solver in order)
                 continue
             collected.append(
                 CollectedBlock(

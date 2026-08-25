@@ -64,10 +64,7 @@ class AdapterError(RuntimeError):
         self.diagnostic = diagnostic
         self.context = context
         context_text = f" ({'; '.join(context)})" if context else ""
-        super().__init__(
-            f"FATAL ERROR: {solver_id.value} adapter {self.phase} failed: "
-            f"{diagnostic}{context_text}"
-        )
+        super().__init__(f"FATAL ERROR: {solver_id.value} adapter {self.phase} failed: " f"{diagnostic}{context_text}")
 
 
 class ProbeError(AdapterError):

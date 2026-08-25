@@ -84,10 +84,7 @@ def build_audit_states(
 
     randomizer = random.Random(perturbation_seed)
     for _ in range(perturbation_count):
-        perturbed = {
-            name: float(initial_state[name]) * math.exp(randomizer.uniform(-0.35, 0.35))
-            for name in species
-        }
+        perturbed = {name: float(initial_state[name]) * math.exp(randomizer.uniform(-0.35, 0.35)) for name in species}
         states.append(_immutable_state("perturbed", perturbed))
     return tuple(states)
 
@@ -131,9 +128,7 @@ def compare_chemistry(
 
     rate_metrics = _metrics(reference.rates, subject.rates, physics_floors["rates"])
     rhs_metrics = _metrics(reference.rhs, subject.rhs, physics_floors["rhs"])
-    jacobian_metrics = _metrics(
-        _flatten(reference.jacobian), _flatten(subject.jacobian), physics_floors["jacobian"]
-    )
+    jacobian_metrics = _metrics(_flatten(reference.jacobian), _flatten(subject.jacobian), physics_floors["jacobian"])
     independent_metrics = _metrics(
         _flatten(subject.jacobian),
         _flatten(subject.independent_jacobian),

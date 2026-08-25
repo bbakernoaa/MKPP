@@ -17,9 +17,7 @@ def valid_manifest() -> dict:
         "schema_version": 1,
         "mechanism_id": "chapman",
         "version": "1.0.0",
-        "canonical_source": [
-            {"path": "sources/chapman/mechanism.yaml", "revision": "v1", "sha256": SHA_A}
-        ],
+        "canonical_source": [{"path": "sources/chapman/mechanism.yaml", "revision": "v1", "sha256": SHA_A}],
         "canonical_species": [
             {
                 "id": "O",
@@ -75,9 +73,7 @@ def test_manifest_rejects_alias_collision(valid_manifest: dict) -> None:
 
 
 @pytest.mark.parametrize("field,value", [("role", "background"), ("unit", ""), ("scale", 0.0)])
-def test_manifest_rejects_invalid_species_metadata(
-    valid_manifest: dict, field: str, value: object
-) -> None:
+def test_manifest_rejects_invalid_species_metadata(valid_manifest: dict, field: str, value: object) -> None:
     manifest = deepcopy(valid_manifest)
     manifest["canonical_species"][0][field] = value
     with pytest.raises(ValueError, match=f"{field}|species"):
@@ -103,9 +99,7 @@ def test_ts1_forbids_kpp_requirement_or_binding(valid_manifest: dict) -> None:
     manifest = deepcopy(valid_manifest)
     manifest["mechanism_id"] = "ts1"
     manifest["required_solvers"] = ["micm", "mkpp"]
-    manifest["bindings"] = {
-        solver: manifest["bindings"][solver] for solver in ("micm", "mkpp")
-    }
+    manifest["bindings"] = {solver: manifest["bindings"][solver] for solver in ("micm", "mkpp")}
     validate_manifest(manifest)
 
     manifest["required_solvers"].append("kpp")

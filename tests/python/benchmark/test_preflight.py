@@ -6,7 +6,6 @@ import hashlib
 from pathlib import Path
 
 import pytest
-
 from mkpp.benchmark.preflight import (
     PreflightError,
     resolve_relative_asset,

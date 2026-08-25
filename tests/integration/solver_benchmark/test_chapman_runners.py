@@ -29,9 +29,7 @@ def _runner_source(solver: str) -> str:
         ("mkpp", ("mkpp", "MechanismRegistry", "execute")),
     ],
 )
-def test_chapman_runner_executes_and_reports_actual_solver_identity(
-    solver: str, identity_tokens: tuple[str, ...]
-) -> None:
+def test_chapman_runner_executes_and_reports_actual_solver_identity(solver: str, identity_tokens: tuple[str, ...]) -> None:
     source = _runner_source(solver)
 
     for token in identity_tokens:

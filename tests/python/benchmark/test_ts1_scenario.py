@@ -5,7 +5,6 @@ from __future__ import annotations
 from copy import deepcopy
 
 import pytest
-
 from mkpp.benchmark.scenario import validate_scenario, validate_scenario_pair
 
 SHA = "c" * 64
@@ -13,9 +12,7 @@ SHA = "c" * 64
 
 @pytest.fixture
 def ts1_calibration() -> dict:
-    initial_state = {
-        f"S{i:03d}": {"value": 1.0e6 + i, "unit": "molecule cm-3"} for i in range(210)
-    }
+    initial_state = {f"S{i:03d}": {"value": 1.0e6 + i, "unit": "molecule cm-3"} for i in range(210)}
     initial_state["S004"]["value"] = 5.1e18
     initial_state["S010"]["value"] = 1.9e19
     atols = {name: 1.0 for name in initial_state}
@@ -105,9 +102,7 @@ def test_ts1_calibration_and_measurement_are_held_out(ts1_calibration: dict) -> 
 
 
 @pytest.mark.parametrize("overlap", ["scenario_id", "ensemble_seed"])
-def test_ts1_rejects_calibration_measurement_overlap(
-    ts1_calibration: dict, overlap: str
-) -> None:
+def test_ts1_rejects_calibration_measurement_overlap(ts1_calibration: dict, overlap: str) -> None:
     measurement = deepcopy(ts1_calibration)
     measurement["scenario_id"] = "ts1-measurement-v1"
     measurement["role"] = "measurement"

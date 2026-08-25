@@ -16,9 +16,9 @@ import yaml
 
 from mkpp.benchmark.manifest import validate_manifest
 from mkpp.benchmark.report import render_markdown_report
+from mkpp.benchmark.sampling import balanced_order, common_repetition_count, stable_warmup_count
 from mkpp.benchmark.scenario import validate_scenario, validate_scenario_pair
 from mkpp.benchmark.schema import SchemaValidationError, validate_runner_result
-from mkpp.benchmark.sampling import balanced_order, common_repetition_count, stable_warmup_count
 
 _ROOT = Path(__file__).resolve().parents[3]
 _MANIFESTS = _ROOT / "benchmarks/solver_comparison/manifests"
@@ -122,9 +122,7 @@ def validate_campaign(path: Path) -> Mapping[str, Any]:
             validate_scenario_pair(calibration, measurement)
         if calibration["mechanism"]["id"] != manifest["mechanism_id"]:
             raise CliError(f"campaign.targets.{index}: scenario mechanism does not match manifest")
-        resolved_targets.append(
-            {"mechanism_id": str(manifest["mechanism_id"]), "manifest": str(manifest_path)}
-        )
+        resolved_targets.append({"mechanism_id": str(manifest["mechanism_id"]), "manifest": str(manifest_path)})
     return {"campaign_id": campaign["campaign_id"], "targets": resolved_targets}
 
 
@@ -150,21 +148,35 @@ def _identity_hash(document: Mapping[str, Any]) -> str:
 
 
 def _invoke_campaign_runner(
-    solver: str, executable: Path, *, mechanism: str, campaign_id: str,
-    manifest: Mapping[str, Any], scenario: Mapping[str, Any], block: int,
-    order_position: int, repetitions: int, warmups: int,
+    solver: str,
+    executable: Path,
+    *,
+    mechanism: str,
+    campaign_id: str,
+    manifest: Mapping[str, Any],
+    scenario: Mapping[str, Any],
+    block: int,
+    order_position: int,
+    repetitions: int,
+    warmups: int,
 ) -> Mapping[str, Any]:
     """Invoke one native runner with a shared frozen campaign identity."""
 
     configuration = {"mechanism": mechanism, "schedule": "canonical-openatmos-v1"}
     common = {
-        "CAMPAIGN_ID": campaign_id, "RUN_ID": f"{mechanism}-{block}-{solver}",
-        "BLOCK_ID": str(block), "ORDER_POSITION": str(order_position),
-        "WARMUPS": str(warmups), "REPETITIONS": str(repetitions),
-        "MANIFEST_VERSION": str(manifest["version"]), "MANIFEST_SHA256": _identity_hash(manifest),
-        "SCENARIO_ID": str(scenario["scenario_id"]), "SCENARIO_VERSION": str(scenario["version"]),
+        "CAMPAIGN_ID": campaign_id,
+        "RUN_ID": f"{mechanism}-{block}-{solver}",
+        "BLOCK_ID": str(block),
+        "ORDER_POSITION": str(order_position),
+        "WARMUPS": str(warmups),
+        "REPETITIONS": str(repetitions),
+        "MANIFEST_VERSION": str(manifest["version"]),
+        "MANIFEST_SHA256": _identity_hash(manifest),
+        "SCENARIO_ID": str(scenario["scenario_id"]),
+        "SCENARIO_VERSION": str(scenario["version"]),
         "SCENARIO_SHA256": _identity_hash(scenario),
-        "CONFIGURATION_ID": "canonical-openatmos-v1", "CONFIGURATION_SHA256": _identity_hash(configuration),
+        "CONFIGURATION_ID": "canonical-openatmos-v1",
+        "CONFIGURATION_SHA256": _identity_hash(configuration),
     }
     command = [str(executable)]
     environment = os.environ.copy()
@@ -173,13 +185,34 @@ def _invoke_campaign_runner(
     else:
         if solver == "mkpp":
             command += ["--mechanism", mechanism]
-        command += ["--warmups", str(warmups), "--repetitions", str(repetitions),
-                    "--campaign-id", campaign_id, "--run-id", common["RUN_ID"],
-                    "--manifest-version", common["MANIFEST_VERSION"], "--manifest-sha256", common["MANIFEST_SHA256"],
-                    "--scenario-id", common["SCENARIO_ID"], "--scenario-version", common["SCENARIO_VERSION"],
-                    "--scenario-sha256", common["SCENARIO_SHA256"],
-                    "--configuration-id", common["CONFIGURATION_ID"], "--configuration-sha256", common["CONFIGURATION_SHA256"],
-                    "--block", str(block), "--order-position", str(order_position)]
+        command += [
+            "--warmups",
+            str(warmups),
+            "--repetitions",
+            str(repetitions),
+            "--campaign-id",
+            campaign_id,
+            "--run-id",
+            common["RUN_ID"],
+            "--manifest-version",
+            common["MANIFEST_VERSION"],
+            "--manifest-sha256",
+            common["MANIFEST_SHA256"],
+            "--scenario-id",
+            common["SCENARIO_ID"],
+            "--scenario-version",
+            common["SCENARIO_VERSION"],
+            "--scenario-sha256",
+            common["SCENARIO_SHA256"],
+            "--configuration-id",
+            common["CONFIGURATION_ID"],
+            "--configuration-sha256",
+            common["CONFIGURATION_SHA256"],
+            "--block",
+            str(block),
+            "--order-position",
+            str(order_position),
+        ]
     completed = subprocess.run(command, capture_output=True, text=True, check=False, env=environment)
     if completed.returncode != 0:
         raise CliError(f"{solver} runner failed: {completed.stderr.strip()}", EXIT_RUNTIME)
@@ -200,7 +233,7 @@ def execute_campaign(path: Path, output: Path, runner_values: Sequence[str]) -> 
     required = {
         solver
         for target in campaign["targets"]
-        for solver in validate_manifest(_read_yaml(_path_from_root(target["manifest"]))) ["required_solvers"]
+        for solver in validate_manifest(_read_yaml(_path_from_root(target["manifest"])))["required_solvers"]
     }
     missing = required - set(runners)
     unexpected = set(runners) - required
@@ -221,19 +254,32 @@ def execute_campaign(path: Path, output: Path, runner_values: Sequence[str]) -> 
         repetitions = 1
         warmups = int(sampling["warmups"]["minimum"])
         if "sampling" in campaign:
+
             def pilot(solver: str, count: int) -> Sequence[float]:
                 _progress(0, 0, f"{manifest['mechanism_id']} pilot {solver} repetitions={count}")
                 return tuple(
-                    float(_invoke_campaign_runner(
-                        solver, runners[solver], mechanism=manifest["mechanism_id"], campaign_id=campaign["campaign_id"],
-                        manifest=manifest, scenario=measurement, block=0, order_position=0,
-                        repetitions=count, warmups=1,
-                    )["timing"]["elapsed_ms"]) / 1000.0
+                    float(
+                        _invoke_campaign_runner(
+                            solver,
+                            runners[solver],
+                            mechanism=manifest["mechanism_id"],
+                            campaign_id=campaign["campaign_id"],
+                            manifest=manifest,
+                            scenario=measurement,
+                            block=0,
+                            order_position=0,
+                            repetitions=count,
+                            warmups=1,
+                        )["timing"]["elapsed_ms"]
+                    )
+                    / 1000.0
                     for _ in range(int(sampling["pilot_iterations"]))
                 )
+
             repetitions = max(
-                common_repetition_count(lambda count, solver=solver: pilot(solver, count),
-                                        minimum_seconds=float(sampling["minimum_sample_seconds"]))
+                common_repetition_count(
+                    lambda count, solver=solver: pilot(solver, count), minimum_seconds=float(sampling["minimum_sample_seconds"])
+                )
                 for solver in manifest["required_solvers"]
             )
             warmup_policy = sampling["warmups"]
@@ -243,13 +289,22 @@ def execute_campaign(path: Path, output: Path, runner_values: Sequence[str]) -> 
                 for count in range(1, int(warmup_policy["maximum"]) + 1):
                     _progress(0, 0, f"{manifest['mechanism_id']} warmup {solver} {count}/{warmup_policy['maximum']}")
                     result = _invoke_campaign_runner(
-                        solver, runners[solver], mechanism=manifest["mechanism_id"], campaign_id=campaign["campaign_id"],
-                        manifest=manifest, scenario=measurement, block=0, order_position=0,
-                        repetitions=repetitions, warmups=count,
+                        solver,
+                        runners[solver],
+                        mechanism=manifest["mechanism_id"],
+                        campaign_id=campaign["campaign_id"],
+                        manifest=manifest,
+                        scenario=measurement,
+                        block=0,
+                        order_position=0,
+                        repetitions=repetitions,
+                        warmups=count,
                     )
                     throughputs.append(result["timing"]["cell_steps"] / (result["timing"]["elapsed_ms"] / 1000.0))
                 stable = stable_warmup_count(
-                    throughputs, minimum=int(warmup_policy["minimum"]), maximum=int(warmup_policy["maximum"]),
+                    throughputs,
+                    minimum=int(warmup_policy["minimum"]),
+                    maximum=int(warmup_policy["maximum"]),
                     relative_range=float(warmup_policy["stable_last_three_relative_range"]),
                 )
                 if stable is None:
@@ -260,29 +315,36 @@ def execute_campaign(path: Path, output: Path, runner_values: Sequence[str]) -> 
         # configuration is frozen before the interleaved measurement blocks.
         total_runs = int(sampling["paired_blocks"]) * len(manifest["required_solvers"])
         completed_runs = 0
-        for block, order in enumerate(balanced_order(manifest["required_solvers"], blocks=sampling["paired_blocks"], seed=sampling["ordering_seed"])):
-          for order_position, solver in enumerate(order):
-            result = _invoke_campaign_runner(
-                solver, runners[solver], mechanism=manifest["mechanism_id"], campaign_id=campaign["campaign_id"],
-                manifest=manifest, scenario=measurement, block=block, order_position=order_position,
-                repetitions=repetitions, warmups=warmups,
-            )
-            if result["solver"]["id"] != solver:
-                raise CliError(f"{solver} runner identity mismatch", EXIT_ENVIRONMENT)
-            if result["manifest"]["id"] != manifest["mechanism_id"]:
-                raise CliError(f"{solver} runner manifest mismatch", EXIT_RUNTIME)
-            if result["scenario"]["id"] != measurement["scenario_id"]:
-                raise CliError(f"{solver} runner scenario mismatch", EXIT_RUNTIME)
-            records.append(result)
-            completed_runs += 1
-            _progress(completed_runs, total_runs, f"{manifest['mechanism_id']} block {block} {solver}")
+        for block, order in enumerate(
+            balanced_order(manifest["required_solvers"], blocks=sampling["paired_blocks"], seed=sampling["ordering_seed"])
+        ):
+            for order_position, solver in enumerate(order):
+                result = _invoke_campaign_runner(
+                    solver,
+                    runners[solver],
+                    mechanism=manifest["mechanism_id"],
+                    campaign_id=campaign["campaign_id"],
+                    manifest=manifest,
+                    scenario=measurement,
+                    block=block,
+                    order_position=order_position,
+                    repetitions=repetitions,
+                    warmups=warmups,
+                )
+                if result["solver"]["id"] != solver:
+                    raise CliError(f"{solver} runner identity mismatch", EXIT_ENVIRONMENT)
+                if result["manifest"]["id"] != manifest["mechanism_id"]:
+                    raise CliError(f"{solver} runner manifest mismatch", EXIT_RUNTIME)
+                if result["scenario"]["id"] != measurement["scenario_id"]:
+                    raise CliError(f"{solver} runner scenario mismatch", EXIT_RUNTIME)
+                records.append(result)
+                completed_runs += 1
+                _progress(completed_runs, total_runs, f"{manifest['mechanism_id']} block {block} {solver}")
     del validation  # Validation must finish before native execution begins.
     output.parent.mkdir(parents=True, exist_ok=True)
     temporary = output.with_suffix(output.suffix + ".tmp")
     prior = output.read_text(encoding="utf-8") if output.exists() else ""
-    temporary.write_text(
-        prior + "".join(json.dumps(record, sort_keys=True) + "\n" for record in records), encoding="utf-8"
-    )
+    temporary.write_text(prior + "".join(json.dumps(record, sort_keys=True) + "\n" for record in records), encoding="utf-8")
     temporary.replace(output)
     return tuple(records)
 

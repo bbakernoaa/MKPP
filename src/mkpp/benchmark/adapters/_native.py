@@ -94,9 +94,7 @@ class NativeExecutableAdapter:
         """Run the native subject and decode its already schema-validated evidence."""
 
         try:
-            result = invoke_json_runner(
-                prepared, self.solver_id, timeout_seconds=self.timeout_seconds
-            )
+            result = invoke_json_runner(prepared, self.solver_id, timeout_seconds=self.timeout_seconds)
         except NativeRunnerError as exc:
             raise ExecutionError(self.solver_id, str(exc)) from exc
         return _decode_solver_run(dict(result), prepared.request)
@@ -168,10 +166,7 @@ def _decode_solver_run(result: dict[str, Any], request: AdapterRunRequest) -> So
         clock=timing["clock"],
         synchronized=timing["synchronized"],
         synchronization_method=timing["synchronization"],
-        lifecycle_seconds=tuple(
-            (name, milliseconds / 1000.0)
-            for name, milliseconds in sorted(timing["lifecycle_ms"].items())
-        ),
+        lifecycle_seconds=tuple((name, milliseconds / 1000.0) for name, milliseconds in sorted(timing["lifecycle_ms"].items())),
         checkpoints=checkpoints,
         work_counters=counters,
         status=RunStatus(result["status"]),

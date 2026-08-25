@@ -5,7 +5,6 @@ from __future__ import annotations
 import math
 
 import pytest
-
 from mkpp.benchmark.accuracy import assess_trajectory_accuracy, symmetric_scaled_error
 
 ATOL = {"A": 1.0e-6, "B": 1.0e-3}
@@ -73,9 +72,7 @@ def test_maximum_above_five_cannot_be_hidden_by_many_species() -> None:
         ("conservation_passed", False, "conservation"),
     ],
 )
-def test_scientific_or_solver_failure_makes_accurate_state_ineligible(
-    flag: str, value: bool, diagnostic: str
-) -> None:
+def test_scientific_or_solver_failure_makes_accurate_state_ineligible(flag: str, value: bool, diagnostic: str) -> None:
     kwargs = {flag: value}
     assessment = assess_trajectory_accuracy(_trajectory(), _trajectory(), ATOL, RTOL, **kwargs)
 

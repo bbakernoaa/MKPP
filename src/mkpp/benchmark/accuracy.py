@@ -115,14 +115,7 @@ def assess_trajectory_accuracy(
     if maximum > 5.0:
         diagnostics.append(f"maximum scaled error {maximum:.6g} exceeds 5")
 
-    eligible = (
-        solver_success
-        and finite
-        and positivity_passed
-        and conservation_passed
-        and worst_wrms <= 1.0
-        and maximum <= 5.0
-    )
+    eligible = solver_success and finite and positivity_passed and conservation_passed and worst_wrms <= 1.0 and maximum <= 5.0
     return TrajectoryAccuracyResult(
         scaled_errors=tuple(scaled),
         aggregate_errors=ErrorMetrics(wrms=worst_wrms, maximum=maximum),

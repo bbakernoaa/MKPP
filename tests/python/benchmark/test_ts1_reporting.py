@@ -40,9 +40,7 @@ def test_ts1_report_requires_exactly_micm_and_mkpp() -> None:
     for missing_solver in ("micm", "mkpp"):
         report = _valid_ts1_report()
         report["required_solvers"].remove(missing_solver)
-        report["results"] = [
-            result for result in report["results"] if result["solver_id"] != missing_solver
-        ]
+        report["results"] = [result for result in report["results"] if result["solver_id"] != missing_solver]
         with pytest.raises(ValueError, match="TS1|MICM|MKPP|exactly|required"):
             _validate(report)
 
@@ -50,9 +48,7 @@ def test_ts1_report_requires_exactly_micm_and_mkpp() -> None:
 @pytest.mark.parametrize("placeholder", [None, "N/A", "unavailable", 0.0])
 def test_ts1_report_rejects_every_kpp_placeholder(placeholder: object) -> None:
     report = _valid_ts1_report()
-    report["results"].append(
-        {"solver_id": "kpp", "status": "absent", "throughput": placeholder}
-    )
+    report["results"].append({"solver_id": "kpp", "status": "absent", "throughput": placeholder})
 
     with pytest.raises(ValueError, match="TS1|KPP|placeholder|forbidden"):
         _validate(report)
