@@ -12248,7 +12248,7 @@ bindings:
     revision: 068891db5165344070729e94915507e3c2254767
     assets:
     - benchmarks/solver_comparison/sources/ts1/musica-config/ts1.json
-    - mkpp-generated/ts1.hpp
+    - mechanisms/openatmos/ts1/mechanism.json
     species_map:
       ALKNIT: ALKNIT
       BZOOH: BZOOH

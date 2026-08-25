@@ -1,0 +1,384 @@
+{
+  "description": "Minimal inorganic core subset of saprc99 mechanism for fast unit and integration testing",
+  "metadata": {
+    "legacy_source": "saprc99_mini.yaml",
+    "legacy_source_sha256": "fec7f39b0a865c16fae332c56c359663f9c39acf9453e825fe3fe0327fc358bd",
+    "migration": "legacy-mkpp-yaml-to-openatmos-v1",
+    "photolysis_host_forcing_expressions": {
+      "j_saprc99_mini.yaml_0000": "6.69e-1",
+      "j_saprc99_mini.yaml_0010": "1.27e-1",
+      "j_saprc99_mini.yaml_0011": "5.40e-5",
+      "j_saprc99_mini.yaml_0012": "5.64e-4"
+    }
+  },
+  "name": "saprc99_mini",
+  "phases": [
+    {
+      "name": "gas"
+    }
+  ],
+  "reactions": [
+    {
+      "gas phase": "gas",
+      "name": "j_saprc99_mini.yaml_0000",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "NO"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "O3P"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "NO2"
+        }
+      ],
+      "scaling factor": 1.0,
+      "type": "PHOTOLYSIS"
+    },
+    {
+      "A": "5.68e-34",
+      "B": "-2.80",
+      "C": 0.0,
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "O3"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "O3P"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "O2"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "AIR"
+        }
+      ],
+      "type": "ARRHENIUS"
+    },
+    {
+      "A": "8.00e-12",
+      "B": 0.0,
+      "C": "-2060.0",
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 2.0,
+          "species name": "O2"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "O3P"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "O3"
+        }
+      ],
+      "type": "ARRHENIUS"
+    },
+    {
+      "A": "1.80e-12",
+      "B": 0.0,
+      "C": "-1370.0",
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "NO2"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "O3"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "NO"
+        }
+      ],
+      "type": "ARRHENIUS"
+    },
+    {
+      "A": "1.40e-13",
+      "B": 0.0,
+      "C": "-2470.0",
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "NO3"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "O3"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "NO2"
+        }
+      ],
+      "type": "ARRHENIUS"
+    },
+    {
+      "A": "1.80e-11",
+      "B": 0.0,
+      "C": "110.0",
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 2.0,
+          "species name": "NO2"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "NO"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "NO3"
+        }
+      ],
+      "type": "ARRHENIUS"
+    },
+    {
+      "Fc": "0.45",
+      "gas phase": "gas",
+      "k0_A": "2.80e-30",
+      "k0_B": "0.0",
+      "k0_C": "3.5",
+      "kinf_A": "2.00e-12",
+      "kinf_B": "0.0",
+      "kinf_C": "-0.2",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "N2O5"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "NO2"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "NO3"
+        }
+      ],
+      "type": "TROE"
+    },
+    {
+      "Fc": "0.45",
+      "gas phase": "gas",
+      "k0_A": "1.e-3",
+      "k0_B": "11000.0",
+      "k0_C": "3.5",
+      "kinf_A": "9.7e+14",
+      "kinf_B": "11080.0",
+      "kinf_C": "-0.1",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "NO2"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "NO3"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "N2O5"
+        }
+      ],
+      "type": "TROE"
+    },
+    {
+      "A0": "7.20e-15",
+      "A2": "4.10e-16",
+      "A3": "1.90e-33",
+      "C0": "785.0",
+      "C2": "1440.0",
+      "C3": "725.0",
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "NO3"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "OH"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "HNO3"
+        }
+      ],
+      "type": "EP2"
+    },
+    {
+      "A1": "2.30e-13",
+      "A2": "1.70e-33",
+      "C1": "600.0",
+      "C2": "1000.0",
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "H2O2"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "O2"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "HO2"
+        }
+      ],
+      "type": "EP3"
+    },
+    {
+      "gas phase": "gas",
+      "name": "j_saprc99_mini.yaml_0010",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "OH"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "NO"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "HONO"
+        }
+      ],
+      "scaling factor": 1.0,
+      "type": "PHOTOLYSIS"
+    },
+    {
+      "gas phase": "gas",
+      "name": "j_saprc99_mini.yaml_0011",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "OH"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "NO2"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "HNO3"
+        }
+      ],
+      "scaling factor": 1.0,
+      "type": "PHOTOLYSIS"
+    },
+    {
+      "gas phase": "gas",
+      "name": "j_saprc99_mini.yaml_0012",
+      "products": [
+        {
+          "coefficient": 2.0,
+          "species name": "OH"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "H2O2"
+        }
+      ],
+      "scaling factor": 1.0,
+      "type": "PHOTOLYSIS"
+    }
+  ],
+  "species": [
+    {
+      "name": "O3"
+    },
+    {
+      "name": "H2O2"
+    },
+    {
+      "name": "NO"
+    },
+    {
+      "name": "NO2"
+    },
+    {
+      "name": "NO3"
+    },
+    {
+      "name": "N2O5"
+    },
+    {
+      "name": "HONO"
+    },
+    {
+      "name": "HNO3"
+    },
+    {
+      "name": "HNO4"
+    },
+    {
+      "name": "O3P"
+    },
+    {
+      "name": "OH"
+    },
+    {
+      "name": "HO2"
+    },
+    {
+      "name": "AIR"
+    },
+    {
+      "name": "O2"
+    },
+    {
+      "name": "H2O"
+    },
+    {
+      "name": "M",
+      "type": "FIXED"
+    },
+    {
+      "name": "N2",
+      "type": "FIXED"
+    }
+  ]
+}

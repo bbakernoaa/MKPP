@@ -1,0 +1,31 @@
+schema_version: 1
+mechanism_id: small-strato
+version: 1.0.0
+canonical_source:
+  - path: mechanisms/openatmos/small_strato/mechanism.json
+    revision: workspace-openatmos-v1
+    sha256: bc651fdf1261a3b5d0e7827f9f0245c71dea122c1582bebcbb2b85fdb13af5a8
+canonical_species:
+  - {id: O, role: active, phase: gas, unit: mol m-3, scale: 1.0e-9}
+  - {id: O1D, role: active, phase: gas, unit: mol m-3, scale: 1.0e-12}
+  - {id: O3, role: active, phase: gas, unit: mol m-3, scale: 1.0e-7}
+  - {id: 'NO', role: active, phase: gas, unit: mol m-3, scale: 1.0e-9}
+  - {id: NO2, role: active, phase: gas, unit: mol m-3, scale: 1.0e-9}
+  - {id: M, role: fixed, phase: gas, unit: mol m-3, scale: 40.0}
+  - {id: O2, role: fixed, phase: gas, unit: mol m-3, scale: 8.0}
+chemistry_sha256: bc651fdf1261a3b5d0e7827f9f0245c71dea122c1582bebcbb2b85fdb13af5a8
+photolysis_inputs:
+  - {id: SUN, unit: '1'}
+required_solvers: [micm, mkpp]
+bindings:
+  micm:
+    revision: workspace
+    assets: [benchmarks/solver_comparison/runners/micm/generated/small_strato.hpp]
+    species_map: {O: O, O1D: O1D, O3: O3, 'NO': 'NO', NO2: NO2, M: M, O2: O2}
+    photolysis_map: {SUN: SUN}
+  mkpp:
+    revision: workspace
+    assets: [mechanisms/openatmos/small_strato/mechanism.json]
+    species_map: {O: O, O1D: O1D, O3: O3, 'NO': 'NO', NO2: NO2, M: M, O2: O2}
+    photolysis_map: {SUN: SUN}
+admission_status: ineligible

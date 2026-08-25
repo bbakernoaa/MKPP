@@ -1,0 +1,787 @@
+{
+  "description": "GOCART mechanism focusing strictly on chemistry and phase-transfer kinetics.",
+  "metadata": {
+    "legacy_source": "gocart.yaml",
+    "legacy_source_sha256": "c56e24ab0a2c275897b0c4d64ff8bbd5c1eea5bb073bff582479f3e602951252",
+    "migration": "legacy-mkpp-yaml-to-openatmos-v1",
+    "mkpp_mechanism_id": "gocart",
+    "photolysis_host_forcing_expressions": {
+      "j_gocart.yaml_0006": "1e-05"
+    }
+  },
+  "name": "GOCART_Mechanism",
+  "phases": [
+    {
+      "name": "gas"
+    }
+  ],
+  "reactions": [
+    {
+      "A": 1.2e-11,
+      "C": -260.0,
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "SO2"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "DMS"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "OH"
+        }
+      ],
+      "type": "ARRHENIUS"
+    },
+    {
+      "A": 1.9e-13,
+      "C": -520.0,
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "SO2"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "DMS"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "NO3"
+        }
+      ],
+      "type": "ARRHENIUS"
+    },
+    {
+      "A": 3.3e-12,
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "SO4"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "SO2"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "OH"
+        }
+      ],
+      "type": "ARRHENIUS"
+    },
+    {
+      "activation_trigger": "meteo.cloud_liquid_water > 1.0e-6",
+      "gamma": 0.01,
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "SO4"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "SO2"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "H2O2"
+        }
+      ],
+      "type": "HETEROGENEOUS"
+    },
+    {
+      "A": 5e-06,
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "BC2"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "BC1"
+        }
+      ],
+      "type": "ARRHENIUS"
+    },
+    {
+      "A": 5e-06,
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "OC2"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "OC1"
+        }
+      ],
+      "type": "ARRHENIUS"
+    },
+    {
+      "gas phase": "gas",
+      "name": "j_gocart.yaml_0006",
+      "products": [
+        {
+          "coefficient": 2.0,
+          "species name": "OH"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "H2O2"
+        }
+      ],
+      "scaling factor": 1.0,
+      "type": "PHOTOLYSIS"
+    },
+    {
+      "gamma": 0.0001,
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "SO4"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "DUST1"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "SO2"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "DUST1"
+        }
+      ],
+      "type": "HETEROGENEOUS"
+    },
+    {
+      "gamma": 0.0001,
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "SO4"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "DUST2"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "SO2"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "DUST2"
+        }
+      ],
+      "type": "HETEROGENEOUS"
+    },
+    {
+      "gamma": 0.0001,
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "SO4"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "DUST3"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "SO2"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "DUST3"
+        }
+      ],
+      "type": "HETEROGENEOUS"
+    },
+    {
+      "gamma": 0.0001,
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "SO4"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "DUST4"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "SO2"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "DUST4"
+        }
+      ],
+      "type": "HETEROGENEOUS"
+    },
+    {
+      "gamma": 0.0001,
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "SO4"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "DUST5"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "SO2"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "DUST5"
+        }
+      ],
+      "type": "HETEROGENEOUS"
+    },
+    {
+      "gamma": 0.001,
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "SO4"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "SS1"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "SO2"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "SS1"
+        }
+      ],
+      "type": "HETEROGENEOUS"
+    },
+    {
+      "gamma": 0.001,
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "SO4"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "SS2"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "SO2"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "SS2"
+        }
+      ],
+      "type": "HETEROGENEOUS"
+    },
+    {
+      "gamma": 0.001,
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "SO4"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "SS3"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "SO2"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "SS3"
+        }
+      ],
+      "type": "HETEROGENEOUS"
+    },
+    {
+      "gamma": 0.001,
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "SO4"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "SS4"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "SO2"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "SS4"
+        }
+      ],
+      "type": "HETEROGENEOUS"
+    },
+    {
+      "gamma": 0.001,
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "SO4"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "SS5"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "SO2"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "SS5"
+        }
+      ],
+      "type": "HETEROGENEOUS"
+    },
+    {
+      "gamma": 0.1,
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "NO3an1"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "DUST1"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "HNO3"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "DUST1"
+        }
+      ],
+      "type": "HETEROGENEOUS"
+    },
+    {
+      "gamma": 0.1,
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "NO3an2"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "DUST2"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "HNO3"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "DUST2"
+        }
+      ],
+      "type": "HETEROGENEOUS"
+    },
+    {
+      "gamma": 0.1,
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "NO3an3"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "DUST3"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "HNO3"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "DUST3"
+        }
+      ],
+      "type": "HETEROGENEOUS"
+    },
+    {
+      "gamma": 0.1,
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "NO3an1"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "DUST4"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "HNO3"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "DUST4"
+        }
+      ],
+      "type": "HETEROGENEOUS"
+    },
+    {
+      "gamma": 0.1,
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "NO3an2"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "DUST5"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "HNO3"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "DUST5"
+        }
+      ],
+      "type": "HETEROGENEOUS"
+    },
+    {
+      "gamma": 0.1,
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "NO3an3"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "SS1"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "HNO3"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "SS1"
+        }
+      ],
+      "type": "HETEROGENEOUS"
+    },
+    {
+      "gamma": 0.1,
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "NO3an1"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "SS2"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "HNO3"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "SS2"
+        }
+      ],
+      "type": "HETEROGENEOUS"
+    },
+    {
+      "gamma": 0.1,
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "NO3an2"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "SS3"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "HNO3"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "SS3"
+        }
+      ],
+      "type": "HETEROGENEOUS"
+    },
+    {
+      "gamma": 0.1,
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "NO3an3"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "SS4"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "HNO3"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "SS4"
+        }
+      ],
+      "type": "HETEROGENEOUS"
+    },
+    {
+      "gamma": 0.1,
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "NO3an1"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "SS5"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "HNO3"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "SS5"
+        }
+      ],
+      "type": "HETEROGENEOUS"
+    },
+    {
+      "equilibrium_constants": {
+        "Kp_NH42SO4": {
+          "A": 1.817e-25,
+          "Tref": 298.15,
+          "dH": -160000.0
+        },
+        "Kp_NH4HSO4": {
+          "A": 0.01086,
+          "Tref": 298.15,
+          "dH": -40000.0
+        },
+        "Kp_NH4NO3": {
+          "A": 4.39e-17,
+          "Tref": 298.15,
+          "dH": -74735.0
+        }
+      },
+      "gas phase": "gas",
+      "products": [],
+      "reactants": [],
+      "regime_blending": "sigmoid",
+      "system": "NH4_NO3_SO4",
+      "total_species": {
+        "oxidized_nitrogen": {
+          "aerosol": [
+            "NO3an1",
+            "NO3an2",
+            "NO3an3"
+          ],
+          "gas": "HNO3"
+        },
+        "reduced_nitrogen": {
+          "aerosol": [
+            "NH4a"
+          ],
+          "gas": "NH3"
+        },
+        "sulfate": {
+          "aerosol": [
+            "SO4"
+          ],
+          "gas": "SO2"
+        }
+      },
+      "transition_width": 0.05,
+      "type": "EQUILIBRIUM"
+    }
+  ],
+  "species": [
+    {
+      "name": "OH"
+    },
+    {
+      "name": "NO3"
+    },
+    {
+      "name": "H2O2"
+    },
+    {
+      "name": "DMS"
+    },
+    {
+      "name": "SO2"
+    },
+    {
+      "name": "SO4"
+    },
+    {
+      "name": "BC1"
+    },
+    {
+      "name": "BC2"
+    },
+    {
+      "name": "OC1"
+    },
+    {
+      "name": "OC2"
+    },
+    {
+      "name": "DUST1"
+    },
+    {
+      "name": "DUST2"
+    },
+    {
+      "name": "DUST3"
+    },
+    {
+      "name": "DUST4"
+    },
+    {
+      "name": "DUST5"
+    },
+    {
+      "name": "SS1"
+    },
+    {
+      "name": "SS2"
+    },
+    {
+      "name": "SS3"
+    },
+    {
+      "name": "SS4"
+    },
+    {
+      "name": "SS5"
+    },
+    {
+      "name": "HNO3"
+    },
+    {
+      "name": "NH3"
+    },
+    {
+      "name": "NH4a"
+    },
+    {
+      "name": "NO3an1"
+    },
+    {
+      "name": "NO3an2"
+    },
+    {
+      "name": "NO3an3"
+    }
+  ]
+}

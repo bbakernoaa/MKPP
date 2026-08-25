@@ -13,10 +13,11 @@ from mkpp.benchmark.accuracy import TrajectoryAccuracyResult
 from mkpp.benchmark.adapters.base import AdapterProtocol, PreparedAdapterRun
 from mkpp.benchmark.admission import ChemistryAssessment
 from mkpp.benchmark.calibration import FrozenConfiguration
-from mkpp.benchmark.models import RunStatus, SolverId, SolverRun
+from mkpp.benchmark.models import CampaignStatus, RunStatus, SolverId, SolverRun
 from mkpp.benchmark.reference import ReferenceAttemptsResult
 from mkpp.benchmark.report import validate_ts1_report
 from mkpp.benchmark.schema import SchemaValidationError, validate_runner_result
+from mkpp.benchmark.statistics import assess_repeatability
 
 
 class NativeRunnerError(RuntimeError):
@@ -50,6 +51,61 @@ class Ts1FlowResult:
 
     scientific: ChapmanFlowResult
     report: Mapping[str, Any]
+
+
+_CAMPAIGN_TRANSITIONS = {
+    CampaignStatus.CONFIGURED: CampaignStatus.PREFLIGHT_PASSED,
+    CampaignStatus.PREFLIGHT_PASSED: CampaignStatus.ADMITTED,
+    CampaignStatus.ADMITTED: CampaignStatus.REFERENCE_QUALIFIED,
+    CampaignStatus.REFERENCE_QUALIFIED: CampaignStatus.CALIBRATED,
+    CampaignStatus.CALIBRATED: CampaignStatus.MEASURING,
+    CampaignStatus.MEASURING: CampaignStatus.ASSESSED,
+    CampaignStatus.ASSESSED: CampaignStatus.REVIEWED,
+    CampaignStatus.REVIEWED: CampaignStatus.PUBLISHED,
+}
+
+
+def advance_campaign_status(current: CampaignStatus, target: CampaignStatus | None = None) -> CampaignStatus:
+    """Advance one constitutional campaign gate; skipped gates are invalid evidence."""
+
+    expected = _CAMPAIGN_TRANSITIONS.get(current)
+    if expected is None:
+        raise ValueError(f"campaign cannot transition from terminal status {current.value}")
+    if target is not None and target is not expected:
+        raise ValueError(f"campaign cannot transition from {current.value} to {target.value}")
+    return expected
+
+
+def require_comparable_pairs(
+    baseline_runs: tuple[SolverRun, ...],
+    candidate_runs: tuple[SolverRun, ...],
+    *,
+    primary_cpu: bool = False,
+) -> tuple[int, ...]:
+    """Validate the immutable matching evidence required for a paired ratio."""
+
+    if not baseline_runs or not candidate_runs:
+        raise ValueError("paired comparison requires retained runs from both solvers")
+    baseline_by_block = {run.block_id: run for run in baseline_runs}
+    candidate_by_block = {run.block_id: run for run in candidate_runs}
+    if set(baseline_by_block) != set(candidate_by_block):
+        raise ValueError("paired comparison requires identical retained block IDs")
+    for block_id in sorted(baseline_by_block):
+        baseline = baseline_by_block[block_id]
+        candidate = candidate_by_block[block_id]
+        if baseline.status is not RunStatus.SUCCESS or candidate.status is not RunStatus.SUCCESS:
+            raise ValueError("failed or invalid runs cannot enter a paired ratio")
+        if baseline.matching_key_sha256 != candidate.matching_key_sha256:
+            raise ValueError("paired runs have different matching key")
+        if baseline.resources != candidate.resources:
+            raise ValueError("paired runs have different resources")
+        if baseline.timing_boundary is not candidate.timing_boundary:
+            raise ValueError("paired runs have different timing boundary")
+        if baseline.common_work_count != candidate.common_work_count:
+            raise ValueError("paired runs have different common work count")
+        if primary_cpu and (baseline.resources.physical_cores != 1 or baseline.resources.threads != 1):
+            raise ValueError("primary CPU comparisons require one physical core and one thread")
+    return tuple(sorted(baseline_by_block))
 
 
 def require_requested_solvers(
@@ -239,8 +295,11 @@ __all__ = [
     "ChapmanFlowResult",
     "NativeRunnerError",
     "Ts1FlowResult",
+    "advance_campaign_status",
     "assess_chapman_flow",
     "assess_ts1_flow",
     "invoke_json_runner",
     "require_requested_solvers",
+    "require_comparable_pairs",
+    "assess_repeatability",
 ]

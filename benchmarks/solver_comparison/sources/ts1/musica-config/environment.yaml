@@ -1,0 +1,15 @@
+environment:
+  # These are the ENV values from the pinned TS1 initial_conditions.csv.
+  # MKPP compiles Arrhenius expressions at this fixed reference state so the
+  # generated rate constants match MICM's Conditions for this benchmark.
+  temperature: 287.45
+  pressure: 101319.9
+  air_density: 42.393400541636808
+  relative_humidity: 0.5
+solver:
+  # Strict controls are shared by the TS1 MICM and MKPP equivalence path.
+  # They are deliberately separate from atmospheric state because a host
+  # chooses numerical accuracy independently of chemistry inputs.
+  atol: 1.0e-12
+  rtol: 1.0e-8
+  max_steps: 100000

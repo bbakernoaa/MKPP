@@ -30,7 +30,7 @@ micm_importer:
   revision: 97ac9e5d8aadd345c242722ee8274d71dfe0f73e
   upstream_path: test/benchmark/import_ts1.py
   vendored_path: benchmarks/solver_comparison/sources/ts1/micm-importer/import_ts1.py
-  sha256: a45b228baf518dde6d0e2112fbb24ffd69f1e670babf6b8c8ecbb5114d0cb015
+  sha256: 4336fb7734db53069a3e515253f7a993c1099817ebc06bbb26d095ab63e57fd7
 generation:
   source_directory: benchmarks/solver_comparison/sources/ts1/musica-config
   importer: benchmarks/solver_comparison/sources/ts1/micm-importer/import_ts1.py

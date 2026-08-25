@@ -54,7 +54,15 @@ def _strength_reduce_squares(code: str) -> str:
     return code
 
 
-def format_eqn(eqn_str, species_list, state_var="state", use_parentheses=True, keep_env_symbols=False):
+def format_eqn(
+    eqn_str,
+    species_list,
+    state_var="state",
+    use_parentheses=True,
+    keep_env_symbols=False,
+    temperature: float = 300.0,
+    air_density: float = 2.4476e19,
+):
     """Convert a symbolic ODE expression string into a C++ code string.
 
     Parameters
@@ -106,7 +114,10 @@ def format_eqn(eqn_str, species_list, state_var="state", use_parentheses=True, k
             sp.Symbol("C_FixedCl"): 1.0,
             sp.Symbol("S_a"): 1.0,
             sp.Symbol("v_gas"): 1.0,
-            sp.Symbol("M_density"): 2.4476e19,
+            # M_density is used only when a mechanism has no explicit AIR or
+            # M species. It must come from the supplied compilation
+            # environment, never from a unit-specific legacy constant.
+            sp.Symbol("M_density"): air_density,
         }
 
         # When keep_env_symbols is False (default), substitute environmental
@@ -116,9 +127,9 @@ def format_eqn(eqn_str, species_list, state_var="state", use_parentheses=True, k
         if not keep_env_symbols:
             # Environmental parameters (not species concentrations)
             # NOTE: SUN is NOT substituted — photolysis rates are runtime J-values from Cloud-J
-            subs_dict[sp.Symbol("TEMP")] = 300.0
-            subs_dict[sp.Symbol("temp")] = 300.0
-            subs_dict[sp.Symbol("Temp")] = 300.0
+            subs_dict[sp.Symbol("TEMP")] = temperature
+            subs_dict[sp.Symbol("temp")] = temperature
+            subs_dict[sp.Symbol("Temp")] = temperature
 
         expr = expr.subs(subs_dict)
         s = sp.ccode(expr)
@@ -127,7 +138,7 @@ def format_eqn(eqn_str, species_list, state_var="state", use_parentheses=True, k
         # Fallback to regex if sympy fails
         s = re.sub(r"([a-zA-Z0-9_\(\)\.\+\-\*\/]+)\*\*(\-?\d+\.\d+|\-?\d+)", r"pow(\1, \2)", s)
         if not keep_env_symbols:
-            s = s.replace("Temp", "300.0")
+            s = s.replace("Temp", str(temperature))
         s = s.replace("S_a", "1.0")
         s = s.replace("v_gas", "1.0")
         s = _fold_numeric_falloff_powers(s)

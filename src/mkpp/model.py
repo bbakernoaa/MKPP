@@ -163,6 +163,8 @@ class EnvironmentDefinition:
     pressure: float = 101325.0
     air_density: float = 2.46e19
     relative_humidity: float = 0.5
+    solver_atol: float | None = None
+    solver_rtol: float | None = None
     initial_concentrations: dict[str, float] = field(default_factory=dict)
 
 

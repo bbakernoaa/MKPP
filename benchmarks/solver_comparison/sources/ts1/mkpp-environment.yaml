@@ -1,0 +1,7 @@
+# Pinned TS1 thermodynamic state used by the MICM importer and benchmark runner.
+# Values are in the same molar units consumed by MKPP lowering.
+environment:
+  temperature: 287.45
+  pressure: 101319.9
+  air_density: 42.39340054163681
+  relative_humidity: 0.5

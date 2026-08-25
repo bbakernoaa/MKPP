@@ -30,10 +30,6 @@
 
   Requirements: 4.1
 #}
-{% from "macros/w_matrix.j2" import emit_w_matrix %}
-{% from "macros/lu_factorize.j2" import emit_lu_factorize %}
-{% from "macros/lu_solve_forward.j2" import emit_forward_sub %}
-{% from "macros/lu_solve_backward.j2" import emit_backward_sub %}
       /**
        * @brief Performs adaptive time-stepping Rosenbrock integration over dt_total.
        *
@@ -77,28 +73,38 @@
 {% for info in state_hoist_info %}
           const double S_{{ info.reg_idx }} = state(Species::{{ info.name }});  // [{{ info.name }}]
 {% endfor %}
-{% if rate_flux_cse_hoist %}
-
-          // --- CSE Temporaries ---
-{% for cse in rate_flux_cse_hoist %}
-          const double {{ cse.symbol }} = {{ cse.expr }};
+          // The expression-dense Jacobian is evaluated by bounded compiled
+          // units.  The solver still uses the same symbolic sparse LU plan.
+          double J_values[NUM_SPECIES * NUM_SPECIES] = {};
+{% for chunk in compiled_jacobian_chunks %}
+          detail::{{ mechanism_name }}::compute_jacobian_chunk_{{ loop.index0 }}(state.data(), J_values, jvals, {% if has_equilibrium %}temp, rh{% else %}0.0, 0.0{% endif %});
 {% endfor %}
-{% endif %}
-{% if rate_flux_exprs_hoist %}
-
-          // --- Reaction Rate Fluxes R_m ---
-{% for r in rate_flux_exprs_hoist %}
-          const double R_{{ r.index }} = {{ r.expr }};
-{% endfor %}
-{% endif %}
-
           // Analytical Jacobian & Iteration Matrix W = inv_g_dt*I - J (sparse)
 {% for entry in jacobian_entries %}
-          double J_{{ entry[0] }}_{{ entry[1] }} = {{ entry[2] }};
+{% if permutation %}
+          double J_{{ entry[0] }}_{{ entry[1] }} = J_values[{{ permutation[entry[0]] }} * NUM_SPECIES + {{ permutation[entry[1]] }}];
+{% else %}
+          double J_{{ entry[0] }}_{{ entry[1] }} = J_values[{{ entry[0] }} * NUM_SPECIES + {{ entry[1] }}];
+{% endif %}
 {% endfor %}
-{{ emit_w_matrix(needed_w, non_zero_jac_set, "inv_g_dt", num_species, is_reduction=false, blocks=none, indent="          ") }}
-          // Symbolic Doolittle Sparse LU Factorization
-{{ emit_lu_factorize(lu_expressions, blocks=blocks, is_reduction=false, indent="          ") }}
+          double W_values[NUM_SPECIES * NUM_SPECIES] = {};
+{% for entry in needed_w %}
+{% set i = entry[0] %}
+{% set j = entry[1] %}
+{% if i == j %}
+{% if (i, j) in non_zero_jac_set %}
+          W_values[{{ i }} * NUM_SPECIES + {{ j }}] = inv_g_dt - J_{{ i }}_{{ j }};
+{% else %}
+          W_values[{{ i }} * NUM_SPECIES + {{ j }}] = inv_g_dt;
+{% endif %}
+{% elif (i, j) in non_zero_jac_set %}
+          W_values[{{ i }} * NUM_SPECIES + {{ j }}] = -J_{{ i }}_{{ j }};
+{% endif %}
+{% endfor %}
+          double LU_values[NUM_SPECIES * NUM_SPECIES] = {};
+{% for chunk in compiled_lu_chunks %}
+          detail::{{ mechanism_name }}::factorize_lu_chunk_{{ loop.index0 }}(W_values, LU_values);
+{% endfor %}
 {% set ns = namespace(current_F_prefix="", rhs_prefix="") %}
 {% for stage in range(1, tableau.stages + 1) %}
 
@@ -135,14 +141,43 @@
 {% if stage == 1 %}
           // Rate evaluation F{{ stage }} at S
 {% for i in range(num_species) %}
-          double F{{ stage }}_{{ i }} = {{ f_exprs[i] }};
+{% if loop.first %}
+          double F_values_{{ stage }}[NUM_SPECIES];
+{% for chunk in compiled_rate_chunks %}
+          detail::{{ mechanism_name }}::compute_rates_chunk_{{ loop.index0 }}(state.data(), F_values_{{ stage }}, jvals, {% if has_equilibrium %}temp, rh{% else %}0.0, 0.0{% endif %});
+{% endfor %}
+{% endif %}
+{% if permutation %}
+          double F{{ stage }}_{{ i }} = F_values_{{ stage }}[{{ permutation[i] }}];
+{% else %}
+          double F{{ stage }}_{{ i }} = F_values_{{ stage }}[{{ i }}];
+{% endif %}
 {% endfor %}
 {% set ns.current_F_prefix = "F" ~ stage %}
 {% else %}
           // Rate evaluation F{{ stage }} at Y{{ stage }}
 {% for i in range(num_species) %}
-{% set stage_expr = f_exprs[i] | replace("S_", "Y" ~ stage ~ "_") %}
-          double F{{ stage }}_{{ i }} = {{ stage_expr }};
+{% if loop.first %}
+          double stage_state_{{ stage }}[NUM_SPECIES];
+{% endif %}
+{% if permutation %}
+          stage_state_{{ stage }}[{{ permutation[i] }}] = Y{{ stage }}_{{ i }};
+{% else %}
+          stage_state_{{ stage }}[{{ i }}] = Y{{ stage }}_{{ i }};
+{% endif %}
+{% if loop.last %}
+          double F_values_{{ stage }}[NUM_SPECIES];
+{% for chunk in compiled_rate_chunks %}
+          detail::{{ mechanism_name }}::compute_rates_chunk_{{ loop.index0 }}(stage_state_{{ stage }}, F_values_{{ stage }}, jvals, {% if has_equilibrium %}temp, rh{% else %}0.0, 0.0{% endif %});
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% for i in range(num_species) %}
+{% if permutation %}
+          double F{{ stage }}_{{ i }} = F_values_{{ stage }}[{{ permutation[i] }}];
+{% else %}
+          double F{{ stage }}_{{ i }} = F_values_{{ stage }}[{{ i }}];
+{% endif %}
 {% endfor %}
 {% set ns.current_F_prefix = "F" ~ stage %}
 {% endif %}
@@ -174,8 +209,15 @@
 {% endfor %}
 {% set ns.rhs_prefix = "rhs" ~ stage %}
 {% endif %}
-{{ emit_forward_sub(forward_sub_steps, ns.rhs_prefix, "y" ~ stage, blocks=blocks, is_reduction=false, indent="          ", k_prefix="K" ~ stage) -}}
-{{ emit_backward_sub(backward_sub_steps, "y" ~ stage, "K" ~ stage, blocks=blocks, is_reduction=false, indent="          ") -}}
+          double rhs_values_{{ stage }}[NUM_SPECIES];
+{% for i in range(num_species) %}
+          rhs_values_{{ stage }}[{{ i }}] = {{ ns.rhs_prefix }}_{{ i }};
+{% endfor %}
+          double K_values_{{ stage }}[NUM_SPECIES];
+          detail::{{ mechanism_name }}::solve_lu(LU_values, rhs_values_{{ stage }}, K_values_{{ stage }});
+{% for i in range(num_species) %}
+          double K{{ stage }}_{{ i }} = K_values_{{ stage }}[{{ i }}];
+{% endfor %}
 {% endfor %}
 
           // --- Solution update and error estimation ---

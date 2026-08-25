@@ -4,10 +4,26 @@ from __future__ import annotations
 
 import math
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from typing import Any
 
 from mkpp.benchmark.schema import SchemaValidationError
 from mkpp.benchmark.schema import validate_scenario as validate_scenario_schema
+
+
+@dataclass(frozen=True, slots=True)
+class ForcingSegment:
+    """One left-closed, right-open constant-forcing integration interval.
+
+    The scenario contract represents a discontinuous forcing schedule: a point
+    at a forcing boundary supplies the value for the following interval.  This
+    compact representation is the only form native benchmark runners receive,
+    preventing per-runner YAML parsing or mechanism-specific defaults.
+    """
+
+    start_seconds: float
+    end_seconds: float
+    values: Mapping[str, float]
 
 
 def _require_text(value: Any, location: str) -> str:
@@ -71,6 +87,48 @@ def _validate_forcing(forcing: Any, start: float, end: float) -> None:
             times.append(time)
         if times != sorted(set(times)):
             raise SchemaValidationError(f"{location}.points: times must be strictly increasing and unique")
+
+
+def forcing_segments(document: Mapping[str, Any]) -> tuple[ForcingSegment, ...]:
+    """Materialize the canonical piecewise-constant forcing schedule.
+
+    This deliberately operates on validated OpenAtmos/MICM-format scenario
+    data. Constants are copied to every segment; point values apply from their
+    declared time up to the next forcing boundary.  A scenario that omits a
+    forcing value at a required boundary is rejected rather than silently
+    interpolated differently by each solver.
+    """
+
+    scenario = validate_scenario(document)
+    integration = scenario["integration"]
+    start = float(integration["start_seconds"])
+    end = start + float(integration["horizon_seconds"])
+    boundaries = tuple(sorted(set((start, *integration["forcing_boundaries_seconds"], end))))
+    if boundaries[0] != start or boundaries[-1] != end:
+        raise SchemaValidationError("forcing boundaries must include integration start and end")
+
+    values_by_name: dict[str, dict[float, float]] = {}
+    constants: dict[str, float] = {}
+    for name, definition in scenario["forcing"].items():
+        if "constant" in definition:
+            constants[name] = float(definition["constant"])
+        else:
+            values_by_name[name] = {
+                float(point["time_seconds"]): float(point["value"])
+                for point in definition["points"]
+            }
+
+    segments: list[ForcingSegment] = []
+    for segment_start, segment_end in zip(boundaries[:-1], boundaries[1:], strict=True):
+        values = dict(constants)
+        for name, points in values_by_name.items():
+            if segment_start not in points:
+                raise SchemaValidationError(
+                    f"forcing.{name}: missing value at forcing boundary {segment_start:g}"
+                )
+            values[name] = points[segment_start]
+        segments.append(ForcingSegment(float(segment_start), float(segment_end), values))
+    return tuple(segments)
 
 
 def _validate_time_axis(document: Mapping[str, Any]) -> tuple[float, float]:

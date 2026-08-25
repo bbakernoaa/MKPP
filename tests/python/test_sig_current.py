@@ -1,6 +1,10 @@
-import yaml
+import json
 
-d = yaml.safe_load(open("mechanisms/saprc99.yaml"))
+d = json.load(open("mechanisms/openatmos/saprc99/mechanism.json"))
+
+for reaction in d["reactions"]:
+    for side in ("reactants", "products"):
+        reaction[side] = {term["species name"]: term.get("coefficient", 1.0) for term in reaction.get(side, [])}
 
 surrogates = {"ALK_SURR", "ARO_SURR", "OLE_SURR", "TERP_SURR"}
 

@@ -25,27 +25,13 @@
       template <class StateView, class JacView>
 {% if has_equilibrium %}
       KOKKOS_INLINE_FUNCTION void compute_jacobian(const StateView& state, JacView& J_block, const double* jvals, const double temp, const double rh) const {
-          const double Temp = temp;
-          const double RH = rh;
-          (void)RH;  // Reserved for future deliquescence modeling
+{% for chunk in compiled_jacobian_chunks %}
+          detail::{{ mechanism_name }}::compute_jacobian_chunk_{{ loop.index0 }}(state.data(), J_block.data(), jvals, temp, rh);
+{% endfor %}
 {% else %}
       KOKKOS_INLINE_FUNCTION void compute_jacobian(const StateView& state, JacView& J_block, const double* jvals) const {
-{% endif %}
-{% if rate_flux_cse %}
-          // --- CSE Temporaries ---
-{% for cse in rate_flux_cse %}
-          const double {{ cse.symbol }} = {{ cse.expr }};
+{% for chunk in compiled_jacobian_chunks %}
+          detail::{{ mechanism_name }}::compute_jacobian_chunk_{{ loop.index0 }}(state.data(), J_block.data(), jvals, 0.0, 0.0);
 {% endfor %}
 {% endif %}
-{% if rate_flux_exprs %}
-          // --- Reaction Rate Fluxes R_m ---
-{% for r in rate_flux_exprs %}
-          const double R_{{ r.index }} = {{ r.expr }};
-{% endfor %}
-{% endif %}
-          // --- Sparse Analytical Jacobian Entries J_block(i, j) ---
-{% for entry in jacobian_entries_state %}
-          // J({{ species[entry[0]].name }}, {{ species[entry[1]].name }}): d(d[{{ species[entry[0]].name }}]/dt) / d[{{ species[entry[1]].name }}]
-          J_block(Species::{{ species[entry[0]].name }}, Species::{{ species[entry[1]].name }}) = {{ entry[2] }};
-{% endfor %}
       }

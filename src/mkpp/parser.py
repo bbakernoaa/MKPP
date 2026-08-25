@@ -95,7 +95,11 @@ def parse_mechanism_micm(
         phase = PhaseMode.GAS
         sp_type = str(s.get("type", "")).lower()
         sp_role = str(s.get("role", "")).lower()
-        if sp_name in ("AIR", "O2", "H2O", "H2", "CH4", "M", "N2", "RO2") or sp_type == "fixed" or sp_role == "fixed":
+        # Only explicit OpenAtmos fixed roles and the conventional third-body
+        # placeholders are non-evolving. Atmospheric species such as O2 and
+        # H2O may look like background constituents, but TS1/MICM evolves them
+        # and their tendency must therefore be part of the same ODE system.
+        if sp_name in ("AIR", "M") or sp_type == "fixed" or sp_role == "fixed":
             role = "fixed"
         else:
             role = "variable"
@@ -199,8 +203,19 @@ def parse_mechanism_micm(
             # EQUILIBRIUM is not a kinetic reaction — do NOT add to reactions list
             continue
 
-        reactants = _normalize_species_dict(r.get("reactants", {}))
-        products = _normalize_species_dict(r.get("products", {}))
+        # OpenAtmos surface uptake reactions encode their gas-phase side with
+        # dedicated fields rather than the ordinary reactants/products maps.
+        # Normalize them into the common representation so downstream
+        # symbolic lowering applies both the concentration dependence and the
+        # product stoichiometry.  This is format-level behaviour, not a
+        # mechanism-specific convention.
+        if rtype.upper() == "SURFACE":
+            gas_species = r.get("gas-phase species")
+            reactants = {str(gas_species): 1.0} if gas_species else {}
+            products = _normalize_species_dict(r.get("gas-phase products", {}))
+        else:
+            reactants = _normalize_species_dict(r.get("reactants", {}))
+            products = _normalize_species_dict(r.get("products", {}))
 
         # Extract all potential rate parameters instead of just A
         # For MICM compliance, parameters can include k0, kinf, Fc, gamma, etc.
@@ -316,9 +331,16 @@ def load_mechanism(path: str | Path) -> MechanismDefinition:
             yaml_location=str(p),
         )
 
-    return parse_mechanism_micm(
-        p.stem, data, convert_openatmos_activation_energy=detect_config_format(p) == "json"
-    )
+    # OpenAtmos/MUSICA and MICM both store Arrhenius activation terms in the
+    # signed exp(C / T) convention.  Preserve the source value verbatim.
+    # OpenAtmos catalog entries are conventionally named ``mechanism.json``.
+    # The source document name describes the chemistry; an optional catalog
+    # mechanism ID provides the stable host-facing artifact name.  This keeps
+    # generated include paths stable without deriving identity from the shared
+    # file stem.
+    metadata = data.get("metadata", {})
+    mechanism_id = metadata.get("mkpp_mechanism_id") if isinstance(metadata, dict) else None
+    return parse_mechanism_micm(str(mechanism_id or data.get("name", p.stem)), data)
 
 
 def load_environment(path: str | Path) -> EnvironmentDefinition:
@@ -363,6 +385,11 @@ def load_environment(path: str | Path) -> EnvironmentDefinition:
     press = float(env_block.get("pressure", env_block.get("P", 101325.0)))
     air_dens = float(env_block.get("air_density", env_block.get("M", 2.46e19)))
     rh = float(env_block.get("relative_humidity", env_block.get("RH", 0.5)))
+    solver_block = data.get("solver", {})
+    if not isinstance(solver_block, dict):
+        solver_block = {}
+    solver_atol = solver_block.get("atol")
+    solver_rtol = solver_block.get("rtol")
 
     init_conc = data.get("initial_concentrations", data.get("initial_conditions", data.get("concentrations", {})))
     if not isinstance(init_conc, dict):
@@ -375,5 +402,7 @@ def load_environment(path: str | Path) -> EnvironmentDefinition:
         pressure=press,
         air_density=air_dens,
         relative_humidity=rh,
+        solver_atol=float(solver_atol) if solver_atol is not None else None,
+        solver_rtol=float(solver_rtol) if solver_rtol is not None else None,
         initial_concentrations=normalized_init,
     )

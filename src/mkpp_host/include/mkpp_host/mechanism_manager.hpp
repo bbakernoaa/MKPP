@@ -25,28 +25,28 @@ class MechanismRegistry {
 public:
     static std::vector<std::string> get_registered_mechanisms() {
         std::vector<std::string> list;
-#if __has_include("chapman.hpp")
+#if (!defined(MKPP_HOST_SELECTED_MECHANISMS) || defined(MKPP_HOST_MECH_CHAPMAN)) && __has_include("chapman.hpp")
         list.push_back("chapman");
 #endif
-#if __has_include("gocart.hpp")
+#if (!defined(MKPP_HOST_SELECTED_MECHANISMS) || defined(MKPP_HOST_MECH_GOCART)) && __has_include("gocart.hpp")
         list.push_back("gocart");
 #endif
-#if __has_include("saprc99.hpp")
+#if (!defined(MKPP_HOST_SELECTED_MECHANISMS) || defined(MKPP_HOST_MECH_SAPRC99)) && __has_include("saprc99.hpp")
         list.push_back("saprc99");
 #endif
-#if __has_include("ts1.hpp")
+#if (!defined(MKPP_HOST_SELECTED_MECHANISMS) || defined(MKPP_HOST_MECH_TS1)) && __has_include("ts1.hpp")
         list.push_back("ts1");
 #endif
-#if __has_include("carbon.hpp")
+#if (!defined(MKPP_HOST_SELECTED_MECHANISMS) || defined(MKPP_HOST_MECH_CARBON)) && __has_include("carbon.hpp")
         list.push_back("carbon");
 #endif
-#if __has_include("small_strato.hpp")
+#if (!defined(MKPP_HOST_SELECTED_MECHANISMS) || defined(MKPP_HOST_MECH_SMALL_STRATO)) && __has_include("small_strato.hpp")
         list.push_back("small_strato");
 #endif
-#if __has_include("saprcnov.hpp")
+#if (!defined(MKPP_HOST_SELECTED_MECHANISMS) || defined(MKPP_HOST_MECH_SAPRCNOV)) && __has_include("saprcnov.hpp")
         list.push_back("saprcnov");
 #endif
-#if __has_include("saprc99_mini.hpp")
+#if (!defined(MKPP_HOST_SELECTED_MECHANISMS) || defined(MKPP_HOST_MECH_SAPRC99_MINI)) && __has_include("saprc99_mini.hpp")
         list.push_back("saprc99_mini");
 #endif
         return list;
@@ -61,42 +61,42 @@ public:
     }
 
     static MechanismInfo get_info(const std::string& name) {
-#if __has_include("chapman.hpp")
+#if (!defined(MKPP_HOST_SELECTED_MECHANISMS) || defined(MKPP_HOST_MECH_CHAPMAN)) && __has_include("chapman.hpp")
         if (name == "chapman") {
             return {"chapman", mech_chapman::mkpp::SolverKernels<Kokkos::DefaultExecutionSpace>::NUM_SPECIES, 0, false};
         }
 #endif
-#if __has_include("gocart.hpp")
+#if (!defined(MKPP_HOST_SELECTED_MECHANISMS) || defined(MKPP_HOST_MECH_GOCART)) && __has_include("gocart.hpp")
         if (name == "gocart") {
             return {"gocart", mech_gocart::mkpp::SolverKernels<Kokkos::DefaultExecutionSpace>::NUM_SPECIES, 0, true};
         }
 #endif
-#if __has_include("saprc99.hpp")
+#if (!defined(MKPP_HOST_SELECTED_MECHANISMS) || defined(MKPP_HOST_MECH_SAPRC99)) && __has_include("saprc99.hpp")
         if (name == "saprc99") {
             return {"saprc99", mech_saprc99::mkpp::SolverKernels<Kokkos::DefaultExecutionSpace>::NUM_SPECIES, 0, false};
         }
 #endif
-#if __has_include("ts1.hpp")
+#if (!defined(MKPP_HOST_SELECTED_MECHANISMS) || defined(MKPP_HOST_MECH_TS1)) && __has_include("ts1.hpp")
         if (name == "ts1") {
             return {"ts1", mech_ts1::mkpp::SolverKernels<Kokkos::DefaultExecutionSpace>::NUM_SPECIES, 0, false};
         }
 #endif
-#if __has_include("carbon.hpp")
+#if (!defined(MKPP_HOST_SELECTED_MECHANISMS) || defined(MKPP_HOST_MECH_CARBON)) && __has_include("carbon.hpp")
         if (name == "carbon") {
             return {"carbon", mech_carbon::mkpp::SolverKernels<Kokkos::DefaultExecutionSpace>::NUM_SPECIES, 0, false};
         }
 #endif
-#if __has_include("small_strato.hpp")
+#if (!defined(MKPP_HOST_SELECTED_MECHANISMS) || defined(MKPP_HOST_MECH_SMALL_STRATO)) && __has_include("small_strato.hpp")
         if (name == "small_strato") {
             return {"small_strato", mech_small_strato::mkpp::SolverKernels<Kokkos::DefaultExecutionSpace>::NUM_SPECIES, 0, false};
         }
 #endif
-#if __has_include("saprcnov.hpp")
+#if (!defined(MKPP_HOST_SELECTED_MECHANISMS) || defined(MKPP_HOST_MECH_SAPRCNOV)) && __has_include("saprcnov.hpp")
         if (name == "saprcnov") {
             return {"saprcnov", mech_saprcnov::mkpp::SolverKernels<Kokkos::DefaultExecutionSpace>::NUM_SPECIES, 0, false};
         }
 #endif
-#if __has_include("saprc99_mini.hpp")
+#if (!defined(MKPP_HOST_SELECTED_MECHANISMS) || defined(MKPP_HOST_MECH_SAPRC99_MINI)) && __has_include("saprc99_mini.hpp")
         if (name == "saprc99_mini") {
             return {"saprc99_mini", mech_saprc99_mini::mkpp::SolverKernels<Kokkos::DefaultExecutionSpace>::NUM_SPECIES, 0, false};
         }
@@ -115,7 +115,7 @@ public:
         using ExecSpace = Kokkos::DefaultExecutionSpace;
         const int num_cells = static_cast<int>(state.extent(0));
 
-#if __has_include("chapman.hpp")
+#if (!defined(MKPP_HOST_SELECTED_MECHANISMS) || defined(MKPP_HOST_MECH_CHAPMAN)) && __has_include("chapman.hpp")
         if (name == "chapman") {
             using SolverType = mech_chapman::mkpp::SolverKernels<ExecSpace>;
             Kokkos::parallel_for("MKPP_Dispatch_chapman",
@@ -125,7 +125,7 @@ public:
             return;
         }
 #endif
-#if __has_include("gocart.hpp")
+#if (!defined(MKPP_HOST_SELECTED_MECHANISMS) || defined(MKPP_HOST_MECH_GOCART)) && __has_include("gocart.hpp")
         if (name == "gocart") {
             using SolverType = mech_gocart::mkpp::SolverKernels<ExecSpace>;
             Kokkos::parallel_for("MKPP_Dispatch_gocart",
@@ -135,7 +135,7 @@ public:
             return;
         }
 #endif
-#if __has_include("saprc99.hpp")
+#if (!defined(MKPP_HOST_SELECTED_MECHANISMS) || defined(MKPP_HOST_MECH_SAPRC99)) && __has_include("saprc99.hpp")
         if (name == "saprc99") {
             using SolverType = mech_saprc99::mkpp::SolverKernels<ExecSpace>;
             Kokkos::parallel_for("MKPP_Dispatch_saprc99",
@@ -145,7 +145,7 @@ public:
             return;
         }
 #endif
-#if __has_include("ts1.hpp")
+#if (!defined(MKPP_HOST_SELECTED_MECHANISMS) || defined(MKPP_HOST_MECH_TS1)) && __has_include("ts1.hpp")
         if (name == "ts1") {
             using SolverType = mech_ts1::mkpp::SolverKernels<ExecSpace>;
             Kokkos::parallel_for("MKPP_Dispatch_ts1",
@@ -155,7 +155,7 @@ public:
             return;
         }
 #endif
-#if __has_include("carbon.hpp")
+#if (!defined(MKPP_HOST_SELECTED_MECHANISMS) || defined(MKPP_HOST_MECH_CARBON)) && __has_include("carbon.hpp")
         if (name == "carbon") {
             using SolverType = mech_carbon::mkpp::SolverKernels<ExecSpace>;
             Kokkos::parallel_for("MKPP_Dispatch_carbon",
@@ -165,7 +165,7 @@ public:
             return;
         }
 #endif
-#if __has_include("small_strato.hpp")
+#if (!defined(MKPP_HOST_SELECTED_MECHANISMS) || defined(MKPP_HOST_MECH_SMALL_STRATO)) && __has_include("small_strato.hpp")
         if (name == "small_strato") {
             using SolverType = mech_small_strato::mkpp::SolverKernels<ExecSpace>;
             Kokkos::parallel_for("MKPP_Dispatch_small_strato",
@@ -175,7 +175,7 @@ public:
             return;
         }
 #endif
-#if __has_include("saprcnov.hpp")
+#if (!defined(MKPP_HOST_SELECTED_MECHANISMS) || defined(MKPP_HOST_MECH_SAPRCNOV)) && __has_include("saprcnov.hpp")
         if (name == "saprcnov") {
             using SolverType = mech_saprcnov::mkpp::SolverKernels<ExecSpace>;
             Kokkos::parallel_for("MKPP_Dispatch_saprcnov",
@@ -185,7 +185,7 @@ public:
             return;
         }
 #endif
-#if __has_include("saprc99_mini.hpp")
+#if (!defined(MKPP_HOST_SELECTED_MECHANISMS) || defined(MKPP_HOST_MECH_SAPRC99_MINI)) && __has_include("saprc99_mini.hpp")
         if (name == "saprc99_mini") {
             using SolverType = mech_saprc99_mini::mkpp::SolverKernels<ExecSpace>;
             Kokkos::parallel_for("MKPP_Dispatch_saprc99_mini",

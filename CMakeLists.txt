@@ -37,22 +37,6 @@ install(
   PATTERN "*.h"
   PATTERN "*.f90")
 
-if(TARGET mkpp_c_api)
-  install(
-    TARGETS mkpp_c_api
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-endif()
-
-if(TARGET mkpp_fortran)
-  install(
-    TARGETS mkpp_fortran
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-endif()
-
 # ---------------------------------------------------------------------------
 # Testing (guarded behind BUILD_TESTING)
 # ---------------------------------------------------------------------------
@@ -67,6 +51,9 @@ option(MKPP_ENABLE_MICM_COMPARE
        OFF)
 
 option(MKPP_ENABLE_BENCHMARK "Build MKPP benchmark suite" OFF)
+
+option(MKPP_ENABLE_ADJOINT
+       "Enable adjoint and tangent-linear APIs in generated MKPP headers" OFF)
 
 option(MKPP_ENABLE_SOLVER_COMPARISON
        "Build governed MICM, KPP, and MKPP comparison runners" OFF)

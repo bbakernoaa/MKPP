@@ -1,0 +1,125 @@
+{
+  "description": "Standard Chapman Cycle mechanism",
+  "metadata": {
+    "legacy_source": "chapman.yaml",
+    "legacy_source_sha256": "2ac5b1f9f442f64a3bb7246a04a46f17b0a64746a040c69241a40cf98ba4decc",
+    "migration": "legacy-mkpp-yaml-to-openatmos-v1",
+    "mkpp_mechanism_id": "chapman",
+    "photolysis_host_forcing_expressions": {
+      "j_chapman.yaml_0000": "1e-05",
+      "j_chapman.yaml_0002": "0.001"
+    }
+  },
+  "name": "ChapmanCycle",
+  "phases": [
+    {
+      "name": "gas"
+    }
+  ],
+  "reactions": [
+    {
+      "gas phase": "gas",
+      "name": "j_chapman.yaml_0000",
+      "products": [
+        {
+          "coefficient": 2.0,
+          "species name": "O"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "O2"
+        }
+      ],
+      "scaling factor": 1.0,
+      "type": "PHOTOLYSIS"
+    },
+    {
+      "A": 6e-34,
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "O3"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "M"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "O"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "O2"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "M"
+        }
+      ],
+      "type": "ARRHENIUS"
+    },
+    {
+      "gas phase": "gas",
+      "name": "j_chapman.yaml_0002",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "O"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "O2"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "O3"
+        }
+      ],
+      "scaling factor": 1.0,
+      "type": "PHOTOLYSIS"
+    },
+    {
+      "A": 8e-12,
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 2.0,
+          "species name": "O2"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "O"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "O3"
+        }
+      ],
+      "type": "ARRHENIUS"
+    }
+  ],
+  "species": [
+    {
+      "name": "O"
+    },
+    {
+      "name": "O2"
+    },
+    {
+      "name": "O3"
+    },
+    {
+      "name": "M"
+    }
+  ]
+}

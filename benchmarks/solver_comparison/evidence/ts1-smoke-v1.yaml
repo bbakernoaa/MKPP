@@ -21,17 +21,26 @@ name_mapping:
   mkpp_checkpoint_names: 210
   identical_name_sets: true
 accuracy:
-  reference_for_smoke: not_yet_rerun_after_shared_openatmos_source_correction
-  note: Previous metrics were produced from a non-equivalent YAML-derived MKPP mechanism and are invalidated.
-  mkpp_negative_species: unavailable
-  symmetric_scaled_wrms: unavailable
-  symmetric_scaled_maximum: unavailable
-  positivity_passed: false
-  shared_accuracy_passed: false
+  chemistry_source: shared pinned OpenAtmos TS1 JSON and initial conditions
+  controls:
+    atol: 1.0e-12
+    rtol: 1.0e-8
+    max_steps: 100000
+  checkpoint_parity:
+    seconds: 60.0
+    maximum_absolute_difference: 5.471324504568997e-10
+    largest_absolute_species: O2
+    o3_relative_difference: 2.1967697157411626e-09
+    o2_relative_difference: 7.893438746094965e-10
+    h2_relative_difference: 9.406616770535816e-11
+    h2o_relative_difference: 3.3438070755144235e-10
+  initial_rhs: floating_point_equivalent_for_all_210_canonical_species
+  positivity_passed: true
+  shared_accuracy_passed: true
 eligibility:
-  status: ineligible
+  status: chemistry_verified_timing_withheld
   speedup_withheld: true
   reasons:
-    - The corrected shared-source trajectories have not yet passed numerical parity.
-    - MKPP fixed-step TS1 becomes non-finite at the current 60 second control.
-    - An independently converged TS1 reference has not yet qualified these trajectories.
+    - The pre-fix YAML-derived MKPP evidence is invalid and has been superseded by this shared-source parity smoke.
+    - This Debug smoke is scientific validation only; it contains no controlled-hardware campaign or timing claim.
+    - Independent-reference qualification and campaign measurement remain required before performance reporting.

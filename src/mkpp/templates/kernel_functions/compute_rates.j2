@@ -23,27 +23,13 @@
       template <class StateView, class RateView>
 {% if has_equilibrium %}
       KOKKOS_INLINE_FUNCTION void compute_rates(const StateView& state, RateView& F_block, const double* jvals, const double temp, const double rh) const {
-          const double Temp = temp;
-          const double RH = rh;
-          (void)RH;  // Reserved for future deliquescence modeling
+{% for chunk in compiled_rate_chunks %}
+          detail::{{ mechanism_name }}::compute_rates_chunk_{{ loop.index0 }}(state.data(), F_block.data(), jvals, temp, rh);
+{% endfor %}
 {% else %}
       KOKKOS_INLINE_FUNCTION void compute_rates(const StateView& state, RateView& F_block, const double* jvals) const {
-{% endif %}
-{% if rate_flux_cse %}
-          // --- CSE Temporaries ---
-{% for cse in rate_flux_cse %}
-          const double {{ cse.symbol }} = {{ cse.expr }};
+{% for chunk in compiled_rate_chunks %}
+          detail::{{ mechanism_name }}::compute_rates_chunk_{{ loop.index0 }}(state.data(), F_block.data(), jvals, 0.0, 0.0);
 {% endfor %}
 {% endif %}
-{% if rate_flux_exprs %}
-          // --- Reaction Rate Fluxes R_m ---
-{% for r in rate_flux_exprs %}
-          const double R_{{ r.index }} = {{ r.expr }};
-{% endfor %}
-{% endif %}
-          // --- Rate-of-Change Vector F_block ---
-{% for expr in rate_exprs_state %}
-          // F_block({{ species[loop.index0].name }}): d[{{ species[loop.index0].name }}]/dt
-          F_block(Species::{{ species[loop.index0].name }}) = {{ expr }};
-{% endfor %}
       }

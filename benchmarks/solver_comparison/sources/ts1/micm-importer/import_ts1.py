@@ -34,6 +34,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import yaml
+
 try:
     import pandas as pd
     from musica import mechanism_configuration as mc
@@ -276,6 +278,50 @@ def init_state_function(environment, concentrations, parameters) -> list[str]:
     return lines
 
 
+def forcing_schedule_function(scenario: dict) -> list[str]:
+    """Render the OpenAtmos scenario's named piecewise-constant forcing table."""
+    integration = scenario["integration"]
+    start = float(integration["start_seconds"])
+    end = start + float(integration["horizon_seconds"])
+    boundaries = sorted(set((start, *map(float, integration["forcing_boundaries_seconds"]), end)))
+    forcing = scenario["forcing"]
+    values: dict[str, dict[float, float]] = {}
+    for name, definition in forcing.items():
+        if "constant" in definition:
+            values[name] = {boundary: float(definition["constant"]) for boundary in boundaries[:-1]}
+        else:
+            values[name] = {float(point["time_seconds"]): float(point["value"]) for point in definition["points"]}
+        missing = [boundary for boundary in boundaries[:-1] if boundary not in values[name]]
+        if missing:
+            raise SystemExit(f"forcing {name!r} lacks values at boundaries {missing}")
+
+    lines = [
+        f"    static constexpr micm::Index kForcingSegmentCount = {len(boundaries) - 1};",
+        "    static constexpr double kForcingSegmentDurations[] = {"
+        + ", ".join(number(right - left) for left, right in zip(boundaries[:-1], boundaries[1:], strict=True))
+        + "};",
+        "",
+        "    template<class State>",
+        "    static void ApplyForcingSegment(State& state, micm::Index num_cells, micm::Index segment)",
+        "    {",
+        "      if (segment >= kForcingSegmentCount) throw std::out_of_range(\"TS1 forcing segment\");",
+        "      std::vector<micm::Real> cells(num_cells);",
+        "      auto parameter = [&](const char* label, micm::Real value)",
+        "      {",
+        "        std::fill(cells.begin(), cells.end(), value);",
+        "        state.SetCustomRateParameter(label, cells);",
+        "      };",
+    ]
+    for name in sorted(values):
+        series = ", ".join(number(values[name][boundary]) for boundary in boundaries[:-1])
+        lines += [
+            f"      static constexpr micm::Real {name}_values[] = {{{series}}};",
+            f"      parameter({cxx_string(name)}, {name}_values[segment]);",
+        ]
+    lines += ["    }"]
+    return lines
+
+
 def custom_parameter_labels(mechanism) -> list[str]:
     """List every custom rate parameter micm registers for this mechanism.
 
@@ -334,6 +380,7 @@ def main() -> int:
         default=None,
         help="directory holding ts1.json and initial_conditions.csv (default: the copy musica ships)",
     )
+    parser.add_argument("--scenario", type=Path, required=True, help="immutable OpenAtmos scenario YAML")
     parser.add_argument(
         "-o",
         "--output",
@@ -346,6 +393,11 @@ def main() -> int:
     source = args.source if args.source is not None else Path(find_config_path("v1", "ts1"))
     mechanism = mc.parse(str(source / "ts1.json"))
     environment, concentrations, parameters = read_initial_conditions(source / "initial_conditions.csv")
+    solver_config = yaml.safe_load((source / "environment.yaml").read_text()).get("solver", {})
+    solver_atol = float(solver_config.get("atol", 1.0e-3))
+    solver_rtol = float(solver_config.get("rtol", 1.0e-6))
+    solver_max_steps = int(solver_config.get("max_steps", 1000))
+    scenario = yaml.safe_load(args.scenario.read_text())
 
     # A third body is parameterized on air density, so it holds no concentration.
     third_bodies = {s.name for s in mechanism.species if s.is_third_body}
@@ -430,6 +482,9 @@ def main() -> int:
         "  struct Ts1",
         "  {",
         '    static constexpr std::string_view kName = "ts1";',
+        f"    static constexpr double kSolverAtol = {number(solver_atol)};",
+        f"    static constexpr double kSolverRtol = {number(solver_rtol)};",
+        f"    static constexpr micm::Index kSolverMaxSteps = {solver_max_steps};",
         "",
         "    template<class Builder>",
         "    static auto Build(Builder builder)",
@@ -443,6 +498,8 @@ def main() -> int:
         "",
     ]
     lines += init_state_function(environment, concentrations, parameters)
+    lines.append("")
+    lines += forcing_schedule_function(scenario)
     lines += [
         "  };",
         "}  // namespace bench",

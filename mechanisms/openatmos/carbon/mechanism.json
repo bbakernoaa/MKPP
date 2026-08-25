@@ -1,0 +1,157 @@
+{
+  "description": "Translated from carbon KPP mechanism",
+  "metadata": {
+    "legacy_source": "carbon.yaml",
+    "legacy_source_sha256": "c943737209c2def1b42a533c7e18f79171cce3cc7b3e18139f7bac4ed4b18ff1",
+    "migration": "legacy-mkpp-yaml-to-openatmos-v1",
+    "photolysis_host_forcing_expressions": {}
+  },
+  "name": "carbon",
+  "phases": [
+    {
+      "name": "gas"
+    }
+  ],
+  "reactions": [
+    {
+      "A": "2.45e-12*exp(-1775.0e0/TEMP)",
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "LCH4byOH"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "CH4"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "FixedOH"
+        }
+      ],
+      "type": "ARRHENIUS"
+    },
+    {
+      "A": "9.60e-12*exp(-1360.0e0/TEMP)",
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "LCH4byCl"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "CH4"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "FixedCl"
+        }
+      ],
+      "type": "ARRHENIUS"
+    },
+    {
+      "A": 4.2566446e-15,
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "CO"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "PCOfromCH4"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "DummyCH4"
+        }
+      ],
+      "type": "ARRHENIUS"
+    },
+    {
+      "A": 7.3679649e-14,
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "LCObyOH"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "CO"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "FixedOH"
+        }
+      ],
+      "type": "ARRHENIUS"
+    },
+    {
+      "A": 38199.012,
+      "gas phase": "gas",
+      "products": [
+        {
+          "coefficient": 1.0,
+          "species name": "CO"
+        },
+        {
+          "coefficient": 1.0,
+          "species name": "PCOfromNMVOC"
+        }
+      ],
+      "reactants": [
+        {
+          "coefficient": 1.0,
+          "species name": "DummyNMVOC"
+        }
+      ],
+      "type": "ARRHENIUS"
+    }
+  ],
+  "species": [
+    {
+      "name": "CH4"
+    },
+    {
+      "name": "CO"
+    },
+    {
+      "name": "PCOfromCH4"
+    },
+    {
+      "name": "PCOfromNMVOC"
+    },
+    {
+      "name": "LCH4byOH"
+    },
+    {
+      "name": "LCH4byCl"
+    },
+    {
+      "name": "LCObyOH"
+    },
+    {
+      "name": "FixedOH"
+    },
+    {
+      "name": "FixedCl"
+    },
+    {
+      "name": "DummyCH4"
+    },
+    {
+      "name": "DummyNMVOC"
+    }
+  ]
+}

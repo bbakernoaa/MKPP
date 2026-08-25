@@ -16,6 +16,7 @@
 #include <string_view>
 #include <vector>
 
+#include "ts1.hpp"
 #include "ts1_binding_data.hpp"
 
 namespace {
@@ -224,8 +225,10 @@ std::vector<double> copy_final_state(StateView state) {
 
 void emit_json_result(const Options& options, double elapsed_ms,
                       const std::vector<double>& final_state) {
-    const long long cell_steps =
-        static_cast<long long>(options.cells) * options.steps * options.repetitions;
+    const bool ts1_schedule = options.mechanism == "ts1";
+    const long long cell_steps = static_cast<long long>(options.cells) *
+        (ts1_schedule ? 2 : options.steps) * options.repetitions;
+    const double final_time = ts1_schedule ? 600.0 : options.steps * options.dt;
     std::cout
         << std::setprecision(17) << "{\"schema_version\":1,\"campaign_id\":\""
         << json_escape(options.campaign_id) << "\",\"run_id\":\"" << json_escape(options.run_id)
@@ -257,7 +260,7 @@ void emit_json_result(const Options& options, double elapsed_ms,
         << ",\"cell_steps\":" << cell_steps
         << ",\"clock\":\"std::chrono::steady_clock\",\"synchronized\":true,"
            "\"synchronization\":\"Kokkos::fence\",\"lifecycle_ms\":{}}"
-        << ",\"state\":{\"checkpoints\":[{\"time_seconds\":" << options.steps * options.dt
+        << ",\"state\":{\"checkpoints\":[{\"time_seconds\":" << final_time
         << ",\"values\":{";
     if (options.mechanism == "ts1") {
         for (std::size_t index = 0; index < ts1_binding::species_names.size(); ++index) {
@@ -315,9 +318,51 @@ int main(int argc, char** argv) {
             }
             Kokkos::deep_copy(jvals, host_jvals);
 
+            const auto execute_ts1_schedule = [&]() {
+                constexpr std::array<double, 2> interval_seconds{300.0, 300.0};
+                constexpr std::array<double, 2> photolysis_scale{1.0, 1.05};
+                for (std::size_t segment = 0; segment < interval_seconds.size(); ++segment) {
+                    for (std::size_t slot = 0; slot < 123; ++slot)
+                        host_jvals(slot) = ts1_binding::reaction_parameters[slot] * photolysis_scale[segment];
+                    Kokkos::deep_copy(jvals, host_jvals);
+                    Options segment_options = options;
+                    segment_options.dt = interval_seconds[segment];
+                    segment_options.steps = 1;
+                    execute_solve(state, segment_options, jvals.data());
+                }
+            };
+
+            // Audit mode is intentionally limited to the common initial state.  It
+            // lets the comparison harness distinguish a chemistry translation
+            // mismatch from an integration-control mismatch without timing either
+            // solver.
+            if (options.mechanism == "ts1" && std::getenv("EMIT_INITIAL_RHS") != nullptr) {
+                reset_state(state, options);
+                StateView rhs("mkpp_initial_rhs", options.cells, expected_species);
+                Kokkos::parallel_for(
+                    "evaluate MKPP TS1 initial RHS", Kokkos::RangePolicy<ExecutionSpace>(0, options.cells),
+                    KOKKOS_LAMBDA(const int cell) {
+                        auto cell_state = Kokkos::subview(state, cell, Kokkos::ALL());
+                        auto cell_rhs = Kokkos::subview(rhs, cell, Kokkos::ALL());
+                        mech_ts1::mkpp::SolverKernels<ExecutionSpace>{}.compute_rates(
+                            cell_state, cell_rhs, jvals.data());
+                    });
+                synchronize_completion();
+                const auto initial_rhs = copy_final_state(rhs);
+                std::cout << std::setprecision(17) << '{';
+                for (std::size_t index = 0; index < ts1_binding::species_names.size(); ++index) {
+                    if (index != 0) std::cout << ',';
+                    std::cout << '"' << ts1_binding::species_names[index] << "\":" << initial_rhs[index];
+                }
+                std::cout << "}\n";
+                Kokkos::finalize();
+                return EXIT_SUCCESS;
+            }
+
             for (int warmup = 0; warmup < options.warmups; ++warmup) {
             reset_state(state, options);
-            execute_solve(state, options, jvals.data());
+            if (options.mechanism == "ts1") execute_ts1_schedule();
+            else execute_solve(state, options, jvals.data());
                 synchronize_completion();
             }
 
@@ -325,7 +370,8 @@ int main(int argc, char** argv) {
             for (int repetition = 0; repetition < options.repetitions; ++repetition) {
                 reset_state(state, options);  // Reset is deliberately outside every timed sample.
                 const auto started = start_timing();
-                execute_solve(state, options, jvals.data());
+                if (options.mechanism == "ts1") execute_ts1_schedule();
+                else execute_solve(state, options, jvals.data());
                 synchronize_completion();
                 elapsed_ms += stop_timing(started);
             }

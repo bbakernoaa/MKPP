@@ -27,12 +27,12 @@ from mkpp.parser import load_mechanism
 
 def _build_chapman_mechanism():
     """Build a Chapman-like mechanism (4 species) for testing."""
-    return load_mechanism("mechanisms/chapman.yaml")
+    return load_mechanism("mechanisms/openatmos/chapman/mechanism.json")
 
 
 def _build_saprc99_mechanism():
     """Load the SAPRC-99 mechanism for testing."""
-    return load_mechanism("mechanisms/saprc99_mini.yaml")
+    return load_mechanism("mechanisms/openatmos/saprc99_mini/mechanism.json")
 
 
 def _generate_with_adjoint(mech, solver_name: str, tmp_dir: str) -> str:

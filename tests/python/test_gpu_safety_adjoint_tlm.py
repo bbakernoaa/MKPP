@@ -41,7 +41,7 @@ FORBIDDEN_PATTERNS = [
 
 def _load_chapman():
     """Load the Chapman mechanism for testing."""
-    return load_mechanism("mechanisms/chapman.yaml")
+    return load_mechanism("mechanisms/openatmos/chapman/mechanism.json")
 
 
 def _generate_adjoint_code(mech, solver_name: str, tmp_dir: str) -> str:

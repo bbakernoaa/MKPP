@@ -94,6 +94,23 @@ namespace mkpp {
 #endif
 
 {% endif %}
+  // The expression-dense RHS and Jacobian are compiled in bounded units.
+  // This declaration-only boundary keeps host-model translation units small.
+  namespace detail::{{ mechanism_name }} {
+{% for chunk in compiled_rate_chunks %}
+  void compute_rates_chunk_{{ loop.index0 }}(const double* state, double* rates,
+                                              const double* jvals, double temp, double rh);
+{% endfor %}
+{% for chunk in compiled_jacobian_chunks %}
+  void compute_jacobian_chunk_{{ loop.index0 }}(const double* state, double* jacobian,
+                                                 const double* jvals, double temp, double rh);
+{% endfor %}
+{% for chunk in compiled_lu_chunks %}
+  void factorize_lu_chunk_{{ loop.index0 }}(const double* w, double* lu);
+{% endfor %}
+  void solve_lu(const double* lu, const double* rhs, double* solution);
+  }  // namespace detail::{{ mechanism_name }}
+
   template<typename DeviceType>
   struct SolverKernels {
 {% include "kernel_functions/compute_rates.j2" %}
@@ -164,7 +181,9 @@ namespace mkpp {
 {% endif %}
 {% include "solver_variants/integrate.j2" %}
 
+#ifdef MKPP_ENABLE_REDUCTION
 {% include "solver_variants/integrate_with_reduction.j2" %}
+#endif
 {% if adjoint_enabled %}
 #ifdef MKPP_ENABLE_ADJOINT
 

@@ -1,0 +1,721 @@
+schema_version: 1
+mechanism_id: saprc99
+version: 1.0.0
+canonical_source:
+- path: mechanisms/openatmos/saprc99/mechanism.json
+  revision: workspace-openatmos-v1
+  sha256: af56d9427e97a8ccaac0a623a0df6652b01e5b093d9a8c856f5fb3bfcef30772
+canonical_species:
+- id: O3
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: H2O2
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: 'NO'
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: NO2
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: NO3
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: N2O5
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: HONO
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: HNO3
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: HNO4
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: SO2
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: H2SO4
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: CO
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: HCHO
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: CCHO
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: RCHO
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: ACET
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: MEK
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: HCOOH
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: MEOH
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: CCO_OH
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: RCO_OH
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: GLY
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: MGLY
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: BACL
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: CRES
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: BALD
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: ISOPROD
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: METHACRO
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: MVK
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: PROD2
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: DCB1
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: DCB2
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: DCB3
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: ETHENE
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: ISOPRENE
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: ALK1
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: ALK2
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: ALK3
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: ALK4
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: ALK5
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: ARO1
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: ARO2
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: OLE1
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: OLE2
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: TERP
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: RNO3
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: NPHE
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: PHEN
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: PAN
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: PAN2
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: PBZN
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: MA_PAN
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: CCO_OOH
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: RCO_O2
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: RCO_OOH
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: XN
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: XC
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: O3P
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: O1D
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: OH
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: HO2
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: C_O2
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: COOH
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: ROOH
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: RO2_R
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: R2O2
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: RO2_N
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: HOCOO
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: CCO_O2
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: BZCO_O2
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: BZNO2_O
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: BZ_O
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: MA_RCO3
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: TBU_O
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: AIR
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: O2
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: H2O
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: H2
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: CH4
+  role: active
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: M
+  role: fixed
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: N2
+  role: fixed
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+- id: RO2
+  role: fixed
+  phase: gas
+  unit: mol m-3
+  scale: 1.0
+chemistry_sha256: af56d9427e97a8ccaac0a623a0df6652b01e5b093d9a8c856f5fb3bfcef30772
+photolysis_inputs:
+- id: j_saprc99.yaml_0000
+  unit: s-1
+- id: j_saprc99.yaml_0014
+  unit: s-1
+- id: j_saprc99.yaml_0015
+  unit: s-1
+- id: j_saprc99.yaml_0016
+  unit: s-1
+- id: j_saprc99.yaml_0017
+  unit: s-1
+- id: j_saprc99.yaml_0021
+  unit: s-1
+- id: j_saprc99.yaml_0022
+  unit: s-1
+- id: j_saprc99.yaml_0027
+  unit: s-1
+- id: j_saprc99.yaml_0033
+  unit: s-1
+- id: j_saprc99.yaml_0040
+  unit: s-1
+- id: j_saprc99.yaml_0122
+  unit: s-1
+- id: j_saprc99.yaml_0123
+  unit: s-1
+- id: j_saprc99.yaml_0130
+  unit: s-1
+- id: j_saprc99.yaml_0133
+  unit: s-1
+- id: j_saprc99.yaml_0136
+  unit: s-1
+- id: j_saprc99.yaml_0138
+  unit: s-1
+- id: j_saprc99.yaml_0141
+  unit: s-1
+- id: j_saprc99.yaml_0143
+  unit: s-1
+- id: j_saprc99.yaml_0144
+  unit: s-1
+- id: j_saprc99.yaml_0145
+  unit: s-1
+- id: j_saprc99.yaml_0148
+  unit: s-1
+- id: j_saprc99.yaml_0151
+  unit: s-1
+- id: j_saprc99.yaml_0158
+  unit: s-1
+- id: j_saprc99.yaml_0164
+  unit: s-1
+- id: j_saprc99.yaml_0168
+  unit: s-1
+- id: j_saprc99.yaml_0172
+  unit: s-1
+- id: j_saprc99.yaml_0174
+  unit: s-1
+- id: j_saprc99.yaml_0176
+  unit: s-1
+- id: j_saprc99.yaml_0180
+  unit: s-1
+- id: j_saprc99.yaml_0182
+  unit: s-1
+required_solvers:
+- micm
+- mkpp
+bindings:
+  micm:
+    revision: workspace
+    assets:
+    - mechanisms/openatmos/saprc99/mechanism.json
+    species_map:
+      O3: O3
+      H2O2: H2O2
+      'NO': 'NO'
+      NO2: NO2
+      NO3: NO3
+      N2O5: N2O5
+      HONO: HONO
+      HNO3: HNO3
+      HNO4: HNO4
+      SO2: SO2
+      H2SO4: H2SO4
+      CO: CO
+      HCHO: HCHO
+      CCHO: CCHO
+      RCHO: RCHO
+      ACET: ACET
+      MEK: MEK
+      HCOOH: HCOOH
+      MEOH: MEOH
+      CCO_OH: CCO_OH
+      RCO_OH: RCO_OH
+      GLY: GLY
+      MGLY: MGLY
+      BACL: BACL
+      CRES: CRES
+      BALD: BALD
+      ISOPROD: ISOPROD
+      METHACRO: METHACRO
+      MVK: MVK
+      PROD2: PROD2
+      DCB1: DCB1
+      DCB2: DCB2
+      DCB3: DCB3
+      ETHENE: ETHENE
+      ISOPRENE: ISOPRENE
+      ALK1: ALK1
+      ALK2: ALK2
+      ALK3: ALK3
+      ALK4: ALK4
+      ALK5: ALK5
+      ARO1: ARO1
+      ARO2: ARO2
+      OLE1: OLE1
+      OLE2: OLE2
+      TERP: TERP
+      RNO3: RNO3
+      NPHE: NPHE
+      PHEN: PHEN
+      PAN: PAN
+      PAN2: PAN2
+      PBZN: PBZN
+      MA_PAN: MA_PAN
+      CCO_OOH: CCO_OOH
+      RCO_O2: RCO_O2
+      RCO_OOH: RCO_OOH
+      XN: XN
+      XC: XC
+      O3P: O3P
+      O1D: O1D
+      OH: OH
+      HO2: HO2
+      C_O2: C_O2
+      COOH: COOH
+      ROOH: ROOH
+      RO2_R: RO2_R
+      R2O2: R2O2
+      RO2_N: RO2_N
+      HOCOO: HOCOO
+      CCO_O2: CCO_O2
+      BZCO_O2: BZCO_O2
+      BZNO2_O: BZNO2_O
+      BZ_O: BZ_O
+      MA_RCO3: MA_RCO3
+      TBU_O: TBU_O
+      AIR: AIR
+      O2: O2
+      H2O: H2O
+      H2: H2
+      CH4: CH4
+      M: M
+      N2: N2
+      RO2: RO2
+    photolysis_map:
+      j_saprc99.yaml_0000: j_saprc99.yaml_0000
+      j_saprc99.yaml_0014: j_saprc99.yaml_0014
+      j_saprc99.yaml_0015: j_saprc99.yaml_0015
+      j_saprc99.yaml_0016: j_saprc99.yaml_0016
+      j_saprc99.yaml_0017: j_saprc99.yaml_0017
+      j_saprc99.yaml_0021: j_saprc99.yaml_0021
+      j_saprc99.yaml_0022: j_saprc99.yaml_0022
+      j_saprc99.yaml_0027: j_saprc99.yaml_0027
+      j_saprc99.yaml_0033: j_saprc99.yaml_0033
+      j_saprc99.yaml_0040: j_saprc99.yaml_0040
+      j_saprc99.yaml_0122: j_saprc99.yaml_0122
+      j_saprc99.yaml_0123: j_saprc99.yaml_0123
+      j_saprc99.yaml_0130: j_saprc99.yaml_0130
+      j_saprc99.yaml_0133: j_saprc99.yaml_0133
+      j_saprc99.yaml_0136: j_saprc99.yaml_0136
+      j_saprc99.yaml_0138: j_saprc99.yaml_0138
+      j_saprc99.yaml_0141: j_saprc99.yaml_0141
+      j_saprc99.yaml_0143: j_saprc99.yaml_0143
+      j_saprc99.yaml_0144: j_saprc99.yaml_0144
+      j_saprc99.yaml_0145: j_saprc99.yaml_0145
+      j_saprc99.yaml_0148: j_saprc99.yaml_0148
+      j_saprc99.yaml_0151: j_saprc99.yaml_0151
+      j_saprc99.yaml_0158: j_saprc99.yaml_0158
+      j_saprc99.yaml_0164: j_saprc99.yaml_0164
+      j_saprc99.yaml_0168: j_saprc99.yaml_0168
+      j_saprc99.yaml_0172: j_saprc99.yaml_0172
+      j_saprc99.yaml_0174: j_saprc99.yaml_0174
+      j_saprc99.yaml_0176: j_saprc99.yaml_0176
+      j_saprc99.yaml_0180: j_saprc99.yaml_0180
+      j_saprc99.yaml_0182: j_saprc99.yaml_0182
+  mkpp:
+    revision: workspace
+    assets:
+    - mechanisms/openatmos/saprc99/mechanism.json
+    species_map:
+      O3: O3
+      H2O2: H2O2
+      'NO': 'NO'
+      NO2: NO2
+      NO3: NO3
+      N2O5: N2O5
+      HONO: HONO
+      HNO3: HNO3
+      HNO4: HNO4
+      SO2: SO2
+      H2SO4: H2SO4
+      CO: CO
+      HCHO: HCHO
+      CCHO: CCHO
+      RCHO: RCHO
+      ACET: ACET
+      MEK: MEK
+      HCOOH: HCOOH
+      MEOH: MEOH
+      CCO_OH: CCO_OH
+      RCO_OH: RCO_OH
+      GLY: GLY
+      MGLY: MGLY
+      BACL: BACL
+      CRES: CRES
+      BALD: BALD
+      ISOPROD: ISOPROD
+      METHACRO: METHACRO
+      MVK: MVK
+      PROD2: PROD2
+      DCB1: DCB1
+      DCB2: DCB2
+      DCB3: DCB3
+      ETHENE: ETHENE
+      ISOPRENE: ISOPRENE
+      ALK1: ALK1
+      ALK2: ALK2
+      ALK3: ALK3
+      ALK4: ALK4
+      ALK5: ALK5
+      ARO1: ARO1
+      ARO2: ARO2
+      OLE1: OLE1
+      OLE2: OLE2
+      TERP: TERP
+      RNO3: RNO3
+      NPHE: NPHE
+      PHEN: PHEN
+      PAN: PAN
+      PAN2: PAN2
+      PBZN: PBZN
+      MA_PAN: MA_PAN
+      CCO_OOH: CCO_OOH
+      RCO_O2: RCO_O2
+      RCO_OOH: RCO_OOH
+      XN: XN
+      XC: XC
+      O3P: O3P
+      O1D: O1D
+      OH: OH
+      HO2: HO2
+      C_O2: C_O2
+      COOH: COOH
+      ROOH: ROOH
+      RO2_R: RO2_R
+      R2O2: R2O2
+      RO2_N: RO2_N
+      HOCOO: HOCOO
+      CCO_O2: CCO_O2
+      BZCO_O2: BZCO_O2
+      BZNO2_O: BZNO2_O
+      BZ_O: BZ_O
+      MA_RCO3: MA_RCO3
+      TBU_O: TBU_O
+      AIR: AIR
+      O2: O2
+      H2O: H2O
+      H2: H2
+      CH4: CH4
+      M: M
+      N2: N2
+      RO2: RO2
+    photolysis_map:
+      j_saprc99.yaml_0000: j_saprc99.yaml_0000
+      j_saprc99.yaml_0014: j_saprc99.yaml_0014
+      j_saprc99.yaml_0015: j_saprc99.yaml_0015
+      j_saprc99.yaml_0016: j_saprc99.yaml_0016
+      j_saprc99.yaml_0017: j_saprc99.yaml_0017
+      j_saprc99.yaml_0021: j_saprc99.yaml_0021
+      j_saprc99.yaml_0022: j_saprc99.yaml_0022
+      j_saprc99.yaml_0027: j_saprc99.yaml_0027
+      j_saprc99.yaml_0033: j_saprc99.yaml_0033
+      j_saprc99.yaml_0040: j_saprc99.yaml_0040
+      j_saprc99.yaml_0122: j_saprc99.yaml_0122
+      j_saprc99.yaml_0123: j_saprc99.yaml_0123
+      j_saprc99.yaml_0130: j_saprc99.yaml_0130
+      j_saprc99.yaml_0133: j_saprc99.yaml_0133
+      j_saprc99.yaml_0136: j_saprc99.yaml_0136
+      j_saprc99.yaml_0138: j_saprc99.yaml_0138
+      j_saprc99.yaml_0141: j_saprc99.yaml_0141
+      j_saprc99.yaml_0143: j_saprc99.yaml_0143
+      j_saprc99.yaml_0144: j_saprc99.yaml_0144
+      j_saprc99.yaml_0145: j_saprc99.yaml_0145
+      j_saprc99.yaml_0148: j_saprc99.yaml_0148
+      j_saprc99.yaml_0151: j_saprc99.yaml_0151
+      j_saprc99.yaml_0158: j_saprc99.yaml_0158
+      j_saprc99.yaml_0164: j_saprc99.yaml_0164
+      j_saprc99.yaml_0168: j_saprc99.yaml_0168
+      j_saprc99.yaml_0172: j_saprc99.yaml_0172
+      j_saprc99.yaml_0174: j_saprc99.yaml_0174
+      j_saprc99.yaml_0176: j_saprc99.yaml_0176
+      j_saprc99.yaml_0180: j_saprc99.yaml_0180
+      j_saprc99.yaml_0182: j_saprc99.yaml_0182
+admission_status: ineligible

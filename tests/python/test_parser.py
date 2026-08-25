@@ -2,6 +2,7 @@ import json
 import time
 
 import pytest
+
 from mkpp.model import CompilationError
 from mkpp.parser import (
     detect_config_format,
@@ -32,6 +33,42 @@ def test_parse_complex_troe_parameters():
     assert "k0" in mech.reactions[0].parameters
     assert mech.reactions[0].parameters["k0"]["A"] == 1.0
     assert mech.reactions[0].parameters["kinf"]["C"] == 6.0
+
+
+def test_openatmos_background_species_are_not_implicitly_fixed():
+    mech = parse_mechanism_micm(
+        "ts1_role_test",
+        {
+            "species": [{"name": name} for name in ("O2", "N2", "H2O", "H2", "CH4", "RO2", "M")],
+            "reactions": [],
+        },
+    )
+    roles = {species.name: species.role for species in mech.species}
+    assert {name for name, role in roles.items() if role == "fixed"} == {"M"}
+
+
+def test_openatmos_surface_reaction_uses_gas_phase_fields():
+    mech = parse_mechanism_micm(
+        "surface_test",
+        {
+            "species": [{"name": name} for name in ("N2O5", "HNO3", "NO3")],
+            "reactions": [
+                {
+                    "type": "SURFACE",
+                    "reaction probability": 0.02,
+                    "gas-phase species": "N2O5",
+                    "gas-phase products": [
+                        {"species name": "HNO3", "coefficient": 2.0},
+                        {"species name": "NO3", "coefficient": 0.5},
+                    ],
+                }
+            ],
+        },
+    )
+
+    reaction = mech.reactions[0]
+    assert reaction.reactants == {"N2O5": 1.0}
+    assert reaction.products == {"HNO3": 2.0, "NO3": 0.5}
 
 
 def test_detect_config_format(tmp_path):

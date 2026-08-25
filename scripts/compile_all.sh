@@ -16,9 +16,14 @@ main() {
     repo_root="$(cd "${script_dir}/.." && pwd)"
     cd "${repo_root}" || exit 1
 
-    local python_bin=".venv/bin/python"
-    if [[ ! -f "${python_bin}" ]]; then
-        python_bin="python3"
+    # Prefer a known-good interpreter instead of silently selecting a local
+    # virtualenv.  A broken optional reporting dependency in that virtualenv
+    # must not make chemistry compilation crash.  Callers can pin an
+    # interpreter with MKPP_PYTHON when needed.
+    local python_bin="${MKPP_PYTHON:-python3}"
+    if ! command -v "${python_bin}" >/dev/null 2>&1; then
+        echo "FATAL ERROR: Python interpreter '${python_bin}' was not found."
+        exit 1
     fi
 
     local test_env="tests/integration/e2e_validation/data/env.yaml"
@@ -29,15 +34,20 @@ main() {
     local out_dir="mkpp-generated/"
     mkdir -p "${out_dir}"
 
+    # Reporting imports Matplotlib.  Keep its cache in a writable, disposable
+    # location so this reproducibility check works in containers and CI.
+    export MPLCONFIGDIR="${TMPDIR:-/tmp}/mkpp-matplotlib"
+    mkdir -p "${MPLCONFIGDIR}"
+
     local mechanisms=(
-        "mechanisms/chapman.yaml"
-        "mechanisms/small_strato.yaml"
-        "mechanisms/carbon.yaml"
-        "mechanisms/gocart.yaml"
-        "mechanisms/saprc99.yaml"
-        "mechanisms/saprcnov.yaml"
-        "mechanisms/saprc99_mini.yaml"
-        "mechanisms/ts1.yaml"
+        "mechanisms/openatmos/chapman/mechanism.json"
+        "mechanisms/openatmos/small_strato/mechanism.json"
+        "mechanisms/openatmos/carbon/mechanism.json"
+        "mechanisms/openatmos/gocart/mechanism.json"
+        "mechanisms/openatmos/saprc99/mechanism.json"
+        "mechanisms/openatmos/saprcnov/mechanism.json"
+        "mechanisms/openatmos/saprc99_mini/mechanism.json"
+        "mechanisms/openatmos/ts1/mechanism.json"
     )
 
     local mech
@@ -56,7 +66,6 @@ main() {
             --out "${out_dir}" \
             --adjoint \
             --emit-manifest \
-            --host-api \
             --report \
             --verbose; then
             echo "FATAL ERROR: Failed to compile ${mech}"

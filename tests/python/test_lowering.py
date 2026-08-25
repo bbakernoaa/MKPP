@@ -1,4 +1,5 @@
 import pytest
+
 from mkpp.lowering import partition_reactions, prepare_adjoint_and_tlm
 from mkpp.model import AerosolRepresentation, MechanismDefinition, ReactionDefinition
 
@@ -162,6 +163,7 @@ def test_sympy_explicit_reaction_types():
 
 def test_arrhenius_micm_sign_convention():
     import sympy as sp
+
     from mkpp.lowering import _evaluate_reaction_fluxes
     from mkpp.model import PhaseMode, SpeciesDefinition
 
@@ -194,12 +196,55 @@ def test_arrhenius_micm_sign_convention():
     assert abs(float(rate_val) - float(expected_val)) < 1e-15
 
 
+def test_troe_micm_sign_convention():
+    import sympy as sp
+
+    from mkpp.lowering import _evaluate_reaction_fluxes
+    from mkpp.model import PhaseMode, SpeciesDefinition
+
+    mech = MechanismDefinition(
+        name="troe_sign_test",
+        description="Test signed Troe Arrhenius convention",
+        aerosol_representation=AerosolRepresentation.BULK,
+        species=[
+            SpeciesDefinition(name="A", phase=PhaseMode.GAS),
+            SpeciesDefinition(name="M", phase=PhaseMode.GAS, role="fixed"),
+        ],
+        phases=[],
+        reactions=[
+            ReactionDefinition(
+                reaction_type="TROE",
+                reactants=["A"],
+                products=["A"],
+                rate_expression="",
+                parameters={
+                    "k0": {"A": 2.0, "B": 0.0, "C": 400.0},
+                    "kinf": {"A": 3.0, "B": 0.0, "C": 200.0},
+                    "Fc": 0.6,
+                    "N": 1.0,
+                },
+            )
+        ],
+    )
+
+    flux = _evaluate_reaction_fluxes(mech)["reaction_fluxes"][0]
+    temp = next(symbol for symbol in flux.free_symbols if symbol.name == "Temp")
+    concentration = next(symbol for symbol in flux.free_symbols if symbol.name == "C_A")
+    third_body = next(symbol for symbol in flux.free_symbols if symbol.name == "C_M")
+    rate = flux.subs({temp: 300.0, third_body: 1.0, concentration: 1.0})
+    k0 = 2.0 * sp.exp(400.0 / 300.0)
+    kinf = 3.0 * sp.exp(200.0 / 300.0)
+    ratio = k0 / kinf
+    expected = k0 / (1.0 + ratio) * 0.6 ** (1.0 / (1.0 + sp.log(ratio, 10) ** 2))
+    assert float(rate - expected) == pytest.approx(0.0, abs=1e-15)
+
+
 def test_rate_vector_hoisting():
     from mkpp.lowering import prepare_unified_jacobian
     from mkpp.parser import load_mechanism
     from mkpp.template_context import build_template_context
 
-    mech = load_mechanism("mechanisms/chapman.yaml")
+    mech = load_mechanism("mechanisms/openatmos/chapman/mechanism.json")
     mech.sympy_metadata = prepare_unified_jacobian(mech)
     ctx = build_template_context(mech)
 
@@ -215,7 +260,7 @@ def test_cse_no_dead_temporaries():
     from mkpp.parser import load_mechanism
     from mkpp.template_context import build_template_context
 
-    mech = load_mechanism("mechanisms/chapman.yaml")
+    mech = load_mechanism("mechanisms/openatmos/chapman/mechanism.json")
     mech.sympy_metadata = prepare_unified_jacobian(mech)
     ctx = build_template_context(mech)
 
@@ -235,7 +280,7 @@ def test_cse_topological_order():
     from mkpp.parser import load_mechanism
     from mkpp.template_context import build_template_context
 
-    mech = load_mechanism("mechanisms/chapman.yaml")
+    mech = load_mechanism("mechanisms/openatmos/chapman/mechanism.json")
     mech.sympy_metadata = prepare_unified_jacobian(mech)
     ctx = build_template_context(mech)
 

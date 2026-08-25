@@ -29,16 +29,16 @@ To generate a solver header for a supported mechanism (e.g., SAPRC-99, Chapman, 
 
 ```bash
 # Compile SAPRC-99 mechanism with ROS-3 (default 3-stage order 3) solver
-mkpp compile mechanisms/saprc99.yaml --test-env example_env.yaml --out mkpp-generated --solver ros3
+mkpp compile mechanisms/openatmos/saprc99/mechanism.json --test-env example_env.yaml --out mkpp-generated --solver ros3
 
 # Compile high-throughput ROS-2 (2-stage order 2) solver for 3D ESM runs
-mkpp compile mechanisms/saprc99.yaml --test-env example_env.yaml --out mkpp-generated --solver ros2
+mkpp compile mechanisms/openatmos/saprc99/mechanism.json --test-env example_env.yaml --out mkpp-generated --solver ros2
 
 # Compile high-accuracy ROS-4 (4-stage order 4) solver
-mkpp compile mechanisms/saprc99.yaml --test-env example_env.yaml --out mkpp-generated --solver ros4
+mkpp compile mechanisms/openatmos/saprc99/mechanism.json --test-env example_env.yaml --out mkpp-generated --solver ros4
 
 # Compile ROS-3 solver with discrete Adjoint / TLM support for JEDI 4D-Var
-mkpp compile mechanisms/saprc99.yaml --test-env example_env.yaml --out mkpp-generated --solver ros3 --adjoint
+mkpp compile mechanisms/openatmos/saprc99/mechanism.json --test-env example_env.yaml --out mkpp-generated --solver ros3 --adjoint
 ```
 
 The generated header (`mkpp-generated/saprc99.hpp`) contains:

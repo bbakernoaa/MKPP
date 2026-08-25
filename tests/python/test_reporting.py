@@ -5,7 +5,7 @@ from mkpp.reporting import write_report
 
 
 def test_write_report_without_matplotlib(tmp_path):
-    mech = load_mechanism("mechanisms/chapman.yaml")
+    mech = load_mechanism("mechanisms/openatmos/chapman/mechanism.json")
     with patch("mkpp.reporting.HAS_MATPLOTLIB", False):
         write_report(mech, {}, tmp_path)
 
@@ -16,7 +16,7 @@ def test_write_report_without_matplotlib(tmp_path):
 
 
 def test_write_report_with_matplotlib_if_installed(tmp_path):
-    mech = load_mechanism("mechanisms/chapman.yaml")
+    mech = load_mechanism("mechanisms/openatmos/chapman/mechanism.json")
     write_report(mech, {}, tmp_path)
 
     report_file = tmp_path / "report_chapman.md"

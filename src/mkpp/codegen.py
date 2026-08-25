@@ -84,8 +84,11 @@ def generate_headers(
     out_path = Path(out_dir)
     out_path.mkdir(parents=True, exist_ok=True)
 
-    # 1. Build template context (handles all data preparation)
-    context = build_template_context(mech, solver_name, adjoint=adjoint, simd_backend=simd_backend)
+    # Sensitivity code is always emitted into the generated header, guarded by
+    # MKPP_ENABLE_ADJOINT.  That keeps a mechanism's chemistry artifact stable
+    # while allowing CMake to preprocess adjoint/TLM code away in forward-only
+    # builds.  ``adjoint`` remains accepted for CLI/API compatibility.
+    context = build_template_context(mech, solver_name, adjoint=True, simd_backend=simd_backend)
     # Add suffix to context for filename generation
     context["suffix"] = suffix
 
@@ -98,7 +101,44 @@ def generate_headers(
     with open(header_path, "w") as f:
         f.write(header_text)
 
-    results = {"header": str(header_path)}
+    compiled_sources = []
+    # Keep the public include at the output root while grouping its compiled
+    # implementation units under a mechanism-specific directory.
+    compiled_path = out_path / f"{mech.name}{suffix}"
+    compiled_path.mkdir(parents=True, exist_ok=True)
+    for kernel, chunks in (
+        ("rates", context["compiled_rate_chunks"]),
+        ("jacobian", context["compiled_jacobian_chunks"]),
+    ):
+        for index, expressions in enumerate(chunks):
+            source_context = dict(context)
+            source_context.update(
+                {
+                    "compiled_kernel": kernel,
+                    "compiled_chunk_index": index,
+                    "compiled_expressions": expressions,
+                }
+            )
+            source_path = compiled_path / f"{kernel}_{index}.cpp"
+            with open(source_path, "w") as f:
+                f.write(engine.render("compiled_kernel_chunk.cpp.j2", source_context))
+            compiled_sources.append(str(source_path))
+
+    for index, expressions in enumerate(context["compiled_lu_chunks"]):
+        source_context = dict(context)
+        source_context.update({"compiled_chunk_index": index, "compiled_expressions": expressions})
+        source_path = compiled_path / f"factorize_{index}.cpp"
+        with open(source_path, "w") as f:
+            f.write(engine.render("compiled_factorize_chunk.cpp.j2", source_context))
+        compiled_sources.append(str(source_path))
+
+    for kernel in ("solve",):
+        source_path = compiled_path / f"{kernel}.cpp"
+        with open(source_path, "w") as f:
+            f.write(engine.render(f"compiled_{kernel}.cpp.j2", context))
+        compiled_sources.append(str(source_path))
+
+    results = {"header": str(header_path), "compiled_sources": compiled_sources}
 
     if generate_host_api:
         api_results = generate_host_api_headers(mech, out_dir=out_dir, solver_name=solver_name)
@@ -112,6 +152,7 @@ def generate_headers(
         "checksum": hashlib.sha256(mech.name.encode()).hexdigest(),
         "artifacts": [
             {"kind": "header", "file": header_path.name},
+            *({"kind": "compiled_kernel_source", "file": str(Path(source).relative_to(out_path))} for source in compiled_sources),
             {"kind": "adjoint_tlm_record", "differentiable": True},
         ],
     }

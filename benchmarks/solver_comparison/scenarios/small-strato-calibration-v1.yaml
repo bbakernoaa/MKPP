@@ -1,0 +1,24 @@
+schema_version: 1
+scenario_id: small-strato-calibration-v1
+version: 1.0.0
+mechanism: {id: small-strato, version: 1.0.0, sha256: 323a53f0f40f58e304fe1d8c7609b79c2b5f6a1bb305baf6e4ddd380f1c0f30a}
+role: calibration
+initial_state:
+  O: {value: 1.0e-12, unit: mol m-3}
+  O1D: {value: 1.0e-15, unit: mol m-3}
+  O3: {value: 1.0e-7, unit: mol m-3}
+  'NO': {value: 1.0e-10, unit: mol m-3}
+  NO2: {value: 1.0e-9, unit: mol m-3}
+  M: {value: 40.0, unit: mol m-3}
+  O2: {value: 8.0, unit: mol m-3}
+environment: {temperature: {value: 270.0, unit: K}, pressure: {value: 80000.0, unit: Pa}}
+forcing:
+  SUN: {unit: '1', points: [{time_seconds: 0.0, value: 0.2}, {time_seconds: 300.0, value: 1.0}, {time_seconds: 600.0, value: 0.2}]}
+integration: {start_seconds: 0.0, horizon_seconds: 600.0, checkpoints_seconds: [300.0, 600.0], forcing_boundaries_seconds: [0.0, 300.0, 600.0]}
+workload: {cells: [1, 10], ensemble_seed: 1701}
+accuracy:
+  rtol: 1.0e-6
+  atol_by_species: {O: 1.0e-15, O1D: 1.0e-18, O3: 1.0e-12, 'NO': 1.0e-15, NO2: 1.0e-15, M: 1.0e-6, O2: 1.0e-6}
+  positivity_policy: nonnegative_with_scaled_roundoff
+  conservation_checks: [oxygen_atoms]
+reference: {implementation: scipy-radau, max_refinements: 3}

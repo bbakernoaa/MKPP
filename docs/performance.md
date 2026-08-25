@@ -68,7 +68,7 @@ cmake --build build -j
 When compiling chemistry mechanisms, pass `--simd-backend kokkos_batched` to leverage `KokkosBatched::Vector` for `Wide<W>` SIMD vector storage:
 
 ```bash
-python3 -m mkpp compile mechanisms/chapman.yaml \
+python3 -m mkpp compile mechanisms/openatmos/chapman/mechanism.json \
   --test-env example_env.yaml \
   --simd-backend kokkos_batched \
   --out mkpp-generated/

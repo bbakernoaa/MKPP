@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -18,8 +19,11 @@ SCENARIO_PATH = BENCHMARK_ROOT / "scenarios" / "ts1-measurement-v1.yaml"
 MICM_TS1_BUILD = BENCHMARK_ROOT / "runners" / "micm" / "ts1" / "CMakeLists.txt"
 MICM_RUNNER = BENCHMARK_ROOT / "runners" / "micm" / "main.cpp"
 MKPP_RUNNER = BENCHMARK_ROOT / "runners" / "mkpp" / "main.cpp"
+MKPP_BUILD = BENCHMARK_ROOT / "runners" / "mkpp" / "CMakeLists.txt"
 MKPP_BINDING = BENCHMARK_ROOT / "runners" / "mkpp" / "ts1_binding.json"
+MKPP_BINDING_DATA = BENCHMARK_ROOT / "runners" / "mkpp" / "ts1_binding_data.hpp"
 SHARED_OPENATMOS_SOURCE = BENCHMARK_ROOT / "sources" / "ts1" / "musica-config" / "ts1.json"
+TS1_INITIAL_CONDITIONS = SHARED_OPENATMOS_SOURCE.with_name("initial_conditions.csv")
 
 
 def _load_yaml(path: Path) -> dict[str, object]:
@@ -100,6 +104,37 @@ def test_ts1_mkpp_uses_the_same_openatmos_reaction_source_as_micm() -> None:
     assert binding["source"] == str(SHARED_OPENATMOS_SOURCE.relative_to(ROOT))
     manifest = _load_yaml(MANIFEST_PATH)
     assert str(SHARED_OPENATMOS_SOURCE.relative_to(ROOT)) in manifest["bindings"]["mkpp"]["assets"]
+
+
+def test_ts1_mkpp_regenerates_its_kernel_from_the_pinned_openatmos_source() -> None:
+    """A checked-in header alone is not an admissible MKPP chemistry source."""
+    build = MKPP_BUILD.read_text(encoding="utf-8")
+    assert "ts1.json" in build
+    assert "environment.yaml" in build
+    assert "mkpp.cli" in build
+    assert "--no-cache" in build
+    assert "mkpp_ts1_openatmos_binding" in build
+
+
+def test_ts1_mkpp_user_defined_inputs_match_the_canonical_initial_conditions() -> None:
+    """Keep the generated runner binding tied to OpenAtmos USER labels, not reaction guesses."""
+    source = json.loads(SHARED_OPENATMOS_SOURCE.read_text(encoding="utf-8"))
+    user_values = {}
+    for row in TS1_INITIAL_CONDITIONS.read_text(encoding="utf-8").splitlines():
+        key, value, *_ = row.split(",")
+        if key.startswith("USER."):
+            user_values[key.removeprefix("USER.")] = float(value)
+
+    binding_data = MKPP_BINDING_DATA.read_text(encoding="utf-8")
+    match = re.search(r"reaction_parameters\{(.*?)\};", binding_data, re.DOTALL)
+    assert match, "TS1 binding must provide one source-indexed reaction parameter array"
+    values = [float(token) for token in match.group(1).replace("\n", " ").split(",") if token.strip()]
+    assert len(values) == len(source["reactions"])
+
+    for index, reaction in enumerate(source["reactions"]):
+        if reaction["type"] == "USER_DEFINED":
+            expected = user_values.get(reaction["name"], 0.0)
+            assert values[index] == expected, f"reaction {index} ({reaction['name']}) drifted from USER input"
 
 
 def test_ts1_micm_and_mkpp_use_the_same_named_photolysis_forcing() -> None:

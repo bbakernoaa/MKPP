@@ -24,7 +24,7 @@ MKPP evaluates the chemical mechanism symbolically at build time, computes a spa
 ```mermaid
 flowchart TD
     subgraph Stage 1: Ingestion
-        A[Mechanism Specification YAML\nmechanisms/*.yaml] --> B[Environment Driver YAML\nexample_env.yaml]
+        A[OpenAtmos Mechanism JSON\nmechanisms/openatmos/*/mechanism.json] --> B[Environment Driver YAML\nexample_env.yaml]
     end
 
     subgraph Stage 2: Symbolic Lowering
@@ -62,7 +62,7 @@ flowchart TD
 ## 3. Stage-by-Stage Technical Walkthrough
 
 ### Stage 1: Mechanism Specification & Input Ingestion
-* **Inputs**: Mechanism declarations (`mechanisms/*.yaml`) and environment configurations.
+* **Inputs**: OpenAtmos mechanism declarations (`mechanisms/openatmos/*/mechanism.json`) and environment configurations.
 * **Mechanism Data**: Chemical species (names, phase modes `gas`/`aerosol`/`aqueous`, roles `variable`/`fixed`, elemental stoichiometry) and reaction rate laws (`ARRHENIUS`, `TROE`/`FALLOFF`, `PHOTOLYSIS`, `EP2`, `EP3`, `HETEROGENEOUS`, `PHASE_CHANGE`, `TUNNELING`, `CUSTOM`).
 * **Parser (`src/mkpp/parser.py`)**: Ingests YAML declarations into typed data structures (`MechanismDefinition`, `SpeciesDefinition`, `ReactionDefinition`).
 

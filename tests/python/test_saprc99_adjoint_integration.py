@@ -32,7 +32,7 @@ from mkpp.parser import load_mechanism
 
 MAX_STEPS = 200
 MAX_CHECKPOINT_MEMORY_BYTES = 256 * 1024  # 256 KB = 262,144 bytes
-SAPRC99_PATH = "mechanisms/saprc99_mini.yaml"
+SAPRC99_PATH = "mechanisms/openatmos/saprc99_mini/mechanism.json"
 
 
 # ---------------------------------------------------------------------------

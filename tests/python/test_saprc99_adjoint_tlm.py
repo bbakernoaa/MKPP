@@ -49,7 +49,7 @@ def _get_saprc99_evaluators():
     if _SAPRC99_CACHE:
         return _SAPRC99_CACHE
 
-    mech = load_mechanism("mechanisms/saprc99_mini.yaml")
+    mech = load_mechanism("mechanisms/openatmos/saprc99_mini/mechanism.json")
     data = prepare_unified_jacobian(mech)
     species_map = data["species_map"]
     f_total = data["f_implicit"] + data["f_explicit"]

@@ -95,6 +95,8 @@ def build_template_context(
 
     # --- Determine permutation ---
     permutation = lu_plan.permutation if lu_plan and lu_plan.permutation else None
+    environment_temperature = float(mech.metadata.get("temperature", "300.0"))
+    environment_air_density = float(mech.metadata.get("air_density", "2.4476e19"))
 
     # --- Determine equilibrium and photolysis flags ---
     has_equilibrium = bool(mech.equilibrium_reactions)
@@ -127,6 +129,8 @@ def build_template_context(
                     state_var="S",
                     use_parentheses=False,
                     keep_env_symbols=has_equilibrium,
+                    temperature=environment_temperature,
+                    air_density=environment_air_density,
                 )
                 remapped_eqn = _remap_s_indices(eqn, inv_p)
                 jacobian_entries.append((i, j, remapped_eqn))
@@ -139,6 +143,8 @@ def build_template_context(
                     state_var="S",
                     use_parentheses=False,
                     keep_env_symbols=has_equilibrium,
+                    temperature=environment_temperature,
+                    air_density=environment_air_density,
                 )
                 jacobian_entries.append((i, j, eqn))
 
@@ -165,6 +171,8 @@ def build_template_context(
                     state_var="S",
                     use_parentheses=False,
                     keep_env_symbols=has_equilibrium,
+                    temperature=environment_temperature,
+                    air_density=environment_air_density,
                 )
                 remapped_eqn = _remap_s_indices(eqn, inv_p)
                 f_exprs.append(remapped_eqn)
@@ -176,6 +184,8 @@ def build_template_context(
                     state_var="S",
                     use_parentheses=False,
                     keep_env_symbols=has_equilibrium,
+                    temperature=environment_temperature,
+                    air_density=environment_air_density,
                 )
                 f_exprs.append(eqn)
 
@@ -372,6 +382,8 @@ def build_template_context(
                 state_var="state",
                 use_parentheses=True,
                 keep_env_symbols=has_equilibrium,
+                temperature=environment_temperature,
+                air_density=environment_air_density,
             )
             rate_flux_cse.append({"symbol": str(sym), "expr": eqn})
             eqn_hoist = format_eqn(
@@ -380,6 +392,8 @@ def build_template_context(
                 state_var="S",
                 use_parentheses=False,
                 keep_env_symbols=has_equilibrium,
+                temperature=environment_temperature,
+                air_density=environment_air_density,
             )
             rate_flux_cse_hoist.append({"symbol": str(sym), "expr": eqn_hoist})
 
@@ -391,6 +405,8 @@ def build_template_context(
                 state_var="state",
                 use_parentheses=True,
                 keep_env_symbols=has_equilibrium,
+                temperature=environment_temperature,
+                air_density=environment_air_density,
             )
             rate_flux_exprs.append({"index": idx, "expr": eqn})
             eqn_hoist = format_eqn(
@@ -399,6 +415,8 @@ def build_template_context(
                 state_var="S",
                 use_parentheses=False,
                 keep_env_symbols=has_equilibrium,
+                temperature=environment_temperature,
+                air_density=environment_air_density,
             )
             rate_flux_exprs_hoist.append({"index": idx, "expr": eqn_hoist})
 
@@ -425,6 +443,8 @@ def build_template_context(
                 state_var="state",
                 use_parentheses=True,
                 keep_env_symbols=has_equilibrium,
+                temperature=environment_temperature,
+                air_density=environment_air_density,
             )
             rate_exprs_state.append(eqn)
     context["rate_exprs_state"] = rate_exprs_state
@@ -441,9 +461,66 @@ def build_template_context(
                         state_var="state",
                         use_parentheses=True,
                         keep_env_symbols=has_equilibrium,
+                        temperature=environment_temperature,
+                        air_density=environment_air_density,
                     )
                     jacobian_entries_state.append((i, j, eqn))
     context["jacobian_entries_state"] = jacobian_entries_state
+
+    # Bound the expression-heavy code into independently compiled units.  The
+    # context owns this metadata (rather than the CLI) so direct template users
+    # and the compiler always select the same generated-artifact pathway.
+    def _chunk(items: list[Any], size: int) -> list[list[Any]]:
+        return [items[index : index + size] for index in range(0, len(items), size)]
+
+    def _raw_pointer_expression(expression: str) -> str:
+        return re.sub(r"state\((\d+)\)", r"state[\1]", expression)
+
+    context["compiled_rate_chunks"] = [
+        [
+            {"index": index, "expr": _raw_pointer_expression(expression)}
+            for index, expression in enumerate(chunk, start=chunk_index * 32)
+        ]
+        for chunk_index, chunk in enumerate(_chunk(rate_exprs_state, 32))
+    ]
+    context["compiled_jacobian_chunks"] = [
+        [
+            {"row": row, "column": column, "expr": _raw_pointer_expression(expression)}
+            for row, column, expression in chunk
+        ]
+        for chunk in _chunk(jacobian_entries_state, 256)
+    ]
+
+    # Sparse LU is emitted as a separate compiled unit while retaining the
+    # exact symbolic operation order selected during lowering.  L and U never
+    # occupy the same matrix location, so a single packed array is sufficient.
+    def _lu_expression(expression: str) -> str:
+        expression = re.sub(r"\b[LU]_(\d+)_(\d+)\b", r"lu[\1 * N + \2]", expression)
+        return re.sub(r"\bW_(\d+)_(\d+)\b", r"w[\1 * N + \2]", expression)
+
+    def _forward_expression(expression: str) -> str:
+        expression = _lu_expression(expression)
+        expression = re.sub(r"\bb_(\d+)\b", r"rhs[\1]", expression)
+        return re.sub(r"\by_(\d+)\b", r"work[\1]", expression)
+
+    def _backward_expression(expression: str) -> str:
+        expression = _lu_expression(expression)
+        expression = re.sub(r"\by_(\d+)\b", r"work[\1]", expression)
+        return re.sub(r"\bx_(\d+)\b", r"solution[\1]", expression)
+
+    compiled_lu_expressions = [
+        {**entry, "expr": _lu_expression(entry["expr"])} for entry in lu_expressions
+    ]
+    context["compiled_lu_expressions"] = compiled_lu_expressions
+    context["compiled_lu_chunks"] = _chunk(compiled_lu_expressions, 256)
+    context["compiled_forward_steps"] = [
+        {"index": step["i"], "expr": _forward_expression(step["raw_expr"])}
+        for step in forward_sub_steps
+    ]
+    context["compiled_backward_steps"] = [
+        {"index": step["i"], "expr": _backward_expression(step["raw_expr"])}
+        for step in backward_sub_steps
+    ]
 
     adjoint_entries_state = []
     if sympy_meta:
@@ -460,6 +537,8 @@ def build_template_context(
                             state_var="state",
                             use_parentheses=True,
                             keep_env_symbols=has_equilibrium,
+                            temperature=environment_temperature,
+                            air_density=environment_air_density,
                         )
                         adjoint_entries_state.append((i, j, eqn))
     context["adjoint_entries_state"] = adjoint_entries_state
@@ -534,7 +613,14 @@ def build_template_context(
                     None,
                 )
                 if species_idx is not None:
-                    eqn = format_eqn(expr, mech.species, state_var="state", use_parentheses=True)
+                    eqn = format_eqn(
+                        expr,
+                        mech.species,
+                        state_var="state",
+                        use_parentheses=True,
+                        temperature=environment_temperature,
+                        air_density=environment_air_density,
+                    )
                     partition_entries.append(
                         {
                             "species_idx": species_idx,

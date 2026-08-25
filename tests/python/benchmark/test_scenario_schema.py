@@ -6,7 +6,7 @@ import math
 from copy import deepcopy
 
 import pytest
-from mkpp.benchmark.scenario import validate_scenario, validate_scenario_pair
+from mkpp.benchmark.scenario import forcing_segments, validate_scenario, validate_scenario_pair
 
 SHA = "c" * 64
 
@@ -126,3 +126,27 @@ def test_scenario_rejects_unknown_fields(valid_scenario: dict) -> None:
     scenario["unexpected"] = True
     with pytest.raises(ValueError, match="unexpected|additional|unknown"):
         validate_scenario(scenario)
+
+
+def test_forcing_segments_materialize_one_shared_piecewise_schedule(valid_scenario: dict) -> None:
+    scenario = deepcopy(valid_scenario)
+    scenario["forcing"]["J_O2"]["points"] = [
+        {"time_seconds": 0.0, "value": 1.0e-12},
+        {"time_seconds": 300.0, "value": 2.0e-12},
+        {"time_seconds": 600.0, "value": 3.0e-12},
+    ]
+    scenario["integration"]["forcing_boundaries_seconds"] = [0.0, 300.0, 600.0]
+    segments = forcing_segments(scenario)
+    assert [(segment.start_seconds, segment.end_seconds) for segment in segments] == [
+        (0.0, 300.0),
+        (300.0, 600.0),
+    ]
+    assert segments[0].values == {"J_O2": pytest.approx(1.0e-12)}
+    assert segments[1].values == {"J_O2": pytest.approx(2.0e-12)}
+
+
+def test_forcing_segments_reject_underspecified_boundary_value(valid_scenario: dict) -> None:
+    scenario = deepcopy(valid_scenario)
+    scenario["integration"]["forcing_boundaries_seconds"] = [0.0, 300.0, 600.0]
+    with pytest.raises(ValueError, match="missing value"):
+        forcing_segments(scenario)

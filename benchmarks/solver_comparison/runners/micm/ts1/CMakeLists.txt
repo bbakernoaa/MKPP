@@ -6,10 +6,12 @@ set(TS1_CONFIG_DIR "${TS1_SOURCE_ROOT}/musica-config")
 set(TS1_IMPORTER "${TS1_SOURCE_ROOT}/micm-importer/import_ts1.py")
 set(TS1_CONFIG "${TS1_CONFIG_DIR}/ts1.json")
 set(TS1_INITIAL_CONDITIONS "${TS1_CONFIG_DIR}/initial_conditions.csv")
+set(TS1_ENVIRONMENT "${TS1_CONFIG_DIR}/environment.yaml")
+set(TS1_SCENARIO "${CMAKE_SOURCE_DIR}/benchmarks/solver_comparison/scenarios/ts1-measurement-v1.yaml")
 set(TS1_GENERATED_HEADER "${CMAKE_CURRENT_BINARY_DIR}/generated_micm_ts1.hpp")
 
 foreach(asset IN ITEMS "${TS1_IMPORTER}" "${TS1_CONFIG}"
-                       "${TS1_INITIAL_CONDITIONS}")
+                       "${TS1_INITIAL_CONDITIONS}" "${TS1_ENVIRONMENT}" "${TS1_SCENARIO}")
   if(NOT EXISTS "${asset}")
     message(FATAL_ERROR "FATAL ERROR: pinned MICM TS1 input is missing: ${asset}")
   endif()
@@ -18,9 +20,14 @@ endforeach()
 file(SHA256 "${TS1_IMPORTER}" TS1_IMPORTER_SHA256)
 file(SHA256 "${TS1_CONFIG}" TS1_CONFIG_SHA256)
 file(SHA256 "${TS1_INITIAL_CONDITIONS}" TS1_INITIAL_CONDITIONS_SHA256)
+file(SHA256 "${TS1_ENVIRONMENT}" TS1_ENVIRONMENT_SHA256)
 if(NOT TS1_IMPORTER_SHA256 STREQUAL
-   "a45b228baf518dde6d0e2112fbb24ffd69f1e670babf6b8c8ecbb5114d0cb015")
+   "be7d2347ea0f2f185c55e763f862635077c8df231f2131b84eba455c9c0d46a3")
   message(FATAL_ERROR "FATAL ERROR: pinned MICM TS1 importer hash mismatch")
+endif()
+if(NOT TS1_ENVIRONMENT_SHA256 STREQUAL
+   "2c5206c7ded909f5c219b47e2eda5b03819c3993e9aaace8556862b5ff0a6995")
+  message(FATAL_ERROR "FATAL ERROR: pinned TS1 environment hash mismatch")
 endif()
 if(NOT TS1_CONFIG_SHA256 STREQUAL
    "4390f37f0b0dedf38c6644986c7b972152b52bd4c3fba83f399035945771a997")
@@ -35,8 +42,9 @@ add_custom_command(
   OUTPUT "${TS1_GENERATED_HEADER}"
   COMMAND
     "${Python3_EXECUTABLE}" "${TS1_IMPORTER}" --source "${TS1_CONFIG_DIR}"
+    --scenario "${TS1_SCENARIO}"
     --output "${TS1_GENERATED_HEADER}"
-  DEPENDS "${TS1_IMPORTER}" "${TS1_CONFIG}" "${TS1_INITIAL_CONDITIONS}"
+  DEPENDS "${TS1_IMPORTER}" "${TS1_CONFIG}" "${TS1_INITIAL_CONDITIONS}" "${TS1_ENVIRONMENT}" "${TS1_SCENARIO}"
   COMMENT "Generating audited MICM TS1 binding from pinned MUSICA inputs"
   VERBATIM)
 

@@ -67,11 +67,19 @@ int main() {
   try {
     const int num_cells = environment_integer("NUM_CELLS", 1);
     const int num_steps = environment_integer("NUM_STEPS", 1);
+    const int warmups = environment_integer("WARMUPS", 1);
+    const int repetitions = environment_integer("REPETITIONS", 1);
     const double dt = environment_double("DT_SECONDS", 60.0);
     const double j1 = environment_double("J1", 1.0e-12);
     const double j3 = environment_double("J3", 1.0e-4);
-    if (num_cells < 1 || num_steps < 1 || !std::isfinite(dt) || dt <= 0.0) {
-      throw std::invalid_argument("NUM_CELLS, NUM_STEPS, and DT_SECONDS must be positive");
+    const double temperature = environment_double("TEMPERATURE_K", 270.0);
+    const double pressure = environment_double("PRESSURE_PA", 80000.0);
+    const double initial_o = environment_double("INITIAL_O", 2.5e9);
+    const double initial_o2 = environment_double("INITIAL_O2", 5.1e18);
+    const double initial_o3 = environment_double("INITIAL_O3", 8.0e11);
+    const double initial_m = environment_double("INITIAL_M", 2.46e19);
+    if (num_cells < 1 || num_steps < 1 || warmups < 1 || repetitions < 1 || !std::isfinite(dt) || dt <= 0.0) {
+      throw std::invalid_argument("NUM_CELLS, NUM_STEPS, WARMUPS, REPETITIONS, and DT_SECONDS must be positive");
     }
 
     micm::Species O("O"), O2("O2"), O3("O3"), M("M");
@@ -124,49 +132,60 @@ int main() {
 
     const auto reset_state = [&]() {
       for (int cell = 0; cell < num_cells; ++cell) {
-        state.conditions_[cell].temperature_ = 288.15;
-        state.conditions_[cell].pressure_ = 101325.0;
-        state.variables_[cell][species_index.at("O")] = 1.0e10;
-        state.variables_[cell][species_index.at("O2")] = 2.0e10;
-        state.variables_[cell][species_index.at("O3")] = 3.0e10;
-        state.variables_[cell][species_index.at("M")] = 4.0e10;
+        state.conditions_[cell].temperature_ = temperature;
+        state.conditions_[cell].pressure_ = pressure;
+        state.variables_[cell][species_index.at("O")] = initial_o;
+        state.variables_[cell][species_index.at("O2")] = initial_o2;
+        state.variables_[cell][species_index.at("O3")] = initial_o3;
+        state.variables_[cell][species_index.at("M")] = initial_m;
       }
       state.SetCustomRateParameter("J1", std::vector<double>(num_cells, j1));
       state.SetCustomRateParameter("J3", std::vector<double>(num_cells, j3));
       solver.UpdateStateParameters(state);
     };
 
-    reset_state();
-    const auto warmup_result = solver.Solve(dt, state);  // real MICM warmup, outside timing
-    if (warmup_result.state_ != micm::SolverState::Converged) {
-      throw std::runtime_error("MICM warmup did not converge: " + micm::SolverStateToString(warmup_result.state_));
-    }
-    reset_state();            // reset before every timed sample
-    synchronize_solver();
-
     micm::SolverStats work{};
-    const auto start_timing = std::chrono::steady_clock::now();
-    for (int step = 0; step < num_steps; ++step) {
-      const auto solve_result = solver.Solve(dt, state);  // real pinned MICM Solve call
-      if (solve_result.state_ != micm::SolverState::Converged) {
-        throw std::runtime_error("MICM Solve did not converge: " + micm::SolverStateToString(solve_result.state_));
+    for (int warmup = 0; warmup < warmups; ++warmup) {
+      reset_state();
+      const auto warmup_result = solver.Solve(dt, state);
+      if (warmup_result.state_ != micm::SolverState::Converged) {
+        throw std::runtime_error("MICM warmup did not converge: " + micm::SolverStateToString(warmup_result.state_));
       }
-      work.function_calls_ += solve_result.stats_.function_calls_;
-      work.jacobian_updates_ += solve_result.stats_.jacobian_updates_;
-      work.number_of_steps_ += solve_result.stats_.number_of_steps_;
-      work.accepted_ += solve_result.stats_.accepted_;
-      work.rejected_ += solve_result.stats_.rejected_;
-      work.decompositions_ += solve_result.stats_.decompositions_;
-      work.solves_ += solve_result.stats_.solves_;
     }
-    synchronize_solver();
-    const auto stop_timing = std::chrono::steady_clock::now();
-    const double elapsed_ms = std::chrono::duration<double, std::milli>(stop_timing - start_timing).count();
+    double elapsed_ms = 0.0;
+    for (int repetition = 0; repetition < repetitions; ++repetition) {
+      reset_state();
+      synchronize_solver();
+      const auto start_timing = std::chrono::steady_clock::now();
+      for (int step = 0; step < num_steps; ++step) {
+        const auto solve_result = solver.Solve(dt, state);
+        if (solve_result.state_ != micm::SolverState::Converged) {
+          throw std::runtime_error("MICM Solve did not converge: " + micm::SolverStateToString(solve_result.state_));
+        }
+        work.function_calls_ += solve_result.stats_.function_calls_;
+        work.jacobian_updates_ += solve_result.stats_.jacobian_updates_;
+        work.number_of_steps_ += solve_result.stats_.number_of_steps_;
+        work.accepted_ += solve_result.stats_.accepted_;
+        work.rejected_ += solve_result.stats_.rejected_;
+        work.decompositions_ += solve_result.stats_.decompositions_;
+        work.solves_ += solve_result.stats_.solves_;
+      }
+      synchronize_solver();
+      const auto stop_timing = std::chrono::steady_clock::now();
+      elapsed_ms += std::chrono::duration<double, std::milli>(stop_timing - start_timing).count();
+    }
 
     const std::string campaign_id = environment_string("CAMPAIGN_ID", "chapman-smoke");
     const std::string run_id = environment_string("RUN_ID", "micm-chapman-0");
     const int block = environment_integer("BLOCK_ID", 0);
     const int order_position = environment_integer("ORDER_POSITION", 0);
+    const std::string manifest_version = environment_string("MANIFEST_VERSION", "1.0.0");
+    const std::string manifest_sha256 = environment_string("MANIFEST_SHA256", kZeroSha256);
+    const std::string scenario_id = environment_string("SCENARIO_ID", "chapman-measurement-v1");
+    const std::string scenario_version = environment_string("SCENARIO_VERSION", "1.0.0");
+    const std::string scenario_sha256 = environment_string("SCENARIO_SHA256", kZeroSha256);
+    const std::string configuration_id = environment_string("CONFIGURATION_ID", "micm-ros3-default");
+    const std::string configuration_sha256 = environment_string("CONFIGURATION_SHA256", kZeroSha256);
     const double final_time = dt * num_steps;
 
     // stdout is reserved for exactly one JSON runner-result object. All
@@ -179,16 +198,18 @@ int main() {
          << ",\"solver\":{\"id\":\"" << kSolverId << "\",\"version\":\"" << MICM_BENCHMARK_VERSION
          << "\",\"revision\":\"" << MICM_BENCHMARK_REVISION
          << "\",\"backend\":\"cpu\",\"method\":\"three-stage-rosenbrock\"}"
-         << ",\"manifest\":{\"id\":\"chapman\",\"version\":\"1\",\"sha256\":\"" << kZeroSha256 << "\"}"
-         << ",\"scenario\":{\"id\":\"chapman-default\",\"version\":\"1\",\"sha256\":\"" << kZeroSha256 << "\"}"
-         << ",\"configuration\":{\"id\":\"micm-ros3-default\",\"sha256\":\"" << kZeroSha256
-         << "\",\"frozen\":true,\"controls\":{\"dt_seconds\":" << dt << "}}"
+         << ",\"manifest\":{\"id\":\"chapman\",\"version\":\"" << json_escape(manifest_version) << "\",\"sha256\":\"" << json_escape(manifest_sha256) << "\"}"
+         << ",\"scenario\":{\"id\":\"" << json_escape(scenario_id) << "\",\"version\":\"" << json_escape(scenario_version) << "\",\"sha256\":\"" << json_escape(scenario_sha256) << "\"}"
+         << ",\"configuration\":{\"id\":\"" << json_escape(configuration_id) << "\",\"sha256\":\"" << json_escape(configuration_sha256)
+         << "\",\"frozen\":true,\"controls\":{\"dt_seconds\":" << dt
+         << ",\"temperature_k\":" << temperature << ",\"pressure_pa\":" << pressure
+         << ",\"J1\":" << j1 << ",\"J3\":" << j3 << "}}"
          << ",\"build\":{\"binary_sha256\":\"" << kZeroSha256 << "\",\"asset_sha256\":[\"" << kZeroSha256
          << "\"],\"compiler\":\"c++20\",\"flags\":[],\"precision\":\"binary64\"}"
          << ",\"resources\":{\"hardware_id\":\"local\",\"physical_cores\":1,\"threads\":1,"
             "\"affinity\":\"unspecified\",\"numa_policy\":\"unspecified\"}"
          << ",\"timing\":{\"boundary\":\"steady_state_solve\",\"elapsed_ms\":" << elapsed_ms
-         << ",\"cell_steps\":" << (num_cells * num_steps)
+         << ",\"cell_steps\":" << (num_cells * num_steps * repetitions)
          << ",\"clock\":\"std::chrono::steady_clock\",\"synchronized\":true,"
             "\"synchronization\":\"synchronous MICM CPU Solve plus atomic fence\",\"lifecycle_ms\":{}}"
          << ",\"state\":{\"checkpoints\":[{\"time_seconds\":" << final_time << ",\"values\":{";

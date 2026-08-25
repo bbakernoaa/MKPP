@@ -208,6 +208,17 @@ def run_compiler(
         validate_mpi_safety(env_config)
 
         mech = load_mechanism(mech_path)
+        if not hasattr(mech, "metadata") or mech.metadata is None:
+            mech.metadata = {}
+        # Preserve the compile-time test environment for code generation.
+        # Mechanisms without runtime meteorology parameters embed this state in
+        # their Arrhenius/Troe expressions.
+        mech.metadata["temperature"] = str(env.temperature)
+        mech.metadata["air_density"] = str(env.air_density)
+        if env.solver_atol is not None:
+            mech.metadata["atol"] = [env.solver_atol] * len(mech.species)
+        if env.solver_rtol is not None:
+            mech.metadata["rtol"] = [env.solver_rtol] * len(mech.species)
 
         # --- Validation stage ---
         _verbose_log("validation", "Validating mechanism schema and constraints", verbose)
@@ -370,7 +381,7 @@ def main(args=None):
         "--adjoint",
         action="store_true",
         default=False,
-        help="Emit adjoint/TLM integrators and checkpoint buffer (default: off)",
+        help="Deprecated compatibility option; enable emitted adjoint/TLM APIs with -DMKPP_ENABLE_ADJOINT=ON",
     )
     compile_parser.add_argument(
         "--migrate-equilibrium",

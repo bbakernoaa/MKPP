@@ -14,7 +14,7 @@ import numpy as np
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
-# SAPRC-99 species names in MKPP index order (0-indexed, from mechanisms/saprc99.yaml)
+# SAPRC-99 species names in MKPP index order (from the OpenAtmos mechanism).
 MKPP_SPECIES = [
     "O3",
     "H2O2",
