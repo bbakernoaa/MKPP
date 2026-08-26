@@ -35,12 +35,13 @@ foreach(MECH ${MECHS})
   target_link_libraries(
     e2e_${MECH}_runner PRIVATE mkpp_host Kokkos::kokkos GTest::gtest_main
                                GTest::gtest e2e_${MECH}_compiled_kernels)
-  target_compile_definitions(e2e_${MECH}_runner PRIVATE
-    MECH_HEADER=${MECH}.hpp
-    MECH_SOLVER_NAMESPACE=mkpp::generated::${MECH}
-    MKPP_HOST_SELECTED_MECHANISMS
-    MKPP_HOST_MECH_${MECH_UPPER}
-    NUM_SPECIES_MACRO=${NUM_SPEC})
+  target_compile_definitions(
+    e2e_${MECH}_runner
+    PRIVATE MECH_HEADER=${MECH}.hpp
+            MECH_SOLVER_NAMESPACE=mkpp::generated::${MECH}
+            MKPP_HOST_SELECTED_MECHANISMS
+            MKPP_HOST_MECH_${MECH_UPPER}
+            NUM_SPECIES_MACRO=${NUM_SPEC})
 
   add_test(NAME E2ESolver_${MECH} COMMAND e2e_${MECH}_runner)
 

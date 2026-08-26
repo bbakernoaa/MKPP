@@ -3,7 +3,6 @@
 import json
 
 import pytest
-
 from mkpp.codegen import generate_headers
 from mkpp.factorization_plan import FactorizationBlock, FactorizationPlan, make_factorization_plan
 from mkpp.parser import load_mechanism

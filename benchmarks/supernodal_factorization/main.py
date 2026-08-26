@@ -23,8 +23,20 @@ def main() -> None:
     parser.add_argument("--repetitions", type=int, default=5)
     parser.add_argument("--dt", type=float, default=10.0)
     options = parser.parse_args()
-    controls = ["--mechanism", "ts1", "--cells", "1", "--steps", str(options.steps),
-                "--warmups", "2", "--repetitions", str(options.repetitions), "--dt", str(options.dt)]
+    controls = [
+        "--mechanism",
+        "ts1",
+        "--cells",
+        "1",
+        "--steps",
+        str(options.steps),
+        "--warmups",
+        "2",
+        "--repetitions",
+        str(options.repetitions),
+        "--dt",
+        str(options.dt),
+    ]
     results = {}
     for label, binary in (("reference", options.reference), ("candidate", options.candidate)):
         timings = [run(binary, controls)[0] for _ in range(options.runs)]

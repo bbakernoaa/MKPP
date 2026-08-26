@@ -113,8 +113,8 @@ else()
 endif()
 
 # The runner selects Chapman as well as TS1 through the host dispatcher.  Each
-# selected generated mechanism must therefore register its implementation
-# assets through the same artifact-discovery path.
+# selected generated mechanism must therefore register its implementation assets
+# through the same artifact-discovery path.
 mkpp_add_compiled_mechanism(mkpp_chapman_compiled_kernels
                             "${CMAKE_SOURCE_DIR}/mkpp-generated" chapman)
 target_compile_features(mkpp_chapman_compiled_kernels PRIVATE cxx_std_23)
@@ -130,5 +130,6 @@ target_include_directories(
   solver_benchmark_mkpp PRIVATE "${MKPP_TS1_GENERATED_DIR}"
                                 ${CMAKE_SOURCE_DIR}/mkpp-generated)
 target_link_libraries(solver_benchmark_mkpp PRIVATE mkpp_host Kokkos::kokkos)
-target_link_libraries(solver_benchmark_mkpp PRIVATE mkpp_ts1_compiled_kernels
-                                                   mkpp_chapman_compiled_kernels)
+target_link_libraries(
+  solver_benchmark_mkpp PRIVATE mkpp_ts1_compiled_kernels
+                                mkpp_chapman_compiled_kernels)
