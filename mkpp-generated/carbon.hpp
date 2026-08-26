@@ -82,15 +82,15 @@ namespace mkpp::generated::carbon {
       KOKKOS_INLINE_FUNCTION void compute_adjoint(const StateView& state, JacView& J_adj_block, const double* jvals) const {
           // --- Sparse Analytical Adjoint Jacobian Entries J_adj_block(i, j) = J^T(i, j) ---
           // J^T(CH4, CH4): d(d[CH4]/dt) / d[CH4]
-          J_adj_block(0, 0) = -9.078100602113127e-14;
+          J_adj_block(0, 0) = -1.0665177283814332e-13;
           // J^T(CH4, LCH4byOH): d(d[LCH4byOH]/dt) / d[CH4]
-          J_adj_block(0, 4) = 5.175092354113148e-15;
+          J_adj_block(0, 4) = 6.3627720033519555e-15;
           // J^T(CH4, LCH4byCl): d(d[LCH4byCl]/dt) / d[CH4]
-          J_adj_block(0, 5) = 8.560591366701813e-14;
+          J_adj_block(0, 5) = 1.0028900083479136e-13;
           // J^T(CH4, FixedOH): d(d[FixedOH]/dt) / d[CH4]
-          J_adj_block(0, 7) = -5.175092354113148e-15;
+          J_adj_block(0, 7) = -6.3627720033519555e-15;
           // J^T(CH4, FixedCl): d(d[FixedCl]/dt) / d[CH4]
-          J_adj_block(0, 8) = -8.560591366701813e-14;
+          J_adj_block(0, 8) = -1.0028900083479136e-13;
           // J^T(CO, CO): d(d[CO]/dt) / d[CO]
           J_adj_block(1, 1) = -7.3679649e-14;
           // J^T(CO, LCObyOH): d(d[LCObyOH]/dt) / d[CO]
@@ -98,21 +98,21 @@ namespace mkpp::generated::carbon {
           // J^T(CO, FixedOH): d(d[FixedOH]/dt) / d[CO]
           J_adj_block(1, 7) = -7.3679649e-14;
           // J^T(FixedOH, CH4): d(d[CH4]/dt) / d[FixedOH]
-          J_adj_block(7, 0) = -5.175092354113148e-15*state(0);
+          J_adj_block(7, 0) = -6.3627720033519555e-15*state(0);
           // J^T(FixedOH, CO): d(d[CO]/dt) / d[FixedOH]
           J_adj_block(7, 1) = -7.3679649e-14*state(1);
           // J^T(FixedOH, LCH4byOH): d(d[LCH4byOH]/dt) / d[FixedOH]
-          J_adj_block(7, 4) = 5.175092354113148e-15*state(0);
+          J_adj_block(7, 4) = 6.3627720033519555e-15*state(0);
           // J^T(FixedOH, LCObyOH): d(d[LCObyOH]/dt) / d[FixedOH]
           J_adj_block(7, 6) = 7.3679649e-14*state(1);
           // J^T(FixedOH, FixedOH): d(d[FixedOH]/dt) / d[FixedOH]
-          J_adj_block(7, 7) = -5.175092354113148e-15*state(0) - 7.3679649e-14*state(1);
+          J_adj_block(7, 7) = -6.3627720033519555e-15*state(0) - 7.3679649e-14*state(1);
           // J^T(FixedCl, CH4): d(d[CH4]/dt) / d[FixedCl]
-          J_adj_block(8, 0) = -8.560591366701813e-14*state(0);
+          J_adj_block(8, 0) = -1.0028900083479136e-13*state(0);
           // J^T(FixedCl, LCH4byCl): d(d[LCH4byCl]/dt) / d[FixedCl]
-          J_adj_block(8, 5) = 8.560591366701813e-14*state(0);
+          J_adj_block(8, 5) = 1.0028900083479136e-13*state(0);
           // J^T(FixedCl, FixedCl): d(d[FixedCl]/dt) / d[FixedCl]
-          J_adj_block(8, 8) = -8.560591366701813e-14*state(0);
+          J_adj_block(8, 8) = -1.0028900083479136e-13*state(0);
           // J^T(DummyCH4, CO): d(d[CO]/dt) / d[DummyCH4]
           J_adj_block(9, 1) = 4.2566446e-15;
           // J^T(DummyCH4, PCOfromCH4): d(d[PCOfromCH4]/dt) / d[DummyCH4]
@@ -132,9 +132,9 @@ namespace mkpp::generated::carbon {
       template <class StateView, class DeltaView, class RateView>
       KOKKOS_INLINE_FUNCTION void compute_tlm(const StateView& state, const DeltaView& delta_C, RateView& dF_block, const double* jvals) const {
           dF_block(0) = 0.0;
-          dF_block(0) += (-9.078100602113127e-14) * delta_C(0);
-          dF_block(0) += (-5.175092354113148e-15*state(0)) * delta_C(7);
-          dF_block(0) += (-8.560591366701813e-14*state(0)) * delta_C(8);
+          dF_block(0) += (-1.0665177283814332e-13) * delta_C(0);
+          dF_block(0) += (-6.3627720033519555e-15*state(0)) * delta_C(7);
+          dF_block(0) += (-1.0028900083479136e-13*state(0)) * delta_C(8);
           dF_block(1) = 0.0;
           dF_block(1) += (-7.3679649e-14) * delta_C(1);
           dF_block(1) += (-7.3679649e-14*state(1)) * delta_C(7);
@@ -145,21 +145,21 @@ namespace mkpp::generated::carbon {
           dF_block(3) = 0.0;
           dF_block(3) += (38199.012) * delta_C(10);
           dF_block(4) = 0.0;
-          dF_block(4) += (5.175092354113148e-15) * delta_C(0);
-          dF_block(4) += (5.175092354113148e-15*state(0)) * delta_C(7);
+          dF_block(4) += (6.3627720033519555e-15) * delta_C(0);
+          dF_block(4) += (6.3627720033519555e-15*state(0)) * delta_C(7);
           dF_block(5) = 0.0;
-          dF_block(5) += (8.560591366701813e-14) * delta_C(0);
-          dF_block(5) += (8.560591366701813e-14*state(0)) * delta_C(8);
+          dF_block(5) += (1.0028900083479136e-13) * delta_C(0);
+          dF_block(5) += (1.0028900083479136e-13*state(0)) * delta_C(8);
           dF_block(6) = 0.0;
           dF_block(6) += (7.3679649e-14) * delta_C(1);
           dF_block(6) += (7.3679649e-14*state(1)) * delta_C(7);
           dF_block(7) = 0.0;
-          dF_block(7) += (-5.175092354113148e-15) * delta_C(0);
+          dF_block(7) += (-6.3627720033519555e-15) * delta_C(0);
           dF_block(7) += (-7.3679649e-14) * delta_C(1);
-          dF_block(7) += (-5.175092354113148e-15*state(0) - 7.3679649e-14*state(1)) * delta_C(7);
+          dF_block(7) += (-6.3627720033519555e-15*state(0) - 7.3679649e-14*state(1)) * delta_C(7);
           dF_block(8) = 0.0;
-          dF_block(8) += (-8.560591366701813e-14) * delta_C(0);
-          dF_block(8) += (-8.560591366701813e-14*state(0)) * delta_C(8);
+          dF_block(8) += (-1.0028900083479136e-13) * delta_C(0);
+          dF_block(8) += (-1.0028900083479136e-13*state(0)) * delta_C(8);
           dF_block(9) = 0.0;
           dF_block(9) += (-4.2566446e-15) * delta_C(9);
           dF_block(10) = 0.0;
@@ -667,11 +667,11 @@ namespace mkpp::generated::carbon {
           double F1_3 = -4.2566446e-15;
           double F1_4 = 38199.012 - 7.3679649e-14*S_4;
           double F1_5 = 7.3679649e-14*S_4;
-          double F1_6 = -5.175092354113148e-15*S_8 - 7.3679649e-14*S_4;
-          double F1_7 = 5.175092354113148e-15*S_8;
-          double F1_8 = -9.078100602113127e-14*S_8;
-          double F1_9 = 8.560591366701813e-14*S_8;
-          double F1_10 = -8.560591366701813e-14*S_8;
+          double F1_6 = -6.3627720033519555e-15*S_8 - 7.3679649e-14*S_4;
+          double F1_7 = 6.3627720033519555e-15*S_8;
+          double F1_8 = -1.0665177283814332e-13*S_8;
+          double F1_9 = 1.0028900083479136e-13*S_8;
+          double F1_10 = -1.0028900083479136e-13*S_8;
 
           // 2. Evaluate importance and update active set
           active[0] = (Kokkos::fabs(F1_0) / (atol[0] + rtol[0] * Kokkos::fabs(state(3))) >= importance_threshold);
@@ -698,17 +698,17 @@ namespace mkpp::generated::carbon {
           double J_5_4 = 7.3679649e-14;
           double J_5_6 = 7.3679649e-14*S_4;
           double J_6_4 = -7.3679649e-14;
-          double J_6_6 = -5.175092354113148e-15*S_8 - 7.3679649e-14*S_4;
-          double J_6_8 = -5.175092354113148e-15;
-          double J_7_6 = 5.175092354113148e-15*S_8;
-          double J_7_8 = 5.175092354113148e-15;
-          double J_8_6 = -5.175092354113148e-15*S_8;
-          double J_8_8 = -9.078100602113127e-14;
-          double J_8_10 = -8.560591366701813e-14*S_8;
-          double J_9_8 = 8.560591366701813e-14;
-          double J_9_10 = 8.560591366701813e-14*S_8;
-          double J_10_8 = -8.560591366701813e-14;
-          double J_10_10 = -8.560591366701813e-14*S_8;
+          double J_6_6 = -6.3627720033519555e-15*S_8 - 7.3679649e-14*S_4;
+          double J_6_8 = -6.3627720033519555e-15;
+          double J_7_6 = 6.3627720033519555e-15*S_8;
+          double J_7_8 = 6.3627720033519555e-15;
+          double J_8_6 = -6.3627720033519555e-15*S_8;
+          double J_8_8 = -1.0665177283814332e-13;
+          double J_8_10 = -1.0028900083479136e-13*S_8;
+          double J_9_8 = 1.0028900083479136e-13;
+          double J_9_10 = 1.0028900083479136e-13*S_8;
+          double J_10_8 = -1.0028900083479136e-13;
+          double J_10_10 = -1.0028900083479136e-13*S_8;
           double W_0_0 = active[0] ? inv_g_dt : 1.0;
           double W_0_2 = (active[0] && active[2]) ? (-J_0_2) : 0.0;
           double W_1_1 = active[1] ? inv_g_dt : 1.0;
@@ -829,11 +829,11 @@ namespace mkpp::generated::carbon {
           double F2_3 = -4.2566446e-15;
           double F2_4 = 38199.012 - 7.3679649e-14*Y2_4;
           double F2_5 = 7.3679649e-14*Y2_4;
-          double F2_6 = -5.175092354113148e-15*Y2_8 - 7.3679649e-14*Y2_4;
-          double F2_7 = 5.175092354113148e-15*Y2_8;
-          double F2_8 = -9.078100602113127e-14*Y2_8;
-          double F2_9 = 8.560591366701813e-14*Y2_8;
-          double F2_10 = -8.560591366701813e-14*Y2_8;
+          double F2_6 = -6.3627720033519555e-15*Y2_8 - 7.3679649e-14*Y2_4;
+          double F2_7 = 6.3627720033519555e-15*Y2_8;
+          double F2_8 = -1.0665177283814332e-13*Y2_8;
+          double F2_9 = 1.0028900083479136e-13*Y2_8;
+          double F2_10 = -1.0028900083479136e-13*Y2_8;
           // RHS for stage 2
           double rhs2_0 = F2_0 + (-1.0156171083877703 / dt) * K1_0;
           double rhs2_1 = F2_1 + (-1.0156171083877703 / dt) * K1_1;
@@ -1101,8 +1101,8 @@ namespace mkpp::generated::carbon {
           const double S_10 = state(Species::FixedCl);  // [FixedCl]
 
           // --- Reaction Rate Fluxes R_m ---
-          const double R_0 = 5.175092354113148e-15*S_0;
-          const double R_1 = 8.560591366701813e-14*S_0;
+          const double R_0 = 6.3627720033519555e-15*S_0;
+          const double R_1 = 1.0028900083479136e-13*S_0;
           const double R_2 = 4.2566446e-15;
           const double R_3 = 7.3679649e-14*S_1;
           const double R_4 = 38199.012;
@@ -1119,17 +1119,17 @@ namespace mkpp::generated::carbon {
           double J_5_4 = 7.3679649e-14;
           double J_5_6 = 7.3679649e-14*S_4;
           double J_6_4 = -7.3679649e-14;
-          double J_6_6 = -5.175092354113148e-15*S_8 - 7.3679649e-14*S_4;
-          double J_6_8 = -5.175092354113148e-15;
-          double J_7_6 = 5.175092354113148e-15*S_8;
-          double J_7_8 = 5.175092354113148e-15;
-          double J_8_6 = -5.175092354113148e-15*S_8;
-          double J_8_8 = -9.078100602113127e-14;
-          double J_8_10 = -8.560591366701813e-14*S_8;
-          double J_9_8 = 8.560591366701813e-14;
-          double J_9_10 = 8.560591366701813e-14*S_8;
-          double J_10_8 = -8.560591366701813e-14;
-          double J_10_10 = -8.560591366701813e-14*S_8;
+          double J_6_6 = -6.3627720033519555e-15*S_8 - 7.3679649e-14*S_4;
+          double J_6_8 = -6.3627720033519555e-15;
+          double J_7_6 = 6.3627720033519555e-15*S_8;
+          double J_7_8 = 6.3627720033519555e-15;
+          double J_8_6 = -6.3627720033519555e-15*S_8;
+          double J_8_8 = -1.0665177283814332e-13;
+          double J_8_10 = -1.0028900083479136e-13*S_8;
+          double J_9_8 = 1.0028900083479136e-13;
+          double J_9_10 = 1.0028900083479136e-13*S_8;
+          double J_10_8 = -1.0028900083479136e-13;
+          double J_10_10 = -1.0028900083479136e-13*S_8;
           // Block 0: species [PCOfromNMVOC, PCOfromCH4, LCH4byOH, CH4]
           double W_0_0 = inv_g_dt;
           double W_0_2 = -J_0_2;
@@ -1212,11 +1212,11 @@ namespace mkpp::generated::carbon {
           double F1_3 = -4.2566446e-15;
           double F1_4 = 38199.012 - 7.3679649e-14*S_4;
           double F1_5 = 7.3679649e-14*S_4;
-          double F1_6 = -5.175092354113148e-15*S_8 - 7.3679649e-14*S_4;
-          double F1_7 = 5.175092354113148e-15*S_8;
-          double F1_8 = -9.078100602113127e-14*S_8;
-          double F1_9 = 8.560591366701813e-14*S_8;
-          double F1_10 = -8.560591366701813e-14*S_8;
+          double F1_6 = -6.3627720033519555e-15*S_8 - 7.3679649e-14*S_4;
+          double F1_7 = 6.3627720033519555e-15*S_8;
+          double F1_8 = -1.0665177283814332e-13*S_8;
+          double F1_9 = 1.0028900083479136e-13*S_8;
+          double F1_10 = -1.0028900083479136e-13*S_8;
           // Block 0: K1 forward sub [PCOfromNMVOC, PCOfromCH4, LCH4byOH, CH4]
           double y1_0 = F1_0;
           double y1_1 = F1_1;
@@ -1278,11 +1278,11 @@ namespace mkpp::generated::carbon {
           double F2_3 = -4.2566446e-15;
           double F2_4 = 38199.012 - 7.3679649e-14*Y2_4;
           double F2_5 = 7.3679649e-14*Y2_4;
-          double F2_6 = -5.175092354113148e-15*Y2_8 - 7.3679649e-14*Y2_4;
-          double F2_7 = 5.175092354113148e-15*Y2_8;
-          double F2_8 = -9.078100602113127e-14*Y2_8;
-          double F2_9 = 8.560591366701813e-14*Y2_8;
-          double F2_10 = -8.560591366701813e-14*Y2_8;
+          double F2_6 = -6.3627720033519555e-15*Y2_8 - 7.3679649e-14*Y2_4;
+          double F2_7 = 6.3627720033519555e-15*Y2_8;
+          double F2_8 = -1.0665177283814332e-13*Y2_8;
+          double F2_9 = 1.0028900083479136e-13*Y2_8;
+          double F2_10 = -1.0028900083479136e-13*Y2_8;
           // RHS for stage 2
           double rhs2_0 = F2_0 + (-1.0156171083877703 / dt) * K1_0;
           double rhs2_1 = F2_1 + (-1.0156171083877703 / dt) * K1_1;
@@ -1591,17 +1591,17 @@ namespace mkpp::generated::carbon {
               double J_5_4 = 7.3679649e-14;
               double J_5_6 = 7.3679649e-14*S_4;
               double J_6_4 = -7.3679649e-14;
-              double J_6_6 = -5.175092354113148e-15*S_8 - 7.3679649e-14*S_4;
-              double J_6_8 = -5.175092354113148e-15;
-              double J_7_6 = 5.175092354113148e-15*S_8;
-              double J_7_8 = 5.175092354113148e-15;
-              double J_8_6 = -5.175092354113148e-15*S_8;
-              double J_8_8 = -9.078100602113127e-14;
-              double J_8_10 = -8.560591366701813e-14*S_8;
-              double J_9_8 = 8.560591366701813e-14;
-              double J_9_10 = 8.560591366701813e-14*S_8;
-              double J_10_8 = -8.560591366701813e-14;
-              double J_10_10 = -8.560591366701813e-14*S_8;
+              double J_6_6 = -6.3627720033519555e-15*S_8 - 7.3679649e-14*S_4;
+              double J_6_8 = -6.3627720033519555e-15;
+              double J_7_6 = 6.3627720033519555e-15*S_8;
+              double J_7_8 = 6.3627720033519555e-15;
+              double J_8_6 = -6.3627720033519555e-15*S_8;
+              double J_8_8 = -1.0665177283814332e-13;
+              double J_8_10 = -1.0028900083479136e-13*S_8;
+              double J_9_8 = 1.0028900083479136e-13;
+              double J_9_10 = 1.0028900083479136e-13*S_8;
+              double J_10_8 = -1.0028900083479136e-13;
+              double J_10_10 = -1.0028900083479136e-13*S_8;
 
               // Form iteration matrix W = (1/(gamma*h))*I - J
               // Block 0: species [PCOfromNMVOC, PCOfromCH4, LCH4byOH, CH4]
@@ -1925,17 +1925,17 @@ namespace mkpp::generated::carbon {
               double J_5_4 = 7.3679649e-14;
               double J_5_6 = 7.3679649e-14*S_4;
               double J_6_4 = -7.3679649e-14;
-              double J_6_6 = -5.175092354113148e-15*S_8 - 7.3679649e-14*S_4;
-              double J_6_8 = -5.175092354113148e-15;
-              double J_7_6 = 5.175092354113148e-15*S_8;
-              double J_7_8 = 5.175092354113148e-15;
-              double J_8_6 = -5.175092354113148e-15*S_8;
-              double J_8_8 = -9.078100602113127e-14;
-              double J_8_10 = -8.560591366701813e-14*S_8;
-              double J_9_8 = 8.560591366701813e-14;
-              double J_9_10 = 8.560591366701813e-14*S_8;
-              double J_10_8 = -8.560591366701813e-14;
-              double J_10_10 = -8.560591366701813e-14*S_8;
+              double J_6_6 = -6.3627720033519555e-15*S_8 - 7.3679649e-14*S_4;
+              double J_6_8 = -6.3627720033519555e-15;
+              double J_7_6 = 6.3627720033519555e-15*S_8;
+              double J_7_8 = 6.3627720033519555e-15;
+              double J_8_6 = -6.3627720033519555e-15*S_8;
+              double J_8_8 = -1.0665177283814332e-13;
+              double J_8_10 = -1.0028900083479136e-13*S_8;
+              double J_9_8 = 1.0028900083479136e-13;
+              double J_9_10 = 1.0028900083479136e-13*S_8;
+              double J_10_8 = -1.0028900083479136e-13;
+              double J_10_10 = -1.0028900083479136e-13*S_8;
 
               // Form iteration matrix W = inv_g_h*I - J
               double W_0_0 = inv_g_h;
