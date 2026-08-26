@@ -3,6 +3,7 @@ import csv
 import math
 import re
 import sys
+from pathlib import Path
 
 
 def eval_jacobian_eqn(eqn_str, state_list, jvals_list=None, local_vars=None):
@@ -71,8 +72,13 @@ def main():
 
         state_list = [1.0e10] * max(num_species + 10, 200)
 
-        jac_match = re.search(r"void\s+compute_jacobian\s*\(.*?\)\s*const\s*\{(.*?)\n\s*\}", content, re.DOTALL)
-        jac_body = jac_match.group(1) if jac_match else content
+        jacobian_content = content
+        jacobian_path = Path(args.hpp).with_suffix("") / "jacobian.cpp"
+        if jacobian_path.is_file():
+            jacobian_content = jacobian_path.read_text()
+
+        jac_match = re.search(r"void\s+compute_jacobian\s*\(.*?\)\s*const\s*\{(.*?)\n\s*\}", jacobian_content, re.DOTALL)
+        jac_body = jac_match.group(1) if jac_match else jacobian_content
 
         local_vars = {}
         for var_match in re.finditer(r"const\s+double\s+([a-zA-Z0-9_]+)\s*=\s*(.+?);", jac_body):
@@ -81,13 +87,17 @@ def main():
             val = eval_jacobian_eqn(var_eqn, state_list, local_vars=local_vars)
             local_vars[var_name] = val
 
-        matches_1d = re.findall(r"J_block\[(\d+)\]\s*=\s*(.+?);", jac_body)
+        matches_1d = re.findall(r"(?:J_block|J_values)\[(\d+)\]\s*=\s*(.+?);", jac_body)
+        matches_compiled = re.findall(
+            r"jacobian\[(\d+)\s*\*\s*(\d+)\s*\+\s*(\d+)\]\s*=\s*(.+?);",
+            jac_body,
+        )
         matches_2d = re.findall(
             r"J_block\((?:Species::)?([a-zA-Z0-9_]+),\s*(?:Species::)?([a-zA-Z0-9_]+)\)\s*=\s*(.+?);",
             jac_body,
         )
 
-        if not matches_1d and not matches_2d:
+        if not matches_1d and not matches_2d and not matches_compiled:
             print("No Jacobian block found in HPP!", file=sys.stderr)
             sys.exit(1)
 
@@ -95,6 +105,11 @@ def main():
         if matches_1d:
             for idx_str, eqn in matches_1d:
                 idx = int(idx_str)
+                val = eval_jacobian_eqn(eqn, state_list, local_vars=local_vars)
+                computed_J[idx] = val
+        elif matches_compiled:
+            for row_str, num_species_str, col_str, eqn in matches_compiled:
+                idx = int(row_str) * int(num_species_str) + int(col_str)
                 val = eval_jacobian_eqn(eqn, state_list, local_vars=local_vars)
                 computed_J[idx] = val
         else:
