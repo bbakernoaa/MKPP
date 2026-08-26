@@ -5,6 +5,7 @@ find_package(Kokkos REQUIRED)
 
 add_library(mkpp_host INTERFACE)
 add_library(MKPP::mkpp_host ALIAS mkpp_host)
+target_compile_features(mkpp_host INTERFACE cxx_std_23)
 
 target_include_directories(
   mkpp_host
