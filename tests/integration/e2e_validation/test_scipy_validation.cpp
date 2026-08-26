@@ -10,6 +10,9 @@
 #include "chapman.hpp"  // Generated header
 
 using ExecSpace = Kokkos::DefaultExecutionSpace;
+using ConcentrationsView =
+    Kokkos::View<double****, Kokkos::LayoutRight, typename ExecSpace::memory_space>;
+using ChapmanSolver = mkpp::generated::chapman::SolverKernels<ExecSpace>;
 
 // Minimal JSON value parser for loading reference data
 // Supports: arrays of numbers, strings, nested objects (limited)
@@ -176,11 +179,11 @@ ReferenceData load_reference(const std::string& path) {
 
 // Functor to run integration on a single cell
 struct ScipyValidationFunctor {
-    mkpp::concentrations_view_t state;
+    ConcentrationsView state;
     double dt;
     const double* jvals_ptr;
 
-    ScipyValidationFunctor(mkpp::concentrations_view_t s, double dt_, const double* jv)
+    ScipyValidationFunctor(ConcentrationsView s, double dt_, const double* jv)
         : state(s), dt(dt_), jvals_ptr(jv) {}
 
     KOKKOS_INLINE_FUNCTION
@@ -190,7 +193,7 @@ struct ScipyValidationFunctor {
         Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 1), [&](const int&) {
             auto cell_state = Kokkos::subview(state, i, Kokkos::ALL(), 0, 0);
 
-            mkpp::SolverKernels<ExecSpace> solver;
+            ChapmanSolver solver;
             solver.integrate(dt, cell_state, jvals_ptr);
         });
     }
@@ -223,7 +226,7 @@ TEST(ScipyValidation, ChapmanIntegration) {
         host_data[s] = ref.initial_conditions[s];
     }
 
-    mkpp::concentrations_view_t state(host_data.data(), num_cells, num_species, 1, 1);
+    ConcentrationsView state(host_data.data(), num_cells, num_species, 1, 1);
 
     // Prepare jvals on device-accessible memory
     double jvals[2] = {ref.jvals[0], ref.jvals[1]};
