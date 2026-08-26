@@ -15,6 +15,7 @@ ros4, rodas3, rodas4), verifying:
 import re
 
 import pytest
+
 from mkpp.codegen import SOLVER_COEFFICIENTS, generate_headers
 from mkpp.lowering import compute_symbolic_lu_decomposition, prepare_unified_jacobian
 from mkpp.model import (
@@ -127,10 +128,12 @@ class TestSolverIntegration:
 
         stage_comments = re.findall(r"// --- Stage \d+ ---", code)
         # Expect stages in both integrate() and integrate_with_reduction()
-        expected_total = 2 * tableau.stages
+        # Forward, reduction, and compiler-guarded checkpoint variants are
+        # emitted into the stable mechanism header.
+        expected_total = 3 * tableau.stages
         assert len(stage_comments) == expected_total, (
             f"[{solver_name}] Expected {expected_total} stage comments "
-            f"(2 functions x {tableau.stages} stages), found {len(stage_comments)}"
+            f"(3 functions x {tableau.stages} stages), found {len(stage_comments)}"
         )
 
     def test_gamma_value_matches_tableau(self, solver_name: str, tmp_path):

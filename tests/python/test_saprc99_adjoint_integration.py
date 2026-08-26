@@ -23,6 +23,7 @@ import shutil
 import subprocess
 
 import pytest
+
 from mkpp.codegen import generate_headers
 from mkpp.parser import load_mechanism
 
@@ -210,7 +211,7 @@ class TestSAPRC99AdjointGeneration:
         code = _generate_saprc99_adjoint(str(tmp_path))
 
         # Namespace must open
-        assert "namespace mkpp {" in code or "namespace mkpp{" in code, "Missing namespace mkpp opening"
+        assert "namespace mkpp::generated::saprc99_mini" in code, "Missing generated mechanism namespace"
 
         # The last non-whitespace closing brace should close the namespace
         # Check that the code ends with a closing brace (after stripping trailing whitespace)
@@ -318,9 +319,9 @@ namespace Kokkos {
             "\n"
             "int main() {\n"
             "    // Instantiate the struct to verify template syntax\n"
-            "    using Kernels = mkpp::SolverKernels<Kokkos::Serial>;\n"
+            "    using Kernels = mkpp::generated::saprc99_mini::SolverKernels<Kokkos::Serial>;\n"
             "    Kernels k;\n"
-            "    mkpp::CheckpointBuffer chk;\n"
+            "    mkpp::generated::saprc99_mini::CheckpointBuffer chk;\n"
             "    (void)k;\n"
             "    (void)chk;\n"
             "    return 0;\n"

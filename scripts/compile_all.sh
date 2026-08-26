@@ -61,12 +61,17 @@ main() {
         echo "Compiling ${mech}..."
         echo "========================================"
 
+        # --no-cache is required for reproducible artifact generation: the
+        # content-addressable cache keys on mechanism input only, not on MKPP
+        # compiler source, so a cached lowering result could mask code changes
+        # and desynchronize committed headers from CI (which has no cache).
         if ! "${python_bin}" -m mkpp.cli compile "${mech}" \
             --test-env "${test_env}" \
             --out "${out_dir}" \
             --adjoint \
             --emit-manifest \
             --report \
+            --no-cache \
             --verbose; then
             echo "FATAL ERROR: Failed to compile ${mech}"
             exit 1

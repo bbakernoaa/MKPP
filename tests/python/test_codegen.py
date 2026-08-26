@@ -1,4 +1,5 @@
 import pytest
+
 from mkpp.codegen import generate_headers
 
 
@@ -254,7 +255,7 @@ def test_codegen_emits_sympy_jacobian(tmp_path):
     # The derivative lives in a compiled Jacobian unit, while the public
     # header retains only the stable dispatch declaration.
     assert "compute_jacobian_chunk_0" in content
-    compiled_source = next(path for path in results["compiled_sources"] if "_jacobian_" in path)
+    compiled_source = next(path for path in results["compiled_sources"] if path.endswith("/jacobian.cpp"))
     assert "jvals[0]" in open(compiled_source).read()
 
 

@@ -103,13 +103,15 @@ def test_codegen_zero_thread_arrays_and_loops(tmp_path):
     assert "double F1[" not in code
     assert "double F2[" not in code
 
-    # Check zero for loops in integrate and solver kernels
-    assert "for (" not in code
-    assert "for(" not in code
+    # The forward integrator is fully unrolled.  Checkpoint/adjoint support
+    # intentionally contains bounded replay loops.
+    integrate_body = code[code.index("void integrate(") : code.index("#ifdef MKPP_ENABLE_REDUCTION")]
+    assert "for (" not in integrate_body
+    assert "for(" not in integrate_body
 
     # Check subview templated interface
     assert "template <class StateView>" in code
-    assert "double* state" not in code
+    assert "void integrate(double dt_total, StateView& state" in code
 
 
 def test_view_interface_contract_signatures(tmp_path):
@@ -129,7 +131,7 @@ def test_view_interface_contract_signatures(tmp_path):
     assert "template <class StateView, class DeltaView, class RateView>" in code
     assert "template <class StateView, class MassView>" in code
     assert "template <class StateView>" in code
-    assert "double* state" not in code
+    assert "void integrate(double dt_total, StateView& state" in code
     assert "double* F_block" not in code
 
 

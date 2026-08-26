@@ -7,8 +7,13 @@ them across all test files that need them.
 import os
 import tempfile
 
+# Test workers must use a non-interactive backend.  Without this, parallel
+# pytest workers on macOS may initialize AppKit and abort in headless runs.
+os.environ.setdefault("MPLBACKEND", "Agg")
+
 import pytest
 from hypothesis import settings
+
 from mkpp.model import (
     AerosolRepresentation,
     EquilibriumDefinition,

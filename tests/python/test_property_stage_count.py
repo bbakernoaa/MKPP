@@ -12,6 +12,7 @@ import re
 import tempfile
 
 import pytest
+
 from mkpp.codegen import SOLVER_COEFFICIENTS, generate_headers
 from mkpp.lowering import compute_symbolic_lu_decomposition, prepare_unified_jacobian
 from mkpp.model import (
@@ -86,17 +87,17 @@ def test_property_4_stage_count_matches_generated_code(solver_name: str):
     # The integrate() and integrate_with_reduction() functions each emit
     # tableau.stages stage blocks. Count total and verify.
     # We expect exactly 2 * tableau.stages (one set per function).
-    expected_total = 2 * tableau.stages
+    expected_total = 3 * tableau.stages
     assert len(stage_comments) == expected_total, (
         f"Solver '{solver_name}' (stages={tableau.stages}): "
-        f"expected {expected_total} stage comments (2 functions x {tableau.stages} stages), "
+        f"expected {expected_total} stage comments (3 functions x {tableau.stages} stages), "
         f"found {len(stage_comments)}"
     )
 
     # Additionally verify that within each function, stages are numbered 1..S sequentially
     # Extract stage numbers
     stage_numbers = [int(re.search(r"Stage (\d+)", c).group(1)) for c in stage_comments]
-    expected_sequence = list(range(1, tableau.stages + 1)) * 2
+    expected_sequence = list(range(1, tableau.stages + 1)) * 3
     assert stage_numbers == expected_sequence, (
         f"Solver '{solver_name}': stage numbering mismatch. " f"Expected {expected_sequence}, got {stage_numbers}"
     )

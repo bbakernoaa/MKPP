@@ -16,6 +16,7 @@ import re
 
 from hypothesis import given, settings
 from hypothesis import strategies as st
+
 from mkpp.template_engine import TemplateEngine
 
 # ---------------------------------------------------------------------------
@@ -244,6 +245,9 @@ def template_context_strategy(draw):
         "suffix": "",
         "annotated_expressions": None,
         "simd_backend": "native",
+        "compiled_rate_chunks": [],
+        "compiled_jacobian_chunks": [],
+        "compiled_lu_chunks": [],
     }
 
     # Include adjoint-specific context

@@ -20,6 +20,7 @@ import re
 import tempfile
 
 import pytest
+
 from mkpp.codegen import SOLVER_COEFFICIENTS, generate_headers
 from mkpp.lowering import compute_symbolic_lu_decomposition, prepare_unified_jacobian
 from mkpp.model import (
@@ -124,13 +125,17 @@ class TestGPUSafetyInvariants:
         """
         code = _generate_code_for_solver(solver_name)
 
-        # No for loops at all (all iteration is unrolled at generation time)
-        assert "for (" not in code, f"[{solver_name}] Generated code contains 'for (' loop"
-        assert "for(" not in code, f"[{solver_name}] Generated code contains 'for(' loop"
+        # The forward integrator is fully unrolled.  Checkpoint/adjoint replay
+        # support intentionally contains bounded loops in the same header.
+        integrate_code = code[code.index("void integrate(") : code.index("#ifdef MKPP_ENABLE_REDUCTION")]
+        assert "for (" not in integrate_code, f"[{solver_name}] Generated integrate() contains 'for (' loop"
+        assert "for(" not in integrate_code, f"[{solver_name}] Generated integrate() contains 'for(' loop"
         # No while loops over stages (the outer while(t < dt_total) is the time-stepping
         # loop which is acceptable, but there should be no stage-related while loops)
-        assert not re.search(r"\bwhile\s*\(\s*stage", code), f"[{solver_name}] Generated code contains 'while (stage...' loop"
-        assert not re.search(r"\bfor\s*\(\s*int\s+stage", code), f"[{solver_name}] Generated code contains 'for (int stage...' loop"
+        assert not re.search(r"\bwhile\s*\(\s*stage", integrate_code), f"[{solver_name}] Generated integrate() contains stage loop"
+        assert not re.search(
+            r"\bfor\s*\(\s*int\s+stage", integrate_code
+        ), f"[{solver_name}] Generated integrate() contains stage loop"
 
     def test_kokkos_inline_function_annotation(self, solver_name: str):
         """

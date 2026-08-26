@@ -19,6 +19,7 @@ import pytest
 from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 from jinja2.exceptions import TemplateNotFound, UndefinedError
+
 from mkpp.template_engine import TemplateEngine
 
 # ---------------------------------------------------------------------------
@@ -221,6 +222,9 @@ def valid_template_context(draw):
         "suffix": "",
         "annotated_expressions": None,
         "simd_backend": "native",
+        "compiled_rate_chunks": [],
+        "compiled_jacobian_chunks": [],
+        "compiled_lu_chunks": [],
     }
 
     if adjoint_enabled:
@@ -244,9 +248,6 @@ REQUIRED_CONTEXT_KEYS = [
     "has_continuous_rxns",
     "host_interface",
     "has_photolysis",
-    "rate_exprs_state",
-    "jacobian_entries_state",
-    "adjoint_entries_state",
     "mass_projector_data",
     "equilibrium_partition_data",
     "tableau",
@@ -259,6 +260,9 @@ REQUIRED_CONTEXT_KEYS = [
     "f_exprs",
     "permutation",
     "blocks",
+    "compiled_rate_chunks",
+    "compiled_jacobian_chunks",
+    "compiled_lu_chunks",
 ]
 
 

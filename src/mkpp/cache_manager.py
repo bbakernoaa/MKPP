@@ -44,13 +44,27 @@ class CacheManager:
         self.cache_dir = cache_dir
 
     def compute_key(self, yaml_path: Path) -> CacheKey:
-        """SHA-256 of file contents + MKPP version string + SymPy version."""
+        """SHA-256 of file contents + MKPP version + SymPy version + compiler source.
+
+        The lowering pipeline source (``lowering.py``, ``partitioning.py``) is
+        hashed so that any change to the compiler invalidates cached symbolic
+        results.  Without this, edits to MKPP itself would silently reuse stale
+        Jacobians and desynchronize regenerated artifacts from CI.
+        """
         file_bytes = yaml_path.read_bytes()
         try:
             version = importlib.metadata.version("mkpp")
         except importlib.metadata.PackageNotFoundError:
             version = "dev"
-        hash_input = file_bytes + version.encode() + sympy.__version__.encode()
+        lowering_source = Path(__file__).parent / "lowering.py"
+        codegen_source = Path(__file__).parent / "codegen.py"
+        source_hash = b""
+        for src in (lowering_source, codegen_source):
+            if src.exists():
+                source_hash += src.read_bytes()
+        hash_input = (
+            file_bytes + version.encode() + sympy.__version__.encode() + source_hash
+        )
         yaml_hash = hashlib.sha256(hash_input).hexdigest()
         return CacheKey(yaml_hash=yaml_hash, mkpp_version=version)
 

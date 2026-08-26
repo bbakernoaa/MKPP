@@ -12,6 +12,7 @@ import re
 import tempfile
 
 import pytest
+
 from mkpp.codegen import SOLVER_COEFFICIENTS, generate_headers
 from mkpp.lowering import compute_symbolic_lu_decomposition, prepare_unified_jacobian
 from mkpp.model import (
@@ -173,13 +174,12 @@ def test_property_7_both_functions_use_same_exponent(solver_name: str):
     SOLVER_COEFFICIENTS[solver_name]
     code = _generate_code_for_solver(solver_name)
 
-    # The step-size comment appears once per function (integrate + integrate_with_reduction)
+    # Forward, reduction, and checkpoint variants share the same control law.
     comment_pattern = re.compile(r"// Step Size Control \(order (\d+): exponent = 1/(\d+) = ([\d.e+-]+)\)")
     matches = comment_pattern.findall(code)
 
-    # Should appear exactly twice (once in each function)
-    assert len(matches) == 2, (
-        f"Solver '{solver_name}': Expected 2 step-size control comments " f"(one per function), found {len(matches)}"
+    assert len(matches) == 3, (
+        f"Solver '{solver_name}': Expected 3 step-size control comments, found {len(matches)}"
     )
 
     # Both should have identical ELO and exponent values
