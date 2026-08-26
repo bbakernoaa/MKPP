@@ -24,7 +24,6 @@ import time
 import numpy as np
 import pytest
 import sympy as sp
-
 from mkpp.lowering import prepare_unified_jacobian
 from mkpp.parser import load_mechanism
 from mkpp.rosenbrock import SOLVER_COEFFICIENTS, get_A, get_C

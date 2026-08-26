@@ -19,7 +19,6 @@ import pytest
 from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 from jinja2.exceptions import TemplateNotFound, UndefinedError
-
 from mkpp.template_engine import TemplateEngine
 
 # ---------------------------------------------------------------------------

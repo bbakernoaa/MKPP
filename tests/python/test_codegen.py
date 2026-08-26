@@ -1,5 +1,4 @@
 import pytest
-
 from mkpp.codegen import generate_headers
 
 

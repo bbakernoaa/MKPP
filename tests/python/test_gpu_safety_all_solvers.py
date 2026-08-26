@@ -20,7 +20,6 @@ import re
 import tempfile
 
 import pytest
-
 from mkpp.codegen import SOLVER_COEFFICIENTS, generate_headers
 from mkpp.lowering import compute_symbolic_lu_decomposition, prepare_unified_jacobian
 from mkpp.model import (

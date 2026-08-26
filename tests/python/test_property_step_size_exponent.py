@@ -12,7 +12,6 @@ import re
 import tempfile
 
 import pytest
-
 from mkpp.codegen import SOLVER_COEFFICIENTS, generate_headers
 from mkpp.lowering import compute_symbolic_lu_decomposition, prepare_unified_jacobian
 from mkpp.model import (
@@ -178,9 +177,7 @@ def test_property_7_both_functions_use_same_exponent(solver_name: str):
     comment_pattern = re.compile(r"// Step Size Control \(order (\d+): exponent = 1/(\d+) = ([\d.e+-]+)\)")
     matches = comment_pattern.findall(code)
 
-    assert len(matches) == 3, (
-        f"Solver '{solver_name}': Expected 3 step-size control comments, found {len(matches)}"
-    )
+    assert len(matches) == 3, f"Solver '{solver_name}': Expected 3 step-size control comments, found {len(matches)}"
 
     # Both should have identical ELO and exponent values
     order_1, divisor_1, exp_1 = matches[0]

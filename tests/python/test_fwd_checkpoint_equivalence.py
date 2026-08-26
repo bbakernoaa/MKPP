@@ -17,7 +17,6 @@ integrate().
 import re
 
 import pytest
-
 from mkpp.codegen import SOLVER_COEFFICIENTS, generate_headers
 from mkpp.parser import load_mechanism
 
@@ -322,8 +321,7 @@ class TestForwardCheckpointEquivalenceChapman:
         # a complete set of scalar stage variables; their expressions need not
         # be textually identical across backends.
         assert len(integrate_k) == len(checkpoint_k), (
-            f"[{solver_name}] K stage count differs: "
-            f"integrate={len(integrate_k)}, checkpoint={len(checkpoint_k)}"
+            f"[{solver_name}] K stage count differs: " f"integrate={len(integrate_k)}, checkpoint={len(checkpoint_k)}"
         )
 
     def test_identical_error_estimation(self, solver_name: str, tmp_path):

@@ -62,9 +62,7 @@ class CacheManager:
         for src in (lowering_source, codegen_source):
             if src.exists():
                 source_hash += src.read_bytes()
-        hash_input = (
-            file_bytes + version.encode() + sympy.__version__.encode() + source_hash
-        )
+        hash_input = file_bytes + version.encode() + sympy.__version__.encode() + source_hash
         yaml_hash = hashlib.sha256(hash_input).hexdigest()
         return CacheKey(yaml_hash=yaml_hash, mkpp_version=version)
 

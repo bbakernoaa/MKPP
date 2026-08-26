@@ -16,7 +16,6 @@ import re
 
 from hypothesis import given, settings
 from hypothesis import strategies as st
-
 from mkpp.template_engine import TemplateEngine
 
 # ---------------------------------------------------------------------------

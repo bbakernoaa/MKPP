@@ -21,7 +21,6 @@ import re
 import tempfile
 
 import pytest
-
 from mkpp.codegen import generate_headers
 from mkpp.model import (
     AerosolRepresentation,

@@ -121,9 +121,17 @@ class TestRos3DefaultRegression:
 
         # Verify stages are numbered 1, 2, 3 in each function
         stage_numbers = [int(re.search(r"Stage (\d+)", c).group(1)) for c in stage_comments]
-        assert stage_numbers == [1, 2, 3, 1, 2, 3, 1, 2, 3], (
-            f"Stage numbering mismatch. Expected [1, 2, 3, 1, 2, 3, 1, 2, 3], got {stage_numbers}"
-        )
+        assert stage_numbers == [
+            1,
+            2,
+            3,
+            1,
+            2,
+            3,
+            1,
+            2,
+            3,
+        ], f"Stage numbering mismatch. Expected [1, 2, 3, 1, 2, 3, 1, 2, 3], got {stage_numbers}"
 
     def test_ros3_gamma_value(self):
         """

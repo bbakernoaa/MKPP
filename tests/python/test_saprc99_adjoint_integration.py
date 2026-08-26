@@ -23,7 +23,6 @@ import shutil
 import subprocess
 
 import pytest
-
 from mkpp.codegen import generate_headers
 from mkpp.parser import load_mechanism
 

@@ -13,7 +13,6 @@ os.environ.setdefault("MPLBACKEND", "Agg")
 
 import pytest
 from hypothesis import settings
-
 from mkpp.model import (
     AerosolRepresentation,
     EquilibriumDefinition,

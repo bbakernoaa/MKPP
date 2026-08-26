@@ -12,7 +12,6 @@ import re
 import tempfile
 
 import pytest
-
 from mkpp.codegen import SOLVER_COEFFICIENTS, generate_headers
 from mkpp.lowering import compute_symbolic_lu_decomposition, prepare_unified_jacobian
 from mkpp.model import (
@@ -197,8 +196,7 @@ def test_property_9_same_stage_count(solver_name: str):
         f"[{solver_name}] integrate() has {stages_integrate} stages, " f"expected {tableau.stages}"
     )
     assert stages_reduction == 2 * tableau.stages, (
-        f"[{solver_name}] integrate_with_reduction() has {stages_reduction} stage blocks, "
-        f"expected {2 * tableau.stages}"
+        f"[{solver_name}] integrate_with_reduction() has {stages_reduction} stage blocks, " f"expected {2 * tableau.stages}"
     )
     assert stages_reduction == 2 * stages_integrate
 
