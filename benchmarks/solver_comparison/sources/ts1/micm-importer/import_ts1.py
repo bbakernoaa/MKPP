@@ -2,13 +2,13 @@
 """Generate the TS1 benchmark mechanism header from the musica configuration.
 
 micm has no mechanism-configuration parser, so this script uses the musica
-Python API to read MOZART-TS1 and writes test/benchmark/ts1_mechanism.hpp with
+Python API to read MOZART-TS1 and write the governed solver-comparison binding.
 every species and every reaction spelled out as ordinary micm types. The
 generated header is checked in, so building and running the benchmark needs
 neither musica nor network access.
 
     pip install musica
-    test/benchmark/import_ts1.py
+    benchmarks/solver_comparison/sources/ts1/micm-importer/import_ts1.py
 
 musica ships the TS1 configuration inside the package, so no arguments are
 needed. Pass --source to read a different directory, for example a musica
@@ -380,7 +380,7 @@ def main() -> int:
         "--output",
         type=Path,
         default=Path(__file__).parent / "ts1_mechanism.hpp",
-        help="output header (default: test/benchmark/ts1_mechanism.hpp)",
+        help="output header (default: generated MICM TS1 binding)",
     )
     args = parser.parse_args()
 
@@ -415,7 +415,7 @@ def main() -> int:
         "// Copyright (C) 2023-2026 University Corporation for Atmospheric Research",
         "// SPDX-License-Identifier: Apache-2.0",
         "//",
-        "// GENERATED FILE. Do not edit. Re-run test/benchmark/import_ts1.py instead.",
+        "// GENERATED FILE. Do not edit. Re-run the governed TS1 importer instead.",
         "//",
         f"// The MOZART-TS1 mechanism ({mechanism.name}), as a benchmark mechanism.",
         f"// Read from the musica TS1 configuration, mechanism configuration version {mechanism.version}.",

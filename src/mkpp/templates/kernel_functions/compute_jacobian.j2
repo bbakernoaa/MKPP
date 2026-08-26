@@ -26,12 +26,12 @@
 {% if has_equilibrium %}
       KOKKOS_INLINE_FUNCTION void compute_jacobian(const StateView& state, JacView& J_block, const double* jvals, const double temp, const double rh) const {
 {% for chunk in compiled_jacobian_chunks %}
-          detail::{{ mechanism_name }}::compute_jacobian_chunk_{{ loop.index0 }}(state.data(), J_block.data(), jvals, temp, rh);
+          detail::compute_jacobian_chunk_{{ loop.index0 }}(state.data(), J_block.data(), jvals, temp, rh);
 {% endfor %}
 {% else %}
       KOKKOS_INLINE_FUNCTION void compute_jacobian(const StateView& state, JacView& J_block, const double* jvals) const {
 {% for chunk in compiled_jacobian_chunks %}
-          detail::{{ mechanism_name }}::compute_jacobian_chunk_{{ loop.index0 }}(state.data(), J_block.data(), jvals, 0.0, 0.0);
+          detail::compute_jacobian_chunk_{{ loop.index0 }}(state.data(), J_block.data(), jvals, 0.0, 0.0);
 {% endfor %}
 {% endif %}
       }

@@ -1,8 +1,5 @@
 // Generated sparse forward/back substitution for {{ mechanism_name }}.
-#ifdef MKPP_GENERATED_MECHANISM_NAMESPACE
-namespace MKPP_GENERATED_MECHANISM_NAMESPACE {
-#endif
-namespace mkpp::detail::{{ mechanism_name }} {
+namespace mkpp::generated::{{ mechanism_name }}::detail {
 void solve_lu(const double* lu, const double* rhs, double* solution) {
   constexpr int N = {{ num_species }};
   double work[N];
@@ -13,7 +10,4 @@ void solve_lu(const double* lu, const double* rhs, double* solution) {
   solution[{{ step.index }}] = {{ step.expr }};
 {% endfor %}
 }
-}  // namespace mkpp::detail::{{ mechanism_name }}
-#ifdef MKPP_GENERATED_MECHANISM_NAMESPACE
-}  // namespace MKPP_GENERATED_MECHANISM_NAMESPACE
-#endif
+}  // namespace mkpp::generated::{{ mechanism_name }}::detail

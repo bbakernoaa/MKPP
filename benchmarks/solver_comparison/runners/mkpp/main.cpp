@@ -344,7 +344,7 @@ int main(int argc, char** argv) {
                     KOKKOS_LAMBDA(const int cell) {
                         auto cell_state = Kokkos::subview(state, cell, Kokkos::ALL());
                         auto cell_rhs = Kokkos::subview(rhs, cell, Kokkos::ALL());
-                        mech_ts1::mkpp::SolverKernels<ExecutionSpace>{}.compute_rates(
+                        mkpp::generated::ts1::SolverKernels<ExecutionSpace>{}.compute_rates(
                             cell_state, cell_rhs, jvals.data());
                     });
                 synchronize_completion();

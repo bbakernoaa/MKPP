@@ -149,7 +149,7 @@ flowchart TD
 - [AOT Symbolic LU Architecture Explanation](aot-symbolic-lu-architecture.md)
 - [Unified Jacobian & Reaction Kinetics Explanation](unified-jacobian-and-reaction-kinetics.md)
 - [AOT Solver C++ & CLI API Reference](../reference/aot-solver-api.md)
-- [How-To: Run AOT Solver Benchmarks](../how-to/run-aot-solver-benchmarks.md)
+- [Solver Comparison Benchmarks](../tutorials/benchmark-mkpp-vs-micm.md)
 - [How-To: Compile & Run Adjoint and TLM Solvers](../how-to/compile-adjoint-and-tlm-solvers.md)
 - [AOT Solver Quickstart Tutorial](../tutorials/aot-solver-quickstart.md)
 - [MKPP Documentation Index](../README.md)

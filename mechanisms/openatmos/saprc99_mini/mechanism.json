@@ -4,6 +4,7 @@
     "legacy_source": "saprc99_mini.yaml",
     "legacy_source_sha256": "fec7f39b0a865c16fae332c56c359663f9c39acf9453e825fe3fe0327fc358bd",
     "migration": "legacy-mkpp-yaml-to-openatmos-v1",
+    "mkpp_mechanism_id": "saprc99_mini",
     "photolysis_host_forcing_expressions": {
       "j_saprc99_mini.yaml_0000": "6.69e-1",
       "j_saprc99_mini.yaml_0010": "1.27e-1",

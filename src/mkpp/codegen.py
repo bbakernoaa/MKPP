@@ -76,6 +76,7 @@ def generate_headers(
     adjoint: bool = False,
     generate_host_api: bool = False,
     simd_backend: str = "native",
+    emit_reference_backend: bool = False,
 ) -> dict[str, str]:
     """Emit the Kokkos headers and manifest artifact."""
     if not mech or not mech.species:
@@ -106,36 +107,41 @@ def generate_headers(
     # implementation units under a mechanism-specific directory.
     compiled_path = out_path / f"{mech.name}{suffix}"
     compiled_path.mkdir(parents=True, exist_ok=True)
-    for kernel, chunks in (
-        ("rates", context["compiled_rate_chunks"]),
-        ("jacobian", context["compiled_jacobian_chunks"]),
-    ):
+    for kernel, chunks in (("rates", context["compiled_rate_chunks"]), ("jacobian", context["compiled_jacobian_chunks"])):
+        source_path = compiled_path / f"{kernel}.cpp"
+        rendered_chunks = []
         for index, expressions in enumerate(chunks):
             source_context = dict(context)
-            source_context.update(
-                {
-                    "compiled_kernel": kernel,
-                    "compiled_chunk_index": index,
-                    "compiled_expressions": expressions,
-                }
-            )
-            source_path = compiled_path / f"{kernel}_{index}.cpp"
-            with open(source_path, "w") as f:
-                f.write(engine.render("compiled_kernel_chunk.cpp.j2", source_context))
-            compiled_sources.append(str(source_path))
-
-    for index, expressions in enumerate(context["compiled_lu_chunks"]):
-        source_context = dict(context)
-        source_context.update({"compiled_chunk_index": index, "compiled_expressions": expressions})
-        source_path = compiled_path / f"factorize_{index}.cpp"
+            source_context.update({"compiled_kernel": kernel, "compiled_chunk_index": index, "compiled_expressions": expressions})
+            rendered_chunks.append(engine.render("compiled_kernel_chunk.cpp.j2", source_context))
         with open(source_path, "w") as f:
-            f.write(engine.render("compiled_factorize_chunk.cpp.j2", source_context))
+            f.write("\n".join(rendered_chunks))
+        for stale_path in compiled_path.glob(f"{kernel}_*.cpp"):
+            stale_path.unlink()
         compiled_sources.append(str(source_path))
+
+    if emit_reference_backend:
+        for index, expressions in enumerate(context["compiled_lu_chunks"]):
+            source_context = dict(context)
+            source_context.update({"compiled_chunk_index": index, "compiled_expressions": expressions})
+            source_path = compiled_path / f"factorize_{index}.cpp"
+            with open(source_path, "w") as f:
+                f.write(engine.render("compiled_factorize_chunk.cpp.j2", source_context))
+            compiled_sources.append(str(source_path))
+    else:
+        for source_path in compiled_path.glob("factorize_*.cpp"):
+            source_path.unlink()
 
     for kernel in ("solve",):
         source_path = compiled_path / f"{kernel}.cpp"
         with open(source_path, "w") as f:
             f.write(engine.render(f"compiled_{kernel}.cpp.j2", context))
+        compiled_sources.append(str(source_path))
+
+    for kernel in ("supernodal_factorize", "supernodal_solve"):
+        source_path = compiled_path / f"{kernel}.cpp"
+        with open(source_path, "w") as f:
+            f.write(engine.render(f"{kernel}.cpp.j2", context))
         compiled_sources.append(str(source_path))
 
     results = {"header": str(header_path), "compiled_sources": compiled_sources}
@@ -172,8 +178,18 @@ def generate_headers(
         manifest["solver_partition"] = partition_meta
 
     manifest_path = out_path / f"{mech.name}_manifest.json"
+    plan_json_path = compiled_path / "factorization_plan.json"
+    plan_markdown_path = compiled_path / "factorization_plan.md"
+    plan_json_path.write_text(engine.render("factorization_plan.json.j2", context), encoding="utf-8")
+    plan_markdown_path.write_text(engine.render("factorization_plan.md.j2", context), encoding="utf-8")
+    manifest["factorization_plan"] = {
+        "json": str(plan_json_path.relative_to(out_path)),
+        "markdown": str(plan_markdown_path.relative_to(out_path)),
+    }
     with open(manifest_path, "w") as f:
         json.dump(manifest, f, indent=2)
 
     results["manifest"] = str(manifest_path)
+    results["factorization_plan"] = str(plan_json_path)
+    results["factorization_plan_markdown"] = str(plan_markdown_path)
     return results

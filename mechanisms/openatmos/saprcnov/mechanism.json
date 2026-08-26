@@ -4,6 +4,7 @@
     "legacy_source": "saprcnov.yaml",
     "legacy_source_sha256": "d2f325873d190ff4cec279d82f5e1d9824a0ff0d5f1deb82126a4c8d38b5da35",
     "migration": "legacy-mkpp-yaml-to-openatmos-v1",
+    "mkpp_mechanism_id": "saprcnov",
     "photolysis_host_forcing_expressions": {
       "j_saprcnov.yaml_0013": "1.0*SUN",
       "j_saprcnov.yaml_0014": "1.0*SUN",

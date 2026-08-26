@@ -27,7 +27,7 @@
           // --- Sparse Analytical Adjoint Jacobian Entries J_adj_block(i, j) = J^T(i, j) ---
 {% for entry in adjoint_entries_state %}
           // J^T({{ species[entry[0]].name }}, {{ species[entry[1]].name }}): d(d[{{ species[entry[1]].name }}]/dt) / d[{{ species[entry[0]].name }}]
-          J_adj_block(Species::{{ species[entry[0]].name }}, Species::{{ species[entry[1]].name }}) = {{ entry[2] }};
+          J_adj_block({{ entry[0] }}, {{ entry[1] }}) = {{ entry[2] }};
 {% endfor %}
       }
 #endif

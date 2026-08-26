@@ -7,7 +7,9 @@ canonical_source:
   files:
     - upstream_path: configs/v1/ts1/ts1.json
       vendored_path: benchmarks/solver_comparison/sources/ts1/musica-config/ts1.json
-      sha256: 4390f37f0b0dedf38c6644986c7b972152b52bd4c3fba83f399035945771a997
+      sha256: f5c31297ba5e38c17e49607ed2b7bcbf194b412fe49f819c23c66548e6f532de
+      upstream_sha256: 4390f37f0b0dedf38c6644986c7b972152b52bd4c3fba83f399035945771a997
+      local_normalization: metadata.mkpp_mechanism_id=ts1; chemistry is unchanged
     - upstream_path: configs/v1/ts1/initial_conditions.csv
       vendored_path: benchmarks/solver_comparison/sources/ts1/musica-config/initial_conditions.csv
       sha256: 58db29256362fcd7fd60d47fe3d463c566dfbe14c000757202393fa7a28a9253
@@ -28,9 +30,9 @@ canonical_source:
 micm_importer:
   repository: https://github.com/NCAR/micm.git
   revision: 97ac9e5d8aadd345c242722ee8274d71dfe0f73e
-  upstream_path: test/benchmark/import_ts1.py
+  upstream_path: benchmarks/solver_comparison/sources/ts1/micm-importer/import_ts1.py
   vendored_path: benchmarks/solver_comparison/sources/ts1/micm-importer/import_ts1.py
-  sha256: 4336fb7734db53069a3e515253f7a993c1099817ebc06bbb26d095ab63e57fd7
+  sha256: 603a8d449275de206e30eac77394c80af2c0054e151a802ff658a53c3ae69241
 generation:
   source_directory: benchmarks/solver_comparison/sources/ts1/musica-config
   importer: benchmarks/solver_comparison/sources/ts1/micm-importer/import_ts1.py

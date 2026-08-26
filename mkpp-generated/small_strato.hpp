@@ -3,7 +3,7 @@
 // Generated solver for small_strato
 // SZA Workload Sorted: true
 // Hysteresis/Spline Continuous Transition: true
-namespace mkpp {
+namespace mkpp::generated::small_strato {
   // Pure Kokkos abstractions (no raw pragmas allowed)
 
   /**
@@ -33,14 +33,16 @@ namespace mkpp {
 
   // The expression-dense RHS and Jacobian are compiled in bounded units.
   // This declaration-only boundary keeps host-model translation units small.
-  namespace detail::small_strato {
+  namespace detail {
   void compute_rates_chunk_0(const double* state, double* rates,
                                               const double* jvals, double temp, double rh);
   void compute_jacobian_chunk_0(const double* state, double* jacobian,
                                                  const double* jvals, double temp, double rh);
   void factorize_lu_chunk_0(const double* w, double* lu);
   void solve_lu(const double* lu, const double* rhs, double* solution);
-  }  // namespace detail::small_strato
+  void factorize_plan(const double* w, double* lu);
+  void solve_plan(const double* lu, const double* rhs, double* solution);
+  }  // namespace detail
 
   template<typename DeviceType>
   struct SolverKernels {
@@ -55,7 +57,7 @@ namespace mkpp {
        */
       template <class StateView, class RateView>
       KOKKOS_INLINE_FUNCTION void compute_rates(const StateView& state, RateView& F_block, const double* jvals) const {
-          detail::small_strato::compute_rates_chunk_0(state.data(), F_block.data(), jvals, 0.0, 0.0);
+          detail::compute_rates_chunk_0(state.data(), F_block.data(), jvals, 0.0, 0.0);
       }
 
       /**
@@ -69,7 +71,7 @@ namespace mkpp {
        */
       template <class StateView, class JacView>
       KOKKOS_INLINE_FUNCTION void compute_jacobian(const StateView& state, JacView& J_block, const double* jvals) const {
-          detail::small_strato::compute_jacobian_chunk_0(state.data(), J_block.data(), jvals, 0.0, 0.0);
+          detail::compute_jacobian_chunk_0(state.data(), J_block.data(), jvals, 0.0, 0.0);
       }
 
 #ifdef MKPP_ENABLE_ADJOINT
@@ -77,61 +79,61 @@ namespace mkpp {
       KOKKOS_INLINE_FUNCTION void compute_adjoint(const StateView& state, JacView& J_adj_block, const double* jvals) const {
           // --- Sparse Analytical Adjoint Jacobian Entries J_adj_block(i, j) = J^T(i, j) ---
           // J^T(O, O): d(d[O]/dt) / d[O]
-          J_adj_block(Species::O, Species::O) = -1.069e-11*state(4) - 8.018e-17*state(6) - 1.576e-15*state(2);
+          J_adj_block(0, 0) = -1.069e-11*state(4) - 8.018e-17*state(6) - 1.576e-15*state(2);
           // J^T(O, O3): d(d[O3]/dt) / d[O]
-          J_adj_block(Species::O, Species::O3) = 8.018e-17*state(6) - 1.576e-15*state(2);
+          J_adj_block(0, 2) = 8.018e-17*state(6) - 1.576e-15*state(2);
           // J^T(O, NO): d(d[NO]/dt) / d[O]
-          J_adj_block(Species::O, Species::NO) = 1.069e-11*state(4);
+          J_adj_block(0, 3) = 1.069e-11*state(4);
           // J^T(O, NO2): d(d[NO2]/dt) / d[O]
-          J_adj_block(Species::O, Species::NO2) = -1.069e-11*state(4);
+          J_adj_block(0, 4) = -1.069e-11*state(4);
           // J^T(O, O2): d(d[O2]/dt) / d[O]
-          J_adj_block(Species::O, Species::O2) = 1.069e-11*state(4) - 8.018e-17*state(6) + 3.152e-15*state(2);
+          J_adj_block(0, 6) = 1.069e-11*state(4) - 8.018e-17*state(6) + 3.152e-15*state(2);
           // J^T(O1D, O): d(d[O]/dt) / d[O1D]
-          J_adj_block(Species::O1D, Species::O) = 7.11e-11*state(5);
+          J_adj_block(1, 0) = 7.11e-11*state(5);
           // J^T(O1D, O1D): d(d[O1D]/dt) / d[O1D]
-          J_adj_block(Species::O1D, Species::O1D) = -7.11e-11*state(5) - 1.2e-10*state(2);
+          J_adj_block(1, 1) = -7.11e-11*state(5) - 1.2e-10*state(2);
           // J^T(O1D, O3): d(d[O3]/dt) / d[O1D]
-          J_adj_block(Species::O1D, Species::O3) = -1.2e-10*state(2);
+          J_adj_block(1, 2) = -1.2e-10*state(2);
           // J^T(O1D, O2): d(d[O2]/dt) / d[O1D]
-          J_adj_block(Species::O1D, Species::O2) = 2.4e-10*state(2);
+          J_adj_block(1, 6) = 2.4e-10*state(2);
           // J^T(O3, O): d(d[O]/dt) / d[O3]
-          J_adj_block(Species::O3, Species::O) = -1.576e-15*state(0) + 1.0*jvals[1];
+          J_adj_block(2, 0) = -1.576e-15*state(0) + 1.0*jvals[1];
           // J^T(O3, O1D): d(d[O1D]/dt) / d[O3]
-          J_adj_block(Species::O3, Species::O1D) = -1.2e-10*state(1) + 1.0*jvals[2];
+          J_adj_block(2, 1) = -1.2e-10*state(1) + 1.0*jvals[2];
           // J^T(O3, O3): d(d[O3]/dt) / d[O3]
-          J_adj_block(Species::O3, Species::O3) = -6.062e-15*state(3) - 1.576e-15*state(0) - 1.2e-10*state(1) - 1.0*jvals[1] - 1.0*jvals[2];
+          J_adj_block(2, 2) = -6.062e-15*state(3) - 1.576e-15*state(0) - 1.2e-10*state(1) - 1.0*jvals[1] - 1.0*jvals[2];
           // J^T(O3, NO): d(d[NO]/dt) / d[O3]
-          J_adj_block(Species::O3, Species::NO) = -6.062e-15*state(3);
+          J_adj_block(2, 3) = -6.062e-15*state(3);
           // J^T(O3, NO2): d(d[NO2]/dt) / d[O3]
-          J_adj_block(Species::O3, Species::NO2) = 6.062e-15*state(3);
+          J_adj_block(2, 4) = 6.062e-15*state(3);
           // J^T(O3, O2): d(d[O2]/dt) / d[O3]
-          J_adj_block(Species::O3, Species::O2) = 6.062e-15*state(3) + 3.152e-15*state(0) + 2.4e-10*state(1) + 1.0*jvals[1] + 1.0*jvals[2];
+          J_adj_block(2, 6) = 6.062e-15*state(3) + 3.152e-15*state(0) + 2.4e-10*state(1) + 1.0*jvals[1] + 1.0*jvals[2];
           // J^T(NO, O3): d(d[O3]/dt) / d[NO]
-          J_adj_block(Species::NO, Species::O3) = -6.062e-15*state(2);
+          J_adj_block(3, 2) = -6.062e-15*state(2);
           // J^T(NO, NO): d(d[NO]/dt) / d[NO]
-          J_adj_block(Species::NO, Species::NO) = -6.062e-15*state(2);
+          J_adj_block(3, 3) = -6.062e-15*state(2);
           // J^T(NO, NO2): d(d[NO2]/dt) / d[NO]
-          J_adj_block(Species::NO, Species::NO2) = 6.062e-15*state(2);
+          J_adj_block(3, 4) = 6.062e-15*state(2);
           // J^T(NO, O2): d(d[O2]/dt) / d[NO]
-          J_adj_block(Species::NO, Species::O2) = 6.062e-15*state(2);
+          J_adj_block(3, 6) = 6.062e-15*state(2);
           // J^T(NO2, O): d(d[O]/dt) / d[NO2]
-          J_adj_block(Species::NO2, Species::O) = -1.069e-11*state(0) + 1.0*jvals[3];
+          J_adj_block(4, 0) = -1.069e-11*state(0) + 1.0*jvals[3];
           // J^T(NO2, NO): d(d[NO]/dt) / d[NO2]
-          J_adj_block(Species::NO2, Species::NO) = 1.069e-11*state(0) + 1.0*jvals[3];
+          J_adj_block(4, 3) = 1.069e-11*state(0) + 1.0*jvals[3];
           // J^T(NO2, NO2): d(d[NO2]/dt) / d[NO2]
-          J_adj_block(Species::NO2, Species::NO2) = -1.069e-11*state(0) - 1.0*jvals[3];
+          J_adj_block(4, 4) = -1.069e-11*state(0) - 1.0*jvals[3];
           // J^T(NO2, O2): d(d[O2]/dt) / d[NO2]
-          J_adj_block(Species::NO2, Species::O2) = 1.069e-11*state(0);
+          J_adj_block(4, 6) = 1.069e-11*state(0);
           // J^T(M, O): d(d[O]/dt) / d[M]
-          J_adj_block(Species::M, Species::O) = 7.11e-11*state(1);
+          J_adj_block(5, 0) = 7.11e-11*state(1);
           // J^T(M, O1D): d(d[O1D]/dt) / d[M]
-          J_adj_block(Species::M, Species::O1D) = -7.11e-11*state(1);
+          J_adj_block(5, 1) = -7.11e-11*state(1);
           // J^T(O2, O): d(d[O]/dt) / d[O2]
-          J_adj_block(Species::O2, Species::O) = -8.018e-17*state(0) + 2.0*jvals[0];
+          J_adj_block(6, 0) = -8.018e-17*state(0) + 2.0*jvals[0];
           // J^T(O2, O3): d(d[O3]/dt) / d[O2]
-          J_adj_block(Species::O2, Species::O3) = 8.018e-17*state(0);
+          J_adj_block(6, 2) = 8.018e-17*state(0);
           // J^T(O2, O2): d(d[O2]/dt) / d[O2]
-          J_adj_block(Species::O2, Species::O2) = -8.018e-17*state(0) - 1.0*jvals[0];
+          J_adj_block(6, 6) = -8.018e-17*state(0) - 1.0*jvals[0];
       }
 #endif
 
@@ -179,11 +181,25 @@ namespace mkpp {
       template <class StateView, class MassView>
       KOKKOS_INLINE_FUNCTION void project_mass_conservation(StateView& C_projected, const StateView& C, const MassView& m_0) const {
           // C_projected = C - E^T (E E^T)^-1 (E C - m_0)
+          C_projected(0) = C(0);
+          C_projected(1) = C(1);
+          C_projected(2) = C(2);
+          C_projected(3) = C(3);
+          C_projected(4) = C(4);
+          C_projected(5) = C(5);
+          C_projected(6) = C(6);
       }
 
       static constexpr int NUM_SPECIES = 7;
       static constexpr double atol[NUM_SPECIES] = { 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001 };
       static constexpr double rtol[NUM_SPECIES] = { 1e-06, 1e-06, 1e-06, 1e-06, 1e-06, 1e-06, 1e-06 };
+
+      // Photolysis reactions (Cloud-J input mapping):
+      //   jvals[0] = O2 -> O  (original A: 1.0)
+      //   jvals[1] = O3 -> O, O2  (original A: 1.0)
+      //   jvals[2] = O3 -> O1D, O2  (original A: 1.0)
+      //   jvals[3] = NO2 -> NO, O  (original A: 1.0)
+      static constexpr int NUM_PHOTOLYSIS = 4;
 
       /**
        * @brief Performs adaptive time-stepping Rosenbrock integration over dt_total.
@@ -226,7 +242,7 @@ namespace mkpp {
           // The expression-dense Jacobian is evaluated by bounded compiled
           // units.  The solver still uses the same symbolic sparse LU plan.
           double J_values[NUM_SPECIES * NUM_SPECIES] = {};
-          detail::small_strato::compute_jacobian_chunk_0(state.data(), J_values, jvals, 0.0, 0.0);
+          detail::compute_jacobian_chunk_0(state.data(), J_values, jvals, 0.0, 0.0);
           // Analytical Jacobian & Iteration Matrix W = inv_g_dt*I - J (sparse)
           double J_1_0 = J_values[1 * NUM_SPECIES + 5];
           double J_1_1 = J_values[1 * NUM_SPECIES + 1];
@@ -287,12 +303,16 @@ namespace mkpp {
           W_values[6 * NUM_SPECIES + 5] = -J_6_5;
           W_values[6 * NUM_SPECIES + 6] = inv_g_dt - J_6_6;
           double LU_values[NUM_SPECIES * NUM_SPECIES] = {};
-          detail::small_strato::factorize_lu_chunk_0(W_values, LU_values);
+#ifndef MKPP_USE_UNROLLED_REFERENCE
+          detail::factorize_plan(W_values, LU_values);
+#else
+          detail::factorize_lu_chunk_0(W_values, LU_values);
+#endif
 
           // --- Stage 1 ---
           // Rate evaluation F1 at S
           double F_values_1[NUM_SPECIES];
-          detail::small_strato::compute_rates_chunk_0(state.data(), F_values_1, jvals, 0.0, 0.0);
+          detail::compute_rates_chunk_0(state.data(), F_values_1, jvals, 0.0, 0.0);
           double F1_0 = F_values_1[5];
           double F1_1 = F_values_1[1];
           double F1_2 = F_values_1[0];
@@ -309,7 +329,11 @@ namespace mkpp {
           rhs_values_1[5] = F1_5;
           rhs_values_1[6] = F1_6;
           double K_values_1[NUM_SPECIES];
-          detail::small_strato::solve_lu(LU_values, rhs_values_1, K_values_1);
+#ifndef MKPP_USE_UNROLLED_REFERENCE
+          detail::solve_plan(LU_values, rhs_values_1, K_values_1);
+#else
+          detail::solve_lu(LU_values, rhs_values_1, K_values_1);
+#endif
           double K1_0 = K_values_1[0];
           double K1_1 = K_values_1[1];
           double K1_2 = K_values_1[2];
@@ -337,7 +361,7 @@ namespace mkpp {
           stage_state_2[3] = Y2_5;
           stage_state_2[4] = Y2_6;
           double F_values_2[NUM_SPECIES];
-          detail::small_strato::compute_rates_chunk_0(stage_state_2, F_values_2, jvals, 0.0, 0.0);
+          detail::compute_rates_chunk_0(stage_state_2, F_values_2, jvals, 0.0, 0.0);
           double F2_0 = F_values_2[5];
           double F2_1 = F_values_2[1];
           double F2_2 = F_values_2[0];
@@ -362,7 +386,11 @@ namespace mkpp {
           rhs_values_2[5] = rhs2_5;
           rhs_values_2[6] = rhs2_6;
           double K_values_2[NUM_SPECIES];
-          detail::small_strato::solve_lu(LU_values, rhs_values_2, K_values_2);
+#ifndef MKPP_USE_UNROLLED_REFERENCE
+          detail::solve_plan(LU_values, rhs_values_2, K_values_2);
+#else
+          detail::solve_lu(LU_values, rhs_values_2, K_values_2);
+#endif
           double K2_0 = K_values_2[0];
           double K2_1 = K_values_2[1];
           double K2_2 = K_values_2[2];
@@ -398,7 +426,11 @@ namespace mkpp {
           rhs_values_3[5] = rhs3_5;
           rhs_values_3[6] = rhs3_6;
           double K_values_3[NUM_SPECIES];
-          detail::small_strato::solve_lu(LU_values, rhs_values_3, K_values_3);
+#ifndef MKPP_USE_UNROLLED_REFERENCE
+          detail::solve_plan(LU_values, rhs_values_3, K_values_3);
+#else
+          detail::solve_lu(LU_values, rhs_values_3, K_values_3);
+#endif
           double K3_0 = K_values_3[0];
           double K3_1 = K_values_3[1];
           double K3_2 = K_values_3[2];
@@ -874,6 +906,18 @@ namespace mkpp {
           const double S_4 = state(Species::O3);  // [O3]
           const double S_5 = state(Species::NO);  // [NO]
           const double S_6 = state(Species::NO2);  // [NO2]
+
+          // --- Reaction Rate Fluxes R_m ---
+          const double R_0 = S_6*jvals[0];
+          const double R_1 = 8.018e-17*S_0*S_6;
+          const double R_2 = S_2*jvals[1];
+          const double R_3 = 1.576e-15*S_0*S_2;
+          const double R_4 = S_2*jvals[2];
+          const double R_5 = 7.11e-11*S_5*S_1;
+          const double R_6 = 1.2e-10*S_1*S_2;
+          const double R_7 = 6.062e-15*S_3*S_2;
+          const double R_8 = 1.069e-11*S_4*S_0;
+          const double R_9 = S_4*jvals[3];
 
           // Analytical Jacobian & Iteration Matrix W = inv_g_dt*I - J (sparse)
           double J_1_0 = -7.11e-11*S_1;

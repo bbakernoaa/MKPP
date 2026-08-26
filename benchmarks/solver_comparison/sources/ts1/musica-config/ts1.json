@@ -1,5 +1,8 @@
 {
     "name": "MZ327_TS1.2_20230307",
+    "metadata": {
+        "mkpp_mechanism_id": "ts1"
+    },
     "reactions": [
         {
             "type": "ARRHENIUS",

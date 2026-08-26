@@ -14,6 +14,7 @@
 #include TOSTRING(MECH_HEADER)
 
 using ExecSpace = Kokkos::DefaultExecutionSpace;
+using ConcentrationsView = Kokkos::View<double****, Kokkos::LayoutRight, typename ExecSpace::memory_space>;
 
 #include "mkpp_host/dispatcher.hpp"
 
@@ -146,7 +147,7 @@ TEST(E2ESolverValidation, MechanismIntegration) {
     double dt_step = 60.0;
     if (const char* env_dt = std::getenv("DT_STEP")) { dt_step = std::atof(env_dt); }
 
-    mkpp::concentrations_view_t state(host_data.data(), cells, n_spec, 1, 1);
+    ConcentrationsView state(host_data.data(), cells, n_spec, 1, 1);
     const bool use_serial_host = []() {
         const char* mode = std::getenv("MKPP_EXECUTION_MODE");
         return mode != nullptr && std::string(mode) == "serial";
@@ -162,7 +163,7 @@ TEST(E2ESolverValidation, MechanismIntegration) {
     if (n_spec >= 79) {
         // SAPRC-99 mode: KPP's Update_RCONST hardcodes SUN = 1.0_dp (constant daytime)
         // The diurnal Update_SUN subroutine is NOT called in KPP's main program.
-        mkpp::SolverKernels<ExecSpace> solver;
+        MECH_SOLVER_NAMESPACE::SolverKernels<ExecSpace> solver;
         auto sub_state = Kokkos::subview(state, 0, Kokkos::ALL(), 0, 0);
 
         // Compute jvals once with SUN=1.0 (constant, matching KPP's Update_RCONST)
@@ -172,10 +173,10 @@ TEST(E2ESolverValidation, MechanismIntegration) {
     } else {
         // Non-SAPRC mechanisms: use fixed zero jvals (no photolysis)
         if (use_serial_host) {
-            mkpp::host::execute_mechanism_serial_steps<mkpp::SolverKernels<ExecSpace>>(
+            mkpp::host::execute_mechanism_serial_steps<MECH_SOLVER_NAMESPACE::SolverKernels<ExecSpace>>(
                 state, dt_step, steps, jvals);
         } else {
-            mkpp::host::execute_mechanism_steps<mkpp::SolverKernels<ExecSpace>>(
+            mkpp::host::execute_mechanism_steps<MECH_SOLVER_NAMESPACE::SolverKernels<ExecSpace>>(
                 TOSTRING(MECH_HEADER), state, dt_step, steps, jvals);
         }
     }

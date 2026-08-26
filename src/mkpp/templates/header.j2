@@ -52,7 +52,7 @@
 {% if has_continuous_rxns %}
 // Hysteresis/Spline Continuous Transition: true
 {% endif %}
-namespace mkpp {
+namespace mkpp::generated::{{ mechanism_name }} {
   // Pure Kokkos abstractions (no raw pragmas allowed)
 
   /**
@@ -96,7 +96,7 @@ namespace mkpp {
 {% endif %}
   // The expression-dense RHS and Jacobian are compiled in bounded units.
   // This declaration-only boundary keeps host-model translation units small.
-  namespace detail::{{ mechanism_name }} {
+  namespace detail {
 {% for chunk in compiled_rate_chunks %}
   void compute_rates_chunk_{{ loop.index0 }}(const double* state, double* rates,
                                               const double* jvals, double temp, double rh);
@@ -109,7 +109,9 @@ namespace mkpp {
   void factorize_lu_chunk_{{ loop.index0 }}(const double* w, double* lu);
 {% endfor %}
   void solve_lu(const double* lu, const double* rhs, double* solution);
-  }  // namespace detail::{{ mechanism_name }}
+  void factorize_plan(const double* w, double* lu);
+  void solve_plan(const double* lu, const double* rhs, double* solution);
+  }  // namespace detail
 
   template<typename DeviceType>
   struct SolverKernels {

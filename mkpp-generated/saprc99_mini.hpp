@@ -3,7 +3,7 @@
 // Generated solver for saprc99_mini
 // SZA Workload Sorted: true
 // Hysteresis/Spline Continuous Transition: true
-namespace mkpp {
+namespace mkpp::generated::saprc99_mini {
   // Pure Kokkos abstractions (no raw pragmas allowed)
 
   /**
@@ -43,14 +43,16 @@ namespace mkpp {
 
   // The expression-dense RHS and Jacobian are compiled in bounded units.
   // This declaration-only boundary keeps host-model translation units small.
-  namespace detail::saprc99_mini {
+  namespace detail {
   void compute_rates_chunk_0(const double* state, double* rates,
                                               const double* jvals, double temp, double rh);
   void compute_jacobian_chunk_0(const double* state, double* jacobian,
                                                  const double* jvals, double temp, double rh);
   void factorize_lu_chunk_0(const double* w, double* lu);
   void solve_lu(const double* lu, const double* rhs, double* solution);
-  }  // namespace detail::saprc99_mini
+  void factorize_plan(const double* w, double* lu);
+  void solve_plan(const double* lu, const double* rhs, double* solution);
+  }  // namespace detail
 
   template<typename DeviceType>
   struct SolverKernels {
@@ -65,7 +67,7 @@ namespace mkpp {
        */
       template <class StateView, class RateView>
       KOKKOS_INLINE_FUNCTION void compute_rates(const StateView& state, RateView& F_block, const double* jvals) const {
-          detail::saprc99_mini::compute_rates_chunk_0(state.data(), F_block.data(), jvals, 0.0, 0.0);
+          detail::compute_rates_chunk_0(state.data(), F_block.data(), jvals, 0.0, 0.0);
       }
 
       /**
@@ -79,7 +81,7 @@ namespace mkpp {
        */
       template <class StateView, class JacView>
       KOKKOS_INLINE_FUNCTION void compute_jacobian(const StateView& state, JacView& J_block, const double* jvals) const {
-          detail::saprc99_mini::compute_jacobian_chunk_0(state.data(), J_block.data(), jvals, 0.0, 0.0);
+          detail::compute_jacobian_chunk_0(state.data(), J_block.data(), jvals, 0.0, 0.0);
       }
 
 #ifdef MKPP_ENABLE_ADJOINT
@@ -87,113 +89,113 @@ namespace mkpp {
       KOKKOS_INLINE_FUNCTION void compute_adjoint(const StateView& state, JacView& J_adj_block, const double* jvals) const {
           // --- Sparse Analytical Adjoint Jacobian Entries J_adj_block(i, j) = J^T(i, j) ---
           // J^T(O3, O3): d(d[O3]/dt) / d[O3]
-          J_adj_block(Species::O3, Species::O3) = -1.8183951663749815e-14*state(2) - 3.5338644420317084e-17*state(3) - 7.98786060795232e-15*state(9);
+          J_adj_block(0, 0) = -1.5503623719243584e-14*state(2) - 2.6508709957531697e-17*state(3) - 6.2848533514771804e-15*state(9);
           // J^T(O3, NO): d(d[NO]/dt) / d[O3]
-          J_adj_block(Species::O3, Species::NO) = -1.8183951663749815e-14*state(2);
+          J_adj_block(0, 2) = -1.5503623719243584e-14*state(2);
           // J^T(O3, NO2): d(d[NO2]/dt) / d[O3]
-          J_adj_block(Species::O3, Species::NO2) = 1.8183951663749815e-14*state(2) - 3.5338644420317084e-17*state(3);
+          J_adj_block(0, 3) = 1.5503623719243584e-14*state(2) - 2.6508709957531697e-17*state(3);
           // J^T(O3, NO3): d(d[NO3]/dt) / d[O3]
-          J_adj_block(Species::O3, Species::NO3) = 3.5338644420317084e-17*state(3);
+          J_adj_block(0, 4) = 2.6508709957531697e-17*state(3);
           // J^T(O3, O3P): d(d[O3P]/dt) / d[O3]
-          J_adj_block(Species::O3, Species::O3P) = -7.98786060795232e-15*state(9);
+          J_adj_block(0, 9) = -6.2848533514771804e-15*state(9);
           // J^T(O3, O2): d(d[O2]/dt) / d[O3]
-          J_adj_block(Species::O3, Species::O2) = 1.597572121590464e-14*state(9);
+          J_adj_block(0, 13) = 1.2569706702954361e-14*state(9);
           // J^T(H2O2, H2O2): d(d[H2O2]/dt) / d[H2O2]
-          J_adj_block(Species::H2O2, Species::H2O2) = -1.0*jvals[3];
+          J_adj_block(1, 1) = -1.0*jvals[3];
           // J^T(H2O2, OH): d(d[OH]/dt) / d[H2O2]
-          J_adj_block(Species::H2O2, Species::OH) = 2.0*jvals[3];
+          J_adj_block(1, 10) = 2.0*jvals[3];
           // J^T(NO, O3): d(d[O3]/dt) / d[NO]
-          J_adj_block(Species::NO, Species::O3) = -1.8183951663749815e-14*state(0);
+          J_adj_block(2, 0) = -1.5503623719243584e-14*state(0);
           // J^T(NO, NO): d(d[NO]/dt) / d[NO]
-          J_adj_block(Species::NO, Species::NO) = -2.6031661982774907e-11*state(4) - 1.8183951663749815e-14*state(0);
+          J_adj_block(2, 2) = -2.636710937705471e-11*state(4) - 1.5503623719243584e-14*state(0);
           // J^T(NO, NO2): d(d[NO2]/dt) / d[NO]
-          J_adj_block(Species::NO, Species::NO2) = 5.206332396554981e-11*state(4) + 1.8183951663749815e-14*state(0);
+          J_adj_block(2, 3) = 5.273421875410942e-11*state(4) + 1.5503623719243584e-14*state(0);
           // J^T(NO, NO3): d(d[NO3]/dt) / d[NO]
-          J_adj_block(Species::NO, Species::NO3) = -2.6031661982774907e-11*state(4);
+          J_adj_block(2, 4) = -2.636710937705471e-11*state(4);
           // J^T(NO2, O3): d(d[O3]/dt) / d[NO2]
-          J_adj_block(Species::NO2, Species::O3) = -3.5338644420317084e-17*state(0);
+          J_adj_block(3, 0) = -2.6508709957531697e-17*state(0);
           // J^T(NO2, NO): d(d[NO]/dt) / d[NO2]
-          J_adj_block(Species::NO2, Species::NO) = 1.0*jvals[0];
+          J_adj_block(3, 2) = 1.0*jvals[0];
           // J^T(NO2, NO2): d(d[NO2]/dt) / d[NO2]
-          J_adj_block(Species::NO2, Species::NO2) = -2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(4)/(1.4174820557114162e-18*state(12) + 1.0) - 3.5338644420317084e-17*state(0) - 1.0*jvals[0];
+          J_adj_block(3, 3) = -2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(4)/(1.4180926593376776e-18*state(12) + 1.0) - 2.6508709957531697e-17*state(0) - 1.0*jvals[0];
           // J^T(NO2, NO3): d(d[NO3]/dt) / d[NO2]
-          J_adj_block(Species::NO2, Species::NO3) = -2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(4)/(1.4174820557114162e-18*state(12) + 1.0) + 3.5338644420317084e-17*state(0);
+          J_adj_block(3, 4) = -2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(4)/(1.4180926593376776e-18*state(12) + 1.0) + 2.6508709957531697e-17*state(0);
           // J^T(NO2, N2O5): d(d[N2O5]/dt) / d[NO2]
-          J_adj_block(Species::NO2, Species::N2O5) = 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(4)/(1.4174820557114162e-18*state(12) + 1.0);
+          J_adj_block(3, 5) = 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(4)/(1.4180926593376776e-18*state(12) + 1.0);
           // J^T(NO2, O3P): d(d[O3P]/dt) / d[NO2]
-          J_adj_block(Species::NO2, Species::O3P) = 1.0*jvals[0];
+          J_adj_block(3, 9) = 1.0*jvals[0];
           // J^T(NO3, NO): d(d[NO]/dt) / d[NO3]
-          J_adj_block(Species::NO3, Species::NO) = -2.6031661982774907e-11*state(2);
+          J_adj_block(4, 2) = -2.636710937705471e-11*state(2);
           // J^T(NO3, NO2): d(d[NO2]/dt) / d[NO3]
-          J_adj_block(Species::NO3, Species::NO2) = -2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(3)/(1.4174820557114162e-18*state(12) + 1.0) + 5.206332396554981e-11*state(2);
+          J_adj_block(4, 3) = -2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(3)/(1.4180926593376776e-18*state(12) + 1.0) + 5.273421875410942e-11*state(2);
           // J^T(NO3, NO3): d(d[NO3]/dt) / d[NO3]
-          J_adj_block(Species::NO3, Species::NO3) = -2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(3)/(1.4174820557114162e-18*state(12) + 1.0) - 2.6031661982774907e-11*state(2);
+          J_adj_block(4, 4) = -2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(3)/(1.4180926593376776e-18*state(12) + 1.0) - 2.636710937705471e-11*state(2);
           // J^T(NO3, N2O5): d(d[N2O5]/dt) / d[NO3]
-          J_adj_block(Species::NO3, Species::N2O5) = 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(3)/(1.4174820557114162e-18*state(12) + 1.0);
+          J_adj_block(4, 5) = 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(3)/(1.4180926593376776e-18*state(12) + 1.0);
           // J^T(N2O5, NO2): d(d[NO2]/dt) / d[N2O5]
-          J_adj_block(Species::N2O5, Species::NO2) = 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)/(7.709507080111506e-19*state(12) + 1.0);
+          J_adj_block(5, 3) = 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)/(6.755293737545229e-19*state(12) + 1.0);
           // J^T(N2O5, NO3): d(d[NO3]/dt) / d[N2O5]
-          J_adj_block(Species::N2O5, Species::NO3) = 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)/(7.709507080111506e-19*state(12) + 1.0);
+          J_adj_block(5, 4) = 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)/(6.755293737545229e-19*state(12) + 1.0);
           // J^T(N2O5, N2O5): d(d[N2O5]/dt) / d[N2O5]
-          J_adj_block(Species::N2O5, Species::N2O5) = -10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)/(7.709507080111506e-19*state(12) + 1.0);
+          J_adj_block(5, 5) = -32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)/(6.755293737545229e-19*state(12) + 1.0);
           // J^T(HONO, NO): d(d[NO]/dt) / d[HONO]
-          J_adj_block(Species::HONO, Species::NO) = 1.0*jvals[1];
+          J_adj_block(6, 2) = 1.0*jvals[1];
           // J^T(HONO, HONO): d(d[HONO]/dt) / d[HONO]
-          J_adj_block(Species::HONO, Species::HONO) = -1.0*jvals[1];
+          J_adj_block(6, 6) = -1.0*jvals[1];
           // J^T(HONO, OH): d(d[OH]/dt) / d[HONO]
-          J_adj_block(Species::HONO, Species::OH) = 1.0*jvals[1];
+          J_adj_block(6, 10) = 1.0*jvals[1];
           // J^T(HNO3, NO2): d(d[NO2]/dt) / d[HNO3]
-          J_adj_block(Species::HNO3, Species::NO2) = 1.0*jvals[2];
+          J_adj_block(7, 3) = 1.0*jvals[2];
           // J^T(HNO3, NO3): d(d[NO3]/dt) / d[HNO3]
-          J_adj_block(Species::HNO3, Species::NO3) = 1.0*state(10)*(2.161777301914759e-32*state(12)/(4.2119062982869013e-19*state(12) + 1.0) + 1.0018153870816924e-13);
+          J_adj_block(7, 4) = 1.0*state(10)*(2.3521256735322904e-32*state(12)/(3.8755615852907066e-19*state(12) + 1.0) + 1.097666311281924e-13);
           // J^T(HNO3, HNO3): d(d[HNO3]/dt) / d[HNO3]
-          J_adj_block(Species::HNO3, Species::HNO3) = -1.0*state(10)*(2.161777301914759e-32*state(12)/(4.2119062982869013e-19*state(12) + 1.0) + 1.0018153870816924e-13) - 1.0*jvals[2];
+          J_adj_block(7, 7) = -1.0*state(10)*(2.3521256735322904e-32*state(12)/(3.8755615852907066e-19*state(12) + 1.0) + 1.097666311281924e-13) - 1.0*jvals[2];
           // J^T(HNO3, OH): d(d[OH]/dt) / d[HNO3]
-          J_adj_block(Species::HNO3, Species::OH) = -1.0*state(10)*(2.161777301914759e-32*state(12)/(4.2119062982869013e-19*state(12) + 1.0) + 1.0018153870816924e-13) + 1.0*jvals[2];
+          J_adj_block(7, 10) = -1.0*state(10)*(2.3521256735322904e-32*state(12)/(3.8755615852907066e-19*state(12) + 1.0) + 1.097666311281924e-13) + 1.0*jvals[2];
           // J^T(O3P, O3): d(d[O3]/dt) / d[O3P]
-          J_adj_block(Species::O3P, Species::O3) = 5.779235214948339e-34*state(12)*state(13) - 7.98786060795232e-15*state(0);
+          J_adj_block(9, 0) = 6.358515026553832e-34*state(12)*state(13) - 6.2848533514771804e-15*state(0);
           // J^T(O3P, O3P): d(d[O3P]/dt) / d[O3P]
-          J_adj_block(Species::O3P, Species::O3P) = -5.779235214948339e-34*state(12)*state(13) - 7.98786060795232e-15*state(0);
+          J_adj_block(9, 9) = -6.358515026553832e-34*state(12)*state(13) - 6.2848533514771804e-15*state(0);
           // J^T(O3P, O2): d(d[O2]/dt) / d[O3P]
-          J_adj_block(Species::O3P, Species::O2) = -5.779235214948339e-34*state(12)*state(13) + 1.597572121590464e-14*state(0);
+          J_adj_block(9, 13) = -6.358515026553832e-34*state(12)*state(13) + 1.2569706702954361e-14*state(0);
           // J^T(OH, NO3): d(d[NO3]/dt) / d[OH]
-          J_adj_block(Species::OH, Species::NO3) = 1.0*state(7)*(2.161777301914759e-32*state(12)/(4.2119062982869013e-19*state(12) + 1.0) + 1.0018153870816924e-13);
+          J_adj_block(10, 4) = 1.0*state(7)*(2.3521256735322904e-32*state(12)/(3.8755615852907066e-19*state(12) + 1.0) + 1.097666311281924e-13);
           // J^T(OH, HNO3): d(d[HNO3]/dt) / d[OH]
-          J_adj_block(Species::OH, Species::HNO3) = -1.0*state(7)*(2.161777301914759e-32*state(12)/(4.2119062982869013e-19*state(12) + 1.0) + 1.0018153870816924e-13);
+          J_adj_block(10, 7) = -1.0*state(7)*(2.3521256735322904e-32*state(12)/(3.8755615852907066e-19*state(12) + 1.0) + 1.097666311281924e-13);
           // J^T(OH, OH): d(d[OH]/dt) / d[OH]
-          J_adj_block(Species::OH, Species::OH) = -1.0*state(7)*(2.161777301914759e-32*state(12)/(4.2119062982869013e-19*state(12) + 1.0) + 1.0018153870816924e-13);
+          J_adj_block(10, 10) = -1.0*state(7)*(2.3521256735322904e-32*state(12)/(3.8755615852907066e-19*state(12) + 1.0) + 1.097666311281924e-13);
           // J^T(HO2, H2O2): d(d[H2O2]/dt) / d[HO2]
-          J_adj_block(Species::HO2, Species::H2O2) = 4.864965347266905e-32*state(12) + 1.7207046561730112e-12;
+          J_adj_block(11, 1) = 5.465512373221516e-32*state(12) + 1.845172665362734e-12;
           // J^T(HO2, HO2): d(d[HO2]/dt) / d[HO2]
-          J_adj_block(Species::HO2, Species::HO2) = -4.864965347266905e-32*state(12) - 1.7207046561730112e-12;
+          J_adj_block(11, 11) = -5.465512373221516e-32*state(12) - 1.845172665362734e-12;
           // J^T(HO2, O2): d(d[O2]/dt) / d[HO2]
-          J_adj_block(Species::HO2, Species::O2) = 4.864965347266905e-32*state(12) + 1.7207046561730112e-12;
+          J_adj_block(11, 13) = 5.465512373221516e-32*state(12) + 1.845172665362734e-12;
           // J^T(AIR, O3): d(d[O3]/dt) / d[AIR]
-          J_adj_block(Species::AIR, Species::O3) = 5.779235214948339e-34*state(13)*state(9);
+          J_adj_block(12, 0) = 6.358515026553832e-34*state(13)*state(9);
           // J^T(AIR, H2O2): d(d[H2O2]/dt) / d[AIR]
-          J_adj_block(Species::AIR, Species::H2O2) = 4.864965347266905e-32*state(11);
+          J_adj_block(12, 1) = 5.465512373221516e-32*state(11);
           // J^T(AIR, NO2): d(d[NO2]/dt) / d[AIR]
-          J_adj_block(Species::AIR, Species::NO2) = -7.953589926046845e-06*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(5)/pow(7.709507080111506e-19*state(12) + 1.0, 2) + 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(5)/(7.709507080111506e-19*state(12) + 1.0) + 16475768690562.62*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(5)*log(7.709507080111506e-19*state(12))/((7.709507080111506e-19*state(12) + 1.0)*pow(pow(log(7.709507080111506e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 4.015816030220338e-48*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(3)*state(4)/pow(1.4174820557114162e-18*state(12) + 1.0, 2) - 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(3)*state(4)/(1.4174820557114162e-18*state(12) + 1.0) - 4.524445291995257e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(3)*state(4)*log(1.4174820557114162e-18*state(12))/((1.4174820557114162e-18*state(12) + 1.0)*pow(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10));
+          J_adj_block(12, 3) = -2.225289891543473e-05*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(5)/pow(6.755293737545229e-19*state(12) + 1.0, 2) + 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(5)/(6.755293737545229e-19*state(12) + 1.0) + 52607959734961.56*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(5)*log(6.755293737545229e-19*state(12))/((6.755293737545229e-19*state(12) + 1.0)*pow(pow(log(6.755293737545229e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 4.0191829662465044e-48*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(3)*state(4)/pow(1.4180926593376776e-18*state(12) + 1.0, 2) - 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(3)*state(4)/(1.4180926593376776e-18*state(12) + 1.0) - 4.526288899279876e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(3)*state(4)*log(1.4180926593376776e-18*state(12))/((1.4180926593376776e-18*state(12) + 1.0)*pow(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10));
           // J^T(AIR, NO3): d(d[NO3]/dt) / d[AIR]
-          J_adj_block(Species::AIR, Species::NO3) = -7.953589926046845e-06*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(5)/pow(7.709507080111506e-19*state(12) + 1.0, 2) + 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(5)/(7.709507080111506e-19*state(12) + 1.0) + 16475768690562.62*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(5)*log(7.709507080111506e-19*state(12))/((7.709507080111506e-19*state(12) + 1.0)*pow(pow(log(7.709507080111506e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 4.015816030220338e-48*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(3)*state(4)/pow(1.4174820557114162e-18*state(12) + 1.0, 2) - 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(3)*state(4)/(1.4174820557114162e-18*state(12) + 1.0) - 4.524445291995257e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(3)*state(4)*log(1.4174820557114162e-18*state(12))/((1.4174820557114162e-18*state(12) + 1.0)*pow(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 1.0*state(7)*state(10)*(-9.105203433428452e-51*state(12)/pow(4.2119062982869013e-19*state(12) + 1.0, 2) + 2.161777301914759e-32/(4.2119062982869013e-19*state(12) + 1.0));
+          J_adj_block(12, 4) = -2.225289891543473e-05*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(5)/pow(6.755293737545229e-19*state(12) + 1.0, 2) + 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(5)/(6.755293737545229e-19*state(12) + 1.0) + 52607959734961.56*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(5)*log(6.755293737545229e-19*state(12))/((6.755293737545229e-19*state(12) + 1.0)*pow(pow(log(6.755293737545229e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 4.0191829662465044e-48*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(3)*state(4)/pow(1.4180926593376776e-18*state(12) + 1.0, 2) - 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(3)*state(4)/(1.4180926593376776e-18*state(12) + 1.0) - 4.526288899279876e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(3)*state(4)*log(1.4180926593376776e-18*state(12))/((1.4180926593376776e-18*state(12) + 1.0)*pow(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 1.0*state(7)*state(10)*(-9.115807904117787e-51*state(12)/pow(3.8755615852907066e-19*state(12) + 1.0, 2) + 2.3521256735322904e-32/(3.8755615852907066e-19*state(12) + 1.0));
           // J^T(AIR, N2O5): d(d[N2O5]/dt) / d[AIR]
-          J_adj_block(Species::AIR, Species::N2O5) = 7.953589926046845e-06*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(5)/pow(7.709507080111506e-19*state(12) + 1.0, 2) - 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(5)/(7.709507080111506e-19*state(12) + 1.0) - 16475768690562.62*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(5)*log(7.709507080111506e-19*state(12))/((7.709507080111506e-19*state(12) + 1.0)*pow(pow(log(7.709507080111506e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) - 4.015816030220338e-48*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(3)*state(4)/pow(1.4174820557114162e-18*state(12) + 1.0, 2) + 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(3)*state(4)/(1.4174820557114162e-18*state(12) + 1.0) + 4.524445291995257e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(3)*state(4)*log(1.4174820557114162e-18*state(12))/((1.4174820557114162e-18*state(12) + 1.0)*pow(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10));
+          J_adj_block(12, 5) = 2.225289891543473e-05*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(5)/pow(6.755293737545229e-19*state(12) + 1.0, 2) - 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(5)/(6.755293737545229e-19*state(12) + 1.0) - 52607959734961.56*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(5)*log(6.755293737545229e-19*state(12))/((6.755293737545229e-19*state(12) + 1.0)*pow(pow(log(6.755293737545229e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) - 4.0191829662465044e-48*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(3)*state(4)/pow(1.4180926593376776e-18*state(12) + 1.0, 2) + 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(3)*state(4)/(1.4180926593376776e-18*state(12) + 1.0) + 4.526288899279876e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(3)*state(4)*log(1.4180926593376776e-18*state(12))/((1.4180926593376776e-18*state(12) + 1.0)*pow(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10));
           // J^T(AIR, HNO3): d(d[HNO3]/dt) / d[AIR]
-          J_adj_block(Species::AIR, Species::HNO3) = -1.0*state(7)*state(10)*(-9.105203433428452e-51*state(12)/pow(4.2119062982869013e-19*state(12) + 1.0, 2) + 2.161777301914759e-32/(4.2119062982869013e-19*state(12) + 1.0));
+          J_adj_block(12, 7) = -1.0*state(7)*state(10)*(-9.115807904117787e-51*state(12)/pow(3.8755615852907066e-19*state(12) + 1.0, 2) + 2.3521256735322904e-32/(3.8755615852907066e-19*state(12) + 1.0));
           // J^T(AIR, O3P): d(d[O3P]/dt) / d[AIR]
-          J_adj_block(Species::AIR, Species::O3P) = -5.779235214948339e-34*state(13)*state(9);
+          J_adj_block(12, 9) = -6.358515026553832e-34*state(13)*state(9);
           // J^T(AIR, OH): d(d[OH]/dt) / d[AIR]
-          J_adj_block(Species::AIR, Species::OH) = -1.0*state(7)*state(10)*(-9.105203433428452e-51*state(12)/pow(4.2119062982869013e-19*state(12) + 1.0, 2) + 2.161777301914759e-32/(4.2119062982869013e-19*state(12) + 1.0));
+          J_adj_block(12, 10) = -1.0*state(7)*state(10)*(-9.115807904117787e-51*state(12)/pow(3.8755615852907066e-19*state(12) + 1.0, 2) + 2.3521256735322904e-32/(3.8755615852907066e-19*state(12) + 1.0));
           // J^T(AIR, HO2): d(d[HO2]/dt) / d[AIR]
-          J_adj_block(Species::AIR, Species::HO2) = -4.864965347266905e-32*state(11);
+          J_adj_block(12, 11) = -5.465512373221516e-32*state(11);
           // J^T(AIR, O2): d(d[O2]/dt) / d[AIR]
-          J_adj_block(Species::AIR, Species::O2) = 4.864965347266905e-32*state(11) - 5.779235214948339e-34*state(13)*state(9);
+          J_adj_block(12, 13) = 5.465512373221516e-32*state(11) - 6.358515026553832e-34*state(13)*state(9);
           // J^T(O2, O3): d(d[O3]/dt) / d[O2]
-          J_adj_block(Species::O2, Species::O3) = 5.779235214948339e-34*state(12)*state(9);
+          J_adj_block(13, 0) = 6.358515026553832e-34*state(12)*state(9);
           // J^T(O2, O3P): d(d[O3P]/dt) / d[O2]
-          J_adj_block(Species::O2, Species::O3P) = -5.779235214948339e-34*state(12)*state(9);
+          J_adj_block(13, 9) = -6.358515026553832e-34*state(12)*state(9);
           // J^T(O2, O2): d(d[O2]/dt) / d[O2]
-          J_adj_block(Species::O2, Species::O2) = -5.779235214948339e-34*state(12)*state(9);
+          J_adj_block(13, 13) = -6.358515026553832e-34*state(12)*state(9);
       }
 #endif
 
@@ -201,73 +203,73 @@ namespace mkpp {
       template <class StateView, class DeltaView, class RateView>
       KOKKOS_INLINE_FUNCTION void compute_tlm(const StateView& state, const DeltaView& delta_C, RateView& dF_block, const double* jvals) const {
           dF_block(0) = 0.0;
-          dF_block(0) += (-1.8183951663749815e-14*state(2) - 3.5338644420317084e-17*state(3) - 7.98786060795232e-15*state(9)) * delta_C(0);
-          dF_block(0) += (-1.8183951663749815e-14*state(0)) * delta_C(2);
-          dF_block(0) += (-3.5338644420317084e-17*state(0)) * delta_C(3);
-          dF_block(0) += (5.779235214948339e-34*state(12)*state(13) - 7.98786060795232e-15*state(0)) * delta_C(9);
-          dF_block(0) += (5.779235214948339e-34*state(13)*state(9)) * delta_C(12);
-          dF_block(0) += (5.779235214948339e-34*state(12)*state(9)) * delta_C(13);
+          dF_block(0) += (-1.5503623719243584e-14*state(2) - 2.6508709957531697e-17*state(3) - 6.2848533514771804e-15*state(9)) * delta_C(0);
+          dF_block(0) += (-1.5503623719243584e-14*state(0)) * delta_C(2);
+          dF_block(0) += (-2.6508709957531697e-17*state(0)) * delta_C(3);
+          dF_block(0) += (6.358515026553832e-34*state(12)*state(13) - 6.2848533514771804e-15*state(0)) * delta_C(9);
+          dF_block(0) += (6.358515026553832e-34*state(13)*state(9)) * delta_C(12);
+          dF_block(0) += (6.358515026553832e-34*state(12)*state(9)) * delta_C(13);
           dF_block(1) = 0.0;
           dF_block(1) += (-1.0*jvals[3]) * delta_C(1);
-          dF_block(1) += (4.864965347266905e-32*state(12) + 1.7207046561730112e-12) * delta_C(11);
-          dF_block(1) += (4.864965347266905e-32*state(11)) * delta_C(12);
+          dF_block(1) += (5.465512373221516e-32*state(12) + 1.845172665362734e-12) * delta_C(11);
+          dF_block(1) += (5.465512373221516e-32*state(11)) * delta_C(12);
           dF_block(2) = 0.0;
-          dF_block(2) += (-1.8183951663749815e-14*state(2)) * delta_C(0);
-          dF_block(2) += (-2.6031661982774907e-11*state(4) - 1.8183951663749815e-14*state(0)) * delta_C(2);
+          dF_block(2) += (-1.5503623719243584e-14*state(2)) * delta_C(0);
+          dF_block(2) += (-2.636710937705471e-11*state(4) - 1.5503623719243584e-14*state(0)) * delta_C(2);
           dF_block(2) += (1.0*jvals[0]) * delta_C(3);
-          dF_block(2) += (-2.6031661982774907e-11*state(2)) * delta_C(4);
+          dF_block(2) += (-2.636710937705471e-11*state(2)) * delta_C(4);
           dF_block(2) += (1.0*jvals[1]) * delta_C(6);
           dF_block(3) = 0.0;
-          dF_block(3) += (1.8183951663749815e-14*state(2) - 3.5338644420317084e-17*state(3)) * delta_C(0);
-          dF_block(3) += (5.206332396554981e-11*state(4) + 1.8183951663749815e-14*state(0)) * delta_C(2);
-          dF_block(3) += (-2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(4)/(1.4174820557114162e-18*state(12) + 1.0) - 3.5338644420317084e-17*state(0) - 1.0*jvals[0]) * delta_C(3);
-          dF_block(3) += (-2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(3)/(1.4174820557114162e-18*state(12) + 1.0) + 5.206332396554981e-11*state(2)) * delta_C(4);
-          dF_block(3) += (10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)/(7.709507080111506e-19*state(12) + 1.0)) * delta_C(5);
+          dF_block(3) += (1.5503623719243584e-14*state(2) - 2.6508709957531697e-17*state(3)) * delta_C(0);
+          dF_block(3) += (5.273421875410942e-11*state(4) + 1.5503623719243584e-14*state(0)) * delta_C(2);
+          dF_block(3) += (-2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(4)/(1.4180926593376776e-18*state(12) + 1.0) - 2.6508709957531697e-17*state(0) - 1.0*jvals[0]) * delta_C(3);
+          dF_block(3) += (-2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(3)/(1.4180926593376776e-18*state(12) + 1.0) + 5.273421875410942e-11*state(2)) * delta_C(4);
+          dF_block(3) += (32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)/(6.755293737545229e-19*state(12) + 1.0)) * delta_C(5);
           dF_block(3) += (1.0*jvals[2]) * delta_C(7);
-          dF_block(3) += (-7.953589926046845e-06*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(5)/pow(7.709507080111506e-19*state(12) + 1.0, 2) + 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(5)/(7.709507080111506e-19*state(12) + 1.0) + 16475768690562.62*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(5)*log(7.709507080111506e-19*state(12))/((7.709507080111506e-19*state(12) + 1.0)*pow(pow(log(7.709507080111506e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 4.015816030220338e-48*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(3)*state(4)/pow(1.4174820557114162e-18*state(12) + 1.0, 2) - 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(3)*state(4)/(1.4174820557114162e-18*state(12) + 1.0) - 4.524445291995257e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(3)*state(4)*log(1.4174820557114162e-18*state(12))/((1.4174820557114162e-18*state(12) + 1.0)*pow(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10))) * delta_C(12);
+          dF_block(3) += (-2.225289891543473e-05*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(5)/pow(6.755293737545229e-19*state(12) + 1.0, 2) + 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(5)/(6.755293737545229e-19*state(12) + 1.0) + 52607959734961.56*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(5)*log(6.755293737545229e-19*state(12))/((6.755293737545229e-19*state(12) + 1.0)*pow(pow(log(6.755293737545229e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 4.0191829662465044e-48*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(3)*state(4)/pow(1.4180926593376776e-18*state(12) + 1.0, 2) - 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(3)*state(4)/(1.4180926593376776e-18*state(12) + 1.0) - 4.526288899279876e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(3)*state(4)*log(1.4180926593376776e-18*state(12))/((1.4180926593376776e-18*state(12) + 1.0)*pow(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10))) * delta_C(12);
           dF_block(4) = 0.0;
-          dF_block(4) += (3.5338644420317084e-17*state(3)) * delta_C(0);
-          dF_block(4) += (-2.6031661982774907e-11*state(4)) * delta_C(2);
-          dF_block(4) += (-2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(4)/(1.4174820557114162e-18*state(12) + 1.0) + 3.5338644420317084e-17*state(0)) * delta_C(3);
-          dF_block(4) += (-2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(3)/(1.4174820557114162e-18*state(12) + 1.0) - 2.6031661982774907e-11*state(2)) * delta_C(4);
-          dF_block(4) += (10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)/(7.709507080111506e-19*state(12) + 1.0)) * delta_C(5);
-          dF_block(4) += (1.0*state(10)*(2.161777301914759e-32*state(12)/(4.2119062982869013e-19*state(12) + 1.0) + 1.0018153870816924e-13)) * delta_C(7);
-          dF_block(4) += (1.0*state(7)*(2.161777301914759e-32*state(12)/(4.2119062982869013e-19*state(12) + 1.0) + 1.0018153870816924e-13)) * delta_C(10);
-          dF_block(4) += (-7.953589926046845e-06*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(5)/pow(7.709507080111506e-19*state(12) + 1.0, 2) + 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(5)/(7.709507080111506e-19*state(12) + 1.0) + 16475768690562.62*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(5)*log(7.709507080111506e-19*state(12))/((7.709507080111506e-19*state(12) + 1.0)*pow(pow(log(7.709507080111506e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 4.015816030220338e-48*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(3)*state(4)/pow(1.4174820557114162e-18*state(12) + 1.0, 2) - 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(3)*state(4)/(1.4174820557114162e-18*state(12) + 1.0) - 4.524445291995257e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(3)*state(4)*log(1.4174820557114162e-18*state(12))/((1.4174820557114162e-18*state(12) + 1.0)*pow(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 1.0*state(7)*state(10)*(-9.105203433428452e-51*state(12)/pow(4.2119062982869013e-19*state(12) + 1.0, 2) + 2.161777301914759e-32/(4.2119062982869013e-19*state(12) + 1.0))) * delta_C(12);
+          dF_block(4) += (2.6508709957531697e-17*state(3)) * delta_C(0);
+          dF_block(4) += (-2.636710937705471e-11*state(4)) * delta_C(2);
+          dF_block(4) += (-2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(4)/(1.4180926593376776e-18*state(12) + 1.0) + 2.6508709957531697e-17*state(0)) * delta_C(3);
+          dF_block(4) += (-2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(3)/(1.4180926593376776e-18*state(12) + 1.0) - 2.636710937705471e-11*state(2)) * delta_C(4);
+          dF_block(4) += (32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)/(6.755293737545229e-19*state(12) + 1.0)) * delta_C(5);
+          dF_block(4) += (1.0*state(10)*(2.3521256735322904e-32*state(12)/(3.8755615852907066e-19*state(12) + 1.0) + 1.097666311281924e-13)) * delta_C(7);
+          dF_block(4) += (1.0*state(7)*(2.3521256735322904e-32*state(12)/(3.8755615852907066e-19*state(12) + 1.0) + 1.097666311281924e-13)) * delta_C(10);
+          dF_block(4) += (-2.225289891543473e-05*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(5)/pow(6.755293737545229e-19*state(12) + 1.0, 2) + 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(5)/(6.755293737545229e-19*state(12) + 1.0) + 52607959734961.56*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(5)*log(6.755293737545229e-19*state(12))/((6.755293737545229e-19*state(12) + 1.0)*pow(pow(log(6.755293737545229e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 4.0191829662465044e-48*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(3)*state(4)/pow(1.4180926593376776e-18*state(12) + 1.0, 2) - 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(3)*state(4)/(1.4180926593376776e-18*state(12) + 1.0) - 4.526288899279876e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(3)*state(4)*log(1.4180926593376776e-18*state(12))/((1.4180926593376776e-18*state(12) + 1.0)*pow(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 1.0*state(7)*state(10)*(-9.115807904117787e-51*state(12)/pow(3.8755615852907066e-19*state(12) + 1.0, 2) + 2.3521256735322904e-32/(3.8755615852907066e-19*state(12) + 1.0))) * delta_C(12);
           dF_block(5) = 0.0;
-          dF_block(5) += (2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(4)/(1.4174820557114162e-18*state(12) + 1.0)) * delta_C(3);
-          dF_block(5) += (2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(3)/(1.4174820557114162e-18*state(12) + 1.0)) * delta_C(4);
-          dF_block(5) += (-10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)/(7.709507080111506e-19*state(12) + 1.0)) * delta_C(5);
-          dF_block(5) += (7.953589926046845e-06*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(5)/pow(7.709507080111506e-19*state(12) + 1.0, 2) - 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(5)/(7.709507080111506e-19*state(12) + 1.0) - 16475768690562.62*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(5)*log(7.709507080111506e-19*state(12))/((7.709507080111506e-19*state(12) + 1.0)*pow(pow(log(7.709507080111506e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) - 4.015816030220338e-48*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(3)*state(4)/pow(1.4174820557114162e-18*state(12) + 1.0, 2) + 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(3)*state(4)/(1.4174820557114162e-18*state(12) + 1.0) + 4.524445291995257e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(3)*state(4)*log(1.4174820557114162e-18*state(12))/((1.4174820557114162e-18*state(12) + 1.0)*pow(pow(log(1.4174820557114162e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10))) * delta_C(12);
+          dF_block(5) += (2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(4)/(1.4180926593376776e-18*state(12) + 1.0)) * delta_C(3);
+          dF_block(5) += (2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(3)/(1.4180926593376776e-18*state(12) + 1.0)) * delta_C(4);
+          dF_block(5) += (-32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)/(6.755293737545229e-19*state(12) + 1.0)) * delta_C(5);
+          dF_block(5) += (2.225289891543473e-05*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(5)/pow(6.755293737545229e-19*state(12) + 1.0, 2) - 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(5)/(6.755293737545229e-19*state(12) + 1.0) - 52607959734961.56*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(5)*log(6.755293737545229e-19*state(12))/((6.755293737545229e-19*state(12) + 1.0)*pow(pow(log(6.755293737545229e-19*state(12)), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) - 4.0191829662465044e-48*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(12)*state(3)*state(4)/pow(1.4180926593376776e-18*state(12) + 1.0, 2) + 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(3)*state(4)/(1.4180926593376776e-18*state(12) + 1.0) + 4.526288899279876e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0))*state(3)*state(4)*log(1.4180926593376776e-18*state(12))/((1.4180926593376776e-18*state(12) + 1.0)*pow(pow(log(1.4180926593376776e-18*state(12)), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10))) * delta_C(12);
           dF_block(6) = 0.0;
           dF_block(6) += (-1.0*jvals[1]) * delta_C(6);
           dF_block(7) = 0.0;
-          dF_block(7) += (-1.0*state(10)*(2.161777301914759e-32*state(12)/(4.2119062982869013e-19*state(12) + 1.0) + 1.0018153870816924e-13) - 1.0*jvals[2]) * delta_C(7);
-          dF_block(7) += (-1.0*state(7)*(2.161777301914759e-32*state(12)/(4.2119062982869013e-19*state(12) + 1.0) + 1.0018153870816924e-13)) * delta_C(10);
-          dF_block(7) += (-1.0*state(7)*state(10)*(-9.105203433428452e-51*state(12)/pow(4.2119062982869013e-19*state(12) + 1.0, 2) + 2.161777301914759e-32/(4.2119062982869013e-19*state(12) + 1.0))) * delta_C(12);
+          dF_block(7) += (-1.0*state(10)*(2.3521256735322904e-32*state(12)/(3.8755615852907066e-19*state(12) + 1.0) + 1.097666311281924e-13) - 1.0*jvals[2]) * delta_C(7);
+          dF_block(7) += (-1.0*state(7)*(2.3521256735322904e-32*state(12)/(3.8755615852907066e-19*state(12) + 1.0) + 1.097666311281924e-13)) * delta_C(10);
+          dF_block(7) += (-1.0*state(7)*state(10)*(-9.115807904117787e-51*state(12)/pow(3.8755615852907066e-19*state(12) + 1.0, 2) + 2.3521256735322904e-32/(3.8755615852907066e-19*state(12) + 1.0))) * delta_C(12);
           dF_block(8) = 0.0;
           dF_block(9) = 0.0;
-          dF_block(9) += (-7.98786060795232e-15*state(9)) * delta_C(0);
+          dF_block(9) += (-6.2848533514771804e-15*state(9)) * delta_C(0);
           dF_block(9) += (1.0*jvals[0]) * delta_C(3);
-          dF_block(9) += (-5.779235214948339e-34*state(12)*state(13) - 7.98786060795232e-15*state(0)) * delta_C(9);
-          dF_block(9) += (-5.779235214948339e-34*state(13)*state(9)) * delta_C(12);
-          dF_block(9) += (-5.779235214948339e-34*state(12)*state(9)) * delta_C(13);
+          dF_block(9) += (-6.358515026553832e-34*state(12)*state(13) - 6.2848533514771804e-15*state(0)) * delta_C(9);
+          dF_block(9) += (-6.358515026553832e-34*state(13)*state(9)) * delta_C(12);
+          dF_block(9) += (-6.358515026553832e-34*state(12)*state(9)) * delta_C(13);
           dF_block(10) = 0.0;
           dF_block(10) += (2.0*jvals[3]) * delta_C(1);
           dF_block(10) += (1.0*jvals[1]) * delta_C(6);
-          dF_block(10) += (-1.0*state(10)*(2.161777301914759e-32*state(12)/(4.2119062982869013e-19*state(12) + 1.0) + 1.0018153870816924e-13) + 1.0*jvals[2]) * delta_C(7);
-          dF_block(10) += (-1.0*state(7)*(2.161777301914759e-32*state(12)/(4.2119062982869013e-19*state(12) + 1.0) + 1.0018153870816924e-13)) * delta_C(10);
-          dF_block(10) += (-1.0*state(7)*state(10)*(-9.105203433428452e-51*state(12)/pow(4.2119062982869013e-19*state(12) + 1.0, 2) + 2.161777301914759e-32/(4.2119062982869013e-19*state(12) + 1.0))) * delta_C(12);
+          dF_block(10) += (-1.0*state(10)*(2.3521256735322904e-32*state(12)/(3.8755615852907066e-19*state(12) + 1.0) + 1.097666311281924e-13) + 1.0*jvals[2]) * delta_C(7);
+          dF_block(10) += (-1.0*state(7)*(2.3521256735322904e-32*state(12)/(3.8755615852907066e-19*state(12) + 1.0) + 1.097666311281924e-13)) * delta_C(10);
+          dF_block(10) += (-1.0*state(7)*state(10)*(-9.115807904117787e-51*state(12)/pow(3.8755615852907066e-19*state(12) + 1.0, 2) + 2.3521256735322904e-32/(3.8755615852907066e-19*state(12) + 1.0))) * delta_C(12);
           dF_block(11) = 0.0;
-          dF_block(11) += (-4.864965347266905e-32*state(12) - 1.7207046561730112e-12) * delta_C(11);
-          dF_block(11) += (-4.864965347266905e-32*state(11)) * delta_C(12);
+          dF_block(11) += (-5.465512373221516e-32*state(12) - 1.845172665362734e-12) * delta_C(11);
+          dF_block(11) += (-5.465512373221516e-32*state(11)) * delta_C(12);
           dF_block(12) = 0.0;
           dF_block(13) = 0.0;
-          dF_block(13) += (1.597572121590464e-14*state(9)) * delta_C(0);
-          dF_block(13) += (-5.779235214948339e-34*state(12)*state(13) + 1.597572121590464e-14*state(0)) * delta_C(9);
-          dF_block(13) += (4.864965347266905e-32*state(12) + 1.7207046561730112e-12) * delta_C(11);
-          dF_block(13) += (4.864965347266905e-32*state(11) - 5.779235214948339e-34*state(13)*state(9)) * delta_C(12);
-          dF_block(13) += (-5.779235214948339e-34*state(12)*state(9)) * delta_C(13);
+          dF_block(13) += (1.2569706702954361e-14*state(9)) * delta_C(0);
+          dF_block(13) += (-6.358515026553832e-34*state(12)*state(13) + 1.2569706702954361e-14*state(0)) * delta_C(9);
+          dF_block(13) += (5.465512373221516e-32*state(12) + 1.845172665362734e-12) * delta_C(11);
+          dF_block(13) += (5.465512373221516e-32*state(11) - 6.358515026553832e-34*state(13)*state(9)) * delta_C(12);
+          dF_block(13) += (-6.358515026553832e-34*state(12)*state(9)) * delta_C(13);
           dF_block(14) = 0.0;
           dF_block(15) = 0.0;
           dF_block(16) = 0.0;
@@ -277,11 +279,35 @@ namespace mkpp {
       template <class StateView, class MassView>
       KOKKOS_INLINE_FUNCTION void project_mass_conservation(StateView& C_projected, const StateView& C, const MassView& m_0) const {
           // C_projected = C - E^T (E E^T)^-1 (E C - m_0)
+          C_projected(0) = C(0);
+          C_projected(1) = C(1);
+          C_projected(2) = C(2);
+          C_projected(3) = C(3);
+          C_projected(4) = C(4);
+          C_projected(5) = C(5);
+          C_projected(6) = C(6);
+          C_projected(7) = C(7);
+          C_projected(8) = C(8);
+          C_projected(9) = C(9);
+          C_projected(10) = C(10);
+          C_projected(11) = C(11);
+          C_projected(12) = C(12);
+          C_projected(13) = C(13);
+          C_projected(14) = C(14);
+          C_projected(15) = C(15);
+          C_projected(16) = C(16);
       }
 
       static constexpr int NUM_SPECIES = 17;
       static constexpr double atol[NUM_SPECIES] = { 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001 };
       static constexpr double rtol[NUM_SPECIES] = { 1e-06, 1e-06, 1e-06, 1e-06, 1e-06, 1e-06, 1e-06, 1e-06, 1e-06, 1e-06, 1e-06, 1e-06, 1e-06, 1e-06, 1e-06, 1e-06, 1e-06 };
+
+      // Photolysis reactions (Cloud-J input mapping):
+      //   jvals[0] = NO2 -> NO, O3P  (original A: 1.0)
+      //   jvals[1] = HONO -> OH, NO  (original A: 1.0)
+      //   jvals[2] = HNO3 -> OH, NO2  (original A: 1.0)
+      //   jvals[3] = H2O2 -> OH  (original A: 1.0)
+      static constexpr int NUM_PHOTOLYSIS = 4;
 
       /**
        * @brief Performs adaptive time-stepping Rosenbrock integration over dt_total.
@@ -334,7 +360,7 @@ namespace mkpp {
           // The expression-dense Jacobian is evaluated by bounded compiled
           // units.  The solver still uses the same symbolic sparse LU plan.
           double J_values[NUM_SPECIES * NUM_SPECIES] = {};
-          detail::saprc99_mini::compute_jacobian_chunk_0(state.data(), J_values, jvals, 0.0, 0.0);
+          detail::compute_jacobian_chunk_0(state.data(), J_values, jvals, 0.0, 0.0);
           // Analytical Jacobian & Iteration Matrix W = inv_g_dt*I - J (sparse)
           double J_4_4 = J_values[6 * NUM_SPECIES + 6];
           double J_5_5 = J_values[13 * NUM_SPECIES + 13];
@@ -451,12 +477,16 @@ namespace mkpp {
           W_values[16 * NUM_SPECIES + 15] = -J_16_15;
           W_values[16 * NUM_SPECIES + 16] = inv_g_dt - J_16_16;
           double LU_values[NUM_SPECIES * NUM_SPECIES] = {};
-          detail::saprc99_mini::factorize_lu_chunk_0(W_values, LU_values);
+#ifndef MKPP_USE_UNROLLED_REFERENCE
+          detail::factorize_plan(W_values, LU_values);
+#else
+          detail::factorize_lu_chunk_0(W_values, LU_values);
+#endif
 
           // --- Stage 1 ---
           // Rate evaluation F1 at S
           double F_values_1[NUM_SPECIES];
-          detail::saprc99_mini::compute_rates_chunk_0(state.data(), F_values_1, jvals, 0.0, 0.0);
+          detail::compute_rates_chunk_0(state.data(), F_values_1, jvals, 0.0, 0.0);
           double F1_0 = F_values_1[16];
           double F1_1 = F_values_1[15];
           double F1_2 = F_values_1[14];
@@ -493,7 +523,11 @@ namespace mkpp {
           rhs_values_1[15] = F1_15;
           rhs_values_1[16] = F1_16;
           double K_values_1[NUM_SPECIES];
-          detail::saprc99_mini::solve_lu(LU_values, rhs_values_1, K_values_1);
+#ifndef MKPP_USE_UNROLLED_REFERENCE
+          detail::solve_plan(LU_values, rhs_values_1, K_values_1);
+#else
+          detail::solve_lu(LU_values, rhs_values_1, K_values_1);
+#endif
           double K1_0 = K_values_1[0];
           double K1_1 = K_values_1[1];
           double K1_2 = K_values_1[2];
@@ -551,7 +585,7 @@ namespace mkpp {
           stage_state_2[3] = Y2_15;
           stage_state_2[5] = Y2_16;
           double F_values_2[NUM_SPECIES];
-          detail::saprc99_mini::compute_rates_chunk_0(stage_state_2, F_values_2, jvals, 0.0, 0.0);
+          detail::compute_rates_chunk_0(stage_state_2, F_values_2, jvals, 0.0, 0.0);
           double F2_0 = F_values_2[16];
           double F2_1 = F_values_2[15];
           double F2_2 = F_values_2[14];
@@ -606,7 +640,11 @@ namespace mkpp {
           rhs_values_2[15] = rhs2_15;
           rhs_values_2[16] = rhs2_16;
           double K_values_2[NUM_SPECIES];
-          detail::saprc99_mini::solve_lu(LU_values, rhs_values_2, K_values_2);
+#ifndef MKPP_USE_UNROLLED_REFERENCE
+          detail::solve_plan(LU_values, rhs_values_2, K_values_2);
+#else
+          detail::solve_lu(LU_values, rhs_values_2, K_values_2);
+#endif
           double K2_0 = K_values_2[0];
           double K2_1 = K_values_2[1];
           double K2_2 = K_values_2[2];
@@ -682,7 +720,11 @@ namespace mkpp {
           rhs_values_3[15] = rhs3_15;
           rhs_values_3[16] = rhs3_16;
           double K_values_3[NUM_SPECIES];
-          detail::saprc99_mini::solve_lu(LU_values, rhs_values_3, K_values_3);
+#ifndef MKPP_USE_UNROLLED_REFERENCE
+          detail::solve_plan(LU_values, rhs_values_3, K_values_3);
+#else
+          detail::solve_lu(LU_values, rhs_values_3, K_values_3);
+#endif
           double K3_0 = K_values_3[0];
           double K3_1 = K_values_3[1];
           double K3_2 = K_values_3[2];
@@ -966,18 +1008,18 @@ namespace mkpp {
           double F1_2 = 0.0;
           double F1_3 = 0.0;
           double F1_4 = -1.0*S_4*jvals[1];
-          double F1_5 = -5.779235214948339e-34*S_13*S_5*S_12 + 1.0*S_6*(4.864965347266905e-32*S_13 + 1.7207046561730112e-12) + 1.597572121590464e-14*S_9*S_12;
-          double F1_6 = -1.0*S_6*(4.864965347266905e-32*S_13 + 1.7207046561730112e-12);
-          double F1_7 = -1.0*S_7*jvals[3] + 1.0*S_6*(4.864965347266905e-32*S_13 + 1.7207046561730112e-12);
-          double F1_8 = 2.0*S_7*jvals[3] - 1.0*S_10*S_8*(2.161777301914759e-32*S_13/(4.2119062982869013e-19*S_13 + 1.0) + 1.0018153870816924e-13) + 1.0*S_10*jvals[2] + 1.0*S_4*jvals[1];
-          double F1_9 = 5.779235214948339e-34*S_13*S_5*S_12 - 1.8183951663749815e-14*S_11*S_9 - 3.5338644420317084e-17*S_15*S_9 - 7.98786060795232e-15*S_9*S_12;
-          double F1_10 = -1.0*S_10*S_8*(2.161777301914759e-32*S_13/(4.2119062982869013e-19*S_13 + 1.0) + 1.0018153870816924e-13) - 1.0*S_10*jvals[2];
-          double F1_11 = 1.0*S_4*jvals[1] - 2.6031661982774907e-11*S_11*S_14 - 1.8183951663749815e-14*S_11*S_9 + 1.0*S_15*jvals[0];
-          double F1_12 = -5.779235214948339e-34*S_13*S_5*S_12 + 1.0*S_15*jvals[0] - 7.98786060795232e-15*S_9*S_12;
+          double F1_5 = -6.358515026553832e-34*S_13*S_5*S_12 + 1.0*S_6*(5.465512373221516e-32*S_13 + 1.845172665362734e-12) + 1.2569706702954361e-14*S_9*S_12;
+          double F1_6 = -1.0*S_6*(5.465512373221516e-32*S_13 + 1.845172665362734e-12);
+          double F1_7 = -1.0*S_7*jvals[3] + 1.0*S_6*(5.465512373221516e-32*S_13 + 1.845172665362734e-12);
+          double F1_8 = 2.0*S_7*jvals[3] - 1.0*S_10*S_8*(2.3521256735322904e-32*S_13/(3.8755615852907066e-19*S_13 + 1.0) + 1.097666311281924e-13) + 1.0*S_10*jvals[2] + 1.0*S_4*jvals[1];
+          double F1_9 = 6.358515026553832e-34*S_13*S_5*S_12 - 1.5503623719243584e-14*S_11*S_9 - 2.6508709957531697e-17*S_15*S_9 - 6.2848533514771804e-15*S_9*S_12;
+          double F1_10 = -1.0*S_10*S_8*(2.3521256735322904e-32*S_13/(3.8755615852907066e-19*S_13 + 1.0) + 1.097666311281924e-13) - 1.0*S_10*jvals[2];
+          double F1_11 = 1.0*S_4*jvals[1] - 2.636710937705471e-11*S_11*S_14 - 1.5503623719243584e-14*S_11*S_9 + 1.0*S_15*jvals[0];
+          double F1_12 = -6.358515026553832e-34*S_13*S_5*S_12 + 1.0*S_15*jvals[0] - 6.2848533514771804e-15*S_9*S_12;
           double F1_13 = 0.0;
-          double F1_14 = 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/(7.709507080111506e-19*S_13 + 1.0) - 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/(1.4174820557114162e-18*S_13 + 1.0) + 1.0*S_10*S_8*(2.161777301914759e-32*S_13/(4.2119062982869013e-19*S_13 + 1.0) + 1.0018153870816924e-13) - 2.6031661982774907e-11*S_11*S_14 + 3.5338644420317084e-17*S_15*S_9;
-          double F1_15 = 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/(7.709507080111506e-19*S_13 + 1.0) - 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/(1.4174820557114162e-18*S_13 + 1.0) + 1.0*S_10*jvals[2] + 5.206332396554981e-11*S_11*S_14 + 1.8183951663749815e-14*S_11*S_9 - 3.5338644420317084e-17*S_15*S_9 - 1.0*S_15*jvals[0];
-          double F1_16 = -10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/(7.709507080111506e-19*S_13 + 1.0) + 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/(1.4174820557114162e-18*S_13 + 1.0);
+          double F1_14 = 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/(6.755293737545229e-19*S_13 + 1.0) - 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/(1.4180926593376776e-18*S_13 + 1.0) + 1.0*S_10*S_8*(2.3521256735322904e-32*S_13/(3.8755615852907066e-19*S_13 + 1.0) + 1.097666311281924e-13) - 2.636710937705471e-11*S_11*S_14 + 2.6508709957531697e-17*S_15*S_9;
+          double F1_15 = 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/(6.755293737545229e-19*S_13 + 1.0) - 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/(1.4180926593376776e-18*S_13 + 1.0) + 1.0*S_10*jvals[2] + 5.273421875410942e-11*S_11*S_14 + 1.5503623719243584e-14*S_11*S_9 - 2.6508709957531697e-17*S_15*S_9 - 1.0*S_15*jvals[0];
+          double F1_16 = -32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/(6.755293737545229e-19*S_13 + 1.0) + 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/(1.4180926593376776e-18*S_13 + 1.0);
 
           // 2. Evaluate importance and update active set
           active[0] = (Kokkos::fabs(F1_0) / (atol[0] + rtol[0] * Kokkos::fabs(state(16))) >= importance_threshold);
@@ -1000,59 +1042,59 @@ namespace mkpp {
 
           // 3. Analytical Jacobian & Iteration Matrix W (identity for frozen species)
           double J_4_4 = -1.0*jvals[1];
-          double J_5_5 = -5.779235214948339e-34*S_13*S_12;
-          double J_5_6 = 4.864965347266905e-32*S_13 + 1.7207046561730112e-12;
-          double J_5_9 = 1.597572121590464e-14*S_12;
-          double J_5_12 = -5.779235214948339e-34*S_13*S_5 + 1.597572121590464e-14*S_9;
-          double J_5_13 = 4.864965347266905e-32*S_6 - 5.779235214948339e-34*S_5*S_12;
-          double J_6_6 = -4.864965347266905e-32*S_13 - 1.7207046561730112e-12;
-          double J_6_13 = -4.864965347266905e-32*S_6;
-          double J_7_6 = 4.864965347266905e-32*S_13 + 1.7207046561730112e-12;
+          double J_5_5 = -6.358515026553832e-34*S_13*S_12;
+          double J_5_6 = 5.465512373221516e-32*S_13 + 1.845172665362734e-12;
+          double J_5_9 = 1.2569706702954361e-14*S_12;
+          double J_5_12 = -6.358515026553832e-34*S_13*S_5 + 1.2569706702954361e-14*S_9;
+          double J_5_13 = 5.465512373221516e-32*S_6 - 6.358515026553832e-34*S_5*S_12;
+          double J_6_6 = -5.465512373221516e-32*S_13 - 1.845172665362734e-12;
+          double J_6_13 = -5.465512373221516e-32*S_6;
+          double J_7_6 = 5.465512373221516e-32*S_13 + 1.845172665362734e-12;
           double J_7_7 = -1.0*jvals[3];
-          double J_7_13 = 4.864965347266905e-32*S_6;
+          double J_7_13 = 5.465512373221516e-32*S_6;
           double J_8_4 = 1.0*jvals[1];
           double J_8_7 = 2.0*jvals[3];
-          double J_8_8 = -1.0*S_10*(2.161777301914759e-32*S_13/(4.2119062982869013e-19*S_13 + 1.0) + 1.0018153870816924e-13);
-          double J_8_10 = -1.0*S_8*(2.161777301914759e-32*S_13/(4.2119062982869013e-19*S_13 + 1.0) + 1.0018153870816924e-13) + 1.0*jvals[2];
-          double J_8_13 = -1.0*S_10*S_8*(-9.105203433428452e-51*S_13/pow(4.2119062982869013e-19*S_13 + 1.0, 2) + 2.161777301914759e-32/(4.2119062982869013e-19*S_13 + 1.0));
-          double J_9_5 = 5.779235214948339e-34*S_13*S_12;
-          double J_9_9 = -1.8183951663749815e-14*S_11 - 3.5338644420317084e-17*S_15 - 7.98786060795232e-15*S_12;
-          double J_9_11 = -1.8183951663749815e-14*S_9;
-          double J_9_12 = 5.779235214948339e-34*S_13*S_5 - 7.98786060795232e-15*S_9;
-          double J_9_13 = 5.779235214948339e-34*S_5*S_12;
-          double J_9_15 = -3.5338644420317084e-17*S_9;
-          double J_10_8 = -1.0*S_10*(2.161777301914759e-32*S_13/(4.2119062982869013e-19*S_13 + 1.0) + 1.0018153870816924e-13);
-          double J_10_10 = -1.0*S_8*(2.161777301914759e-32*S_13/(4.2119062982869013e-19*S_13 + 1.0) + 1.0018153870816924e-13) - 1.0*jvals[2];
-          double J_10_13 = -1.0*S_10*S_8*(-9.105203433428452e-51*S_13/pow(4.2119062982869013e-19*S_13 + 1.0, 2) + 2.161777301914759e-32/(4.2119062982869013e-19*S_13 + 1.0));
+          double J_8_8 = -1.0*S_10*(2.3521256735322904e-32*S_13/(3.8755615852907066e-19*S_13 + 1.0) + 1.097666311281924e-13);
+          double J_8_10 = -1.0*S_8*(2.3521256735322904e-32*S_13/(3.8755615852907066e-19*S_13 + 1.0) + 1.097666311281924e-13) + 1.0*jvals[2];
+          double J_8_13 = -1.0*S_10*S_8*(-9.115807904117787e-51*S_13/pow(3.8755615852907066e-19*S_13 + 1.0, 2) + 2.3521256735322904e-32/(3.8755615852907066e-19*S_13 + 1.0));
+          double J_9_5 = 6.358515026553832e-34*S_13*S_12;
+          double J_9_9 = -1.5503623719243584e-14*S_11 - 2.6508709957531697e-17*S_15 - 6.2848533514771804e-15*S_12;
+          double J_9_11 = -1.5503623719243584e-14*S_9;
+          double J_9_12 = 6.358515026553832e-34*S_13*S_5 - 6.2848533514771804e-15*S_9;
+          double J_9_13 = 6.358515026553832e-34*S_5*S_12;
+          double J_9_15 = -2.6508709957531697e-17*S_9;
+          double J_10_8 = -1.0*S_10*(2.3521256735322904e-32*S_13/(3.8755615852907066e-19*S_13 + 1.0) + 1.097666311281924e-13);
+          double J_10_10 = -1.0*S_8*(2.3521256735322904e-32*S_13/(3.8755615852907066e-19*S_13 + 1.0) + 1.097666311281924e-13) - 1.0*jvals[2];
+          double J_10_13 = -1.0*S_10*S_8*(-9.115807904117787e-51*S_13/pow(3.8755615852907066e-19*S_13 + 1.0, 2) + 2.3521256735322904e-32/(3.8755615852907066e-19*S_13 + 1.0));
           double J_11_4 = 1.0*jvals[1];
-          double J_11_9 = -1.8183951663749815e-14*S_11;
-          double J_11_11 = -2.6031661982774907e-11*S_14 - 1.8183951663749815e-14*S_9;
-          double J_11_14 = -2.6031661982774907e-11*S_11;
+          double J_11_9 = -1.5503623719243584e-14*S_11;
+          double J_11_11 = -2.636710937705471e-11*S_14 - 1.5503623719243584e-14*S_9;
+          double J_11_14 = -2.636710937705471e-11*S_11;
           double J_11_15 = 1.0*jvals[0];
-          double J_12_5 = -5.779235214948339e-34*S_13*S_12;
-          double J_12_9 = -7.98786060795232e-15*S_12;
-          double J_12_12 = -5.779235214948339e-34*S_13*S_5 - 7.98786060795232e-15*S_9;
-          double J_12_13 = -5.779235214948339e-34*S_5*S_12;
+          double J_12_5 = -6.358515026553832e-34*S_13*S_12;
+          double J_12_9 = -6.2848533514771804e-15*S_12;
+          double J_12_12 = -6.358515026553832e-34*S_13*S_5 - 6.2848533514771804e-15*S_9;
+          double J_12_13 = -6.358515026553832e-34*S_5*S_12;
           double J_12_15 = 1.0*jvals[0];
-          double J_14_8 = 1.0*S_10*(2.161777301914759e-32*S_13/(4.2119062982869013e-19*S_13 + 1.0) + 1.0018153870816924e-13);
-          double J_14_9 = 3.5338644420317084e-17*S_15;
-          double J_14_10 = 1.0*S_8*(2.161777301914759e-32*S_13/(4.2119062982869013e-19*S_13 + 1.0) + 1.0018153870816924e-13);
-          double J_14_11 = -2.6031661982774907e-11*S_14;
-          double J_14_13 = -7.953589926046845e-06*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/pow(7.709507080111506e-19*S_13 + 1.0, 2) + 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16/(7.709507080111506e-19*S_13 + 1.0) + 16475768690562.62*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16*log(7.709507080111506e-19*S_13)/((7.709507080111506e-19*S_13 + 1.0)*pow(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 4.015816030220338e-48*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/pow(1.4174820557114162e-18*S_13 + 1.0, 2) - 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14/(1.4174820557114162e-18*S_13 + 1.0) - 4.524445291995257e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14*log(1.4174820557114162e-18*S_13)/((1.4174820557114162e-18*S_13 + 1.0)*pow(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 1.0*S_10*S_8*(-9.105203433428452e-51*S_13/pow(4.2119062982869013e-19*S_13 + 1.0, 2) + 2.161777301914759e-32/(4.2119062982869013e-19*S_13 + 1.0));
-          double J_14_14 = -2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15/(1.4174820557114162e-18*S_13 + 1.0) - 2.6031661982774907e-11*S_11;
-          double J_14_15 = -2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_14/(1.4174820557114162e-18*S_13 + 1.0) + 3.5338644420317084e-17*S_9;
-          double J_14_16 = 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13/(7.709507080111506e-19*S_13 + 1.0);
-          double J_15_9 = 1.8183951663749815e-14*S_11 - 3.5338644420317084e-17*S_15;
+          double J_14_8 = 1.0*S_10*(2.3521256735322904e-32*S_13/(3.8755615852907066e-19*S_13 + 1.0) + 1.097666311281924e-13);
+          double J_14_9 = 2.6508709957531697e-17*S_15;
+          double J_14_10 = 1.0*S_8*(2.3521256735322904e-32*S_13/(3.8755615852907066e-19*S_13 + 1.0) + 1.097666311281924e-13);
+          double J_14_11 = -2.636710937705471e-11*S_14;
+          double J_14_13 = -2.225289891543473e-05*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/pow(6.755293737545229e-19*S_13 + 1.0, 2) + 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16/(6.755293737545229e-19*S_13 + 1.0) + 52607959734961.56*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16*log(6.755293737545229e-19*S_13)/((6.755293737545229e-19*S_13 + 1.0)*pow(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 4.0191829662465044e-48*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/pow(1.4180926593376776e-18*S_13 + 1.0, 2) - 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14/(1.4180926593376776e-18*S_13 + 1.0) - 4.526288899279876e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14*log(1.4180926593376776e-18*S_13)/((1.4180926593376776e-18*S_13 + 1.0)*pow(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 1.0*S_10*S_8*(-9.115807904117787e-51*S_13/pow(3.8755615852907066e-19*S_13 + 1.0, 2) + 2.3521256735322904e-32/(3.8755615852907066e-19*S_13 + 1.0));
+          double J_14_14 = -2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15/(1.4180926593376776e-18*S_13 + 1.0) - 2.636710937705471e-11*S_11;
+          double J_14_15 = -2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_14/(1.4180926593376776e-18*S_13 + 1.0) + 2.6508709957531697e-17*S_9;
+          double J_14_16 = 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13/(6.755293737545229e-19*S_13 + 1.0);
+          double J_15_9 = 1.5503623719243584e-14*S_11 - 2.6508709957531697e-17*S_15;
           double J_15_10 = 1.0*jvals[2];
-          double J_15_11 = 5.206332396554981e-11*S_14 + 1.8183951663749815e-14*S_9;
-          double J_15_13 = -7.953589926046845e-06*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/pow(7.709507080111506e-19*S_13 + 1.0, 2) + 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16/(7.709507080111506e-19*S_13 + 1.0) + 16475768690562.62*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16*log(7.709507080111506e-19*S_13)/((7.709507080111506e-19*S_13 + 1.0)*pow(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 4.015816030220338e-48*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/pow(1.4174820557114162e-18*S_13 + 1.0, 2) - 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14/(1.4174820557114162e-18*S_13 + 1.0) - 4.524445291995257e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14*log(1.4174820557114162e-18*S_13)/((1.4174820557114162e-18*S_13 + 1.0)*pow(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10));
-          double J_15_14 = -2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15/(1.4174820557114162e-18*S_13 + 1.0) + 5.206332396554981e-11*S_11;
-          double J_15_15 = -2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_14/(1.4174820557114162e-18*S_13 + 1.0) - 3.5338644420317084e-17*S_9 - 1.0*jvals[0];
-          double J_15_16 = 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13/(7.709507080111506e-19*S_13 + 1.0);
-          double J_16_13 = 7.953589926046845e-06*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/pow(7.709507080111506e-19*S_13 + 1.0, 2) - 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16/(7.709507080111506e-19*S_13 + 1.0) - 16475768690562.62*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16*log(7.709507080111506e-19*S_13)/((7.709507080111506e-19*S_13 + 1.0)*pow(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) - 4.015816030220338e-48*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/pow(1.4174820557114162e-18*S_13 + 1.0, 2) + 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14/(1.4174820557114162e-18*S_13 + 1.0) + 4.524445291995257e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14*log(1.4174820557114162e-18*S_13)/((1.4174820557114162e-18*S_13 + 1.0)*pow(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10));
-          double J_16_14 = 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15/(1.4174820557114162e-18*S_13 + 1.0);
-          double J_16_15 = 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_14/(1.4174820557114162e-18*S_13 + 1.0);
-          double J_16_16 = -10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13/(7.709507080111506e-19*S_13 + 1.0);
+          double J_15_11 = 5.273421875410942e-11*S_14 + 1.5503623719243584e-14*S_9;
+          double J_15_13 = -2.225289891543473e-05*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/pow(6.755293737545229e-19*S_13 + 1.0, 2) + 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16/(6.755293737545229e-19*S_13 + 1.0) + 52607959734961.56*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16*log(6.755293737545229e-19*S_13)/((6.755293737545229e-19*S_13 + 1.0)*pow(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 4.0191829662465044e-48*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/pow(1.4180926593376776e-18*S_13 + 1.0, 2) - 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14/(1.4180926593376776e-18*S_13 + 1.0) - 4.526288899279876e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14*log(1.4180926593376776e-18*S_13)/((1.4180926593376776e-18*S_13 + 1.0)*pow(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10));
+          double J_15_14 = -2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15/(1.4180926593376776e-18*S_13 + 1.0) + 5.273421875410942e-11*S_11;
+          double J_15_15 = -2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_14/(1.4180926593376776e-18*S_13 + 1.0) - 2.6508709957531697e-17*S_9 - 1.0*jvals[0];
+          double J_15_16 = 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13/(6.755293737545229e-19*S_13 + 1.0);
+          double J_16_13 = 2.225289891543473e-05*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/pow(6.755293737545229e-19*S_13 + 1.0, 2) - 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16/(6.755293737545229e-19*S_13 + 1.0) - 52607959734961.56*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16*log(6.755293737545229e-19*S_13)/((6.755293737545229e-19*S_13 + 1.0)*pow(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) - 4.0191829662465044e-48*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/pow(1.4180926593376776e-18*S_13 + 1.0, 2) + 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14/(1.4180926593376776e-18*S_13 + 1.0) + 4.526288899279876e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14*log(1.4180926593376776e-18*S_13)/((1.4180926593376776e-18*S_13 + 1.0)*pow(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10));
+          double J_16_14 = 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15/(1.4180926593376776e-18*S_13 + 1.0);
+          double J_16_15 = 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_14/(1.4180926593376776e-18*S_13 + 1.0);
+          double J_16_16 = -32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13/(6.755293737545229e-19*S_13 + 1.0);
           double W_0_0 = active[0] ? inv_g_dt : 1.0;
           double W_1_1 = active[1] ? inv_g_dt : 1.0;
           double W_2_2 = active[2] ? inv_g_dt : 1.0;
@@ -1266,18 +1308,18 @@ namespace mkpp {
           double F2_2 = 0.0;
           double F2_3 = 0.0;
           double F2_4 = -1.0*Y2_4*jvals[1];
-          double F2_5 = -5.779235214948339e-34*Y2_13*Y2_5*Y2_12 + 1.0*Y2_6*(4.864965347266905e-32*Y2_13 + 1.7207046561730112e-12) + 1.597572121590464e-14*Y2_9*Y2_12;
-          double F2_6 = -1.0*Y2_6*(4.864965347266905e-32*Y2_13 + 1.7207046561730112e-12);
-          double F2_7 = -1.0*Y2_7*jvals[3] + 1.0*Y2_6*(4.864965347266905e-32*Y2_13 + 1.7207046561730112e-12);
-          double F2_8 = 2.0*Y2_7*jvals[3] - 1.0*Y2_10*Y2_8*(2.161777301914759e-32*Y2_13/(4.2119062982869013e-19*Y2_13 + 1.0) + 1.0018153870816924e-13) + 1.0*Y2_10*jvals[2] + 1.0*Y2_4*jvals[1];
-          double F2_9 = 5.779235214948339e-34*Y2_13*Y2_5*Y2_12 - 1.8183951663749815e-14*Y2_11*Y2_9 - 3.5338644420317084e-17*Y2_15*Y2_9 - 7.98786060795232e-15*Y2_9*Y2_12;
-          double F2_10 = -1.0*Y2_10*Y2_8*(2.161777301914759e-32*Y2_13/(4.2119062982869013e-19*Y2_13 + 1.0) + 1.0018153870816924e-13) - 1.0*Y2_10*jvals[2];
-          double F2_11 = 1.0*Y2_4*jvals[1] - 2.6031661982774907e-11*Y2_11*Y2_14 - 1.8183951663749815e-14*Y2_11*Y2_9 + 1.0*Y2_15*jvals[0];
-          double F2_12 = -5.779235214948339e-34*Y2_13*Y2_5*Y2_12 + 1.0*Y2_15*jvals[0] - 7.98786060795232e-15*Y2_9*Y2_12;
+          double F2_5 = -6.358515026553832e-34*Y2_13*Y2_5*Y2_12 + 1.0*Y2_6*(5.465512373221516e-32*Y2_13 + 1.845172665362734e-12) + 1.2569706702954361e-14*Y2_9*Y2_12;
+          double F2_6 = -1.0*Y2_6*(5.465512373221516e-32*Y2_13 + 1.845172665362734e-12);
+          double F2_7 = -1.0*Y2_7*jvals[3] + 1.0*Y2_6*(5.465512373221516e-32*Y2_13 + 1.845172665362734e-12);
+          double F2_8 = 2.0*Y2_7*jvals[3] - 1.0*Y2_10*Y2_8*(2.3521256735322904e-32*Y2_13/(3.8755615852907066e-19*Y2_13 + 1.0) + 1.097666311281924e-13) + 1.0*Y2_10*jvals[2] + 1.0*Y2_4*jvals[1];
+          double F2_9 = 6.358515026553832e-34*Y2_13*Y2_5*Y2_12 - 1.5503623719243584e-14*Y2_11*Y2_9 - 2.6508709957531697e-17*Y2_15*Y2_9 - 6.2848533514771804e-15*Y2_9*Y2_12;
+          double F2_10 = -1.0*Y2_10*Y2_8*(2.3521256735322904e-32*Y2_13/(3.8755615852907066e-19*Y2_13 + 1.0) + 1.097666311281924e-13) - 1.0*Y2_10*jvals[2];
+          double F2_11 = 1.0*Y2_4*jvals[1] - 2.636710937705471e-11*Y2_11*Y2_14 - 1.5503623719243584e-14*Y2_11*Y2_9 + 1.0*Y2_15*jvals[0];
+          double F2_12 = -6.358515026553832e-34*Y2_13*Y2_5*Y2_12 + 1.0*Y2_15*jvals[0] - 6.2848533514771804e-15*Y2_9*Y2_12;
           double F2_13 = 0.0;
-          double F2_14 = 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*Y2_13), 2)/(M_LN10 * M_LN10) + 1.0))*Y2_13*Y2_16/(7.709507080111506e-19*Y2_13 + 1.0) - 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*Y2_13), 2)/(M_LN10 * M_LN10) + 1.0))*Y2_13*Y2_15*Y2_14/(1.4174820557114162e-18*Y2_13 + 1.0) + 1.0*Y2_10*Y2_8*(2.161777301914759e-32*Y2_13/(4.2119062982869013e-19*Y2_13 + 1.0) + 1.0018153870816924e-13) - 2.6031661982774907e-11*Y2_11*Y2_14 + 3.5338644420317084e-17*Y2_15*Y2_9;
-          double F2_15 = 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*Y2_13), 2)/(M_LN10 * M_LN10) + 1.0))*Y2_13*Y2_16/(7.709507080111506e-19*Y2_13 + 1.0) - 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*Y2_13), 2)/(M_LN10 * M_LN10) + 1.0))*Y2_13*Y2_15*Y2_14/(1.4174820557114162e-18*Y2_13 + 1.0) + 1.0*Y2_10*jvals[2] + 5.206332396554981e-11*Y2_11*Y2_14 + 1.8183951663749815e-14*Y2_11*Y2_9 - 3.5338644420317084e-17*Y2_15*Y2_9 - 1.0*Y2_15*jvals[0];
-          double F2_16 = -10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*Y2_13), 2)/(M_LN10 * M_LN10) + 1.0))*Y2_13*Y2_16/(7.709507080111506e-19*Y2_13 + 1.0) + 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*Y2_13), 2)/(M_LN10 * M_LN10) + 1.0))*Y2_13*Y2_15*Y2_14/(1.4174820557114162e-18*Y2_13 + 1.0);
+          double F2_14 = 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*Y2_13), 2)/(M_LN10 * M_LN10) + 1.0))*Y2_13*Y2_16/(6.755293737545229e-19*Y2_13 + 1.0) - 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*Y2_13), 2)/(M_LN10 * M_LN10) + 1.0))*Y2_13*Y2_15*Y2_14/(1.4180926593376776e-18*Y2_13 + 1.0) + 1.0*Y2_10*Y2_8*(2.3521256735322904e-32*Y2_13/(3.8755615852907066e-19*Y2_13 + 1.0) + 1.097666311281924e-13) - 2.636710937705471e-11*Y2_11*Y2_14 + 2.6508709957531697e-17*Y2_15*Y2_9;
+          double F2_15 = 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*Y2_13), 2)/(M_LN10 * M_LN10) + 1.0))*Y2_13*Y2_16/(6.755293737545229e-19*Y2_13 + 1.0) - 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*Y2_13), 2)/(M_LN10 * M_LN10) + 1.0))*Y2_13*Y2_15*Y2_14/(1.4180926593376776e-18*Y2_13 + 1.0) + 1.0*Y2_10*jvals[2] + 5.273421875410942e-11*Y2_11*Y2_14 + 1.5503623719243584e-14*Y2_11*Y2_9 - 2.6508709957531697e-17*Y2_15*Y2_9 - 1.0*Y2_15*jvals[0];
+          double F2_16 = -32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*Y2_13), 2)/(M_LN10 * M_LN10) + 1.0))*Y2_13*Y2_16/(6.755293737545229e-19*Y2_13 + 1.0) + 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*Y2_13), 2)/(M_LN10 * M_LN10) + 1.0))*Y2_13*Y2_15*Y2_14/(1.4180926593376776e-18*Y2_13 + 1.0);
           // RHS for stage 2
           double rhs2_0 = F2_0 + (-1.0156171083877703 / dt) * K1_0;
           double rhs2_1 = F2_1 + (-1.0156171083877703 / dt) * K1_1;
@@ -1648,61 +1690,82 @@ namespace mkpp {
           const double S_15 = state(Species::NO2);  // [NO2]
           const double S_16 = state(Species::N2O5);  // [N2O5]
 
+          // --- CSE Temporaries ---
+          const double cse_tmp_0 = 0.00347041471455839;
+          const double cse_tmp_1 = 1.4e-18*S_12*exp(3.7*cse_tmp_0);
+          const double cse_tmp_2 = pow(M_LN10, -2);
+          const double cse_tmp_3 = 8.917000579081798e-19*S_12*exp(-80.0*cse_tmp_0);
+
+          // --- Reaction Rate Fluxes R_m ---
+          const double R_0 = S_3*jvals[0];
+          const double R_1 = 6.358515026553832e-34*S_12*S_13*S_9;
+          const double R_2 = 8e-12*S_0*S_9*exp(-2060.0*cse_tmp_0);
+          const double R_3 = 1.8e-12*S_2*S_0*exp(-1370.0*cse_tmp_0);
+          const double R_4 = 1.4e-13*S_3*S_0*exp(-2470.0*cse_tmp_0);
+          const double R_5 = 1.8e-11*S_2*S_4*exp(110.0*cse_tmp_0);
+          const double R_6 = 2.8e-30*pow(0.45, 1.0/(cse_tmp_2*pow(log(cse_tmp_1), 2) + 1.0))*S_12*S_3*S_4*exp(3.5*cse_tmp_0)/(cse_tmp_1 + 1.0);
+          const double R_7 = 0.0008684419467048947*pow(0.45, 1.0/(cse_tmp_2*pow(log(cse_tmp_3), 2) + 1.0))*S_12*S_5*exp(11000.0*cse_tmp_0)/(cse_tmp_3 + 1.0);
+          const double R_8 = S_7*S_10*(1.9e-33*S_12*exp(725.0*cse_tmp_0)/(4.63414634146341e-18*S_12*exp(-715.0*cse_tmp_0) + 1.0) + 7.2e-15*exp(785.0*cse_tmp_0));
+          const double R_9 = S_11*(1.7e-33*S_12*exp(1000.0*cse_tmp_0) + 2.3e-13*exp(600.0*cse_tmp_0));
+          const double R_10 = S_6*jvals[1];
+          const double R_11 = S_7*jvals[2];
+          const double R_12 = S_1*jvals[3];
+
           // Analytical Jacobian & Iteration Matrix W = inv_g_dt*I - J (sparse)
           double J_4_4 = -1.0*jvals[1];
-          double J_5_5 = -5.779235214948339e-34*S_13*S_12;
-          double J_5_6 = 4.864965347266905e-32*S_13 + 1.7207046561730112e-12;
-          double J_5_9 = 1.597572121590464e-14*S_12;
-          double J_5_12 = -5.779235214948339e-34*S_13*S_5 + 1.597572121590464e-14*S_9;
-          double J_5_13 = 4.864965347266905e-32*S_6 - 5.779235214948339e-34*S_5*S_12;
-          double J_6_6 = -4.864965347266905e-32*S_13 - 1.7207046561730112e-12;
-          double J_6_13 = -4.864965347266905e-32*S_6;
-          double J_7_6 = 4.864965347266905e-32*S_13 + 1.7207046561730112e-12;
+          double J_5_5 = -6.358515026553832e-34*S_13*S_12;
+          double J_5_6 = 5.465512373221516e-32*S_13 + 1.845172665362734e-12;
+          double J_5_9 = 1.2569706702954361e-14*S_12;
+          double J_5_12 = -6.358515026553832e-34*S_13*S_5 + 1.2569706702954361e-14*S_9;
+          double J_5_13 = 5.465512373221516e-32*S_6 - 6.358515026553832e-34*S_5*S_12;
+          double J_6_6 = -5.465512373221516e-32*S_13 - 1.845172665362734e-12;
+          double J_6_13 = -5.465512373221516e-32*S_6;
+          double J_7_6 = 5.465512373221516e-32*S_13 + 1.845172665362734e-12;
           double J_7_7 = -1.0*jvals[3];
-          double J_7_13 = 4.864965347266905e-32*S_6;
+          double J_7_13 = 5.465512373221516e-32*S_6;
           double J_8_4 = 1.0*jvals[1];
           double J_8_7 = 2.0*jvals[3];
-          double J_8_8 = -1.0*S_10*(2.161777301914759e-32*S_13/(4.2119062982869013e-19*S_13 + 1.0) + 1.0018153870816924e-13);
-          double J_8_10 = -1.0*S_8*(2.161777301914759e-32*S_13/(4.2119062982869013e-19*S_13 + 1.0) + 1.0018153870816924e-13) + 1.0*jvals[2];
-          double J_8_13 = -1.0*S_10*S_8*(-9.105203433428452e-51*S_13/pow(4.2119062982869013e-19*S_13 + 1.0, 2) + 2.161777301914759e-32/(4.2119062982869013e-19*S_13 + 1.0));
-          double J_9_5 = 5.779235214948339e-34*S_13*S_12;
-          double J_9_9 = -1.8183951663749815e-14*S_11 - 3.5338644420317084e-17*S_15 - 7.98786060795232e-15*S_12;
-          double J_9_11 = -1.8183951663749815e-14*S_9;
-          double J_9_12 = 5.779235214948339e-34*S_13*S_5 - 7.98786060795232e-15*S_9;
-          double J_9_13 = 5.779235214948339e-34*S_5*S_12;
-          double J_9_15 = -3.5338644420317084e-17*S_9;
-          double J_10_8 = -1.0*S_10*(2.161777301914759e-32*S_13/(4.2119062982869013e-19*S_13 + 1.0) + 1.0018153870816924e-13);
-          double J_10_10 = -1.0*S_8*(2.161777301914759e-32*S_13/(4.2119062982869013e-19*S_13 + 1.0) + 1.0018153870816924e-13) - 1.0*jvals[2];
-          double J_10_13 = -1.0*S_10*S_8*(-9.105203433428452e-51*S_13/pow(4.2119062982869013e-19*S_13 + 1.0, 2) + 2.161777301914759e-32/(4.2119062982869013e-19*S_13 + 1.0));
+          double J_8_8 = -1.0*S_10*(2.3521256735322904e-32*S_13/(3.8755615852907066e-19*S_13 + 1.0) + 1.097666311281924e-13);
+          double J_8_10 = -1.0*S_8*(2.3521256735322904e-32*S_13/(3.8755615852907066e-19*S_13 + 1.0) + 1.097666311281924e-13) + 1.0*jvals[2];
+          double J_8_13 = -1.0*S_10*S_8*(-9.115807904117787e-51*S_13/pow(3.8755615852907066e-19*S_13 + 1.0, 2) + 2.3521256735322904e-32/(3.8755615852907066e-19*S_13 + 1.0));
+          double J_9_5 = 6.358515026553832e-34*S_13*S_12;
+          double J_9_9 = -1.5503623719243584e-14*S_11 - 2.6508709957531697e-17*S_15 - 6.2848533514771804e-15*S_12;
+          double J_9_11 = -1.5503623719243584e-14*S_9;
+          double J_9_12 = 6.358515026553832e-34*S_13*S_5 - 6.2848533514771804e-15*S_9;
+          double J_9_13 = 6.358515026553832e-34*S_5*S_12;
+          double J_9_15 = -2.6508709957531697e-17*S_9;
+          double J_10_8 = -1.0*S_10*(2.3521256735322904e-32*S_13/(3.8755615852907066e-19*S_13 + 1.0) + 1.097666311281924e-13);
+          double J_10_10 = -1.0*S_8*(2.3521256735322904e-32*S_13/(3.8755615852907066e-19*S_13 + 1.0) + 1.097666311281924e-13) - 1.0*jvals[2];
+          double J_10_13 = -1.0*S_10*S_8*(-9.115807904117787e-51*S_13/pow(3.8755615852907066e-19*S_13 + 1.0, 2) + 2.3521256735322904e-32/(3.8755615852907066e-19*S_13 + 1.0));
           double J_11_4 = 1.0*jvals[1];
-          double J_11_9 = -1.8183951663749815e-14*S_11;
-          double J_11_11 = -2.6031661982774907e-11*S_14 - 1.8183951663749815e-14*S_9;
-          double J_11_14 = -2.6031661982774907e-11*S_11;
+          double J_11_9 = -1.5503623719243584e-14*S_11;
+          double J_11_11 = -2.636710937705471e-11*S_14 - 1.5503623719243584e-14*S_9;
+          double J_11_14 = -2.636710937705471e-11*S_11;
           double J_11_15 = 1.0*jvals[0];
-          double J_12_5 = -5.779235214948339e-34*S_13*S_12;
-          double J_12_9 = -7.98786060795232e-15*S_12;
-          double J_12_12 = -5.779235214948339e-34*S_13*S_5 - 7.98786060795232e-15*S_9;
-          double J_12_13 = -5.779235214948339e-34*S_5*S_12;
+          double J_12_5 = -6.358515026553832e-34*S_13*S_12;
+          double J_12_9 = -6.2848533514771804e-15*S_12;
+          double J_12_12 = -6.358515026553832e-34*S_13*S_5 - 6.2848533514771804e-15*S_9;
+          double J_12_13 = -6.358515026553832e-34*S_5*S_12;
           double J_12_15 = 1.0*jvals[0];
-          double J_14_8 = 1.0*S_10*(2.161777301914759e-32*S_13/(4.2119062982869013e-19*S_13 + 1.0) + 1.0018153870816924e-13);
-          double J_14_9 = 3.5338644420317084e-17*S_15;
-          double J_14_10 = 1.0*S_8*(2.161777301914759e-32*S_13/(4.2119062982869013e-19*S_13 + 1.0) + 1.0018153870816924e-13);
-          double J_14_11 = -2.6031661982774907e-11*S_14;
-          double J_14_13 = -7.953589926046845e-06*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/pow(7.709507080111506e-19*S_13 + 1.0, 2) + 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16/(7.709507080111506e-19*S_13 + 1.0) + 16475768690562.62*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16*log(7.709507080111506e-19*S_13)/((7.709507080111506e-19*S_13 + 1.0)*pow(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 4.015816030220338e-48*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/pow(1.4174820557114162e-18*S_13 + 1.0, 2) - 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14/(1.4174820557114162e-18*S_13 + 1.0) - 4.524445291995257e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14*log(1.4174820557114162e-18*S_13)/((1.4174820557114162e-18*S_13 + 1.0)*pow(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 1.0*S_10*S_8*(-9.105203433428452e-51*S_13/pow(4.2119062982869013e-19*S_13 + 1.0, 2) + 2.161777301914759e-32/(4.2119062982869013e-19*S_13 + 1.0));
-          double J_14_14 = -2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15/(1.4174820557114162e-18*S_13 + 1.0) - 2.6031661982774907e-11*S_11;
-          double J_14_15 = -2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_14/(1.4174820557114162e-18*S_13 + 1.0) + 3.5338644420317084e-17*S_9;
-          double J_14_16 = 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13/(7.709507080111506e-19*S_13 + 1.0);
-          double J_15_9 = 1.8183951663749815e-14*S_11 - 3.5338644420317084e-17*S_15;
+          double J_14_8 = 1.0*S_10*(2.3521256735322904e-32*S_13/(3.8755615852907066e-19*S_13 + 1.0) + 1.097666311281924e-13);
+          double J_14_9 = 2.6508709957531697e-17*S_15;
+          double J_14_10 = 1.0*S_8*(2.3521256735322904e-32*S_13/(3.8755615852907066e-19*S_13 + 1.0) + 1.097666311281924e-13);
+          double J_14_11 = -2.636710937705471e-11*S_14;
+          double J_14_13 = -2.225289891543473e-05*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/pow(6.755293737545229e-19*S_13 + 1.0, 2) + 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16/(6.755293737545229e-19*S_13 + 1.0) + 52607959734961.56*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16*log(6.755293737545229e-19*S_13)/((6.755293737545229e-19*S_13 + 1.0)*pow(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 4.0191829662465044e-48*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/pow(1.4180926593376776e-18*S_13 + 1.0, 2) - 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14/(1.4180926593376776e-18*S_13 + 1.0) - 4.526288899279876e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14*log(1.4180926593376776e-18*S_13)/((1.4180926593376776e-18*S_13 + 1.0)*pow(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 1.0*S_10*S_8*(-9.115807904117787e-51*S_13/pow(3.8755615852907066e-19*S_13 + 1.0, 2) + 2.3521256735322904e-32/(3.8755615852907066e-19*S_13 + 1.0));
+          double J_14_14 = -2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15/(1.4180926593376776e-18*S_13 + 1.0) - 2.636710937705471e-11*S_11;
+          double J_14_15 = -2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_14/(1.4180926593376776e-18*S_13 + 1.0) + 2.6508709957531697e-17*S_9;
+          double J_14_16 = 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13/(6.755293737545229e-19*S_13 + 1.0);
+          double J_15_9 = 1.5503623719243584e-14*S_11 - 2.6508709957531697e-17*S_15;
           double J_15_10 = 1.0*jvals[2];
-          double J_15_11 = 5.206332396554981e-11*S_14 + 1.8183951663749815e-14*S_9;
-          double J_15_13 = -7.953589926046845e-06*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/pow(7.709507080111506e-19*S_13 + 1.0, 2) + 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16/(7.709507080111506e-19*S_13 + 1.0) + 16475768690562.62*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16*log(7.709507080111506e-19*S_13)/((7.709507080111506e-19*S_13 + 1.0)*pow(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 4.015816030220338e-48*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/pow(1.4174820557114162e-18*S_13 + 1.0, 2) - 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14/(1.4174820557114162e-18*S_13 + 1.0) - 4.524445291995257e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14*log(1.4174820557114162e-18*S_13)/((1.4174820557114162e-18*S_13 + 1.0)*pow(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10));
-          double J_15_14 = -2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15/(1.4174820557114162e-18*S_13 + 1.0) + 5.206332396554981e-11*S_11;
-          double J_15_15 = -2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_14/(1.4174820557114162e-18*S_13 + 1.0) - 3.5338644420317084e-17*S_9 - 1.0*jvals[0];
-          double J_15_16 = 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13/(7.709507080111506e-19*S_13 + 1.0);
-          double J_16_13 = 7.953589926046845e-06*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/pow(7.709507080111506e-19*S_13 + 1.0, 2) - 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16/(7.709507080111506e-19*S_13 + 1.0) - 16475768690562.62*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16*log(7.709507080111506e-19*S_13)/((7.709507080111506e-19*S_13 + 1.0)*pow(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) - 4.015816030220338e-48*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/pow(1.4174820557114162e-18*S_13 + 1.0, 2) + 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14/(1.4174820557114162e-18*S_13 + 1.0) + 4.524445291995257e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14*log(1.4174820557114162e-18*S_13)/((1.4174820557114162e-18*S_13 + 1.0)*pow(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10));
-          double J_16_14 = 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15/(1.4174820557114162e-18*S_13 + 1.0);
-          double J_16_15 = 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_14/(1.4174820557114162e-18*S_13 + 1.0);
-          double J_16_16 = -10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13/(7.709507080111506e-19*S_13 + 1.0);
+          double J_15_11 = 5.273421875410942e-11*S_14 + 1.5503623719243584e-14*S_9;
+          double J_15_13 = -2.225289891543473e-05*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/pow(6.755293737545229e-19*S_13 + 1.0, 2) + 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16/(6.755293737545229e-19*S_13 + 1.0) + 52607959734961.56*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16*log(6.755293737545229e-19*S_13)/((6.755293737545229e-19*S_13 + 1.0)*pow(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 4.0191829662465044e-48*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/pow(1.4180926593376776e-18*S_13 + 1.0, 2) - 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14/(1.4180926593376776e-18*S_13 + 1.0) - 4.526288899279876e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14*log(1.4180926593376776e-18*S_13)/((1.4180926593376776e-18*S_13 + 1.0)*pow(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10));
+          double J_15_14 = -2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15/(1.4180926593376776e-18*S_13 + 1.0) + 5.273421875410942e-11*S_11;
+          double J_15_15 = -2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_14/(1.4180926593376776e-18*S_13 + 1.0) - 2.6508709957531697e-17*S_9 - 1.0*jvals[0];
+          double J_15_16 = 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13/(6.755293737545229e-19*S_13 + 1.0);
+          double J_16_13 = 2.225289891543473e-05*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/pow(6.755293737545229e-19*S_13 + 1.0, 2) - 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16/(6.755293737545229e-19*S_13 + 1.0) - 52607959734961.56*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16*log(6.755293737545229e-19*S_13)/((6.755293737545229e-19*S_13 + 1.0)*pow(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) - 4.0191829662465044e-48*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/pow(1.4180926593376776e-18*S_13 + 1.0, 2) + 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14/(1.4180926593376776e-18*S_13 + 1.0) + 4.526288899279876e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14*log(1.4180926593376776e-18*S_13)/((1.4180926593376776e-18*S_13 + 1.0)*pow(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10));
+          double J_16_14 = 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15/(1.4180926593376776e-18*S_13 + 1.0);
+          double J_16_15 = 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_14/(1.4180926593376776e-18*S_13 + 1.0);
+          double J_16_16 = -32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13/(6.755293737545229e-19*S_13 + 1.0);
           // Block 0: species [N2, H2O, HNO4, HONO, O2, O3, AIR]
           double W_0_0 = inv_g_dt;
           // Block 1: species [M]
@@ -1863,18 +1926,18 @@ namespace mkpp {
           double F1_2 = 0.0;
           double F1_3 = 0.0;
           double F1_4 = -1.0*S_4*jvals[1];
-          double F1_5 = -5.779235214948339e-34*S_13*S_5*S_12 + 1.0*S_6*(4.864965347266905e-32*S_13 + 1.7207046561730112e-12) + 1.597572121590464e-14*S_9*S_12;
-          double F1_6 = -1.0*S_6*(4.864965347266905e-32*S_13 + 1.7207046561730112e-12);
-          double F1_7 = -1.0*S_7*jvals[3] + 1.0*S_6*(4.864965347266905e-32*S_13 + 1.7207046561730112e-12);
-          double F1_8 = 2.0*S_7*jvals[3] - 1.0*S_10*S_8*(2.161777301914759e-32*S_13/(4.2119062982869013e-19*S_13 + 1.0) + 1.0018153870816924e-13) + 1.0*S_10*jvals[2] + 1.0*S_4*jvals[1];
-          double F1_9 = 5.779235214948339e-34*S_13*S_5*S_12 - 1.8183951663749815e-14*S_11*S_9 - 3.5338644420317084e-17*S_15*S_9 - 7.98786060795232e-15*S_9*S_12;
-          double F1_10 = -1.0*S_10*S_8*(2.161777301914759e-32*S_13/(4.2119062982869013e-19*S_13 + 1.0) + 1.0018153870816924e-13) - 1.0*S_10*jvals[2];
-          double F1_11 = 1.0*S_4*jvals[1] - 2.6031661982774907e-11*S_11*S_14 - 1.8183951663749815e-14*S_11*S_9 + 1.0*S_15*jvals[0];
-          double F1_12 = -5.779235214948339e-34*S_13*S_5*S_12 + 1.0*S_15*jvals[0] - 7.98786060795232e-15*S_9*S_12;
+          double F1_5 = -6.358515026553832e-34*S_13*S_5*S_12 + 1.0*S_6*(5.465512373221516e-32*S_13 + 1.845172665362734e-12) + 1.2569706702954361e-14*S_9*S_12;
+          double F1_6 = -1.0*S_6*(5.465512373221516e-32*S_13 + 1.845172665362734e-12);
+          double F1_7 = -1.0*S_7*jvals[3] + 1.0*S_6*(5.465512373221516e-32*S_13 + 1.845172665362734e-12);
+          double F1_8 = 2.0*S_7*jvals[3] - 1.0*S_10*S_8*(2.3521256735322904e-32*S_13/(3.8755615852907066e-19*S_13 + 1.0) + 1.097666311281924e-13) + 1.0*S_10*jvals[2] + 1.0*S_4*jvals[1];
+          double F1_9 = 6.358515026553832e-34*S_13*S_5*S_12 - 1.5503623719243584e-14*S_11*S_9 - 2.6508709957531697e-17*S_15*S_9 - 6.2848533514771804e-15*S_9*S_12;
+          double F1_10 = -1.0*S_10*S_8*(2.3521256735322904e-32*S_13/(3.8755615852907066e-19*S_13 + 1.0) + 1.097666311281924e-13) - 1.0*S_10*jvals[2];
+          double F1_11 = 1.0*S_4*jvals[1] - 2.636710937705471e-11*S_11*S_14 - 1.5503623719243584e-14*S_11*S_9 + 1.0*S_15*jvals[0];
+          double F1_12 = -6.358515026553832e-34*S_13*S_5*S_12 + 1.0*S_15*jvals[0] - 6.2848533514771804e-15*S_9*S_12;
           double F1_13 = 0.0;
-          double F1_14 = 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/(7.709507080111506e-19*S_13 + 1.0) - 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/(1.4174820557114162e-18*S_13 + 1.0) + 1.0*S_10*S_8*(2.161777301914759e-32*S_13/(4.2119062982869013e-19*S_13 + 1.0) + 1.0018153870816924e-13) - 2.6031661982774907e-11*S_11*S_14 + 3.5338644420317084e-17*S_15*S_9;
-          double F1_15 = 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/(7.709507080111506e-19*S_13 + 1.0) - 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/(1.4174820557114162e-18*S_13 + 1.0) + 1.0*S_10*jvals[2] + 5.206332396554981e-11*S_11*S_14 + 1.8183951663749815e-14*S_11*S_9 - 3.5338644420317084e-17*S_15*S_9 - 1.0*S_15*jvals[0];
-          double F1_16 = -10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/(7.709507080111506e-19*S_13 + 1.0) + 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/(1.4174820557114162e-18*S_13 + 1.0);
+          double F1_14 = 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/(6.755293737545229e-19*S_13 + 1.0) - 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/(1.4180926593376776e-18*S_13 + 1.0) + 1.0*S_10*S_8*(2.3521256735322904e-32*S_13/(3.8755615852907066e-19*S_13 + 1.0) + 1.097666311281924e-13) - 2.636710937705471e-11*S_11*S_14 + 2.6508709957531697e-17*S_15*S_9;
+          double F1_15 = 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/(6.755293737545229e-19*S_13 + 1.0) - 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/(1.4180926593376776e-18*S_13 + 1.0) + 1.0*S_10*jvals[2] + 5.273421875410942e-11*S_11*S_14 + 1.5503623719243584e-14*S_11*S_9 - 2.6508709957531697e-17*S_15*S_9 - 1.0*S_15*jvals[0];
+          double F1_16 = -32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/(6.755293737545229e-19*S_13 + 1.0) + 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/(1.4180926593376776e-18*S_13 + 1.0);
           // Block 0: K1 forward sub [N2, H2O, HNO4, HONO, O2, O3, AIR]
           double y1_0 = F1_0;
           // Block 1: K1 forward sub [M]
@@ -1957,18 +2020,18 @@ namespace mkpp {
           double F2_2 = 0.0;
           double F2_3 = 0.0;
           double F2_4 = -1.0*Y2_4*jvals[1];
-          double F2_5 = -5.779235214948339e-34*Y2_13*Y2_5*Y2_12 + 1.0*Y2_6*(4.864965347266905e-32*Y2_13 + 1.7207046561730112e-12) + 1.597572121590464e-14*Y2_9*Y2_12;
-          double F2_6 = -1.0*Y2_6*(4.864965347266905e-32*Y2_13 + 1.7207046561730112e-12);
-          double F2_7 = -1.0*Y2_7*jvals[3] + 1.0*Y2_6*(4.864965347266905e-32*Y2_13 + 1.7207046561730112e-12);
-          double F2_8 = 2.0*Y2_7*jvals[3] - 1.0*Y2_10*Y2_8*(2.161777301914759e-32*Y2_13/(4.2119062982869013e-19*Y2_13 + 1.0) + 1.0018153870816924e-13) + 1.0*Y2_10*jvals[2] + 1.0*Y2_4*jvals[1];
-          double F2_9 = 5.779235214948339e-34*Y2_13*Y2_5*Y2_12 - 1.8183951663749815e-14*Y2_11*Y2_9 - 3.5338644420317084e-17*Y2_15*Y2_9 - 7.98786060795232e-15*Y2_9*Y2_12;
-          double F2_10 = -1.0*Y2_10*Y2_8*(2.161777301914759e-32*Y2_13/(4.2119062982869013e-19*Y2_13 + 1.0) + 1.0018153870816924e-13) - 1.0*Y2_10*jvals[2];
-          double F2_11 = 1.0*Y2_4*jvals[1] - 2.6031661982774907e-11*Y2_11*Y2_14 - 1.8183951663749815e-14*Y2_11*Y2_9 + 1.0*Y2_15*jvals[0];
-          double F2_12 = -5.779235214948339e-34*Y2_13*Y2_5*Y2_12 + 1.0*Y2_15*jvals[0] - 7.98786060795232e-15*Y2_9*Y2_12;
+          double F2_5 = -6.358515026553832e-34*Y2_13*Y2_5*Y2_12 + 1.0*Y2_6*(5.465512373221516e-32*Y2_13 + 1.845172665362734e-12) + 1.2569706702954361e-14*Y2_9*Y2_12;
+          double F2_6 = -1.0*Y2_6*(5.465512373221516e-32*Y2_13 + 1.845172665362734e-12);
+          double F2_7 = -1.0*Y2_7*jvals[3] + 1.0*Y2_6*(5.465512373221516e-32*Y2_13 + 1.845172665362734e-12);
+          double F2_8 = 2.0*Y2_7*jvals[3] - 1.0*Y2_10*Y2_8*(2.3521256735322904e-32*Y2_13/(3.8755615852907066e-19*Y2_13 + 1.0) + 1.097666311281924e-13) + 1.0*Y2_10*jvals[2] + 1.0*Y2_4*jvals[1];
+          double F2_9 = 6.358515026553832e-34*Y2_13*Y2_5*Y2_12 - 1.5503623719243584e-14*Y2_11*Y2_9 - 2.6508709957531697e-17*Y2_15*Y2_9 - 6.2848533514771804e-15*Y2_9*Y2_12;
+          double F2_10 = -1.0*Y2_10*Y2_8*(2.3521256735322904e-32*Y2_13/(3.8755615852907066e-19*Y2_13 + 1.0) + 1.097666311281924e-13) - 1.0*Y2_10*jvals[2];
+          double F2_11 = 1.0*Y2_4*jvals[1] - 2.636710937705471e-11*Y2_11*Y2_14 - 1.5503623719243584e-14*Y2_11*Y2_9 + 1.0*Y2_15*jvals[0];
+          double F2_12 = -6.358515026553832e-34*Y2_13*Y2_5*Y2_12 + 1.0*Y2_15*jvals[0] - 6.2848533514771804e-15*Y2_9*Y2_12;
           double F2_13 = 0.0;
-          double F2_14 = 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*Y2_13), 2)/(M_LN10 * M_LN10) + 1.0))*Y2_13*Y2_16/(7.709507080111506e-19*Y2_13 + 1.0) - 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*Y2_13), 2)/(M_LN10 * M_LN10) + 1.0))*Y2_13*Y2_15*Y2_14/(1.4174820557114162e-18*Y2_13 + 1.0) + 1.0*Y2_10*Y2_8*(2.161777301914759e-32*Y2_13/(4.2119062982869013e-19*Y2_13 + 1.0) + 1.0018153870816924e-13) - 2.6031661982774907e-11*Y2_11*Y2_14 + 3.5338644420317084e-17*Y2_15*Y2_9;
-          double F2_15 = 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*Y2_13), 2)/(M_LN10 * M_LN10) + 1.0))*Y2_13*Y2_16/(7.709507080111506e-19*Y2_13 + 1.0) - 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*Y2_13), 2)/(M_LN10 * M_LN10) + 1.0))*Y2_13*Y2_15*Y2_14/(1.4174820557114162e-18*Y2_13 + 1.0) + 1.0*Y2_10*jvals[2] + 5.206332396554981e-11*Y2_11*Y2_14 + 1.8183951663749815e-14*Y2_11*Y2_9 - 3.5338644420317084e-17*Y2_15*Y2_9 - 1.0*Y2_15*jvals[0];
-          double F2_16 = -10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*Y2_13), 2)/(M_LN10 * M_LN10) + 1.0))*Y2_13*Y2_16/(7.709507080111506e-19*Y2_13 + 1.0) + 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*Y2_13), 2)/(M_LN10 * M_LN10) + 1.0))*Y2_13*Y2_15*Y2_14/(1.4174820557114162e-18*Y2_13 + 1.0);
+          double F2_14 = 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*Y2_13), 2)/(M_LN10 * M_LN10) + 1.0))*Y2_13*Y2_16/(6.755293737545229e-19*Y2_13 + 1.0) - 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*Y2_13), 2)/(M_LN10 * M_LN10) + 1.0))*Y2_13*Y2_15*Y2_14/(1.4180926593376776e-18*Y2_13 + 1.0) + 1.0*Y2_10*Y2_8*(2.3521256735322904e-32*Y2_13/(3.8755615852907066e-19*Y2_13 + 1.0) + 1.097666311281924e-13) - 2.636710937705471e-11*Y2_11*Y2_14 + 2.6508709957531697e-17*Y2_15*Y2_9;
+          double F2_15 = 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*Y2_13), 2)/(M_LN10 * M_LN10) + 1.0))*Y2_13*Y2_16/(6.755293737545229e-19*Y2_13 + 1.0) - 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*Y2_13), 2)/(M_LN10 * M_LN10) + 1.0))*Y2_13*Y2_15*Y2_14/(1.4180926593376776e-18*Y2_13 + 1.0) + 1.0*Y2_10*jvals[2] + 5.273421875410942e-11*Y2_11*Y2_14 + 1.5503623719243584e-14*Y2_11*Y2_9 - 2.6508709957531697e-17*Y2_15*Y2_9 - 1.0*Y2_15*jvals[0];
+          double F2_16 = -32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*Y2_13), 2)/(M_LN10 * M_LN10) + 1.0))*Y2_13*Y2_16/(6.755293737545229e-19*Y2_13 + 1.0) + 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*Y2_13), 2)/(M_LN10 * M_LN10) + 1.0))*Y2_13*Y2_15*Y2_14/(1.4180926593376776e-18*Y2_13 + 1.0);
           // RHS for stage 2
           double rhs2_0 = F2_0 + (-1.0156171083877703 / dt) * K1_0;
           double rhs2_1 = F2_1 + (-1.0156171083877703 / dt) * K1_1;
@@ -2389,59 +2452,59 @@ namespace mkpp {
 
               // Recompute Jacobian at checkpointed state (recompute-J strategy, D1)
               double J_4_4 = -1.0*jvals[1];
-              double J_5_5 = -5.779235214948339e-34*S_13*S_12;
-              double J_5_6 = 4.864965347266905e-32*S_13 + 1.7207046561730112e-12;
-              double J_5_9 = 1.597572121590464e-14*S_12;
-              double J_5_12 = -5.779235214948339e-34*S_13*S_5 + 1.597572121590464e-14*S_9;
-              double J_5_13 = 4.864965347266905e-32*S_6 - 5.779235214948339e-34*S_5*S_12;
-              double J_6_6 = -4.864965347266905e-32*S_13 - 1.7207046561730112e-12;
-              double J_6_13 = -4.864965347266905e-32*S_6;
-              double J_7_6 = 4.864965347266905e-32*S_13 + 1.7207046561730112e-12;
+              double J_5_5 = -6.358515026553832e-34*S_13*S_12;
+              double J_5_6 = 5.465512373221516e-32*S_13 + 1.845172665362734e-12;
+              double J_5_9 = 1.2569706702954361e-14*S_12;
+              double J_5_12 = -6.358515026553832e-34*S_13*S_5 + 1.2569706702954361e-14*S_9;
+              double J_5_13 = 5.465512373221516e-32*S_6 - 6.358515026553832e-34*S_5*S_12;
+              double J_6_6 = -5.465512373221516e-32*S_13 - 1.845172665362734e-12;
+              double J_6_13 = -5.465512373221516e-32*S_6;
+              double J_7_6 = 5.465512373221516e-32*S_13 + 1.845172665362734e-12;
               double J_7_7 = -1.0*jvals[3];
-              double J_7_13 = 4.864965347266905e-32*S_6;
+              double J_7_13 = 5.465512373221516e-32*S_6;
               double J_8_4 = 1.0*jvals[1];
               double J_8_7 = 2.0*jvals[3];
-              double J_8_8 = -1.0*S_10*(2.161777301914759e-32*S_13/(4.2119062982869013e-19*S_13 + 1.0) + 1.0018153870816924e-13);
-              double J_8_10 = -1.0*S_8*(2.161777301914759e-32*S_13/(4.2119062982869013e-19*S_13 + 1.0) + 1.0018153870816924e-13) + 1.0*jvals[2];
-              double J_8_13 = -1.0*S_10*S_8*(-9.105203433428452e-51*S_13/pow(4.2119062982869013e-19*S_13 + 1.0, 2) + 2.161777301914759e-32/(4.2119062982869013e-19*S_13 + 1.0));
-              double J_9_5 = 5.779235214948339e-34*S_13*S_12;
-              double J_9_9 = -1.8183951663749815e-14*S_11 - 3.5338644420317084e-17*S_15 - 7.98786060795232e-15*S_12;
-              double J_9_11 = -1.8183951663749815e-14*S_9;
-              double J_9_12 = 5.779235214948339e-34*S_13*S_5 - 7.98786060795232e-15*S_9;
-              double J_9_13 = 5.779235214948339e-34*S_5*S_12;
-              double J_9_15 = -3.5338644420317084e-17*S_9;
-              double J_10_8 = -1.0*S_10*(2.161777301914759e-32*S_13/(4.2119062982869013e-19*S_13 + 1.0) + 1.0018153870816924e-13);
-              double J_10_10 = -1.0*S_8*(2.161777301914759e-32*S_13/(4.2119062982869013e-19*S_13 + 1.0) + 1.0018153870816924e-13) - 1.0*jvals[2];
-              double J_10_13 = -1.0*S_10*S_8*(-9.105203433428452e-51*S_13/pow(4.2119062982869013e-19*S_13 + 1.0, 2) + 2.161777301914759e-32/(4.2119062982869013e-19*S_13 + 1.0));
+              double J_8_8 = -1.0*S_10*(2.3521256735322904e-32*S_13/(3.8755615852907066e-19*S_13 + 1.0) + 1.097666311281924e-13);
+              double J_8_10 = -1.0*S_8*(2.3521256735322904e-32*S_13/(3.8755615852907066e-19*S_13 + 1.0) + 1.097666311281924e-13) + 1.0*jvals[2];
+              double J_8_13 = -1.0*S_10*S_8*(-9.115807904117787e-51*S_13/pow(3.8755615852907066e-19*S_13 + 1.0, 2) + 2.3521256735322904e-32/(3.8755615852907066e-19*S_13 + 1.0));
+              double J_9_5 = 6.358515026553832e-34*S_13*S_12;
+              double J_9_9 = -1.5503623719243584e-14*S_11 - 2.6508709957531697e-17*S_15 - 6.2848533514771804e-15*S_12;
+              double J_9_11 = -1.5503623719243584e-14*S_9;
+              double J_9_12 = 6.358515026553832e-34*S_13*S_5 - 6.2848533514771804e-15*S_9;
+              double J_9_13 = 6.358515026553832e-34*S_5*S_12;
+              double J_9_15 = -2.6508709957531697e-17*S_9;
+              double J_10_8 = -1.0*S_10*(2.3521256735322904e-32*S_13/(3.8755615852907066e-19*S_13 + 1.0) + 1.097666311281924e-13);
+              double J_10_10 = -1.0*S_8*(2.3521256735322904e-32*S_13/(3.8755615852907066e-19*S_13 + 1.0) + 1.097666311281924e-13) - 1.0*jvals[2];
+              double J_10_13 = -1.0*S_10*S_8*(-9.115807904117787e-51*S_13/pow(3.8755615852907066e-19*S_13 + 1.0, 2) + 2.3521256735322904e-32/(3.8755615852907066e-19*S_13 + 1.0));
               double J_11_4 = 1.0*jvals[1];
-              double J_11_9 = -1.8183951663749815e-14*S_11;
-              double J_11_11 = -2.6031661982774907e-11*S_14 - 1.8183951663749815e-14*S_9;
-              double J_11_14 = -2.6031661982774907e-11*S_11;
+              double J_11_9 = -1.5503623719243584e-14*S_11;
+              double J_11_11 = -2.636710937705471e-11*S_14 - 1.5503623719243584e-14*S_9;
+              double J_11_14 = -2.636710937705471e-11*S_11;
               double J_11_15 = 1.0*jvals[0];
-              double J_12_5 = -5.779235214948339e-34*S_13*S_12;
-              double J_12_9 = -7.98786060795232e-15*S_12;
-              double J_12_12 = -5.779235214948339e-34*S_13*S_5 - 7.98786060795232e-15*S_9;
-              double J_12_13 = -5.779235214948339e-34*S_5*S_12;
+              double J_12_5 = -6.358515026553832e-34*S_13*S_12;
+              double J_12_9 = -6.2848533514771804e-15*S_12;
+              double J_12_12 = -6.358515026553832e-34*S_13*S_5 - 6.2848533514771804e-15*S_9;
+              double J_12_13 = -6.358515026553832e-34*S_5*S_12;
               double J_12_15 = 1.0*jvals[0];
-              double J_14_8 = 1.0*S_10*(2.161777301914759e-32*S_13/(4.2119062982869013e-19*S_13 + 1.0) + 1.0018153870816924e-13);
-              double J_14_9 = 3.5338644420317084e-17*S_15;
-              double J_14_10 = 1.0*S_8*(2.161777301914759e-32*S_13/(4.2119062982869013e-19*S_13 + 1.0) + 1.0018153870816924e-13);
-              double J_14_11 = -2.6031661982774907e-11*S_14;
-              double J_14_13 = -7.953589926046845e-06*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/pow(7.709507080111506e-19*S_13 + 1.0, 2) + 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16/(7.709507080111506e-19*S_13 + 1.0) + 16475768690562.62*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16*log(7.709507080111506e-19*S_13)/((7.709507080111506e-19*S_13 + 1.0)*pow(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 4.015816030220338e-48*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/pow(1.4174820557114162e-18*S_13 + 1.0, 2) - 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14/(1.4174820557114162e-18*S_13 + 1.0) - 4.524445291995257e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14*log(1.4174820557114162e-18*S_13)/((1.4174820557114162e-18*S_13 + 1.0)*pow(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 1.0*S_10*S_8*(-9.105203433428452e-51*S_13/pow(4.2119062982869013e-19*S_13 + 1.0, 2) + 2.161777301914759e-32/(4.2119062982869013e-19*S_13 + 1.0));
-              double J_14_14 = -2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15/(1.4174820557114162e-18*S_13 + 1.0) - 2.6031661982774907e-11*S_11;
-              double J_14_15 = -2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_14/(1.4174820557114162e-18*S_13 + 1.0) + 3.5338644420317084e-17*S_9;
-              double J_14_16 = 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13/(7.709507080111506e-19*S_13 + 1.0);
-              double J_15_9 = 1.8183951663749815e-14*S_11 - 3.5338644420317084e-17*S_15;
+              double J_14_8 = 1.0*S_10*(2.3521256735322904e-32*S_13/(3.8755615852907066e-19*S_13 + 1.0) + 1.097666311281924e-13);
+              double J_14_9 = 2.6508709957531697e-17*S_15;
+              double J_14_10 = 1.0*S_8*(2.3521256735322904e-32*S_13/(3.8755615852907066e-19*S_13 + 1.0) + 1.097666311281924e-13);
+              double J_14_11 = -2.636710937705471e-11*S_14;
+              double J_14_13 = -2.225289891543473e-05*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/pow(6.755293737545229e-19*S_13 + 1.0, 2) + 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16/(6.755293737545229e-19*S_13 + 1.0) + 52607959734961.56*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16*log(6.755293737545229e-19*S_13)/((6.755293737545229e-19*S_13 + 1.0)*pow(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 4.0191829662465044e-48*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/pow(1.4180926593376776e-18*S_13 + 1.0, 2) - 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14/(1.4180926593376776e-18*S_13 + 1.0) - 4.526288899279876e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14*log(1.4180926593376776e-18*S_13)/((1.4180926593376776e-18*S_13 + 1.0)*pow(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 1.0*S_10*S_8*(-9.115807904117787e-51*S_13/pow(3.8755615852907066e-19*S_13 + 1.0, 2) + 2.3521256735322904e-32/(3.8755615852907066e-19*S_13 + 1.0));
+              double J_14_14 = -2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15/(1.4180926593376776e-18*S_13 + 1.0) - 2.636710937705471e-11*S_11;
+              double J_14_15 = -2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_14/(1.4180926593376776e-18*S_13 + 1.0) + 2.6508709957531697e-17*S_9;
+              double J_14_16 = 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13/(6.755293737545229e-19*S_13 + 1.0);
+              double J_15_9 = 1.5503623719243584e-14*S_11 - 2.6508709957531697e-17*S_15;
               double J_15_10 = 1.0*jvals[2];
-              double J_15_11 = 5.206332396554981e-11*S_14 + 1.8183951663749815e-14*S_9;
-              double J_15_13 = -7.953589926046845e-06*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/pow(7.709507080111506e-19*S_13 + 1.0, 2) + 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16/(7.709507080111506e-19*S_13 + 1.0) + 16475768690562.62*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16*log(7.709507080111506e-19*S_13)/((7.709507080111506e-19*S_13 + 1.0)*pow(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 4.015816030220338e-48*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/pow(1.4174820557114162e-18*S_13 + 1.0, 2) - 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14/(1.4174820557114162e-18*S_13 + 1.0) - 4.524445291995257e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14*log(1.4174820557114162e-18*S_13)/((1.4174820557114162e-18*S_13 + 1.0)*pow(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10));
-              double J_15_14 = -2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15/(1.4174820557114162e-18*S_13 + 1.0) + 5.206332396554981e-11*S_11;
-              double J_15_15 = -2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_14/(1.4174820557114162e-18*S_13 + 1.0) - 3.5338644420317084e-17*S_9 - 1.0*jvals[0];
-              double J_15_16 = 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13/(7.709507080111506e-19*S_13 + 1.0);
-              double J_16_13 = 7.953589926046845e-06*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/pow(7.709507080111506e-19*S_13 + 1.0, 2) - 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16/(7.709507080111506e-19*S_13 + 1.0) - 16475768690562.62*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16*log(7.709507080111506e-19*S_13)/((7.709507080111506e-19*S_13 + 1.0)*pow(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) - 4.015816030220338e-48*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/pow(1.4174820557114162e-18*S_13 + 1.0, 2) + 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14/(1.4174820557114162e-18*S_13 + 1.0) + 4.524445291995257e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14*log(1.4174820557114162e-18*S_13)/((1.4174820557114162e-18*S_13 + 1.0)*pow(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10));
-              double J_16_14 = 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15/(1.4174820557114162e-18*S_13 + 1.0);
-              double J_16_15 = 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_14/(1.4174820557114162e-18*S_13 + 1.0);
-              double J_16_16 = -10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13/(7.709507080111506e-19*S_13 + 1.0);
+              double J_15_11 = 5.273421875410942e-11*S_14 + 1.5503623719243584e-14*S_9;
+              double J_15_13 = -2.225289891543473e-05*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/pow(6.755293737545229e-19*S_13 + 1.0, 2) + 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16/(6.755293737545229e-19*S_13 + 1.0) + 52607959734961.56*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16*log(6.755293737545229e-19*S_13)/((6.755293737545229e-19*S_13 + 1.0)*pow(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 4.0191829662465044e-48*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/pow(1.4180926593376776e-18*S_13 + 1.0, 2) - 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14/(1.4180926593376776e-18*S_13 + 1.0) - 4.526288899279876e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14*log(1.4180926593376776e-18*S_13)/((1.4180926593376776e-18*S_13 + 1.0)*pow(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10));
+              double J_15_14 = -2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15/(1.4180926593376776e-18*S_13 + 1.0) + 5.273421875410942e-11*S_11;
+              double J_15_15 = -2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_14/(1.4180926593376776e-18*S_13 + 1.0) - 2.6508709957531697e-17*S_9 - 1.0*jvals[0];
+              double J_15_16 = 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13/(6.755293737545229e-19*S_13 + 1.0);
+              double J_16_13 = 2.225289891543473e-05*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/pow(6.755293737545229e-19*S_13 + 1.0, 2) - 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16/(6.755293737545229e-19*S_13 + 1.0) - 52607959734961.56*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16*log(6.755293737545229e-19*S_13)/((6.755293737545229e-19*S_13 + 1.0)*pow(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) - 4.0191829662465044e-48*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/pow(1.4180926593376776e-18*S_13 + 1.0, 2) + 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14/(1.4180926593376776e-18*S_13 + 1.0) + 4.526288899279876e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14*log(1.4180926593376776e-18*S_13)/((1.4180926593376776e-18*S_13 + 1.0)*pow(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10));
+              double J_16_14 = 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15/(1.4180926593376776e-18*S_13 + 1.0);
+              double J_16_15 = 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_14/(1.4180926593376776e-18*S_13 + 1.0);
+              double J_16_16 = -32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13/(6.755293737545229e-19*S_13 + 1.0);
 
               // Form iteration matrix W = (1/(gamma*h))*I - J
               // Block 0: species [N2, H2O, HNO4, HONO, O2, O3, AIR]
@@ -2924,59 +2987,59 @@ namespace mkpp {
 
               // Recompute Jacobian at checkpointed state (recompute-J strategy, D1)
               double J_4_4 = -1.0*jvals[1];
-              double J_5_5 = -5.779235214948339e-34*S_13*S_12;
-              double J_5_6 = 4.864965347266905e-32*S_13 + 1.7207046561730112e-12;
-              double J_5_9 = 1.597572121590464e-14*S_12;
-              double J_5_12 = -5.779235214948339e-34*S_13*S_5 + 1.597572121590464e-14*S_9;
-              double J_5_13 = 4.864965347266905e-32*S_6 - 5.779235214948339e-34*S_5*S_12;
-              double J_6_6 = -4.864965347266905e-32*S_13 - 1.7207046561730112e-12;
-              double J_6_13 = -4.864965347266905e-32*S_6;
-              double J_7_6 = 4.864965347266905e-32*S_13 + 1.7207046561730112e-12;
+              double J_5_5 = -6.358515026553832e-34*S_13*S_12;
+              double J_5_6 = 5.465512373221516e-32*S_13 + 1.845172665362734e-12;
+              double J_5_9 = 1.2569706702954361e-14*S_12;
+              double J_5_12 = -6.358515026553832e-34*S_13*S_5 + 1.2569706702954361e-14*S_9;
+              double J_5_13 = 5.465512373221516e-32*S_6 - 6.358515026553832e-34*S_5*S_12;
+              double J_6_6 = -5.465512373221516e-32*S_13 - 1.845172665362734e-12;
+              double J_6_13 = -5.465512373221516e-32*S_6;
+              double J_7_6 = 5.465512373221516e-32*S_13 + 1.845172665362734e-12;
               double J_7_7 = -1.0*jvals[3];
-              double J_7_13 = 4.864965347266905e-32*S_6;
+              double J_7_13 = 5.465512373221516e-32*S_6;
               double J_8_4 = 1.0*jvals[1];
               double J_8_7 = 2.0*jvals[3];
-              double J_8_8 = -1.0*S_10*(2.161777301914759e-32*S_13/(4.2119062982869013e-19*S_13 + 1.0) + 1.0018153870816924e-13);
-              double J_8_10 = -1.0*S_8*(2.161777301914759e-32*S_13/(4.2119062982869013e-19*S_13 + 1.0) + 1.0018153870816924e-13) + 1.0*jvals[2];
-              double J_8_13 = -1.0*S_10*S_8*(-9.105203433428452e-51*S_13/pow(4.2119062982869013e-19*S_13 + 1.0, 2) + 2.161777301914759e-32/(4.2119062982869013e-19*S_13 + 1.0));
-              double J_9_5 = 5.779235214948339e-34*S_13*S_12;
-              double J_9_9 = -1.8183951663749815e-14*S_11 - 3.5338644420317084e-17*S_15 - 7.98786060795232e-15*S_12;
-              double J_9_11 = -1.8183951663749815e-14*S_9;
-              double J_9_12 = 5.779235214948339e-34*S_13*S_5 - 7.98786060795232e-15*S_9;
-              double J_9_13 = 5.779235214948339e-34*S_5*S_12;
-              double J_9_15 = -3.5338644420317084e-17*S_9;
-              double J_10_8 = -1.0*S_10*(2.161777301914759e-32*S_13/(4.2119062982869013e-19*S_13 + 1.0) + 1.0018153870816924e-13);
-              double J_10_10 = -1.0*S_8*(2.161777301914759e-32*S_13/(4.2119062982869013e-19*S_13 + 1.0) + 1.0018153870816924e-13) - 1.0*jvals[2];
-              double J_10_13 = -1.0*S_10*S_8*(-9.105203433428452e-51*S_13/pow(4.2119062982869013e-19*S_13 + 1.0, 2) + 2.161777301914759e-32/(4.2119062982869013e-19*S_13 + 1.0));
+              double J_8_8 = -1.0*S_10*(2.3521256735322904e-32*S_13/(3.8755615852907066e-19*S_13 + 1.0) + 1.097666311281924e-13);
+              double J_8_10 = -1.0*S_8*(2.3521256735322904e-32*S_13/(3.8755615852907066e-19*S_13 + 1.0) + 1.097666311281924e-13) + 1.0*jvals[2];
+              double J_8_13 = -1.0*S_10*S_8*(-9.115807904117787e-51*S_13/pow(3.8755615852907066e-19*S_13 + 1.0, 2) + 2.3521256735322904e-32/(3.8755615852907066e-19*S_13 + 1.0));
+              double J_9_5 = 6.358515026553832e-34*S_13*S_12;
+              double J_9_9 = -1.5503623719243584e-14*S_11 - 2.6508709957531697e-17*S_15 - 6.2848533514771804e-15*S_12;
+              double J_9_11 = -1.5503623719243584e-14*S_9;
+              double J_9_12 = 6.358515026553832e-34*S_13*S_5 - 6.2848533514771804e-15*S_9;
+              double J_9_13 = 6.358515026553832e-34*S_5*S_12;
+              double J_9_15 = -2.6508709957531697e-17*S_9;
+              double J_10_8 = -1.0*S_10*(2.3521256735322904e-32*S_13/(3.8755615852907066e-19*S_13 + 1.0) + 1.097666311281924e-13);
+              double J_10_10 = -1.0*S_8*(2.3521256735322904e-32*S_13/(3.8755615852907066e-19*S_13 + 1.0) + 1.097666311281924e-13) - 1.0*jvals[2];
+              double J_10_13 = -1.0*S_10*S_8*(-9.115807904117787e-51*S_13/pow(3.8755615852907066e-19*S_13 + 1.0, 2) + 2.3521256735322904e-32/(3.8755615852907066e-19*S_13 + 1.0));
               double J_11_4 = 1.0*jvals[1];
-              double J_11_9 = -1.8183951663749815e-14*S_11;
-              double J_11_11 = -2.6031661982774907e-11*S_14 - 1.8183951663749815e-14*S_9;
-              double J_11_14 = -2.6031661982774907e-11*S_11;
+              double J_11_9 = -1.5503623719243584e-14*S_11;
+              double J_11_11 = -2.636710937705471e-11*S_14 - 1.5503623719243584e-14*S_9;
+              double J_11_14 = -2.636710937705471e-11*S_11;
               double J_11_15 = 1.0*jvals[0];
-              double J_12_5 = -5.779235214948339e-34*S_13*S_12;
-              double J_12_9 = -7.98786060795232e-15*S_12;
-              double J_12_12 = -5.779235214948339e-34*S_13*S_5 - 7.98786060795232e-15*S_9;
-              double J_12_13 = -5.779235214948339e-34*S_5*S_12;
+              double J_12_5 = -6.358515026553832e-34*S_13*S_12;
+              double J_12_9 = -6.2848533514771804e-15*S_12;
+              double J_12_12 = -6.358515026553832e-34*S_13*S_5 - 6.2848533514771804e-15*S_9;
+              double J_12_13 = -6.358515026553832e-34*S_5*S_12;
               double J_12_15 = 1.0*jvals[0];
-              double J_14_8 = 1.0*S_10*(2.161777301914759e-32*S_13/(4.2119062982869013e-19*S_13 + 1.0) + 1.0018153870816924e-13);
-              double J_14_9 = 3.5338644420317084e-17*S_15;
-              double J_14_10 = 1.0*S_8*(2.161777301914759e-32*S_13/(4.2119062982869013e-19*S_13 + 1.0) + 1.0018153870816924e-13);
-              double J_14_11 = -2.6031661982774907e-11*S_14;
-              double J_14_13 = -7.953589926046845e-06*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/pow(7.709507080111506e-19*S_13 + 1.0, 2) + 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16/(7.709507080111506e-19*S_13 + 1.0) + 16475768690562.62*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16*log(7.709507080111506e-19*S_13)/((7.709507080111506e-19*S_13 + 1.0)*pow(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 4.015816030220338e-48*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/pow(1.4174820557114162e-18*S_13 + 1.0, 2) - 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14/(1.4174820557114162e-18*S_13 + 1.0) - 4.524445291995257e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14*log(1.4174820557114162e-18*S_13)/((1.4174820557114162e-18*S_13 + 1.0)*pow(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 1.0*S_10*S_8*(-9.105203433428452e-51*S_13/pow(4.2119062982869013e-19*S_13 + 1.0, 2) + 2.161777301914759e-32/(4.2119062982869013e-19*S_13 + 1.0));
-              double J_14_14 = -2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15/(1.4174820557114162e-18*S_13 + 1.0) - 2.6031661982774907e-11*S_11;
-              double J_14_15 = -2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_14/(1.4174820557114162e-18*S_13 + 1.0) + 3.5338644420317084e-17*S_9;
-              double J_14_16 = 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13/(7.709507080111506e-19*S_13 + 1.0);
-              double J_15_9 = 1.8183951663749815e-14*S_11 - 3.5338644420317084e-17*S_15;
+              double J_14_8 = 1.0*S_10*(2.3521256735322904e-32*S_13/(3.8755615852907066e-19*S_13 + 1.0) + 1.097666311281924e-13);
+              double J_14_9 = 2.6508709957531697e-17*S_15;
+              double J_14_10 = 1.0*S_8*(2.3521256735322904e-32*S_13/(3.8755615852907066e-19*S_13 + 1.0) + 1.097666311281924e-13);
+              double J_14_11 = -2.636710937705471e-11*S_14;
+              double J_14_13 = -2.225289891543473e-05*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/pow(6.755293737545229e-19*S_13 + 1.0, 2) + 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16/(6.755293737545229e-19*S_13 + 1.0) + 52607959734961.56*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16*log(6.755293737545229e-19*S_13)/((6.755293737545229e-19*S_13 + 1.0)*pow(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 4.0191829662465044e-48*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/pow(1.4180926593376776e-18*S_13 + 1.0, 2) - 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14/(1.4180926593376776e-18*S_13 + 1.0) - 4.526288899279876e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14*log(1.4180926593376776e-18*S_13)/((1.4180926593376776e-18*S_13 + 1.0)*pow(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 1.0*S_10*S_8*(-9.115807904117787e-51*S_13/pow(3.8755615852907066e-19*S_13 + 1.0, 2) + 2.3521256735322904e-32/(3.8755615852907066e-19*S_13 + 1.0));
+              double J_14_14 = -2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15/(1.4180926593376776e-18*S_13 + 1.0) - 2.636710937705471e-11*S_11;
+              double J_14_15 = -2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_14/(1.4180926593376776e-18*S_13 + 1.0) + 2.6508709957531697e-17*S_9;
+              double J_14_16 = 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13/(6.755293737545229e-19*S_13 + 1.0);
+              double J_15_9 = 1.5503623719243584e-14*S_11 - 2.6508709957531697e-17*S_15;
               double J_15_10 = 1.0*jvals[2];
-              double J_15_11 = 5.206332396554981e-11*S_14 + 1.8183951663749815e-14*S_9;
-              double J_15_13 = -7.953589926046845e-06*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/pow(7.709507080111506e-19*S_13 + 1.0, 2) + 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16/(7.709507080111506e-19*S_13 + 1.0) + 16475768690562.62*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16*log(7.709507080111506e-19*S_13)/((7.709507080111506e-19*S_13 + 1.0)*pow(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 4.015816030220338e-48*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/pow(1.4174820557114162e-18*S_13 + 1.0, 2) - 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14/(1.4174820557114162e-18*S_13 + 1.0) - 4.524445291995257e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14*log(1.4174820557114162e-18*S_13)/((1.4174820557114162e-18*S_13 + 1.0)*pow(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10));
-              double J_15_14 = -2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15/(1.4174820557114162e-18*S_13 + 1.0) + 5.206332396554981e-11*S_11;
-              double J_15_15 = -2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_14/(1.4174820557114162e-18*S_13 + 1.0) - 3.5338644420317084e-17*S_9 - 1.0*jvals[0];
-              double J_15_16 = 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13/(7.709507080111506e-19*S_13 + 1.0);
-              double J_16_13 = 7.953589926046845e-06*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/pow(7.709507080111506e-19*S_13 + 1.0, 2) - 10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16/(7.709507080111506e-19*S_13 + 1.0) - 16475768690562.62*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16*log(7.709507080111506e-19*S_13)/((7.709507080111506e-19*S_13 + 1.0)*pow(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) - 4.015816030220338e-48*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/pow(1.4174820557114162e-18*S_13 + 1.0, 2) + 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14/(1.4174820557114162e-18*S_13 + 1.0) + 4.524445291995257e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14*log(1.4174820557114162e-18*S_13)/((1.4174820557114162e-18*S_13 + 1.0)*pow(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10));
-              double J_16_14 = 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15/(1.4174820557114162e-18*S_13 + 1.0);
-              double J_16_15 = 2.833063045870341e-30*pow(0.45, 1.0/(pow(log(1.4174820557114162e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_14/(1.4174820557114162e-18*S_13 + 1.0);
-              double J_16_16 = -10316599807742.686*pow(0.45, 1.0/(pow(log(7.709507080111506e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13/(7.709507080111506e-19*S_13 + 1.0);
+              double J_15_11 = 5.273421875410942e-11*S_14 + 1.5503623719243584e-14*S_9;
+              double J_15_13 = -2.225289891543473e-05*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/pow(6.755293737545229e-19*S_13 + 1.0, 2) + 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16/(6.755293737545229e-19*S_13 + 1.0) + 52607959734961.56*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16*log(6.755293737545229e-19*S_13)/((6.755293737545229e-19*S_13 + 1.0)*pow(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) + 4.0191829662465044e-48*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/pow(1.4180926593376776e-18*S_13 + 1.0, 2) - 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14/(1.4180926593376776e-18*S_13 + 1.0) - 4.526288899279876e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14*log(1.4180926593376776e-18*S_13)/((1.4180926593376776e-18*S_13 + 1.0)*pow(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10));
+              double J_15_14 = -2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15/(1.4180926593376776e-18*S_13 + 1.0) + 5.273421875410942e-11*S_11;
+              double J_15_15 = -2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_14/(1.4180926593376776e-18*S_13 + 1.0) - 2.6508709957531697e-17*S_9 - 1.0*jvals[0];
+              double J_15_16 = 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13/(6.755293737545229e-19*S_13 + 1.0);
+              double J_16_13 = 2.225289891543473e-05*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_16/pow(6.755293737545229e-19*S_13 + 1.0, 2) - 32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16/(6.755293737545229e-19*S_13 + 1.0) - 52607959734961.56*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_16*log(6.755293737545229e-19*S_13)/((6.755293737545229e-19*S_13 + 1.0)*pow(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10)) - 4.0191829662465044e-48*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15*S_14/pow(1.4180926593376776e-18*S_13 + 1.0, 2) + 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14/(1.4180926593376776e-18*S_13 + 1.0) + 4.526288899279876e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_15*S_14*log(1.4180926593376776e-18*S_13)/((1.4180926593376776e-18*S_13 + 1.0)*pow(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0, 2)*(M_LN10 * M_LN10));
+              double J_16_14 = 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_15/(1.4180926593376776e-18*S_13 + 1.0);
+              double J_16_15 = 2.8342174538324383e-30*pow(0.45, 1.0/(pow(log(1.4180926593376776e-18*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13*S_14/(1.4180926593376776e-18*S_13 + 1.0);
+              double J_16_16 = -32941423097200.93*pow(0.45, 1.0/(pow(log(6.755293737545229e-19*S_13), 2)/(M_LN10 * M_LN10) + 1.0))*S_13/(6.755293737545229e-19*S_13 + 1.0);
 
               // Form iteration matrix W = inv_g_h*I - J
               double W_0_0 = inv_g_h;

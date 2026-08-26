@@ -1,8 +1,5 @@
 // Generated sparse forward/back substitution for saprc99_mini.
-#ifdef MKPP_GENERATED_MECHANISM_NAMESPACE
-namespace MKPP_GENERATED_MECHANISM_NAMESPACE {
-#endif
-namespace mkpp::detail::saprc99_mini {
+namespace mkpp::generated::saprc99_mini::detail {
 void solve_lu(const double* lu, const double* rhs, double* solution) {
   constexpr int N = 17;
   double work[N];
@@ -41,7 +38,4 @@ void solve_lu(const double* lu, const double* rhs, double* solution) {
   solution[1] = work[1] / lu[1 * N + 1];
   solution[0] = work[0] / lu[0 * N + 0];
 }
-}  // namespace mkpp::detail::saprc99_mini
-#ifdef MKPP_GENERATED_MECHANISM_NAMESPACE
-}  // namespace MKPP_GENERATED_MECHANISM_NAMESPACE
-#endif
+}  // namespace mkpp::generated::saprc99_mini::detail

@@ -169,6 +169,8 @@ def run_compiler(
     migrate_equilibrium_flag: bool = False,
     simd_backend: str = "native",
     generate_host_api: bool = False,
+    mechanism_id: str | None = None,
+    emit_reference_backend: bool = False,
 ) -> None:
     """Orchestrate the compilation pipeline."""
 
@@ -208,6 +210,17 @@ def run_compiler(
         validate_mpi_safety(env_config)
 
         mech = load_mechanism(mech_path)
+        # Artifact identity is intentionally independent from the OpenAtmos
+        # document's descriptive ``name``.  Benchmark and host integrations
+        # can therefore use a stable, valid C++ identifier without copying or
+        # modifying the shared chemistry input.
+        if mechanism_id is not None:
+            if not mechanism_id.isidentifier():
+                raise CompilationError(
+                    stage="validation",
+                    message="--mechanism-id must be a valid C++ identifier",
+                )
+            mech.name = mechanism_id
         if not hasattr(mech, "metadata") or mech.metadata is None:
             mech.metadata = {}
         # Preserve the compile-time test environment for code generation.
@@ -306,6 +319,7 @@ def run_compiler(
             adjoint=adjoint,
             generate_host_api=generate_host_api,
             simd_backend=simd_backend,
+            emit_reference_backend=emit_reference_backend,
         )
 
         if report:
@@ -342,6 +356,10 @@ def main(args=None):
     compile_parser.add_argument("mechanism", help="Path to the mechanism YAML/JSON file")
     compile_parser.add_argument("--test-env", required=True, help="Path to the test environment YAML/JSON file")
     compile_parser.add_argument("--out", default="mkpp-generated/", help="Output directory for generated artifacts")
+    compile_parser.add_argument(
+        "--mechanism-id",
+        help="Stable generated-artifact identifier; does not modify the OpenAtmos input",
+    )
     compile_parser.add_argument("--strict", action="store_true", help="Enable strict schema validation")
     compile_parser.add_argument("--emit-manifest", action="store_true", help="Emit metadata manifest alongside headers")
     compile_parser.add_argument("--report", action="store_true", help="Generate full mechanism analysis report and graph")
@@ -402,6 +420,7 @@ def main(args=None):
         default=False,
         help="Generate C, C++, and Fortran host API headers and C wrapper source",
     )
+    compile_parser.add_argument("--emit-unrolled-reference", action="store_true")
 
     parsed_args = parser.parse_args(args)
 
@@ -423,6 +442,8 @@ def main(args=None):
             migrate_equilibrium_flag=parsed_args.migrate_equilibrium,
             simd_backend=parsed_args.simd_backend,
             generate_host_api=parsed_args.host_api,
+            mechanism_id=parsed_args.mechanism_id,
+            emit_reference_backend=parsed_args.emit_unrolled_reference,
         )
         sys.exit(0)
 

@@ -319,5 +319,5 @@ Variables and species states in MKPP generated solvers conform to standard Clima
 - [Reaction Kinetics & Unified Jacobian Explanation](../explanation/unified-jacobian-and-reaction-kinetics.md)
 - [How-To: Create Custom Reactions](../how-to/create-custom-reactions.md)
 - [AOT Solver Quickstart Tutorial](../tutorials/aot-solver-quickstart.md)
-- [How-To: Run AOT Solver Benchmarks](../how-to/run-aot-solver-benchmarks.md)
+- [Solver Comparison Benchmarks](../tutorials/benchmark-mkpp-vs-micm.md)
 - [AOT Symbolic LU Architecture Explanation](../explanation/aot-symbolic-lu-architecture.md)

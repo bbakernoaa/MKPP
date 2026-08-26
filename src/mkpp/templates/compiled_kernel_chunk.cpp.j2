@@ -2,10 +2,7 @@
 // for {{ mechanism_name }}.  This file is part of the required compiled-artifact
 // pathway; do not include mechanism expressions in host-model translation units.
 #include <cmath>
-#ifdef MKPP_GENERATED_MECHANISM_NAMESPACE
-namespace MKPP_GENERATED_MECHANISM_NAMESPACE {
-#endif
-namespace mkpp::detail::{{ mechanism_name }} {
+namespace mkpp::generated::{{ mechanism_name }}::detail {
 void compute_{{ compiled_kernel }}_chunk_{{ compiled_chunk_index }}(
     const double* state, double* {% if compiled_kernel == "rates" %}rates{% else %}jacobian{% endif %},
     const double* jvals, double temp, double rh) {
@@ -27,7 +24,4 @@ void compute_{{ compiled_kernel }}_chunk_{{ compiled_chunk_index }}(
 {% endfor %}
 {% endif %}
 }
-}  // namespace mkpp::detail::{{ mechanism_name }}
-#ifdef MKPP_GENERATED_MECHANISM_NAMESPACE
-}  // namespace MKPP_GENERATED_MECHANISM_NAMESPACE
-#endif
+}  // namespace mkpp::generated::{{ mechanism_name }}::detail

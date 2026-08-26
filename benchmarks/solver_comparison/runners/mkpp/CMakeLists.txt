@@ -1,4 +1,5 @@
 find_package(Python3 QUIET COMPONENTS Interpreter)
+include("${CMAKE_SOURCE_DIR}/src/mkpp_host/cmake/MKPPCompiledMechanism.cmake")
 
 set(TS1_SOURCE_ROOT
     "${CMAKE_SOURCE_DIR}/benchmarks/solver_comparison/sources/ts1/musica-config"
@@ -23,7 +24,7 @@ endforeach()
 file(SHA256 "${TS1_CONFIG}" TS1_CONFIG_SHA256)
 file(SHA256 "${TS1_ENVIRONMENT}" TS1_ENVIRONMENT_SHA256)
 if(NOT TS1_CONFIG_SHA256 STREQUAL
-   "4390f37f0b0dedf38c6644986c7b972152b52bd4c3fba83f399035945771a997")
+   "f5c31297ba5e38c17e49607ed2b7bcbf194b412fe49f819c23c66548e6f532de")
   message(
     FATAL_ERROR "FATAL ERROR: pinned OpenAtmos TS1 configuration hash mismatch")
 endif()
@@ -42,7 +43,7 @@ if(Python3_Interpreter_FOUND)
   # dependency below.  The generator is deterministic, so this does not add a
   # second mechanism representation.
   if(NOT EXISTS "${MKPP_TS1_GENERATED_HEADER}"
-     OR NOT EXISTS "${MKPP_TS1_GENERATED_DIR}/ts1/rates_0.cpp")
+     OR NOT EXISTS "${MKPP_TS1_GENERATED_DIR}/ts1/rates.cpp")
     execute_process(
       COMMAND "${CMAKE_COMMAND}" -E make_directory "${MKPP_TS1_GENERATED_DIR}"
       COMMAND
@@ -62,10 +63,12 @@ if(Python3_Interpreter_FOUND)
     GLOB
     MKPP_TS1_COMPILED_SOURCES
     CONFIGURE_DEPENDS
-    "${MKPP_TS1_GENERATED_DIR}/ts1/rates_*.cpp"
-    "${MKPP_TS1_GENERATED_DIR}/ts1/jacobian_*.cpp"
+    "${MKPP_TS1_GENERATED_DIR}/ts1/rates.cpp"
+    "${MKPP_TS1_GENERATED_DIR}/ts1/jacobian.cpp"
     "${MKPP_TS1_GENERATED_DIR}/ts1/factorize_*.cpp"
-    "${MKPP_TS1_GENERATED_DIR}/ts1/solve.cpp")
+    "${MKPP_TS1_GENERATED_DIR}/ts1/solve.cpp"
+    "${MKPP_TS1_GENERATED_DIR}/ts1/supernodal_factorize.cpp"
+    "${MKPP_TS1_GENERATED_DIR}/ts1/supernodal_solve.cpp")
   if(NOT MKPP_TS1_COMPILED_SOURCES)
     message(
       FATAL_ERROR
@@ -86,12 +89,8 @@ if(Python3_Interpreter_FOUND)
   add_custom_target(mkpp_ts1_openatmos_binding
                     DEPENDS "${MKPP_TS1_GENERATED_HEADER}")
 
-  include("${CMAKE_SOURCE_DIR}/src/mkpp_host/cmake/MKPPCompiledMechanism.cmake")
   mkpp_add_compiled_mechanism(mkpp_ts1_compiled_kernels
                               "${MKPP_TS1_GENERATED_DIR}" ts1)
-  target_compile_definitions(
-    mkpp_ts1_compiled_kernels
-    PRIVATE MKPP_GENERATED_MECHANISM_NAMESPACE=mech_ts1)
   add_dependencies(mkpp_ts1_compiled_kernels mkpp_ts1_openatmos_binding)
   target_compile_features(mkpp_ts1_compiled_kernels PRIVATE cxx_std_23)
 else()
@@ -109,7 +108,16 @@ else()
   add_custom_target(
     mkpp_ts1_openatmos_binding DEPENDS "${MKPP_TS1_GENERATED_HEADER}"
                                        "${TS1_CONFIG}" "${TS1_ENVIRONMENT}")
+  mkpp_add_compiled_mechanism(mkpp_ts1_compiled_kernels
+                              "${MKPP_TS1_GENERATED_DIR}" ts1)
 endif()
+
+# The runner selects Chapman as well as TS1 through the host dispatcher.  Each
+# selected generated mechanism must therefore register its implementation
+# assets through the same artifact-discovery path.
+mkpp_add_compiled_mechanism(mkpp_chapman_compiled_kernels
+                            "${CMAKE_SOURCE_DIR}/mkpp-generated" chapman)
+target_compile_features(mkpp_chapman_compiled_kernels PRIVATE cxx_std_23)
 
 add_executable(solver_benchmark_mkpp main.cpp)
 add_dependencies(solver_benchmark_mkpp mkpp_ts1_openatmos_binding)
@@ -122,6 +130,5 @@ target_include_directories(
   solver_benchmark_mkpp PRIVATE "${MKPP_TS1_GENERATED_DIR}"
                                 ${CMAKE_SOURCE_DIR}/mkpp-generated)
 target_link_libraries(solver_benchmark_mkpp PRIVATE mkpp_host Kokkos::kokkos)
-if(TARGET mkpp_ts1_compiled_kernels)
-  target_link_libraries(solver_benchmark_mkpp PRIVATE mkpp_ts1_compiled_kernels)
-endif()
+target_link_libraries(solver_benchmark_mkpp PRIVATE mkpp_ts1_compiled_kernels
+                                                   mkpp_chapman_compiled_kernels)

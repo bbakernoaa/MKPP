@@ -50,18 +50,11 @@ option(MKPP_ENABLE_MICM_COMPARE
        "Fetch NCAR/micm and build direct C++ side-by-side comparison benchmark"
        OFF)
 
-option(MKPP_ENABLE_BENCHMARK "Build MKPP benchmark suite" OFF)
-
 option(MKPP_ENABLE_ADJOINT
        "Enable adjoint and tangent-linear APIs in generated MKPP headers" OFF)
 
 option(MKPP_ENABLE_SOLVER_COMPARISON
        "Build governed MICM, KPP, and MKPP comparison runners" OFF)
-
-if(MKPP_ENABLE_BENCHMARK)
-  include(CheckIncludeFile)
-  add_subdirectory(test/benchmark)
-endif()
 
 if(MKPP_ENABLE_MICM_COMPARE OR MKPP_ENABLE_SOLVER_COMPARISON)
   set(CMAKE_CXX_STANDARD

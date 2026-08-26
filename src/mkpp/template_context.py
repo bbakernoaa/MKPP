@@ -8,6 +8,7 @@ calls, only pre-computed data.
 import re
 from typing import Any
 
+from .factorization_plan import make_factorization_plan
 from .format_eqn import format_eqn
 from .model import MechanismDefinition, SymbolicLUPlan
 from .rosenbrock import SOLVER_COEFFICIENTS
@@ -506,8 +507,22 @@ def build_template_context(
         return re.sub(r"\bx_(\d+)\b", r"solution[\1]", expression)
 
     compiled_lu_expressions = [{**entry, "expr": _lu_expression(entry["expr"])} for entry in lu_expressions]
+    factorization_plan = make_factorization_plan(
+        mech.name,
+        len(mech.species),
+        lu_expressions,
+        elimination_order=lu_plan.permutation if lu_plan and lu_plan.permutation else None,
+        fill_in_count=lu_plan.fill_in_count if lu_plan else 0,
+    )
+    context["factorization_plan"] = factorization_plan
     context["compiled_lu_expressions"] = compiled_lu_expressions
     context["compiled_lu_chunks"] = _chunk(compiled_lu_expressions, 256)
+    # A compact symbolic sparsity mask drives the portable candidate backend.
+    # Unlike the reference expressions it contains no chemistry algebra.
+    l_locations = {(entry["i"], entry["j"]) for entry in lu_expressions if entry["kind"] == "L"}
+    u_locations = {(entry["i"], entry["j"]) for entry in lu_expressions if entry["kind"] == "U"}
+    context["plan_l_pattern"] = [int((row, column) in l_locations) for row in range(N) for column in range(N)]
+    context["plan_u_pattern"] = [int((row, column) in u_locations) for row in range(N) for column in range(N)]
     context["compiled_forward_steps"] = [
         {"index": step["i"], "expr": _forward_expression(step["raw_expr"])} for step in forward_sub_steps
     ]

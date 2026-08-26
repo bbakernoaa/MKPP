@@ -5,9 +5,12 @@ if(NOT TARGET mkpp_host)
                    ${CMAKE_BINARY_DIR}/mkpp_host)
 endif()
 
+include("${CMAKE_SOURCE_DIR}/src/mkpp_host/cmake/MKPPCompiledMechanism.cmake")
+
 set(MECHS "chapman" "small_strato" "carbon" "ts1")
 
 foreach(MECH ${MECHS})
+  string(TOUPPER "${MECH}" MECH_UPPER)
   if("${MECH}" STREQUAL "chapman")
     set(NUM_SPEC 3)
   elseif("${MECH}" STREQUAL "small_strato")
@@ -25,14 +28,19 @@ foreach(MECH ${MECHS})
   endif()
 
   add_executable(e2e_${MECH}_runner test_e2e_mechanisms.cpp)
+  mkpp_add_compiled_mechanism(e2e_${MECH}_compiled_kernels
+                              "${CMAKE_SOURCE_DIR}/mkpp-generated" ${MECH})
   target_include_directories(e2e_${MECH}_runner
                              PRIVATE ${CMAKE_SOURCE_DIR}/mkpp-generated)
   target_link_libraries(
     e2e_${MECH}_runner PRIVATE mkpp_host Kokkos::kokkos GTest::gtest_main
-                               GTest::gtest)
-  target_compile_definitions(
-    e2e_${MECH}_runner PRIVATE MECH_HEADER=${MECH}.hpp
-                               NUM_SPECIES_MACRO=${NUM_SPEC})
+                               GTest::gtest e2e_${MECH}_compiled_kernels)
+  target_compile_definitions(e2e_${MECH}_runner PRIVATE
+    MECH_HEADER=${MECH}.hpp
+    MECH_SOLVER_NAMESPACE=mkpp::generated::${MECH}
+    MKPP_HOST_SELECTED_MECHANISMS
+    MKPP_HOST_MECH_${MECH_UPPER}
+    NUM_SPECIES_MACRO=${NUM_SPEC})
 
   add_test(NAME E2ESolver_${MECH} COMMAND e2e_${MECH}_runner)
 

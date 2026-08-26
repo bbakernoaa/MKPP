@@ -31,7 +31,7 @@ Practical step-by-step guides for solving specific real-world tasks.
 
 * **[Create Custom Reactions](how-to/create-custom-reactions.md)**
   * Define custom kinetics, SymPy math rate expressions, multiphase aerosol condensation, and extend the Python lowering engine.
-* **[Run AOT Solver Benchmarks & Verification](how-to/run-aot-solver-benchmarks.md)**
+* **[Solver Comparison Benchmarks](tutorials/benchmark-mkpp-vs-micm.md)**
   * Execute numerical accuracy verification against legacy Fortran KPP, run 24-hour diurnal cycle benchmarks, and profile GPU register usage.
 * **[Compile & Run Adjoint and TLM Solvers](how-to/compile-adjoint-and-tlm-solvers.md)**
   * Generate discrete adjoint and Tangent-Linear Model (TLM) solvers using `--adjoint` for JEDI 4D-Var data assimilation workflows.

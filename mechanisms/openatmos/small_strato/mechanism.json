@@ -4,6 +4,7 @@
     "legacy_source": "small_strato.yaml",
     "legacy_source_sha256": "323a53f0f40f58e304fe1d8c7609b79c2b5f6a1bb305baf6e4ddd380f1c0f30a",
     "migration": "legacy-mkpp-yaml-to-openatmos-v1",
+    "mkpp_mechanism_id": "small_strato",
     "photolysis_host_forcing_expressions": {
       "j_small_strato.yaml_0000": "2.643E-10 * SUN*SUN*SUN",
       "j_small_strato.yaml_0002": "6.120E-04 * SUN",

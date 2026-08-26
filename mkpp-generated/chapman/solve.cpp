@@ -1,8 +1,5 @@
 // Generated sparse forward/back substitution for chapman.
-#ifdef MKPP_GENERATED_MECHANISM_NAMESPACE
-namespace MKPP_GENERATED_MECHANISM_NAMESPACE {
-#endif
-namespace mkpp::detail::chapman {
+namespace mkpp::generated::chapman::detail {
 void solve_lu(const double* lu, const double* rhs, double* solution) {
   constexpr int N = 4;
   double work[N];
@@ -15,7 +12,4 @@ void solve_lu(const double* lu, const double* rhs, double* solution) {
   solution[1] = (work[1] - lu[1 * N + 2] * solution[2] - lu[1 * N + 3] * solution[3]) / lu[1 * N + 1];
   solution[0] = work[0] / lu[0 * N + 0];
 }
-}  // namespace mkpp::detail::chapman
-#ifdef MKPP_GENERATED_MECHANISM_NAMESPACE
-}  // namespace MKPP_GENERATED_MECHANISM_NAMESPACE
-#endif
+}  // namespace mkpp::generated::chapman::detail

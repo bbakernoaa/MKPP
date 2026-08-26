@@ -1,0 +1,9 @@
+# {{ factorization_plan.mechanism }} Factorization Plan
+
+| Block | First operation | Operations | Dependencies |
+|---:|---:|---:|---|
+{% for block in factorization_plan.blocks -%}
+| {{ block.ordinal }} | {{ block.first_operation }} | {{ block.operation_count }} | {{ block.dependencies | join(', ') if block.dependencies else 'none' }} |
+{% endfor %}
+
+The plan has {{ factorization_plan.operation_count }} numeric operations and {{ factorization_plan.fill_in_count }} fill entries for {{ factorization_plan.species_count }} species.

@@ -110,6 +110,6 @@ make -j
 - Learn how to compile and run discrete adjoint models with the [How-To: Compile & Run Adjoint and TLM Solvers](../how-to/compile-adjoint-and-tlm-solvers.md) guide.
 - Review CLI options and function signatures in the [AOT Solver C++ & CLI API Reference](../reference/aot-solver-api.md).
 - Review reaction rate laws and parameters in the [Reaction Types & YAML Schema Reference](../reference/reaction-types-and-yaml-schema.md).
-- Explore the [How-To: Run AOT Solver Benchmarks](../how-to/run-aot-solver-benchmarks.md) guide to benchmark accuracy and performance against legacy KPP.
+- Explore the [Solver Comparison Benchmarks](benchmark-mkpp-vs-micm.md) guide to benchmark accuracy and performance.
 - Read the [Complete End-to-End MKPP Architecture & Compiler Pipeline](../explanation/mkpp-end-to-end-architecture.md) for a complete system walkthrough.
 - Visit the [MKPP Documentation Index](../README.md) to explore all Diátaxis documentation.

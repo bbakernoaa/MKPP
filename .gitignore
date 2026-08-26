@@ -72,11 +72,12 @@ kpp_legacy/
 # local Python generation step.  CI regenerates them from OpenAtmos sources.
 # CI regenerates these before building to verify freshness.
 mkpp-generated/*_manifest.json
+mkpp-generated/**/*.json
 mkpp-generated/*.png
 mkpp-generated/report_*.md
 mkpp-generated-*/
 src/solvers/
-.tmp_oa*/
+.tmp*/
 
 # Reproducible solver-comparison run products (immutable inputs remain tracked)
 benchmarks/solver_comparison/output/
@@ -93,3 +94,4 @@ kpp*/
 .github/agents/
 .github/prompts/
 .agents/
+.kiro/

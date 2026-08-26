@@ -24,12 +24,12 @@
 {% if has_equilibrium %}
       KOKKOS_INLINE_FUNCTION void compute_rates(const StateView& state, RateView& F_block, const double* jvals, const double temp, const double rh) const {
 {% for chunk in compiled_rate_chunks %}
-          detail::{{ mechanism_name }}::compute_rates_chunk_{{ loop.index0 }}(state.data(), F_block.data(), jvals, temp, rh);
+          detail::compute_rates_chunk_{{ loop.index0 }}(state.data(), F_block.data(), jvals, temp, rh);
 {% endfor %}
 {% else %}
       KOKKOS_INLINE_FUNCTION void compute_rates(const StateView& state, RateView& F_block, const double* jvals) const {
 {% for chunk in compiled_rate_chunks %}
-          detail::{{ mechanism_name }}::compute_rates_chunk_{{ loop.index0 }}(state.data(), F_block.data(), jvals, 0.0, 0.0);
+          detail::compute_rates_chunk_{{ loop.index0 }}(state.data(), F_block.data(), jvals, 0.0, 0.0);
 {% endfor %}
 {% endif %}
       }

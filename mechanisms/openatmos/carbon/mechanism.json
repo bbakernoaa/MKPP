@@ -4,6 +4,7 @@
     "legacy_source": "carbon.yaml",
     "legacy_source_sha256": "c943737209c2def1b42a533c7e18f79171cce3cc7b3e18139f7bac4ed4b18ff1",
     "migration": "legacy-mkpp-yaml-to-openatmos-v1",
+    "mkpp_mechanism_id": "carbon",
     "photolysis_host_forcing_expressions": {}
   },
   "name": "carbon",

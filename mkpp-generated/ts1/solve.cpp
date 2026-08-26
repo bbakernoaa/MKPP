@@ -1,8 +1,5 @@
 // Generated sparse forward/back substitution for ts1.
-#ifdef MKPP_GENERATED_MECHANISM_NAMESPACE
-namespace MKPP_GENERATED_MECHANISM_NAMESPACE {
-#endif
-namespace mkpp::detail::ts1 {
+namespace mkpp::generated::ts1::detail {
 void solve_lu(const double* lu, const double* rhs, double* solution) {
   constexpr int N = 210;
   double work[N];
@@ -427,7 +424,4 @@ void solve_lu(const double* lu, const double* rhs, double* solution) {
   solution[1] = (work[1] - lu[1 * N + 2] * solution[2]) / lu[1 * N + 1];
   solution[0] = work[0] / lu[0 * N + 0];
 }
-}  // namespace mkpp::detail::ts1
-#ifdef MKPP_GENERATED_MECHANISM_NAMESPACE
-}  // namespace MKPP_GENERATED_MECHANISM_NAMESPACE
-#endif
+}  // namespace mkpp::generated::ts1::detail
