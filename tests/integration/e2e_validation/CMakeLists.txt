@@ -58,10 +58,26 @@ foreach(MECH ${MECHS})
   endif()
 endforeach()
 
+foreach(MECH gocart saprc99 saprcnov saprc99_mini)
+  mkpp_add_compiled_mechanism(e2e_${MECH}_compiled_kernels
+                              "${CMAKE_SOURCE_DIR}/mkpp-generated" ${MECH})
+endforeach()
+
 add_executable(benchmark_runner benchmark_runner.cpp)
 target_include_directories(benchmark_runner
                            PRIVATE ${CMAKE_SOURCE_DIR}/mkpp-generated)
-target_link_libraries(benchmark_runner PRIVATE mkpp_host Kokkos::kokkos)
+target_link_libraries(
+  benchmark_runner
+  PRIVATE mkpp_host
+          Kokkos::kokkos
+          e2e_chapman_compiled_kernels
+          e2e_small_strato_compiled_kernels
+          e2e_carbon_compiled_kernels
+          e2e_ts1_compiled_kernels
+          e2e_gocart_compiled_kernels
+          e2e_saprc99_compiled_kernels
+          e2e_saprcnov_compiled_kernels
+          e2e_saprc99_mini_compiled_kernels)
 
 # SciPy reference validation test
 add_executable(test_scipy_validation test_scipy_validation.cpp)
@@ -69,7 +85,7 @@ target_include_directories(test_scipy_validation
                            PRIVATE ${CMAKE_SOURCE_DIR}/mkpp-generated)
 target_link_libraries(
   test_scipy_validation PRIVATE mkpp_host Kokkos::kokkos GTest::gtest_main
-                                GTest::gtest)
+                                GTest::gtest e2e_chapman_compiled_kernels)
 target_compile_definitions(
   test_scipy_validation
   PRIVATE REFERENCE_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")
@@ -79,8 +95,9 @@ add_test(NAME mkpp_scipy_validation COMMAND test_scipy_validation)
 add_executable(test_e2e_batched test_e2e_batched.cpp)
 target_include_directories(test_e2e_batched
                            PRIVATE ${CMAKE_SOURCE_DIR}/mkpp-generated)
-target_link_libraries(test_e2e_batched PRIVATE mkpp_host Kokkos::kokkos
-                                               GTest::gtest)
+target_link_libraries(
+  test_e2e_batched PRIVATE mkpp_host Kokkos::kokkos GTest::gtest
+                           e2e_chapman_compiled_kernels)
 add_test(NAME test_e2e_batched COMMAND test_e2e_batched)
 if(MKPP_ENABLE_MICM_COMPARE)
   add_executable(benchmark_mkpp_vs_micm benchmark_mkpp_vs_micm.cpp)
