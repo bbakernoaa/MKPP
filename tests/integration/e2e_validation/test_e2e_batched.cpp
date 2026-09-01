@@ -19,13 +19,21 @@ using ChapmanSpecies = mkpp::generated::chapman::Species;
 template <typename ExecutionSpace>
 using ChapmanSolver = mkpp::generated::chapman::SolverKernels<ExecutionSpace>;
 
+// The generated kernels hoist species into scalar registers via linear indexing
+// from state.data(), so the species dimension MUST be contiguous.  Use
+// LayoutRight (cell-major, species-contiguous) to match the ConcentrationsView
+// convention used by the SciPy and per-mechanism E2E tests.  A LayoutLeft view
+// strides species by num_cells, so state.data()+k reads other cells' memory and
+// the ROS-3 solver never accepts a step (effectively an infinite loop).
+using StateView = Kokkos::View<double****, Kokkos::LayoutRight>;
+
 TEST(E2EBatchedTest, DynamicBatchSizesTeamPolicy) {
     std::vector<int> batch_sizes = {64, 128, 256};
     const double dt = 60.0;
     const int steps = 5;
 
     for (int num_cells : batch_sizes) {
-        Kokkos::View<double****, Kokkos::LayoutLeft> state("state", num_cells, 4, 1, 1);
+        StateView state("state", num_cells, 4, 1, 1);
         auto h_state = Kokkos::create_mirror_view(state);
 
         for (int c = 0; c < num_cells; ++c) {
@@ -58,9 +66,9 @@ TEST(E2EBatchedTest, MultiCellTrajectoryParity) {
     double jvals[2] = {1.0e-5, 1.0e-3};
 
     // State array for single-cell serial execution
-    Kokkos::View<double****, Kokkos::LayoutLeft> state_serial("state_serial", num_cells, 4, 1, 1);
+    StateView state_serial("state_serial", num_cells, 4, 1, 1);
     // State array for batched team execution
-    Kokkos::View<double****, Kokkos::LayoutLeft> state_batched("state_batched", num_cells, 4, 1, 1);
+    StateView state_batched("state_batched", num_cells, 4, 1, 1);
 
     auto h_serial = Kokkos::create_mirror_view(state_serial);
     auto h_batched = Kokkos::create_mirror_view(state_batched);
@@ -109,7 +117,7 @@ TEST(E2EBatchedTest, FaultIsolationNonFiniteErrorInjection) {
     const int steps = 2;
     double jvals[2] = {1.0e-5, 1.0e-3};
 
-    Kokkos::View<double****, Kokkos::LayoutLeft> state("state", num_cells, 4, 1, 1);
+    StateView state("state", num_cells, 4, 1, 1);
     auto h_state = Kokkos::create_mirror_view(state);
 
     for (int c = 0; c < num_cells; ++c) {
