@@ -192,6 +192,8 @@ jobs:
       - name: Ensure Executable Permissions
         run: find build/ -type f -exec chmod +x {} +
 
+      - name: install jsonschema
+        run: pip3 install jsonschema
       - name: Install MKPP Package
         # Must precede CTest: several CTest targets (e.g.
         # solver_benchmark_contract_admission_smoke) shell out to pytest, whose
