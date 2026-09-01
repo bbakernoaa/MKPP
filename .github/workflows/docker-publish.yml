@@ -18,11 +18,13 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  # Org-owned namespace so the workflow's GITHUB_TOKEN (packages:write) can
-  # actually push: the token is only valid for packages owned by this repo's
-  # organization, not a personal namespace like bbakernoaa.
-  # GHCR identifiers must be lowercase.
-  IMAGE_NAME: noaa-emc/mkpp-ci-env
+  # Personal namespace: the package is public, so CI jobs pull it anonymously.
+  # The org GITHUB_TOKEN cannot write to a personal namespace, so merges
+  # republish via the repo secret GHCR_PAT (a PAT owned by bbakernoaa with
+  # write:packages).  Without that secret the workflow still builds (keeping
+  # the Dockerfile validated) but skips the push.
+  IMAGE_NAME: bbakernoaa/mkpp-ci-env
+  IMAGE_USER: bbakernoaa
 
 jobs:
   build-and-push:
@@ -36,12 +38,28 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Detect push capability
+        id: canpush
+        env:
+          GHCR_PAT: ${{ secrets.GHCR_PAT }}
+        run: |
+          if [ -n "$GHCR_PAT" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::GHCR_PAT secret not set; image will be built but NOT pushed"
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Log in to GitHub Container Registry
+        # A PAT owned by the image owner is required: the org GITHUB_TOKEN
+        # cannot write to a personal namespace.  Without it the build still
+        # validates the Dockerfile and the push is skipped.
+        if: steps.canpush.outputs.enabled == 'true'
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ env.IMAGE_USER }}
+          password: ${{ secrets.GHCR_PAT }}
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
@@ -60,7 +78,7 @@ jobs:
         with:
           context: .
           file: .github/docker/Dockerfile.ci
-          push: ${{ github.event_name != 'pull_request' }}
+          push: ${{ github.event_name != 'pull_request' && steps.canpush.outputs.enabled == 'true' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha

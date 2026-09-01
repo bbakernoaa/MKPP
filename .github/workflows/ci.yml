@@ -69,7 +69,7 @@ jobs:
     needs: static-gates
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/noaa-emc/mkpp-ci-env:latest
+      image: ghcr.io/bbakernoaa/mkpp-ci-env:latest
 
     steps:
       - name: Checkout Code
@@ -91,7 +91,7 @@ jobs:
     needs: env-setup
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/noaa-emc/mkpp-ci-env:latest
+      image: ghcr.io/bbakernoaa/mkpp-ci-env:latest
     env:
       PYTHONPATH: ${{ github.workspace }}/src
 
@@ -151,7 +151,7 @@ jobs:
     needs: aot-codegen
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/noaa-emc/mkpp-ci-env:latest
+      image: ghcr.io/bbakernoaa/mkpp-ci-env:latest
 
     steps:
       - name: Checkout Code
@@ -175,7 +175,7 @@ jobs:
     needs: build-cpp
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/noaa-emc/mkpp-ci-env:latest
+      image: ghcr.io/bbakernoaa/mkpp-ci-env:latest
     env:
       PYTHONPATH: ${{ github.workspace }}/src
 
