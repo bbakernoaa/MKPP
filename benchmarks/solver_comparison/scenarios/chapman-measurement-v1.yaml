@@ -1,0 +1,49 @@
+schema_version: 1
+scenario_id: chapman-measurement-v1
+version: 1.0.0
+mechanism:
+  id: chapman
+  version: 1.0.0
+  sha256: 54186ec6db56ca9d63ce6387f504067912bc40c258a2914031fdc4d7e90b9306
+role: measurement
+initial_state:
+  O: {value: 2.5e+9, unit: molecule cm-3}
+  O2: {value: 5.1e+18, unit: molecule cm-3}
+  O3: {value: 8.0e+11, unit: molecule cm-3}
+  M: {value: 2.46e+19, unit: molecule cm-3}
+environment:
+  temperature: {value: 270.0, unit: K}
+  pressure: {value: 80000.0, unit: Pa}
+forcing:
+  J1:
+    unit: s-1
+    points:
+      - {time_seconds: 0.0, value: 0.0}
+      - {time_seconds: 21600.0, value: 1.0e-12}
+      - {time_seconds: 43200.0, value: 2.0e-12}
+      - {time_seconds: 64800.0, value: 1.0e-12}
+      - {time_seconds: 86400.0, value: 0.0}
+  J3:
+    unit: s-1
+    points:
+      - {time_seconds: 0.0, value: 0.0}
+      - {time_seconds: 21600.0, value: 5.0e-5}
+      - {time_seconds: 43200.0, value: 1.0e-4}
+      - {time_seconds: 64800.0, value: 5.0e-5}
+      - {time_seconds: 86400.0, value: 0.0}
+integration:
+  start_seconds: 0.0
+  horizon_seconds: 86400.0
+  checkpoints_seconds: [3600.0, 21600.0, 43200.0, 64800.0, 86400.0]
+  forcing_boundaries_seconds: [0.0, 21600.0, 43200.0, 64800.0, 86400.0]
+workload:
+  cells: [1, 10, 100, 1000, 10000]
+  ensemble_seed: 2718
+accuracy:
+  rtol: 1.0e-6
+  atol_by_species: {O: 1.0e+2, O2: 1.0e+8, O3: 1.0e+2, M: 1.0e+8}
+  positivity_policy: nonnegative_with_scaled_roundoff
+  conservation_checks: [oxygen_atoms]
+reference:
+  implementation: scipy-radau
+  max_refinements: 3

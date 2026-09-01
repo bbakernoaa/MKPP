@@ -4,9 +4,9 @@ This guide explains how to define custom reactions in mechanism YAML files, conf
 
 ---
 
-## 1. Defining Reactions in Mechanism YAML
+## 1. Defining Reactions in an OpenAtmos Mechanism
 
-All chemical mechanisms in MKPP are declared in YAML specification files located in `mechanisms/` (e.g., `mechanisms/saprc99.yaml`, `mechanisms/gocart.yaml`).
+All chemical mechanisms in MKPP are declared as OpenAtmos JSON documents under `mechanisms/openatmos/` (for example, `mechanisms/openatmos/saprc99/mechanism.json`).
 
 ### Basic Reaction Structure
 
@@ -125,7 +125,7 @@ if r.reaction_type.upper() == "MY_CUSTOM_TYPE":
 Test your new reaction type by compiling a mechanism header:
 
 ```bash
-python -m mkpp.cli compile mechanisms/my_mechanism.yaml --out mkpp-generated/
+python -m mkpp.cli compile mechanisms/openatmos/my_mechanism/mechanism.json --out mkpp-generated/
 ```
 
 Verify that `mkpp-generated/my_mechanism.hpp` contains the unrolled C++ rate and Jacobian expressions.

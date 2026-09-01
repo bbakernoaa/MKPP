@@ -30,10 +30,6 @@
 
   Requirements: 4.1
 #}
-{% from "macros/w_matrix.j2" import emit_w_matrix %}
-{% from "macros/lu_factorize.j2" import emit_lu_factorize %}
-{% from "macros/lu_solve_forward.j2" import emit_forward_sub %}
-{% from "macros/lu_solve_backward.j2" import emit_backward_sub %}
       /**
        * @brief Performs adaptive time-stepping Rosenbrock integration over dt_total.
        *
@@ -57,8 +53,14 @@
           const double safety = 0.9;
           const double max_growth = 6.0;
           const double min_shrink = 0.2;
+          const double rejection_factor_decrease = 0.1;
+          const double h_min = dt_total * 1.0e-15;
           double t = 0.0;
-          double dt = Kokkos::fmin(dt_total, 1.0);  // conservative initial step
+          // Match MICM's default initial Rosenbrock step: 1e-6 of the
+          // chemistry interval, with the interval itself as h_max.
+          double dt = dt_total * 1.0e-6;
+          bool reject_last_dt = false;
+          bool reject_more_dt = false;
 
           while (t < dt_total) {
           dt = Kokkos::min(dt, dt_total - t);
@@ -71,14 +73,42 @@
 {% for info in state_hoist_info %}
           const double S_{{ info.reg_idx }} = state(Species::{{ info.name }});  // [{{ info.name }}]
 {% endfor %}
-
+          // The expression-dense Jacobian is evaluated by bounded compiled
+          // units.  The solver still uses the same symbolic sparse LU plan.
+          double J_values[NUM_SPECIES * NUM_SPECIES] = {};
+{% for chunk in compiled_jacobian_chunks %}
+          detail::compute_jacobian_chunk_{{ loop.index0 }}(state.data(), J_values, jvals, {% if has_equilibrium %}temp, rh{% else %}0.0, 0.0{% endif %});
+{% endfor %}
           // Analytical Jacobian & Iteration Matrix W = inv_g_dt*I - J (sparse)
 {% for entry in jacobian_entries %}
-          double J_{{ entry[0] }}_{{ entry[1] }} = {{ entry[2] }};
+{% if permutation %}
+          double J_{{ entry[0] }}_{{ entry[1] }} = J_values[{{ permutation[entry[0]] }} * NUM_SPECIES + {{ permutation[entry[1]] }}];
+{% else %}
+          double J_{{ entry[0] }}_{{ entry[1] }} = J_values[{{ entry[0] }} * NUM_SPECIES + {{ entry[1] }}];
+{% endif %}
 {% endfor %}
-{{ emit_w_matrix(needed_w, non_zero_jac_set, "inv_g_dt", num_species, is_reduction=false, blocks=none, indent="          ") }}
-          // Symbolic Doolittle Sparse LU Factorization
-{{ emit_lu_factorize(lu_expressions, blocks=blocks, is_reduction=false, indent="          ") }}
+          double W_values[NUM_SPECIES * NUM_SPECIES] = {};
+{% for entry in needed_w %}
+{% set i = entry[0] %}
+{% set j = entry[1] %}
+{% if i == j %}
+{% if (i, j) in non_zero_jac_set %}
+          W_values[{{ i }} * NUM_SPECIES + {{ j }}] = inv_g_dt - J_{{ i }}_{{ j }};
+{% else %}
+          W_values[{{ i }} * NUM_SPECIES + {{ j }}] = inv_g_dt;
+{% endif %}
+{% elif (i, j) in non_zero_jac_set %}
+          W_values[{{ i }} * NUM_SPECIES + {{ j }}] = -J_{{ i }}_{{ j }};
+{% endif %}
+{% endfor %}
+          double LU_values[NUM_SPECIES * NUM_SPECIES] = {};
+#ifndef MKPP_USE_UNROLLED_REFERENCE
+          detail::factorize_plan(W_values, LU_values);
+#else
+{% for chunk in compiled_lu_chunks %}
+          detail::factorize_lu_chunk_{{ loop.index0 }}(W_values, LU_values);
+{% endfor %}
+#endif
 {% set ns = namespace(current_F_prefix="", rhs_prefix="") %}
 {% for stage in range(1, tableau.stages + 1) %}
 
@@ -115,14 +145,43 @@
 {% if stage == 1 %}
           // Rate evaluation F{{ stage }} at S
 {% for i in range(num_species) %}
-          double F{{ stage }}_{{ i }} = {{ f_exprs[i] }};
+{% if loop.first %}
+          double F_values_{{ stage }}[NUM_SPECIES];
+{% for chunk in compiled_rate_chunks %}
+          detail::compute_rates_chunk_{{ loop.index0 }}(state.data(), F_values_{{ stage }}, jvals, {% if has_equilibrium %}temp, rh{% else %}0.0, 0.0{% endif %});
+{% endfor %}
+{% endif %}
+{% if permutation %}
+          double F{{ stage }}_{{ i }} = F_values_{{ stage }}[{{ permutation[i] }}];
+{% else %}
+          double F{{ stage }}_{{ i }} = F_values_{{ stage }}[{{ i }}];
+{% endif %}
 {% endfor %}
 {% set ns.current_F_prefix = "F" ~ stage %}
 {% else %}
           // Rate evaluation F{{ stage }} at Y{{ stage }}
 {% for i in range(num_species) %}
-{% set stage_expr = f_exprs[i] | replace("S_", "Y" ~ stage ~ "_") %}
-          double F{{ stage }}_{{ i }} = {{ stage_expr }};
+{% if loop.first %}
+          double stage_state_{{ stage }}[NUM_SPECIES];
+{% endif %}
+{% if permutation %}
+          stage_state_{{ stage }}[{{ permutation[i] }}] = Y{{ stage }}_{{ i }};
+{% else %}
+          stage_state_{{ stage }}[{{ i }}] = Y{{ stage }}_{{ i }};
+{% endif %}
+{% if loop.last %}
+          double F_values_{{ stage }}[NUM_SPECIES];
+{% for chunk in compiled_rate_chunks %}
+          detail::compute_rates_chunk_{{ loop.index0 }}(stage_state_{{ stage }}, F_values_{{ stage }}, jvals, {% if has_equilibrium %}temp, rh{% else %}0.0, 0.0{% endif %});
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% for i in range(num_species) %}
+{% if permutation %}
+          double F{{ stage }}_{{ i }} = F_values_{{ stage }}[{{ permutation[i] }}];
+{% else %}
+          double F{{ stage }}_{{ i }} = F_values_{{ stage }}[{{ i }}];
+{% endif %}
 {% endfor %}
 {% set ns.current_F_prefix = "F" ~ stage %}
 {% endif %}
@@ -154,8 +213,19 @@
 {% endfor %}
 {% set ns.rhs_prefix = "rhs" ~ stage %}
 {% endif %}
-{{ emit_forward_sub(forward_sub_steps, ns.rhs_prefix, "y" ~ stage, blocks=blocks, is_reduction=false, indent="          ", k_prefix="K" ~ stage) -}}
-{{ emit_backward_sub(backward_sub_steps, "y" ~ stage, "K" ~ stage, blocks=blocks, is_reduction=false, indent="          ") -}}
+          double rhs_values_{{ stage }}[NUM_SPECIES];
+{% for i in range(num_species) %}
+          rhs_values_{{ stage }}[{{ i }}] = {{ ns.rhs_prefix }}_{{ i }};
+{% endfor %}
+          double K_values_{{ stage }}[NUM_SPECIES];
+#ifndef MKPP_USE_UNROLLED_REFERENCE
+          detail::solve_plan(LU_values, rhs_values_{{ stage }}, K_values_{{ stage }});
+#else
+          detail::solve_lu(LU_values, rhs_values_{{ stage }}, K_values_{{ stage }});
+#endif
+{% for i in range(num_species) %}
+          double K{{ stage }}_{{ i }} = K_values_{{ stage }}[{{ i }}];
+{% endfor %}
 {% endfor %}
 
           // --- Solution update and error estimation ---
@@ -207,7 +277,9 @@
           {
               double Ynew_i = S_{{ i }} + {{ m_expr }};
               double ymax = Kokkos::fmax(Kokkos::fabs(state({{ state_idx }})), Kokkos::fabs(Ynew_i));
-              double sci = atol[{{ i }}] + rtol[{{ i }}] * ymax;
+              // Tolerances are stored in physical species order, while the
+              // generated scalar registers may use the RCM permutation.
+              double sci = atol[{{ state_idx }}] + rtol[{{ state_idx }}] * ymax;
               double yerr_i = {{ e_expr }};
               err_norm_sq += (yerr_i / sci) * (yerr_i / sci);
           }
@@ -255,9 +327,21 @@
               state({{ state_idx }}) += {{ m_expr }};
 {% endfor %}
               t += dt;
-              dt *= factor;
+              double next_dt = Kokkos::fmax(h_min, Kokkos::fmin(dt * factor, dt_total));
+              // MICM deliberately prevents a step-size increase immediately
+              // after a rejected attempt.  This keeps the accepted-step
+              // sequence stable for stiff atmospheric mechanisms.
+              if (reject_last_dt) next_dt = Kokkos::fmin(next_dt, dt);
+              reject_last_dt = false;
+              reject_more_dt = false;
+              dt = next_dt;
           } else {
-              dt *= factor;
+              // Match MICM's rejection controller: after two consecutive
+              // rejections, force a tenfold reduction instead of accepting
+              // the bounded error-controller factor.
+              dt *= reject_more_dt ? rejection_factor_decrease : factor;
+              reject_more_dt = reject_last_dt;
+              reject_last_dt = true;
           }
           } // end while (t < dt_total)
       }

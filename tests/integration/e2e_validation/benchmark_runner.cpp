@@ -1,4 +1,5 @@
 #include <Kokkos_Core.hpp>
+#include <mkpp_host/mechanism_manager.hpp>
 
 #include <chrono>
 #include <cmath>
@@ -8,30 +9,9 @@
 #include <string>
 #include <vector>
 
-#include "saprc99.hpp"
-
 using ExecSpace = Kokkos::DefaultExecutionSpace;
 
-template <typename SolverKernelsType>
-struct DiurnalCellFunctor {
-    using ViewType = Kokkos::View<double**, Kokkos::LayoutLeft, typename ExecSpace::memory_space>;
-    ViewType m_state;
-    double m_dt;
-    const double* m_jvals;
-
-    DiurnalCellFunctor(ViewType state, double dt, const double* jvals)
-        : m_state(state), m_dt(dt), m_jvals(jvals) {}
-
-    KOKKOS_INLINE_FUNCTION
-    void operator()(const int cell_idx) const {
-        auto sub_state = Kokkos::subview(m_state, cell_idx, Kokkos::ALL());
-        SolverKernelsType solver;
-        solver.integrate(m_dt, sub_state, m_jvals);
-    }
-};
-
-template <typename SolverKernelsType>
-double run_diurnal_benchmark(int num_cells, int num_species, int num_steps, double dt,
+double run_diurnal_benchmark(const std::string& mech_name, int num_cells, int num_species, int num_steps, double dt,
                              std::vector<double>& final_state_out) {
     using ViewType = Kokkos::View<double**, Kokkos::LayoutLeft, typename ExecSpace::memory_space>;
     ViewType state("state", num_cells, num_species);
@@ -66,16 +46,18 @@ double run_diurnal_benchmark(int num_cells, int num_species, int num_steps, doub
     }
     Kokkos::deep_copy(state, host_state);
 
-    // Warmup step
-    Kokkos::parallel_for("warmup", Kokkos::RangePolicy<ExecSpace>(0, num_cells),
-                         DiurnalCellFunctor<SolverKernelsType>(state, dt, jvals_dev.data()));
+    mkpp::host::HostExecutionParams params;
+    params.dt = dt;
+    params.jvals = jvals_dev.data();
+    params.steps = 1;
+
+    // Warmup step via host interface
+    mkpp::host::MechanismRegistry::execute(mech_name, state, params);
     Kokkos::fence();
 
+    params.steps = num_steps;
     auto start = std::chrono::high_resolution_clock::now();
-    for (int step = 0; step < num_steps; ++step) {
-        Kokkos::parallel_for("diurnal_step", Kokkos::RangePolicy<ExecSpace>(0, num_cells),
-                             DiurnalCellFunctor<SolverKernelsType>(state, dt, jvals_dev.data()));
-    }
+    mkpp::host::MechanismRegistry::execute(mech_name, state, params);
     Kokkos::fence();
     auto end = std::chrono::high_resolution_clock::now();
 
@@ -91,6 +73,7 @@ int main(int argc, char** argv) {
     int num_cells = 1000;
     int num_steps = 1440;
     std::string mode = "full";  // "full" or "lumped"
+    std::string mech = "saprc99";
     std::string csv_out = "";
 
     for (int i = 1; i < argc; ++i) {
@@ -98,14 +81,16 @@ int main(int argc, char** argv) {
         if (arg == "--cells" && i + 1 < argc) num_cells = std::stoi(argv[++i]);
         if (arg == "--steps" && i + 1 < argc) num_steps = std::stoi(argv[++i]);
         if (arg == "--mode" && i + 1 < argc) mode = argv[++i];
+        if (arg == "--mechanism" && i + 1 < argc) mech = argv[++i];
         if (arg == "--output" && i + 1 < argc) csv_out = argv[++i];
     }
 
     Kokkos::initialize(argc, argv);
     {
         std::vector<double> final_state;
-        double time_ms = run_diurnal_benchmark<mkpp::SolverKernels<ExecSpace>>(
-            num_cells, 79, num_steps, 60.0, final_state);
+        auto info = mkpp::host::MechanismRegistry::get_info(mech);
+        double time_ms = run_diurnal_benchmark(
+            mech, num_cells, info.num_species, num_steps, 60.0, final_state);
 
         std::cout << "CELLS=" << num_cells << ", STEPS=" << num_steps << ", MODE=" << mode
                   << ", TIME_MS=" << std::fixed << std::setprecision(2) << time_ms

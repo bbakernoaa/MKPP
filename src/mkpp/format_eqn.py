@@ -17,18 +17,52 @@ def _fold_numeric_falloff_powers(code: str) -> str:
         base = float(match.group(1))
         coefficient = float(match.group(2))
         exponent = 1.0 / (1.0 + coefficient / (math.log(10.0) ** 2))
-        return f"{base ** exponent:.17g}"
+        return _clean_float_literals(f"{base ** exponent:g}")
+
+    return pattern.sub(replace, code)
+
+
+def _clean_float_literals(code: str) -> str:
+    """Clean up verbose floating point literals (e.g. 7.9999999999999998e-12 -> 8e-12)."""
+    pattern = re.compile(r"\b(?<![a-zA-Z_])\d+\.\d+(?:[eE][-+]?\d+)?\b")
+
+    def replace(match):
+        val_str = match.group(0)
+        try:
+            val = float(val_str)
+            cleaned = str(val)
+            if "." not in cleaned and "e" not in cleaned and "E" not in cleaned:
+                cleaned += ".0"
+            return cleaned
+        except ValueError:
+            return val_str
 
     return pattern.sub(replace, code)
 
 
 def _strength_reduce_squares(code: str) -> str:
-    """Replace generated pow(x, 2) terms with explicit multiplication."""
-    term = r"(?:state\(\d+\)|Ynew_\d+|S_\d+)"
-    return re.sub(rf"pow\(({term}), 2\)", r"\1 * \1", code)
+    """Replace generated pow(x, n) terms with explicit multiplication or identity."""
+    term = r"(?:state\(\d+\)|Ynew_\d+|S_\d+|[a-zA-Z_][a-zA-Z0-9_]*)"
+    # pow(x, 2) -> (x * x)
+    code = re.sub(rf"\bpow\(({term}),\s*2(?:\.0)?\)", r"(\1 * \1)", code)
+    # pow(x, 3) -> ((x * x) * x)
+    code = re.sub(rf"\bpow\(({term}),\s*3(?:\.0)?\)", r"((\1 * \1) * \1)", code)
+    # pow(x, 1) -> x
+    code = re.sub(rf"\bpow\(({term}),\s*1(?:\.0)?\)", r"\1", code)
+    # pow(x, 0) -> 1.0
+    code = re.sub(rf"\bpow\(({term}),\s*0(?:\.0)?\)", r"1.0", code)
+    return code
 
 
-def format_eqn(eqn_str, species_list, state_var="state", use_parentheses=True, keep_env_symbols=False):
+def format_eqn(
+    eqn_str,
+    species_list,
+    state_var="state",
+    use_parentheses=True,
+    keep_env_symbols=False,
+    temperature: float = 300.0,
+    air_density: float = 2.4476e19,
+):
     """Convert a symbolic ODE expression string into a C++ code string.
 
     Parameters
@@ -80,7 +114,10 @@ def format_eqn(eqn_str, species_list, state_var="state", use_parentheses=True, k
             sp.Symbol("C_FixedCl"): 1.0,
             sp.Symbol("S_a"): 1.0,
             sp.Symbol("v_gas"): 1.0,
-            sp.Symbol("M_density"): 2.4476e19,
+            # M_density is used only when a mechanism has no explicit AIR or
+            # M species. It must come from the supplied compilation
+            # environment, never from a unit-specific legacy constant.
+            sp.Symbol("M_density"): air_density,
         }
 
         # When keep_env_symbols is False (default), substitute environmental
@@ -90,9 +127,9 @@ def format_eqn(eqn_str, species_list, state_var="state", use_parentheses=True, k
         if not keep_env_symbols:
             # Environmental parameters (not species concentrations)
             # NOTE: SUN is NOT substituted — photolysis rates are runtime J-values from Cloud-J
-            subs_dict[sp.Symbol("TEMP")] = 300.0
-            subs_dict[sp.Symbol("temp")] = 300.0
-            subs_dict[sp.Symbol("Temp")] = 300.0
+            subs_dict[sp.Symbol("TEMP")] = temperature
+            subs_dict[sp.Symbol("temp")] = temperature
+            subs_dict[sp.Symbol("Temp")] = temperature
 
         expr = expr.subs(subs_dict)
         s = sp.ccode(expr)
@@ -101,7 +138,7 @@ def format_eqn(eqn_str, species_list, state_var="state", use_parentheses=True, k
         # Fallback to regex if sympy fails
         s = re.sub(r"([a-zA-Z0-9_\(\)\.\+\-\*\/]+)\*\*(\-?\d+\.\d+|\-?\d+)", r"pow(\1, \2)", s)
         if not keep_env_symbols:
-            s = s.replace("Temp", "300.0")
+            s = s.replace("Temp", str(temperature))
         s = s.replace("S_a", "1.0")
         s = s.replace("v_gas", "1.0")
         s = _fold_numeric_falloff_powers(s)
@@ -123,5 +160,6 @@ def format_eqn(eqn_str, species_list, state_var="state", use_parentheses=True, k
     s = re.sub(r"\bRate_(\d+)\b", r"jvals[\1]", s)
 
     s = _strength_reduce_squares(s)
+    s = _clean_float_literals(s)
 
     return s

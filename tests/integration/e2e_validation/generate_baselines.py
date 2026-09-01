@@ -1,10 +1,9 @@
 import glob
+import json
 import os
 import re
 import subprocess
 from pathlib import Path
-
-import yaml
 
 
 def generate_kpp_baseline(mech_name, kpp_dir, out_dir):
@@ -33,9 +32,9 @@ def generate_kpp_baseline(mech_name, kpp_dir, out_dir):
     env["KPP_HOME"] = os.path.abspath(kpp_dir)
     subprocess.run([kpp_bin, f"{mech_name}.def"], cwd=str(run_dir), env=env, capture_output=True, text=True)
 
-    yaml_path = f"mechanisms/{mech_name}.yaml" if mech_name != "chapman" else "tests/integration/e2e_validation/data/chapman.yaml"
-    with open(yaml_path) as f:
-        mech = yaml.safe_load(f)
+    mechanism_path = Path("mechanisms/openatmos") / mech_name / "mechanism.json"
+    with open(mechanism_path) as f:
+        mech = json.load(f)
     mkpp_species = [s["name"] for s in mech["species"]]
     n_spec = len(mkpp_species)
 

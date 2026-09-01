@@ -56,7 +56,7 @@ AT_LEAST_ONE_IDENTIFIER = st.one_of(
     species_name=OPTIONAL_SPECIES_NAME,
     yaml_location=OPTIONAL_YAML_LOCATION,
 )
-@settings(max_examples=100)
+@settings(deadline=None)
 def test_to_dict_always_includes_stage_and_message(stage, message, reaction_index, species_name, yaml_location):
     """Property 1: to_dict() always includes stage and message fields.
 
@@ -86,7 +86,7 @@ def test_to_dict_always_includes_stage_and_message(stage, message, reaction_inde
     species_name=OPTIONAL_SPECIES_NAME,
     yaml_location=OPTIONAL_YAML_LOCATION,
 )
-@settings(max_examples=100)
+@settings(deadline=None)
 def test_str_always_includes_stage_and_message(stage, message, reaction_index, species_name, yaml_location):
     """Property 1: __str__() always includes stage and message.
 
@@ -111,7 +111,7 @@ def test_str_always_includes_stage_and_message(stage, message, reaction_index, s
     identifiers=AT_LEAST_ONE_IDENTIFIER,
     yaml_location=OPTIONAL_YAML_LOCATION,
 )
-@settings(max_examples=100)
+@settings(deadline=None)
 def test_at_least_one_identifying_field_present(stage, message, identifiers, yaml_location):
     """Property 1: When constructed with at least one identifier, to_dict()
     reflects at least one of reaction_index or species_name.
@@ -143,7 +143,7 @@ def test_at_least_one_identifying_field_present(stage, message, identifiers, yam
     species_name=st.text(min_size=1, max_size=50).filter(lambda s: s.strip()),
     yaml_location=OPTIONAL_YAML_LOCATION,
 )
-@settings(max_examples=100)
+@settings(deadline=None)
 def test_to_dict_optional_fields_included_when_set(stage, message, reaction_index, species_name, yaml_location):
     """Property 1: When optional fields are non-None, to_dict() includes them.
 

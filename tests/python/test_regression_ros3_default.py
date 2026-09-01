@@ -117,7 +117,7 @@ class TestRos3DefaultRegression:
         # Count stage comments in the entire file (integrate + integrate_with_reduction)
         stage_comments = re.findall(r"// --- Stage \d+ ---", code)
         # 3 stages x 2 functions = 6 total stage markers
-        assert len(stage_comments) == 6, f"Expected 6 stage markers (3 stages x 2 functions), found {len(stage_comments)}"
+        assert len(stage_comments) == 9, f"Expected 9 stage markers (3 stages x 3 functions), found {len(stage_comments)}"
 
         # Verify stages are numbered 1, 2, 3 in each function
         stage_numbers = [int(re.search(r"Stage (\d+)", c).group(1)) for c in stage_comments]
@@ -128,7 +128,10 @@ class TestRos3DefaultRegression:
             1,
             2,
             3,
-        ], f"Stage numbering mismatch. Expected [1, 2, 3, 1, 2, 3], got {stage_numbers}"
+            1,
+            2,
+            3,
+        ], f"Stage numbering mismatch. Expected [1, 2, 3, 1, 2, 3, 1, 2, 3], got {stage_numbers}"
 
     def test_ros3_gamma_value(self):
         """

@@ -8,6 +8,7 @@ calls, only pre-computed data.
 import re
 from typing import Any
 
+from .factorization_plan import make_factorization_plan
 from .format_eqn import format_eqn
 from .model import MechanismDefinition, SymbolicLUPlan
 from .rosenbrock import SOLVER_COEFFICIENTS
@@ -19,6 +20,7 @@ def build_template_context(
     lu_plan: SymbolicLUPlan | None = None,
     sympy_meta: dict | None = None,
     adjoint: bool = False,
+    simd_backend: str = "native",
 ) -> dict[str, Any]:
     """Assemble all data needed for Jinja2 template rendering.
 
@@ -94,6 +96,8 @@ def build_template_context(
 
     # --- Determine permutation ---
     permutation = lu_plan.permutation if lu_plan and lu_plan.permutation else None
+    environment_temperature = float(mech.metadata.get("temperature", "300.0"))
+    environment_air_density = float(mech.metadata.get("air_density", "2.4476e19"))
 
     # --- Determine equilibrium and photolysis flags ---
     has_equilibrium = bool(mech.equilibrium_reactions)
@@ -126,6 +130,8 @@ def build_template_context(
                     state_var="S",
                     use_parentheses=False,
                     keep_env_symbols=has_equilibrium,
+                    temperature=environment_temperature,
+                    air_density=environment_air_density,
                 )
                 remapped_eqn = _remap_s_indices(eqn, inv_p)
                 jacobian_entries.append((i, j, remapped_eqn))
@@ -138,6 +144,8 @@ def build_template_context(
                     state_var="S",
                     use_parentheses=False,
                     keep_env_symbols=has_equilibrium,
+                    temperature=environment_temperature,
+                    air_density=environment_air_density,
                 )
                 jacobian_entries.append((i, j, eqn))
 
@@ -164,6 +172,8 @@ def build_template_context(
                     state_var="S",
                     use_parentheses=False,
                     keep_env_symbols=has_equilibrium,
+                    temperature=environment_temperature,
+                    air_density=environment_air_density,
                 )
                 remapped_eqn = _remap_s_indices(eqn, inv_p)
                 f_exprs.append(remapped_eqn)
@@ -175,6 +185,8 @@ def build_template_context(
                     state_var="S",
                     use_parentheses=False,
                     keep_env_symbols=has_equilibrium,
+                    temperature=environment_temperature,
+                    air_density=environment_air_density,
                 )
                 f_exprs.append(eqn)
 
@@ -249,8 +261,10 @@ def build_template_context(
             )
 
     # --- Tolerance arrays ---
-    default_atol = 1.0  # molecules/cm3 (conservative default)
-    default_rtol = 1e-4  # 0.01% relative tolerance
+    # Match MICM's default solver controls for an equivalent comparison.
+    # Per-species metadata remains the higher-priority override.
+    default_atol = 1.0e-3
+    default_rtol = 1.0e-6
 
     # Start with defaults
     atol_values = [default_atol] * N
@@ -337,6 +351,7 @@ def build_template_context(
         "has_photolysis": has_photolysis,
         "num_photolysis": num_photolysis,
         "tolerance_arrays": tolerance_arrays,
+        "simd_backend": simd_backend,
     }
 
     # Conditionally include adjoint-specific data
@@ -353,6 +368,63 @@ def build_template_context(
     context["host_interface"] = mech.host_interface if getattr(mech, "host_interface", None) else None
     context["equilibrium_results"] = sympy_meta.get("equilibrium_results") if sympy_meta else None
     context["mass_projector"] = sympy_meta.get("mass_projector") if sympy_meta else None
+
+    # --- Reaction rate flux vector CSE and expressions ---
+    rate_flux_cse = []
+    rate_flux_exprs = []
+    rate_flux_cse_hoist = []
+    rate_flux_exprs_hoist = []
+    if sympy_meta:
+        raw_cse = sympy_meta.get("rate_flux_cse", [])
+        for sym, expr in raw_cse:
+            eqn = format_eqn(
+                expr,
+                mech.species,
+                state_var="state",
+                use_parentheses=True,
+                keep_env_symbols=has_equilibrium,
+                temperature=environment_temperature,
+                air_density=environment_air_density,
+            )
+            rate_flux_cse.append({"symbol": str(sym), "expr": eqn})
+            eqn_hoist = format_eqn(
+                expr,
+                mech.species,
+                state_var="S",
+                use_parentheses=False,
+                keep_env_symbols=has_equilibrium,
+                temperature=environment_temperature,
+                air_density=environment_air_density,
+            )
+            rate_flux_cse_hoist.append({"symbol": str(sym), "expr": eqn_hoist})
+
+        raw_exprs = sympy_meta.get("rate_flux_exprs", [])
+        for idx, expr in enumerate(raw_exprs):
+            eqn = format_eqn(
+                expr,
+                mech.species,
+                state_var="state",
+                use_parentheses=True,
+                keep_env_symbols=has_equilibrium,
+                temperature=environment_temperature,
+                air_density=environment_air_density,
+            )
+            rate_flux_exprs.append({"index": idx, "expr": eqn})
+            eqn_hoist = format_eqn(
+                expr,
+                mech.species,
+                state_var="S",
+                use_parentheses=False,
+                keep_env_symbols=has_equilibrium,
+                temperature=environment_temperature,
+                air_density=environment_air_density,
+            )
+            rate_flux_exprs_hoist.append({"index": idx, "expr": eqn_hoist})
+
+    context["rate_flux_cse"] = rate_flux_cse
+    context["rate_flux_exprs"] = rate_flux_exprs
+    context["rate_flux_cse_hoist"] = rate_flux_cse_hoist
+    context["rate_flux_exprs_hoist"] = rate_flux_exprs_hoist
 
     # --- Kernel function context: state(i)-based expressions ---
     # These use state_var="state" and use_parentheses=True for kernel function templates
@@ -372,6 +444,8 @@ def build_template_context(
                 state_var="state",
                 use_parentheses=True,
                 keep_env_symbols=has_equilibrium,
+                temperature=environment_temperature,
+                air_density=environment_air_density,
             )
             rate_exprs_state.append(eqn)
     context["rate_exprs_state"] = rate_exprs_state
@@ -388,9 +462,73 @@ def build_template_context(
                         state_var="state",
                         use_parentheses=True,
                         keep_env_symbols=has_equilibrium,
+                        temperature=environment_temperature,
+                        air_density=environment_air_density,
                     )
                     jacobian_entries_state.append((i, j, eqn))
     context["jacobian_entries_state"] = jacobian_entries_state
+
+    # Bound the expression-heavy code into independently compiled units.  The
+    # context owns this metadata (rather than the CLI) so direct template users
+    # and the compiler always select the same generated-artifact pathway.
+    def _chunk(items: list[Any], size: int) -> list[list[Any]]:
+        return [items[index : index + size] for index in range(0, len(items), size)]
+
+    def _raw_pointer_expression(expression: str) -> str:
+        return re.sub(r"state\((\d+)\)", r"state[\1]", expression)
+
+    context["compiled_rate_chunks"] = [
+        [
+            {"index": index, "expr": _raw_pointer_expression(expression)}
+            for index, expression in enumerate(chunk, start=chunk_index * 32)
+        ]
+        for chunk_index, chunk in enumerate(_chunk(rate_exprs_state, 32))
+    ]
+    context["compiled_jacobian_chunks"] = [
+        [{"row": row, "column": column, "expr": _raw_pointer_expression(expression)} for row, column, expression in chunk]
+        for chunk in _chunk(jacobian_entries_state, 256)
+    ]
+
+    # Sparse LU is emitted as a separate compiled unit while retaining the
+    # exact symbolic operation order selected during lowering.  L and U never
+    # occupy the same matrix location, so a single packed array is sufficient.
+    def _lu_expression(expression: str) -> str:
+        expression = re.sub(r"\b[LU]_(\d+)_(\d+)\b", r"lu[\1 * N + \2]", expression)
+        return re.sub(r"\bW_(\d+)_(\d+)\b", r"w[\1 * N + \2]", expression)
+
+    def _forward_expression(expression: str) -> str:
+        expression = _lu_expression(expression)
+        expression = re.sub(r"\bb_(\d+)\b", r"rhs[\1]", expression)
+        return re.sub(r"\by_(\d+)\b", r"work[\1]", expression)
+
+    def _backward_expression(expression: str) -> str:
+        expression = _lu_expression(expression)
+        expression = re.sub(r"\by_(\d+)\b", r"work[\1]", expression)
+        return re.sub(r"\bx_(\d+)\b", r"solution[\1]", expression)
+
+    compiled_lu_expressions = [{**entry, "expr": _lu_expression(entry["expr"])} for entry in lu_expressions]
+    factorization_plan = make_factorization_plan(
+        mech.name,
+        len(mech.species),
+        lu_expressions,
+        elimination_order=lu_plan.permutation if lu_plan and lu_plan.permutation else None,
+        fill_in_count=lu_plan.fill_in_count if lu_plan else 0,
+    )
+    context["factorization_plan"] = factorization_plan
+    context["compiled_lu_expressions"] = compiled_lu_expressions
+    context["compiled_lu_chunks"] = _chunk(compiled_lu_expressions, 256)
+    # A compact symbolic sparsity mask drives the portable candidate backend.
+    # Unlike the reference expressions it contains no chemistry algebra.
+    l_locations = {(entry["i"], entry["j"]) for entry in lu_expressions if entry["kind"] == "L"}
+    u_locations = {(entry["i"], entry["j"]) for entry in lu_expressions if entry["kind"] == "U"}
+    context["plan_l_pattern"] = [int((row, column) in l_locations) for row in range(N) for column in range(N)]
+    context["plan_u_pattern"] = [int((row, column) in u_locations) for row in range(N) for column in range(N)]
+    context["compiled_forward_steps"] = [
+        {"index": step["i"], "expr": _forward_expression(step["raw_expr"])} for step in forward_sub_steps
+    ]
+    context["compiled_backward_steps"] = [
+        {"index": step["i"], "expr": _backward_expression(step["raw_expr"])} for step in backward_sub_steps
+    ]
 
     adjoint_entries_state = []
     if sympy_meta:
@@ -407,6 +545,8 @@ def build_template_context(
                             state_var="state",
                             use_parentheses=True,
                             keep_env_symbols=has_equilibrium,
+                            temperature=environment_temperature,
+                            air_density=environment_air_density,
                         )
                         adjoint_entries_state.append((i, j, eqn))
     context["adjoint_entries_state"] = adjoint_entries_state
@@ -481,7 +621,14 @@ def build_template_context(
                     None,
                 )
                 if species_idx is not None:
-                    eqn = format_eqn(expr, mech.species, state_var="state", use_parentheses=True)
+                    eqn = format_eqn(
+                        expr,
+                        mech.species,
+                        state_var="state",
+                        use_parentheses=True,
+                        temperature=environment_temperature,
+                        air_density=environment_air_density,
+                    )
                     partition_entries.append(
                         {
                             "species_idx": species_idx,

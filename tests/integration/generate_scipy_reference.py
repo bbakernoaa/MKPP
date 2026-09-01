@@ -59,12 +59,12 @@ def chapman_ode(t, y, jvals):
 
     # Production and loss rates matching generated compute_rates:
     # F_block(0) = -k2*M*O*O2 - k4*O*O3 + 2*O2*j_O2 + O3*j_O3
-    # F_block(1) = 0.0  (O2 constant)
+    # F_block(1) = -k2*M*O*O2 + 2*k4*O*O3 - O2*j_O2 + O3*j_O3
     # F_block(2) = k2*M*O*O2 - k4*O*O3 - O3*j_O3
     # F_block(3) = 0.0  (M constant)
 
     dO_dt = -k2 * M * O * O2 - k4 * O * O3 + 2.0 * O2 * j_O2 + O3 * j_O3
-    dO2_dt = 0.0
+    dO2_dt = -k2 * M * O * O2 + 2.0 * k4 * O * O3 - O2 * j_O2 + O3 * j_O3
     dO3_dt = k2 * M * O * O2 - k4 * O * O3 - O3 * j_O3
     dM_dt = 0.0
 

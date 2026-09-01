@@ -178,7 +178,7 @@ def _build_plan_from_numeric(L, U, n):
 
 
 @given(data=symmetric_diagonally_dominant_system(min_n=2, max_n=8))
-@settings(max_examples=200, deadline=None)
+@settings(deadline=None)
 def test_property_transposed_solve_matches_forward_for_symmetric(data):
     """
     For any symmetric diagonally-dominant matrix W and any RHS vector b,

@@ -14,6 +14,10 @@
 #include <unordered_map>
 #include <vector>
 
+using mkpp::mkpp_handle_impl;
+using ExecSpace = Kokkos::DefaultExecutionSpace;
+using SolverKernelsType = mkpp::SolverKernels<ExecSpace>;
+
 namespace {
 
 // Static species name map
@@ -210,15 +214,8 @@ int mkpp_integrate(mkpp_handle_t handle, double dt) {
 
     try {
         const double* jvals = impl->photolysis_rates.data();
-{% if has_equilibrium %}
-        double temp = impl->temperature.data() ? impl->temperature(0) : 298.15;
-        double rh = impl->relative_humidity.data() ? impl->relative_humidity(0) : 70.0;
-        mkpp::host::execute_mechanism<mkpp_generated_{{ mechanism_name | lower }}::SolverKernels>(
-            "{{ mechanism_name }}", impl->species_conc, dt, jvals, temp, rh);
-{% else %}
-        mkpp::host::execute_mechanism<mkpp_generated_{{ mechanism_name | lower }}::SolverKernels>(
+        mkpp::host::execute_mechanism<SolverKernelsType>(
             "{{ mechanism_name }}", impl->species_conc, dt, jvals);
-{% endif %}
         return MKPP_SUCCESS;
     } catch (const std::exception& e) {
         impl->set_error(e.what());
@@ -234,7 +231,7 @@ int mkpp_evaluate_rates(mkpp_handle_t handle, double* rates_out) {
     if (!impl->is_initialized) {
         return MKPP_ERROR_INVALID_STATE;
     }
-    if (!impl->species_conc.data() || !impl->temperature.data() || !impl->pressure.data()) {
+    if (!impl->species_conc.data()) {
         return MKPP_ERROR_NULL_POINTER;
     }
 
@@ -243,17 +240,11 @@ int mkpp_evaluate_rates(mkpp_handle_t handle, double* rates_out) {
             rates_out, impl->num_cells, impl->num_reactions);
 
         for (std::size_t i = 0; i < impl->num_cells; ++i) {
-            mkpp_generated_{{ mechanism_name | lower }}::SolverKernels solver;
+            SolverKernelsType solver;
             auto sub_conc = Kokkos::subview(impl->species_conc, i, Kokkos::ALL());
             auto sub_rates = Kokkos::subview(rates_view, i, Kokkos::ALL());
             const double* jvals = impl->photolysis_rates.data() ? impl->photolysis_rates.data() + i * impl->num_photolysis : nullptr;
-{% if has_equilibrium %}
-            double temp = impl->temperature.data() ? impl->temperature(i) : 298.15;
-            double rh = impl->relative_humidity.data() ? impl->relative_humidity(i) : 70.0;
-            solver.compute_rates(sub_conc, sub_rates, jvals, temp, rh);
-{% else %}
             solver.compute_rates(sub_conc, sub_rates, jvals);
-{% endif %}
         }
         return MKPP_SUCCESS;
     } catch (const std::exception& e) {
@@ -270,27 +261,20 @@ int mkpp_evaluate_jacobian(mkpp_handle_t handle, double* jac_out) {
     if (!impl->is_initialized) {
         return MKPP_ERROR_INVALID_STATE;
     }
-    if (!impl->species_conc.data() || !impl->temperature.data() || !impl->pressure.data()) {
+    if (!impl->species_conc.data()) {
         return MKPP_ERROR_NULL_POINTER;
     }
 
     try {
-        std::size_t non_zeros = {{ non_zero_jacobian_count | default(num_species * num_species) }};
-        Kokkos::View<double**, Kokkos::LayoutLeft, Kokkos::HostSpace, Kokkos::MemoryUnmanaged> jac_view(
-            jac_out, impl->num_cells, non_zeros);
+        Kokkos::View<double***, Kokkos::LayoutLeft, Kokkos::HostSpace, Kokkos::MemoryUnmanaged> jac_view(
+            jac_out, impl->num_cells, impl->num_species, impl->num_species);
 
         for (std::size_t i = 0; i < impl->num_cells; ++i) {
-            mkpp_generated_{{ mechanism_name | lower }}::SolverKernels solver;
+            SolverKernelsType solver;
             auto sub_conc = Kokkos::subview(impl->species_conc, i, Kokkos::ALL());
-            auto sub_jac = Kokkos::subview(jac_view, i, Kokkos::ALL());
+            auto sub_jac = Kokkos::subview(jac_view, i, Kokkos::ALL(), Kokkos::ALL());
             const double* jvals = impl->photolysis_rates.data() ? impl->photolysis_rates.data() + i * impl->num_photolysis : nullptr;
-{% if has_equilibrium %}
-            double temp = impl->temperature.data() ? impl->temperature(i) : 298.15;
-            double rh = impl->relative_humidity.data() ? impl->relative_humidity(i) : 70.0;
-            solver.compute_jacobian(sub_conc, sub_jac, jvals, temp, rh);
-{% else %}
             solver.compute_jacobian(sub_conc, sub_jac, jvals);
-{% endif %}
         }
         return MKPP_SUCCESS;
     } catch (const std::exception& e) {

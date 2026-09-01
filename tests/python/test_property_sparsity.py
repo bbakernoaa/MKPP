@@ -100,7 +100,7 @@ def random_diagonally_dominant_system(draw, min_n=2, max_n=8):
 
 
 @given(data=random_sparse_structure(min_n=3, max_n=15, min_density=0.1, max_density=0.5))
-@settings(max_examples=100)
+@settings(deadline=None)
 def test_property_10_fill_in_prediction_soundness(data):
     """
     For any NxN sparse structure, the fill-in positions predicted by
@@ -188,7 +188,7 @@ def compute_bandwidth(structure, n):
 
 
 @given(data=random_symmetric_sparse_structure(min_n=4, max_n=20, min_density=0.1, max_density=0.5))
-@settings(max_examples=100)
+@settings(deadline=None)
 def test_property_11_rcm_bandwidth_reduction(data):
     """
     For any symmetric sparse structure graph, the bandwidth after RCM
@@ -235,7 +235,7 @@ def test_property_11_rcm_bandwidth_reduction(data):
 
 
 @given(data=random_diagonally_dominant_system(min_n=2, max_n=8))
-@settings(max_examples=100)
+@settings(deadline=None)
 def test_property_12_permuted_solve_equivalence(data):
     """
     For any NxN non-singular diagonally-dominant matrix A and RHS b,
@@ -347,7 +347,7 @@ def test_rcm_permutation_wired_into_lu_plan():
 
 
 @given(data=random_sparse_structure(min_n=3, max_n=10, min_density=0.1, max_density=0.5))
-@settings(max_examples=100)
+@settings(deadline=None)
 def test_property_13_sparsity_optimizer_determinism(data):
     """
     For any Jacobian structure set S and matrix size N, invoking

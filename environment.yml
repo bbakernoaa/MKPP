@@ -7,15 +7,18 @@ dependencies:
   - sympy           # For analytical Jacobian and Adjoint generation
   - networkx        # For Tarjan SCC algorithm and mechanism block/graph analysis
   - pyyaml          # For parsing OpenAtmos/MICM chemistry specs
+  - matplotlib      # For network graph generation in diagnostic reports
   - cmake>=3.24     # C++ Build system
   - ninja           # Fast C++ builder
   - compilers       # Meta-package providing C/C++/Fortran compilers (gcc/g++/gfortran)
   - pre-commit      # Git hooks
   - ruff            # Python ultra-fast linting/formatting
   - pytest          # Python AOT compiler test framework
+  - pytest-xdist    # Parallel test executor
   - mkdocs-material # MkDocs Material theme for GitHub Pages documentation
   - mkdocstrings    # Autodoc plugin for Python docstrings
   - mkdocstrings-python
+  - jsonschema
   - pip
   - pip:
     - -e .          # Install the local python package in editable mode (once we scaffold it)

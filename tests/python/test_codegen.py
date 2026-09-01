@@ -127,13 +127,33 @@ def test_sorted_artifact_metadata(tmp_path):
 
     with open(results["manifest"]) as f:
         manifest = json.load(f)
-
     assert "solver_partition" in manifest
     assert manifest["solver_partition"]["sza_sorted"] is True
 
     with open(results["header"]) as f:
         content = f.read()
     assert "// SZA Workload Sorted: true" in content
+
+
+def test_template_declares_compiled_rate_units():
+    from mkpp.lowering import prepare_unified_jacobian
+    from mkpp.parser import load_mechanism
+    from mkpp.template_context import build_template_context
+    from mkpp.template_engine import render_template
+
+    # Expression-heavy fluxes belong in compiled units, not every consuming TU.
+    mech = load_mechanism("mechanisms/openatmos/chapman/mechanism.json")
+    mech.sympy_metadata = prepare_unified_jacobian(mech)
+    ctx = build_template_context(mech)
+    rendered = render_template("header.j2", ctx)
+    assert "compute_rates_chunk_0" in rendered
+
+    # The same contract applies to larger mechanisms.
+    mech_saprc = load_mechanism("mechanisms/openatmos/saprc99_mini/mechanism.json")
+    mech_saprc.sympy_metadata = prepare_unified_jacobian(mech_saprc)
+    ctx_saprc = build_template_context(mech_saprc)
+    rendered_saprc = render_template("header.j2", ctx_saprc)
+    assert "compute_rates_chunk_0" in rendered_saprc
 
 
 def test_continuous_transition_annotations(tmp_path):
@@ -231,10 +251,11 @@ def test_codegen_emits_sympy_jacobian(tmp_path):
     with open(results["header"]) as f:
         content = f.read()
 
-    # The derivative of d[O]/dt (which is 2*J_0*[O2]) with respect to [O2] is 2*J_0.
-    # Therefore, J_block(1, 0) should be assigned 2*jvals[0].
-    assert "J_block(" in content
-    assert "jvals[0]" in content
+    # The derivative lives in a compiled Jacobian unit, while the public
+    # header retains only the stable dispatch declaration.
+    assert "compute_jacobian_chunk_0" in content
+    compiled_source = next(path for path in results["compiled_sources"] if path.endswith("/jacobian.cpp"))
+    assert "jvals[0]" in open(compiled_source).read()
 
 
 def test_all_rosenbrock_tableaus_codegen(tmp_path):
@@ -340,8 +361,8 @@ def test_checkpoint_buffer_emitted_when_adjoint_true(tmp_path):
     assert "std::vector" not in content
 
 
-def test_checkpoint_buffer_not_emitted_when_adjoint_false(tmp_path):
-    """Verify CheckpointBuffer struct is NOT emitted when adjoint=False (Req 6.1, 6.3)."""
+def test_checkpoint_buffer_is_always_emitted_behind_the_compiler_guard(tmp_path):
+    """Sensitivity APIs are selected by MKPP_ENABLE_ADJOINT, not regeneration."""
     from mkpp.codegen import generate_headers
     from mkpp.model import (
         AerosolRepresentation,
@@ -376,8 +397,10 @@ def test_checkpoint_buffer_not_emitted_when_adjoint_false(tmp_path):
     with open(results["header"]) as f:
         content = f.read()
 
-    # CheckpointBuffer must NOT be present when adjoint is disabled
-    assert "CheckpointBuffer" not in content
+    assert "#ifdef MKPP_ENABLE_ADJOINT" in content
+    assert "struct CheckpointBuffer" in content
+    assert "integrate_adj" in content
+    assert "integrate_tlm" in content
 
 
 def test_checkpoint_buffer_gpu_safe(tmp_path):

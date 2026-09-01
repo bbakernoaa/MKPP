@@ -1,0 +1,638 @@
+schema_version: 1
+version: 1.0.0
+mechanism:
+  id: saprc99
+  version: 1.0.0
+  sha256: e65ad349e86b13462bbf55df89934825dad5c784368b04276e5096ad086ee3c5
+initial_state:
+  O3:
+    value: 1.0e-12
+    unit: mol m-3
+  H2O2:
+    value: 1.0e-12
+    unit: mol m-3
+  'NO':
+    value: 1.0e-12
+    unit: mol m-3
+  NO2:
+    value: 1.0e-12
+    unit: mol m-3
+  NO3:
+    value: 1.0e-12
+    unit: mol m-3
+  N2O5:
+    value: 1.0e-12
+    unit: mol m-3
+  HONO:
+    value: 1.0e-12
+    unit: mol m-3
+  HNO3:
+    value: 1.0e-12
+    unit: mol m-3
+  HNO4:
+    value: 1.0e-12
+    unit: mol m-3
+  SO2:
+    value: 1.0e-12
+    unit: mol m-3
+  H2SO4:
+    value: 1.0e-12
+    unit: mol m-3
+  CO:
+    value: 1.0e-12
+    unit: mol m-3
+  HCHO:
+    value: 1.0e-12
+    unit: mol m-3
+  CCHO:
+    value: 1.0e-12
+    unit: mol m-3
+  RCHO:
+    value: 1.0e-12
+    unit: mol m-3
+  ACET:
+    value: 1.0e-12
+    unit: mol m-3
+  MEK:
+    value: 1.0e-12
+    unit: mol m-3
+  HCOOH:
+    value: 1.0e-12
+    unit: mol m-3
+  MEOH:
+    value: 1.0e-12
+    unit: mol m-3
+  CCO_OH:
+    value: 1.0e-12
+    unit: mol m-3
+  RCO_OH:
+    value: 1.0e-12
+    unit: mol m-3
+  GLY:
+    value: 1.0e-12
+    unit: mol m-3
+  MGLY:
+    value: 1.0e-12
+    unit: mol m-3
+  BACL:
+    value: 1.0e-12
+    unit: mol m-3
+  CRES:
+    value: 1.0e-12
+    unit: mol m-3
+  BALD:
+    value: 1.0e-12
+    unit: mol m-3
+  ISOPROD:
+    value: 1.0e-12
+    unit: mol m-3
+  METHACRO:
+    value: 1.0e-12
+    unit: mol m-3
+  MVK:
+    value: 1.0e-12
+    unit: mol m-3
+  PROD2:
+    value: 1.0e-12
+    unit: mol m-3
+  DCB1:
+    value: 1.0e-12
+    unit: mol m-3
+  DCB2:
+    value: 1.0e-12
+    unit: mol m-3
+  DCB3:
+    value: 1.0e-12
+    unit: mol m-3
+  ETHENE:
+    value: 1.0e-12
+    unit: mol m-3
+  ISOPRENE:
+    value: 1.0e-12
+    unit: mol m-3
+  ALK1:
+    value: 1.0e-12
+    unit: mol m-3
+  ALK2:
+    value: 1.0e-12
+    unit: mol m-3
+  ALK3:
+    value: 1.0e-12
+    unit: mol m-3
+  ALK4:
+    value: 1.0e-12
+    unit: mol m-3
+  ALK5:
+    value: 1.0e-12
+    unit: mol m-3
+  ARO1:
+    value: 1.0e-12
+    unit: mol m-3
+  ARO2:
+    value: 1.0e-12
+    unit: mol m-3
+  OLE1:
+    value: 1.0e-12
+    unit: mol m-3
+  OLE2:
+    value: 1.0e-12
+    unit: mol m-3
+  TERP:
+    value: 1.0e-12
+    unit: mol m-3
+  RNO3:
+    value: 1.0e-12
+    unit: mol m-3
+  NPHE:
+    value: 1.0e-12
+    unit: mol m-3
+  PHEN:
+    value: 1.0e-12
+    unit: mol m-3
+  PAN:
+    value: 1.0e-12
+    unit: mol m-3
+  PAN2:
+    value: 1.0e-12
+    unit: mol m-3
+  PBZN:
+    value: 1.0e-12
+    unit: mol m-3
+  MA_PAN:
+    value: 1.0e-12
+    unit: mol m-3
+  CCO_OOH:
+    value: 1.0e-12
+    unit: mol m-3
+  RCO_O2:
+    value: 1.0e-12
+    unit: mol m-3
+  RCO_OOH:
+    value: 1.0e-12
+    unit: mol m-3
+  XN:
+    value: 1.0e-12
+    unit: mol m-3
+  XC:
+    value: 1.0e-12
+    unit: mol m-3
+  O3P:
+    value: 1.0e-12
+    unit: mol m-3
+  O1D:
+    value: 1.0e-12
+    unit: mol m-3
+  OH:
+    value: 1.0e-12
+    unit: mol m-3
+  HO2:
+    value: 1.0e-12
+    unit: mol m-3
+  C_O2:
+    value: 1.0e-12
+    unit: mol m-3
+  COOH:
+    value: 1.0e-12
+    unit: mol m-3
+  ROOH:
+    value: 1.0e-12
+    unit: mol m-3
+  RO2_R:
+    value: 1.0e-12
+    unit: mol m-3
+  R2O2:
+    value: 1.0e-12
+    unit: mol m-3
+  RO2_N:
+    value: 1.0e-12
+    unit: mol m-3
+  HOCOO:
+    value: 1.0e-12
+    unit: mol m-3
+  CCO_O2:
+    value: 1.0e-12
+    unit: mol m-3
+  BZCO_O2:
+    value: 1.0e-12
+    unit: mol m-3
+  BZNO2_O:
+    value: 1.0e-12
+    unit: mol m-3
+  BZ_O:
+    value: 1.0e-12
+    unit: mol m-3
+  MA_RCO3:
+    value: 1.0e-12
+    unit: mol m-3
+  TBU_O:
+    value: 1.0e-12
+    unit: mol m-3
+  AIR:
+    value: 1.0e-12
+    unit: mol m-3
+  O2:
+    value: 1.0e-12
+    unit: mol m-3
+  H2O:
+    value: 1.0e-12
+    unit: mol m-3
+  H2:
+    value: 1.0e-12
+    unit: mol m-3
+  CH4:
+    value: 1.0e-12
+    unit: mol m-3
+  M:
+    value: 40.0
+    unit: mol m-3
+  N2:
+    value: 40.0
+    unit: mol m-3
+  RO2:
+    value: 40.0
+    unit: mol m-3
+environment:
+  temperature:
+    value: 298.15
+    unit: K
+  pressure:
+    value: 101325.0
+    unit: Pa
+forcing:
+  j_saprc99.yaml_0000:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-06
+    - time_seconds: 300.0
+      value: 1.05e-06
+    - time_seconds: 600.0
+      value: 1.0e-06
+  j_saprc99.yaml_0014:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-06
+    - time_seconds: 300.0
+      value: 1.05e-06
+    - time_seconds: 600.0
+      value: 1.0e-06
+  j_saprc99.yaml_0015:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-06
+    - time_seconds: 300.0
+      value: 1.05e-06
+    - time_seconds: 600.0
+      value: 1.0e-06
+  j_saprc99.yaml_0016:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-06
+    - time_seconds: 300.0
+      value: 1.05e-06
+    - time_seconds: 600.0
+      value: 1.0e-06
+  j_saprc99.yaml_0017:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-06
+    - time_seconds: 300.0
+      value: 1.05e-06
+    - time_seconds: 600.0
+      value: 1.0e-06
+  j_saprc99.yaml_0021:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-06
+    - time_seconds: 300.0
+      value: 1.05e-06
+    - time_seconds: 600.0
+      value: 1.0e-06
+  j_saprc99.yaml_0022:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-06
+    - time_seconds: 300.0
+      value: 1.05e-06
+    - time_seconds: 600.0
+      value: 1.0e-06
+  j_saprc99.yaml_0027:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-06
+    - time_seconds: 300.0
+      value: 1.05e-06
+    - time_seconds: 600.0
+      value: 1.0e-06
+  j_saprc99.yaml_0033:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-06
+    - time_seconds: 300.0
+      value: 1.05e-06
+    - time_seconds: 600.0
+      value: 1.0e-06
+  j_saprc99.yaml_0040:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-06
+    - time_seconds: 300.0
+      value: 1.05e-06
+    - time_seconds: 600.0
+      value: 1.0e-06
+  j_saprc99.yaml_0122:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-06
+    - time_seconds: 300.0
+      value: 1.05e-06
+    - time_seconds: 600.0
+      value: 1.0e-06
+  j_saprc99.yaml_0123:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-06
+    - time_seconds: 300.0
+      value: 1.05e-06
+    - time_seconds: 600.0
+      value: 1.0e-06
+  j_saprc99.yaml_0130:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-06
+    - time_seconds: 300.0
+      value: 1.05e-06
+    - time_seconds: 600.0
+      value: 1.0e-06
+  j_saprc99.yaml_0133:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-06
+    - time_seconds: 300.0
+      value: 1.05e-06
+    - time_seconds: 600.0
+      value: 1.0e-06
+  j_saprc99.yaml_0136:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-06
+    - time_seconds: 300.0
+      value: 1.05e-06
+    - time_seconds: 600.0
+      value: 1.0e-06
+  j_saprc99.yaml_0138:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-06
+    - time_seconds: 300.0
+      value: 1.05e-06
+    - time_seconds: 600.0
+      value: 1.0e-06
+  j_saprc99.yaml_0141:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-06
+    - time_seconds: 300.0
+      value: 1.05e-06
+    - time_seconds: 600.0
+      value: 1.0e-06
+  j_saprc99.yaml_0143:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-06
+    - time_seconds: 300.0
+      value: 1.05e-06
+    - time_seconds: 600.0
+      value: 1.0e-06
+  j_saprc99.yaml_0144:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-06
+    - time_seconds: 300.0
+      value: 1.05e-06
+    - time_seconds: 600.0
+      value: 1.0e-06
+  j_saprc99.yaml_0145:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-06
+    - time_seconds: 300.0
+      value: 1.05e-06
+    - time_seconds: 600.0
+      value: 1.0e-06
+  j_saprc99.yaml_0148:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-06
+    - time_seconds: 300.0
+      value: 1.05e-06
+    - time_seconds: 600.0
+      value: 1.0e-06
+  j_saprc99.yaml_0151:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-06
+    - time_seconds: 300.0
+      value: 1.05e-06
+    - time_seconds: 600.0
+      value: 1.0e-06
+  j_saprc99.yaml_0158:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-06
+    - time_seconds: 300.0
+      value: 1.05e-06
+    - time_seconds: 600.0
+      value: 1.0e-06
+  j_saprc99.yaml_0164:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-06
+    - time_seconds: 300.0
+      value: 1.05e-06
+    - time_seconds: 600.0
+      value: 1.0e-06
+  j_saprc99.yaml_0168:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-06
+    - time_seconds: 300.0
+      value: 1.05e-06
+    - time_seconds: 600.0
+      value: 1.0e-06
+  j_saprc99.yaml_0172:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-06
+    - time_seconds: 300.0
+      value: 1.05e-06
+    - time_seconds: 600.0
+      value: 1.0e-06
+  j_saprc99.yaml_0174:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-06
+    - time_seconds: 300.0
+      value: 1.05e-06
+    - time_seconds: 600.0
+      value: 1.0e-06
+  j_saprc99.yaml_0176:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-06
+    - time_seconds: 300.0
+      value: 1.05e-06
+    - time_seconds: 600.0
+      value: 1.0e-06
+  j_saprc99.yaml_0180:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-06
+    - time_seconds: 300.0
+      value: 1.05e-06
+    - time_seconds: 600.0
+      value: 1.0e-06
+  j_saprc99.yaml_0182:
+    unit: s-1
+    points:
+    - time_seconds: 0.0
+      value: 1.0e-06
+    - time_seconds: 300.0
+      value: 1.05e-06
+    - time_seconds: 600.0
+      value: 1.0e-06
+integration:
+  start_seconds: 0.0
+  horizon_seconds: 600.0
+  checkpoints_seconds:
+  - 300.0
+  - 600.0
+  forcing_boundaries_seconds:
+  - 0.0
+  - 300.0
+  - 600.0
+accuracy:
+  rtol: 1.0e-06
+  atol_by_species:
+    O3: 1.0e-15
+    H2O2: 1.0e-15
+    'NO': 1.0e-15
+    NO2: 1.0e-15
+    NO3: 1.0e-15
+    N2O5: 1.0e-15
+    HONO: 1.0e-15
+    HNO3: 1.0e-15
+    HNO4: 1.0e-15
+    SO2: 1.0e-15
+    H2SO4: 1.0e-15
+    CO: 1.0e-15
+    HCHO: 1.0e-15
+    CCHO: 1.0e-15
+    RCHO: 1.0e-15
+    ACET: 1.0e-15
+    MEK: 1.0e-15
+    HCOOH: 1.0e-15
+    MEOH: 1.0e-15
+    CCO_OH: 1.0e-15
+    RCO_OH: 1.0e-15
+    GLY: 1.0e-15
+    MGLY: 1.0e-15
+    BACL: 1.0e-15
+    CRES: 1.0e-15
+    BALD: 1.0e-15
+    ISOPROD: 1.0e-15
+    METHACRO: 1.0e-15
+    MVK: 1.0e-15
+    PROD2: 1.0e-15
+    DCB1: 1.0e-15
+    DCB2: 1.0e-15
+    DCB3: 1.0e-15
+    ETHENE: 1.0e-15
+    ISOPRENE: 1.0e-15
+    ALK1: 1.0e-15
+    ALK2: 1.0e-15
+    ALK3: 1.0e-15
+    ALK4: 1.0e-15
+    ALK5: 1.0e-15
+    ARO1: 1.0e-15
+    ARO2: 1.0e-15
+    OLE1: 1.0e-15
+    OLE2: 1.0e-15
+    TERP: 1.0e-15
+    RNO3: 1.0e-15
+    NPHE: 1.0e-15
+    PHEN: 1.0e-15
+    PAN: 1.0e-15
+    PAN2: 1.0e-15
+    PBZN: 1.0e-15
+    MA_PAN: 1.0e-15
+    CCO_OOH: 1.0e-15
+    RCO_O2: 1.0e-15
+    RCO_OOH: 1.0e-15
+    XN: 1.0e-15
+    XC: 1.0e-15
+    O3P: 1.0e-15
+    O1D: 1.0e-15
+    OH: 1.0e-15
+    HO2: 1.0e-15
+    C_O2: 1.0e-15
+    COOH: 1.0e-15
+    ROOH: 1.0e-15
+    RO2_R: 1.0e-15
+    R2O2: 1.0e-15
+    RO2_N: 1.0e-15
+    HOCOO: 1.0e-15
+    CCO_O2: 1.0e-15
+    BZCO_O2: 1.0e-15
+    BZNO2_O: 1.0e-15
+    BZ_O: 1.0e-15
+    MA_RCO3: 1.0e-15
+    TBU_O: 1.0e-15
+    AIR: 1.0e-15
+    O2: 1.0e-15
+    H2O: 1.0e-15
+    H2: 1.0e-15
+    CH4: 1.0e-15
+    M: 1.0e-15
+    N2: 1.0e-15
+    RO2: 1.0e-15
+  positivity_policy: nonnegative_with_scaled_roundoff
+  conservation_checks: []
+reference:
+  implementation: scipy-radau
+  max_refinements: 3
+scenario_id: saprc99-calibration-v1
+role: calibration
+workload:
+  cells:
+  - 1
+  - 10
+  ensemble_seed: 1701

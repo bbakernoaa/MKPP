@@ -42,6 +42,7 @@ struct MKPPDualFunctor {
 // ---------------------------------------------------------------------------
 int main(int argc, char* argv[]) {
     Kokkos::initialize(argc, argv);
+    int exit_code = 0;
     {
         int num_cells = 1000;
         int num_steps = 100;
@@ -61,21 +62,35 @@ int main(int argc, char* argv[]) {
         std::cout << "Timesteps  : " << num_steps << std::endl;
         std::cout << "Step Size  : " << dt << " s\n" << std::endl;
 
-        // 1. Setup MICM System
+        // Initial concentration values
+        const double init_O  = 1.0e10;
+        const double init_O2 = 2.0e10; // fixed background in MKPP
+        const double init_O3 = 3.0e10;
+        const double init_M  = 4.0e10; // fixed background in MKPP
+
+        const double J1_val = 1.0e-12; // J(O2 hv)
+        const double J3_val = 1.0e-4;  // J(O3 hv)
+
+        // 1. Setup MICM System with O and O3 as active species and fixed O2, M
+        // Matching MKPP Chapman system:
+        // R1: O2 + hv -> 2 O          (rate = J1 * [O2])
+        // R2: O + O2 + M -> O3 + M    (rate = 6e-34 * [M] * [O2] * [O])
+        // R3: O3 + hv -> O + O2       (rate = J3 * [O3])
+        // R4: O + O3 -> 2 O2          (rate = 8e-12 * [O] * [O3])
         micm::Species o("O"), o2("O2"), o3("O3"), m("M");
         micm::Phase gas_phase{"gas", std::vector<micm::PhaseSpecies>{o, o2, o3, m}};
         micm::System system{gas_phase};
 
         micm::Process r1 = micm::ChemicalReactionBuilder()
             .SetReactants({o2})
-            .SetProducts({micm::StoichSpecies(o, 2)})
+            .SetProducts({micm::StoichSpecies(o, 2), micm::StoichSpecies(o2, 1)})
             .SetRateConstant(micm::UserDefinedRateConstantParameters{.label_ = "J1"})
             .SetPhase(gas_phase)
             .Build();
 
         micm::Process r2 = micm::ChemicalReactionBuilder()
             .SetReactants({o, o2, m})
-            .SetProducts({micm::StoichSpecies(o3, 1), micm::StoichSpecies(m, 1)})
+            .SetProducts({micm::StoichSpecies(o3, 1), micm::StoichSpecies(o2, 1), micm::StoichSpecies(m, 1)})
             .SetRateConstant(micm::ArrheniusRateConstantParameters{.A_ = 6.0e-34})
             .SetPhase(gas_phase)
             .Build();
@@ -103,41 +118,51 @@ int main(int argc, char* argv[]) {
                     .SetIgnoreUnusedSpecies(true)
                     .Build();
 
-        auto micm_state = micm_solver.GetState();
-        micm_state.SetAbsoluteTolerances(std::vector<double>(4, 1.0e-12));
-        micm_state.SetRelativeTolerance(1.0e-4);
-        micm_state.conditions_[0].temperature_ = 288.15;
-        micm_state.conditions_[0].pressure_ = 101325.0; // Pa
-        micm_state.SetCustomRateParameter("J1", 1.0e-12);
-        micm_state.SetCustomRateParameter("J3", 1.0e-4);
-
-        micm_state.variables_[0] = {1.0e10, 2.0e10, 3.0e10, 4.0e10}; // [O, O2, O3, M]
-
-        // 2. Warmup MICM
-        micm_solver.Solve(dt, micm_state);
-
-        // 3. Benchmark MICM
-        auto start_micm = std::chrono::high_resolution_clock::now();
-
+        // 2. Setup MICM multi-cell state
         auto s = micm_solver.GetState(num_cells);
+        size_t micm_idx_O  = s.variable_map_.at("O");
+        size_t micm_idx_O2 = s.variable_map_.at("O2");
+        size_t micm_idx_O3 = s.variable_map_.at("O3");
+        size_t micm_idx_M  = s.variable_map_.at("M");
+
         for (int cell = 0; cell < num_cells; ++cell) {
             s.conditions_[cell].temperature_ = 288.15;
             s.conditions_[cell].pressure_ = 101325.0;
-            s.variables_[cell] = {1.0e10, 2.0e10, 3.0e10, 4.0e10};
+            s.variables_[cell][micm_idx_O]  = init_O;
+            s.variables_[cell][micm_idx_O2] = init_O2;
+            s.variables_[cell][micm_idx_O3] = init_O3;
+            s.variables_[cell][micm_idx_M]  = init_M;
         }
-        std::vector<double> custom_rates(num_cells, 1.0e-12);
-        s.SetCustomRateParameter("J1", custom_rates);
-        std::vector<double> custom_rates2(num_cells, 1.0e-4);
-        s.SetCustomRateParameter("J3", custom_rates2);
 
+        std::vector<double> custom_j1(num_cells, J1_val);
+        std::vector<double> custom_j3(num_cells, J3_val);
+        s.SetCustomRateParameter("J1", custom_j1);
+        s.SetCustomRateParameter("J3", custom_j3);
+
+        micm_solver.UpdateStateParameters(s);
+
+        // Warmup MICM
+        micm_solver.Solve(dt, s);
+
+        // Re-initialize MICM state for benchmark
+        for (int cell = 0; cell < num_cells; ++cell) {
+            s.variables_[cell][micm_idx_O]  = init_O;
+            s.variables_[cell][micm_idx_O2] = init_O2;
+            s.variables_[cell][micm_idx_O3] = init_O3;
+            s.variables_[cell][micm_idx_M]  = init_M;
+        }
+
+        micm_solver.UpdateStateParameters(s);
+
+        // Benchmark MICM (timing only solve calls)
+        auto start_micm = std::chrono::high_resolution_clock::now();
         for (int step = 0; step < num_steps; ++step) {
             micm_solver.Solve(dt, s);
         }
-
         auto end_micm = std::chrono::high_resolution_clock::now();
         double micm_time_ms = std::chrono::duration<double, std::milli>(end_micm - start_micm).count();
 
-        // 4. Setup MKPP
+        // 3. Setup MKPP
         using ViewType = Kokkos::View<double**, Kokkos::LayoutLeft, typename ExecSpace::memory_space>;
         ViewType mkpp_state("state", num_cells, 4);
         Kokkos::View<double*, typename ExecSpace::memory_space> mkpp_jvals("jvals", 2);
@@ -145,24 +170,34 @@ int main(int argc, char* argv[]) {
         auto h_state = Kokkos::create_mirror_view(mkpp_state);
         auto h_jvals = Kokkos::create_mirror_view(mkpp_jvals);
 
-        h_jvals(0) = 1.0e-12; // J1
-        h_jvals(1) = 1.0e-4;  // J3
+        h_jvals(0) = J1_val; // J1
+        h_jvals(1) = J3_val; // J3
         Kokkos::deep_copy(mkpp_jvals, h_jvals);
 
         for (int i = 0; i < num_cells; ++i) {
-            h_state(i, 0) = 1.0e10; // O
-            h_state(i, 1) = 2.0e10; // O2
-            h_state(i, 2) = 3.0e10; // O3
-            h_state(i, 3) = 4.0e10; // M
+            h_state(i, mkpp::Species::O)  = init_O;
+            h_state(i, mkpp::Species::O2) = init_O2;
+            h_state(i, mkpp::Species::O3) = init_O3;
+            h_state(i, mkpp::Species::M)  = init_M;
         }
         Kokkos::deep_copy(mkpp_state, h_state);
 
-        // 5. Warmup MKPP
+        // Warmup MKPP
         Kokkos::parallel_for("warmup", Kokkos::RangePolicy<ExecSpace>(0, num_cells),
                              MKPPDualFunctor(mkpp_state, dt, mkpp_jvals.data()));
         Kokkos::fence();
 
-        // 6. Benchmark MKPP
+        // Re-initialize MKPP state for benchmark
+        for (int i = 0; i < num_cells; ++i) {
+            h_state(i, mkpp::Species::O)  = init_O;
+            h_state(i, mkpp::Species::O2) = init_O2;
+            h_state(i, mkpp::Species::O3) = init_O3;
+            h_state(i, mkpp::Species::M)  = init_M;
+        }
+        Kokkos::deep_copy(mkpp_state, h_state);
+        Kokkos::fence();
+
+        // Benchmark MKPP (timing only kernel execution and final fence)
         auto start_mkpp = std::chrono::high_resolution_clock::now();
         for (int step = 0; step < num_steps; ++step) {
             Kokkos::parallel_for("step", Kokkos::RangePolicy<ExecSpace>(0, num_cells),
@@ -172,7 +207,28 @@ int main(int argc, char* argv[]) {
         auto end_mkpp = std::chrono::high_resolution_clock::now();
         double mkpp_time_ms = std::chrono::duration<double, std::milli>(end_mkpp - start_mkpp).count();
 
-        // 7. Results
+        // 4. Parity Verification
+        Kokkos::deep_copy(h_state, mkpp_state);
+
+        double max_abs_err = 0.0;
+        double max_rel_err = 0.0;
+
+        for (int cell = 0; cell < num_cells; ++cell) {
+            double mkpp_O  = h_state(cell, mkpp::Species::O);
+            double micm_O  = s.variables_[cell][micm_idx_O];
+            double mkpp_O3 = h_state(cell, mkpp::Species::O3);
+            double micm_O3 = s.variables_[cell][micm_idx_O3];
+
+            double abs_O = std::abs(mkpp_O - micm_O);
+            double rel_O = abs_O / std::max(1.0e-12, std::abs(micm_O));
+
+            double abs_O3 = std::abs(mkpp_O3 - micm_O3);
+            double rel_O3 = abs_O3 / std::max(1.0e-12, std::abs(micm_O3));
+
+            max_abs_err = std::max(max_abs_err, std::max(abs_O, abs_O3));
+            max_rel_err = std::max(max_rel_err, std::max(rel_O, rel_O3));
+        }
+
         std::cout << std::left << std::setw(28) << "Metric"
                   << std::left << std::setw(18) << "MKPP C++ (AOT)"
                   << std::left << std::setw(18) << "MICM C++"
@@ -192,8 +248,25 @@ int main(int argc, char* argv[]) {
                   << std::left << std::setw(18) << std::scientific << std::setprecision(2) << micm_throughput
                   << "--" << std::endl;
 
+        std::cout << std::left << std::setw(28) << "Max Abs Error"
+                  << std::left << std::setw(18) << std::scientific << std::setprecision(3) << max_abs_err
+                  << "--                --" << std::endl;
+        std::cout << std::left << std::setw(28) << "Max Rel Error"
+                  << std::left << std::setw(18) << std::scientific << std::setprecision(3) << max_rel_err
+                  << "--                --" << std::endl;
+
         std::cout << "==========================================================================" << std::endl;
+
+        const double parity_threshold = 0.02; // 2.0% max relative error across 100 integration steps
+        if (max_rel_err > parity_threshold) {
+            std::cerr << "FATAL ERROR: Chapman parity check failed: max relative error "
+                      << max_rel_err << " exceeds threshold " << parity_threshold << "." << std::endl;
+            exit_code = 1;
+        } else {
+            std::cout << "SUCCESS: Chapman parity check passed (max rel error "
+                      << max_rel_err << " <= " << parity_threshold << ")." << std::endl;
+        }
     }
     Kokkos::finalize();
-    return 0;
+    return exit_code;
 }

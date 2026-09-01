@@ -1,0 +1,15 @@
+#INCLUDE chapman.spc
+#INCLUDE chapman.eqn
+
+{ J1 and J3 are named, runner-supplied photolysis rate constants [s-1]. }
+#INLINE F90_GLOBAL
+  REAL(dp), PUBLIC :: J1 = 0.0_dp
+  REAL(dp), PUBLIC :: J3 = 0.0_dp
+#ENDINLINE
+
+#INITVALUES
+  CFACTOR = 1.0;
+  O  = 1.0e10;
+  O2 = 5.1e18;
+  O3 = 3.0e10;
+  M  = 2.46e19;

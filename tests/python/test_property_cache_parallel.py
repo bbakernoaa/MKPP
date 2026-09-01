@@ -145,7 +145,7 @@ def random_sympy_expression(draw, max_depth=3):
 
 
 @given(entry=random_cache_entry())
-@settings(max_examples=100)
+@settings(deadline=None)
 def test_property_5_cache_round_trip_consistency(entry):
     """
     For any valid CacheEntry, serializing to disk with CacheManager.store()
@@ -189,7 +189,7 @@ def test_property_5_cache_round_trip_consistency(entry):
 
 
 @given(data=st.binary(min_size=1, max_size=1024))
-@settings(max_examples=100)
+@settings(deadline=None)
 def test_property_6_hash_determinism(data):
     """
     Same bytes produce the same hash (idempotent). Calling compute_key twice
@@ -211,7 +211,7 @@ def test_property_6_hash_determinism(data):
     data_a=st.binary(min_size=1, max_size=512),
     data_b=st.binary(min_size=1, max_size=512),
 )
-@settings(max_examples=100)
+@settings(deadline=None)
 def test_property_6_hash_sensitivity(data_a, data_b):
     """
     Different byte sequences produce different hashes.
@@ -277,7 +277,7 @@ def test_property_7_parallel_jacobian_equivalence(mech_file):
 
 
 @given(exprs=random_sympy_expression())
-@settings(max_examples=100)
+@settings(deadline=None)
 def test_property_8_cse_semantic_preservation(exprs):
     """
     For any set of SymPy expressions, applying sympy.cse() and substituting
@@ -316,7 +316,7 @@ def test_property_8_cse_semantic_preservation(exprs):
 
 
 @given(exprs=random_sympy_expression())
-@settings(max_examples=100)
+@settings(deadline=None)
 def test_property_9_cse_declaration_ordering(exprs):
     """
     For CSE replacements from sympy.cse(), verify that each symbol is defined

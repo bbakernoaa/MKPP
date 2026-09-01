@@ -119,8 +119,12 @@ int main(void) {
     double* temp = (double*)malloc(num_cells * sizeof(double));
     double* pres = (double*)malloc(num_cells * sizeof(double));
     double* rho  = (double*)malloc(num_cells * sizeof(double));
+    double* photo = (double*)calloc(num_cells * MKPP_NUM_PHOTOLYSIS, sizeof(double));
 
     mkpp_set_state_ptrs(handle, conc, temp, pres, rho);
+    if (MKPP_NUM_PHOTOLYSIS > 0) {
+        mkpp_set_photolysis_ptrs(handle, photo);
+    }
 
     // 3. Step chemistry
     if (mkpp_integrate(handle, 60.0) != MKPP_SUCCESS) {
@@ -131,7 +135,7 @@ int main(void) {
 
     // 4. Teardown
     mkpp_destroy_handle(handle);
-    free(conc); free(temp); free(pres); free(rho);
+    free(conc); free(temp); free(pres); free(rho); free(photo);
     return 0;
 }
 ```
@@ -151,12 +155,17 @@ int main() {
     ctx.initialize();
 
     std::size_t num_species = ctx.getSpeciesCount();
+    std::size_t num_photo = ctx.getPhotolysisCount();
     std::vector<double> conc(num_cells * num_species, 1.0e-9);
     std::vector<double> temp(num_cells, 298.15);
     std::vector<double> pres(num_cells, 101325.0);
     std::vector<double> rho(num_cells, 2.45e19);
+    std::vector<double> photo(num_cells * num_photo, 1.0e-5);
 
     ctx.setStatePointers(conc.data(), temp.data(), pres.data(), rho.data());
+    if (num_photo > 0) {
+        ctx.setPhotolysisPointers(photo.data());
+    }
     ctx.integrate(60.0);
 
     std::cout << "C++ integration completed successfully.\n";

@@ -192,3 +192,101 @@ def test_arrhenius_micm_sign_convention():
     rate_val = rate_expr.subs({temp_sym: 300.0})
     expected_val = 2.15e-12 * sp.exp(-1735.0 / 300.0)
     assert abs(float(rate_val) - float(expected_val)) < 1e-15
+
+
+def test_troe_micm_sign_convention():
+    import sympy as sp
+    from mkpp.lowering import _evaluate_reaction_fluxes
+    from mkpp.model import PhaseMode, SpeciesDefinition
+
+    mech = MechanismDefinition(
+        name="troe_sign_test",
+        description="Test signed Troe Arrhenius convention",
+        aerosol_representation=AerosolRepresentation.BULK,
+        species=[
+            SpeciesDefinition(name="A", phase=PhaseMode.GAS),
+            SpeciesDefinition(name="M", phase=PhaseMode.GAS, role="fixed"),
+        ],
+        phases=[],
+        reactions=[
+            ReactionDefinition(
+                reaction_type="TROE",
+                reactants=["A"],
+                products=["A"],
+                rate_expression="",
+                parameters={
+                    "k0": {"A": 2.0, "B": 0.0, "C": 400.0},
+                    "kinf": {"A": 3.0, "B": 0.0, "C": 200.0},
+                    "Fc": 0.6,
+                    "N": 1.0,
+                },
+            )
+        ],
+    )
+
+    flux = _evaluate_reaction_fluxes(mech)["reaction_fluxes"][0]
+    temp = next(symbol for symbol in flux.free_symbols if symbol.name == "Temp")
+    concentration = next(symbol for symbol in flux.free_symbols if symbol.name == "C_A")
+    third_body = next(symbol for symbol in flux.free_symbols if symbol.name == "C_M")
+    rate = flux.subs({temp: 300.0, third_body: 1.0, concentration: 1.0})
+    k0 = 2.0 * sp.exp(400.0 / 300.0)
+    kinf = 3.0 * sp.exp(200.0 / 300.0)
+    ratio = k0 / kinf
+    expected = k0 / (1.0 + ratio) * 0.6 ** (1.0 / (1.0 + sp.log(ratio, 10) ** 2))
+    assert float(rate - expected) == pytest.approx(0.0, abs=1e-15)
+
+
+def test_rate_vector_hoisting():
+    from mkpp.lowering import prepare_unified_jacobian
+    from mkpp.parser import load_mechanism
+    from mkpp.template_context import build_template_context
+
+    mech = load_mechanism("mechanisms/openatmos/chapman/mechanism.json")
+    mech.sympy_metadata = prepare_unified_jacobian(mech)
+    ctx = build_template_context(mech)
+
+    assert "rate_flux_exprs" in ctx
+    assert len(ctx["rate_flux_exprs"]) == len(mech.reactions)
+    assert "rate_flux_cse" in ctx
+
+
+def test_cse_no_dead_temporaries():
+    import re
+
+    from mkpp.lowering import prepare_unified_jacobian
+    from mkpp.parser import load_mechanism
+    from mkpp.template_context import build_template_context
+
+    mech = load_mechanism("mechanisms/openatmos/chapman/mechanism.json")
+    mech.sympy_metadata = prepare_unified_jacobian(mech)
+    ctx = build_template_context(mech)
+
+    cse_list = ctx["rate_flux_cse"]
+    all_other_exprs = " ".join(
+        [r["expr"] for r in ctx["rate_flux_exprs"]] + ctx["f_exprs"] + [e[2] for e in ctx["jacobian_entries"]]
+    )
+    for cse in cse_list:
+        sym = cse["symbol"]
+        assert re.search(r"\b" + sym + r"\b", all_other_exprs), f"Dead temporary {sym} found!"
+
+
+def test_cse_topological_order():
+    import re
+
+    from mkpp.lowering import prepare_unified_jacobian
+    from mkpp.parser import load_mechanism
+    from mkpp.template_context import build_template_context
+
+    mech = load_mechanism("mechanisms/openatmos/chapman/mechanism.json")
+    mech.sympy_metadata = prepare_unified_jacobian(mech)
+    ctx = build_template_context(mech)
+
+    cse_list = ctx["rate_flux_cse"]
+    symbols_so_far = set()
+    for entry in cse_list:
+        sym = entry["symbol"]
+        expr = entry["expr"]
+        refs = re.findall(r"\bcse_tmp_\d+\b", expr)
+        for ref in refs:
+            assert ref in symbols_so_far, f"Forward reference {ref} in {sym} = {expr}"
+        symbols_so_far.add(sym)

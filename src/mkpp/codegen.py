@@ -75,6 +75,8 @@ def generate_headers(
     solver_name: str = "ros3",
     adjoint: bool = False,
     generate_host_api: bool = False,
+    simd_backend: str = "native",
+    emit_reference_backend: bool = False,
 ) -> dict[str, str]:
     """Emit the Kokkos headers and manifest artifact."""
     if not mech or not mech.species:
@@ -83,8 +85,11 @@ def generate_headers(
     out_path = Path(out_dir)
     out_path.mkdir(parents=True, exist_ok=True)
 
-    # 1. Build template context (handles all data preparation)
-    context = build_template_context(mech, solver_name, adjoint=adjoint)
+    # Sensitivity code is always emitted into the generated header, guarded by
+    # MKPP_ENABLE_ADJOINT.  That keeps a mechanism's chemistry artifact stable
+    # while allowing CMake to preprocess adjoint/TLM code away in forward-only
+    # builds.  ``adjoint`` remains accepted for CLI/API compatibility.
+    context = build_template_context(mech, solver_name, adjoint=True, simd_backend=simd_backend)
     # Add suffix to context for filename generation
     context["suffix"] = suffix
 
@@ -97,7 +102,49 @@ def generate_headers(
     with open(header_path, "w") as f:
         f.write(header_text)
 
-    results = {"header": str(header_path)}
+    compiled_sources = []
+    # Keep the public include at the output root while grouping its compiled
+    # implementation units under a mechanism-specific directory.
+    compiled_path = out_path / f"{mech.name}{suffix}"
+    compiled_path.mkdir(parents=True, exist_ok=True)
+    for kernel, chunks in (("rates", context["compiled_rate_chunks"]), ("jacobian", context["compiled_jacobian_chunks"])):
+        source_path = compiled_path / f"{kernel}.cpp"
+        rendered_chunks = []
+        for index, expressions in enumerate(chunks):
+            source_context = dict(context)
+            source_context.update({"compiled_kernel": kernel, "compiled_chunk_index": index, "compiled_expressions": expressions})
+            rendered_chunks.append(engine.render("compiled_kernel_chunk.cpp.j2", source_context))
+        with open(source_path, "w") as f:
+            f.write("\n".join(rendered_chunks))
+        for stale_path in compiled_path.glob(f"{kernel}_*.cpp"):
+            stale_path.unlink()
+        compiled_sources.append(str(source_path))
+
+    if emit_reference_backend:
+        for index, expressions in enumerate(context["compiled_lu_chunks"]):
+            source_context = dict(context)
+            source_context.update({"compiled_chunk_index": index, "compiled_expressions": expressions})
+            source_path = compiled_path / f"factorize_{index}.cpp"
+            with open(source_path, "w") as f:
+                f.write(engine.render("compiled_factorize_chunk.cpp.j2", source_context))
+            compiled_sources.append(str(source_path))
+    else:
+        for source_path in compiled_path.glob("factorize_*.cpp"):
+            source_path.unlink()
+
+    for kernel in ("solve",):
+        source_path = compiled_path / f"{kernel}.cpp"
+        with open(source_path, "w") as f:
+            f.write(engine.render(f"compiled_{kernel}.cpp.j2", context))
+        compiled_sources.append(str(source_path))
+
+    for kernel in ("supernodal_factorize", "supernodal_solve"):
+        source_path = compiled_path / f"{kernel}.cpp"
+        with open(source_path, "w") as f:
+            f.write(engine.render(f"{kernel}.cpp.j2", context))
+        compiled_sources.append(str(source_path))
+
+    results = {"header": str(header_path), "compiled_sources": compiled_sources}
 
     if generate_host_api:
         api_results = generate_host_api_headers(mech, out_dir=out_dir, solver_name=solver_name)
@@ -107,9 +154,11 @@ def generate_headers(
     manifest = {
         "mechanism": mech.name,
         "aerosol_representation": mech.aerosol_representation.value,
+        "simd_backend": simd_backend,
         "checksum": hashlib.sha256(mech.name.encode()).hexdigest(),
         "artifacts": [
             {"kind": "header", "file": header_path.name},
+            *({"kind": "compiled_kernel_source", "file": str(Path(source).relative_to(out_path))} for source in compiled_sources),
             {"kind": "adjoint_tlm_record", "differentiable": True},
         ],
     }
@@ -129,8 +178,18 @@ def generate_headers(
         manifest["solver_partition"] = partition_meta
 
     manifest_path = out_path / f"{mech.name}_manifest.json"
+    plan_json_path = compiled_path / "factorization_plan.json"
+    plan_markdown_path = compiled_path / "factorization_plan.md"
+    plan_json_path.write_text(engine.render("factorization_plan.json.j2", context), encoding="utf-8")
+    plan_markdown_path.write_text(engine.render("factorization_plan.md.j2", context), encoding="utf-8")
+    manifest["factorization_plan"] = {
+        "json": str(plan_json_path.relative_to(out_path)),
+        "markdown": str(plan_markdown_path.relative_to(out_path)),
+    }
     with open(manifest_path, "w") as f:
         json.dump(manifest, f, indent=2)
 
     results["manifest"] = str(manifest_path)
+    results["factorization_plan"] = str(plan_json_path)
+    results["factorization_plan_markdown"] = str(plan_markdown_path)
     return results

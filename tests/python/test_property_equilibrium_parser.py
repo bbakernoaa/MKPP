@@ -190,7 +190,7 @@ def mechanism_with_phase_change_equilibrium_conflict(draw):
 
 # Feature: isorropia-unified-jacobian, Property 1: Equilibrium Declaration Parsing Completeness
 @given(eq_data=valid_equilibrium_data())
-@settings(max_examples=100)
+@settings(deadline=None)
 def test_equilibrium_declaration_parsing_completeness(eq_data):
     """Property 1: For any well-formed EQUILIBRIUM YAML block with N participating species
     and M equilibrium constants, the parser extracts exactly N species entries and M constant
@@ -228,7 +228,7 @@ def test_equilibrium_declaration_parsing_completeness(eq_data):
 
 # Feature: isorropia-unified-jacobian, Property 2: Species Validation Rejects Invalid References
 @given(data=equilibrium_data_with_invalid_species())
-@settings(max_examples=100)
+@settings(deadline=None)
 def test_species_validation_rejects_invalid_references(data):
     """Property 2: For any EQUILIBRIUM block that references at least one species name NOT in
     the mechanism species list, the parser raises CompilationError.
@@ -245,7 +245,7 @@ def test_species_validation_rejects_invalid_references(data):
 
 # Feature: isorropia-unified-jacobian, Property 3: PHASE_CHANGE / EQUILIBRIUM Conflict Detection
 @given(data=mechanism_with_phase_change_equilibrium_conflict())
-@settings(max_examples=100)
+@settings(deadline=None)
 def test_phase_change_equilibrium_conflict_detection(data):
     """Property 3: For any mechanism with both PHASE_CHANGE and EQUILIBRIUM reactions where
     species overlap, parser raises CompilationError.

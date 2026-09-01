@@ -1,7 +1,11 @@
-import yaml
+import json
 
-with open("mechanisms/saprc99.yaml") as f:
-    data = yaml.safe_load(f)
+with open("mechanisms/openatmos/saprc99/mechanism.json") as f:
+    data = json.load(f)
+
+for reaction in data["reactions"]:
+    for side in ("reactants", "products"):
+        reaction[side] = {term["species name"]: term.get("coefficient", 1.0) for term in reaction.get(side, [])}
 
 rules = {"ALK1_SURR": ["ALK1", "ALK2", "ALK3"]}
 

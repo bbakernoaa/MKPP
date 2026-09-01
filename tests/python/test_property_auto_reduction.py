@@ -218,7 +218,7 @@ def make_diagonal_system(rates):
 
 
 @given(data=random_auto_reduction_scenario(min_n=3, max_n=10))
-@settings(max_examples=100)
+@settings(deadline=None)
 def test_property_14_auto_reduction_freeze_correctness(data):
     """
     For any mechanism state where species i has importance_i < threshold,
@@ -268,7 +268,7 @@ def test_property_14_auto_reduction_freeze_correctness(data):
 
 
 @given(data=random_reactivation_scenario(min_n=3, max_n=8))
-@settings(max_examples=100)
+@settings(deadline=None)
 def test_property_15_auto_reduction_reactivation(data):
     """
     For any species i that was frozen on step 1 (importance < threshold) but

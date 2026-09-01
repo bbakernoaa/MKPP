@@ -130,7 +130,7 @@ def mechanism_strategy(draw):
 
 
 @given(data=mechanism_strategy())
-@settings(max_examples=100, deadline=None)
+@settings(deadline=None)
 def test_property_1_roundtrip_equivalence(data):
     """
     For any valid MechanismDefinition and solver configuration:
@@ -196,7 +196,7 @@ def test_property_1_roundtrip_equivalence(data):
 
 
 @given(data=mechanism_strategy())
-@settings(max_examples=100, deadline=None)
+@settings(deadline=None)
 def test_property_1_generate_headers_deterministic(data):
     """
     For any valid MechanismDefinition and solver configuration, calling

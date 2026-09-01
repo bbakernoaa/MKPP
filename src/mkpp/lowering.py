@@ -100,6 +100,44 @@ def prepare_adjoint_and_tlm(mech: MechanismDefinition) -> dict[str, bool]:
     return {"adjoint_ready": True, "tlm_ready": True}
 
 
+def _process_rate_vector_cse(reaction_fluxes: list[sp.Expr]) -> tuple[list[tuple[sp.Symbol, sp.Expr]], list[sp.Expr]]:
+    """
+    Apply SymPy Common Subexpression Elimination (CSE) across reaction rate fluxes.
+    Assigns deterministic `cse_tmp_{n}` names in topological order and applies a
+    reachability filter to drop unreferenced temporaries.
+    """
+    if not reaction_fluxes:
+        return [], []
+
+    replacements, reduced_fluxes = sp.cse(reaction_fluxes, optimizations="basic")
+
+    # Reachability filter: collect all symbols referenced directly or indirectly by reduced_fluxes
+    used_symbols = set()
+    for flux_expr in reduced_fluxes:
+        if isinstance(flux_expr, sp.Basic):
+            used_symbols.update(flux_expr.free_symbols)
+
+    for sym, expr in reversed(replacements):
+        if sym in used_symbols:
+            if isinstance(expr, sp.Basic):
+                used_symbols.update(expr.free_symbols)
+
+    kept_replacements = [item for item in replacements if item[0] in used_symbols]
+
+    # Re-index kept replacements deterministically as cse_tmp_0, cse_tmp_1, ...
+    symbol_map = {sym: sp.Symbol(f"cse_tmp_{idx}", real=True) for idx, (sym, expr) in enumerate(kept_replacements)}
+
+    final_cse = []
+    for idx, (sym, expr) in enumerate(kept_replacements):
+        new_sym = symbol_map[sym]
+        new_expr = expr.subs(symbol_map)
+        final_cse.append((new_sym, new_expr))
+
+    final_reduced_fluxes = [r.subs(symbol_map) if isinstance(r, sp.Basic) else r for r in reduced_fluxes]
+
+    return final_cse, final_reduced_fluxes
+
+
 def _evaluate_reaction_fluxes(mech: MechanismDefinition) -> dict[str, Any]:
     """
     Evaluates reaction rate expressions and builds symbolic implicit/explicit ODE vectors (f_implicit, f_explicit, f_total)
@@ -120,6 +158,7 @@ def _evaluate_reaction_fluxes(mech: MechanismDefinition) -> dict[str, Any]:
 
     photo_idx = 0
     photolysis_reactions = []
+    reaction_fluxes = []
 
     for idx, r in enumerate(mech.reactions):
         rtype = r.reaction_type.upper()
@@ -127,8 +166,8 @@ def _evaluate_reaction_fluxes(mech: MechanismDefinition) -> dict[str, Any]:
         flux = sp.Integer(0)
 
         if rtype == "PHOTOLYSIS":
-            if "A" not in p:
-                raise ValueError(f"PHOTOLYSIS reaction {idx} missing 'A' parameter (J-rate).")
+            # OpenAtmos/MUSICA photolysis rates are supplied as named forcing;
+            # the optional A field is only a legacy YAML placeholder.
             flux = sp.Symbol(f"J_{photo_idx}", real=True, nonnegative=True)
             photolysis_reactions.append(
                 {
@@ -136,7 +175,7 @@ def _evaluate_reaction_fluxes(mech: MechanismDefinition) -> dict[str, Any]:
                     "reaction_idx": idx,
                     "reactants": r.reactants,
                     "products": r.products,
-                    "original_A": str(p["A"]),
+                    "original_A": str(p.get("A", 1.0)),
                 }
             )
             photo_idx += 1
@@ -169,7 +208,14 @@ def _evaluate_reaction_fluxes(mech: MechanismDefinition) -> dict[str, Any]:
                 a = parse_sym_or_val(sub_p.get("A", 0.0))
                 b = parse_sym_or_val(sub_p.get("B", 0.0))
                 c = parse_sym_or_val(sub_p.get("C", 0.0))
-                return a, c, b
+                try:
+                    fb = float(b)
+                    fc = float(c)
+                    if abs(fb) > 100.0 and abs(fc) <= 100.0:
+                        b, c = c, b
+                except Exception:
+                    pass
+                return a, b, c
 
             if "k0" in p and isinstance(p["k0"], dict):
                 A0, B0, C0 = get_troe_sub_params(p["k0"])
@@ -193,9 +239,18 @@ def _evaluate_reaction_fluxes(mech: MechanismDefinition) -> dict[str, Any]:
 
             CF = parse_sym_or_val(p.get("Fc", 0.6))
 
+            # OpenAtmos/MUSICA and MICM use the same signed Arrhenius
+            # convention for both Troe limits: exp(C / T).  Do not infer an
+            # activation-energy sign from the coefficient magnitude.
             K0 = A0 * sp.exp(C0 / Temp) * (Temp / 300) ** B0
             K1 = A1 * sp.exp(C1 / Temp) * (Temp / 300) ** B1
-            K0 = K0 * species_symbols.get("AIR", M_density)
+            # MICM/OpenAtmos represents the atmospheric third body as the
+            # special fixed species M. Prefer it when present; falling back to
+            # AIR preserves mechanisms that use that spelling. This prevents
+            # the renderer from substituting a legacy number-density constant
+            # into molar-concentration mechanisms such as TS1.
+            third_body = species_symbols.get("AIR", species_symbols.get("M", M_density))
+            K0 = K0 * third_body
             K_ratio = K0 / K1
             F_broadening = CF ** (1.0 / (1.0 + (sp.log(K_ratio, 10)) ** 2))
             flux = (K0 / (1.0 + K_ratio)) * F_broadening
@@ -209,7 +264,7 @@ def _evaluate_reaction_fluxes(mech: MechanismDefinition) -> dict[str, Any]:
             C3 = parse_sym_or_val(p.get("C3", 0.0))
             K0 = A0 * sp.exp(C0 / Temp)
             K2 = A2 * sp.exp(C2 / Temp)
-            K3 = A3 * sp.exp(C3 / Temp) * species_symbols.get("AIR", M_density)
+            K3 = A3 * sp.exp(C3 / Temp) * species_symbols.get("AIR", species_symbols.get("M", M_density))
             flux = K0 + K3 / (1.0 + K3 / K2)
 
         elif rtype == "EP3":
@@ -219,7 +274,7 @@ def _evaluate_reaction_fluxes(mech: MechanismDefinition) -> dict[str, Any]:
             C2 = parse_sym_or_val(p.get("C2", 0.0))
             K1 = A1 * sp.exp(C1 / Temp)
             K2 = A2 * sp.exp(C2 / Temp)
-            flux = K1 + K2 * species_symbols.get("AIR", M_density)
+            flux = K1 + K2 * species_symbols.get("AIR", species_symbols.get("M", M_density))
 
         elif rtype == "HETEROGENEOUS":
             gamma = parse_sym_or_val(p["gamma"])
@@ -253,6 +308,8 @@ def _evaluate_reaction_fluxes(mech: MechanismDefinition) -> dict[str, Any]:
         for reactant, stoich in reactants_dict.items():
             if reactant in species_symbols:
                 flux *= species_symbols[reactant] ** sp.Integer(int(stoich))
+
+        reaction_fluxes.append(flux)
 
         is_implicit = r in blocks["implicit"]
 
@@ -327,6 +384,7 @@ def _evaluate_reaction_fluxes(mech: MechanismDefinition) -> dict[str, Any]:
         "c_vector": c_vector,
         "photolysis_count": photo_idx,
         "photolysis_reactions": photolysis_reactions,
+        "reaction_fluxes": reaction_fluxes,
     }
 
 
@@ -340,6 +398,9 @@ def prepare_unified_jacobian(mech: MechanismDefinition) -> dict[str, Any]:
 
     jacobian_matrix = f_total.jacobian(c_vector)
     adjoint_matrix = jacobian_matrix.transpose()
+
+    reaction_fluxes = built.get("reaction_fluxes", [])
+    rate_flux_cse, rate_flux_exprs = _process_rate_vector_cse(reaction_fluxes)
 
     unique_elements = sorted(list(set(elem for s in mech.species for elem in s.elements.keys())))
     if unique_elements:
@@ -367,6 +428,8 @@ def prepare_unified_jacobian(mech: MechanismDefinition) -> dict[str, Any]:
         "element_map": unique_elements,
         "photolysis_count": built["photolysis_count"],
         "photolysis_reactions": built["photolysis_reactions"],
+        "rate_flux_cse": rate_flux_cse,
+        "rate_flux_exprs": rate_flux_exprs,
     }
 
     # ------------------------------------------------------------------

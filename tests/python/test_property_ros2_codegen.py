@@ -71,7 +71,7 @@ def sparse_sympy_matrix_strategy(draw, min_n=2, max_n=12):
 
 
 @given(data=sparse_sympy_matrix_strategy())
-@settings(max_examples=100, deadline=None)
+@settings(deadline=None)
 def test_property_2_backward_substitution_variable_init(data):
     """
     For any NxN Jacobian (N=2..12), compute LU plan, simulate the K1 backward
@@ -116,7 +116,7 @@ def test_property_2_backward_substitution_variable_init(data):
 
 
 @given(data=sparse_sympy_matrix_strategy())
-@settings(max_examples=100, deadline=None)
+@settings(deadline=None)
 def test_property_3_stage2_completeness(data):
     """
     For any NxN Jacobian (N=2..12), generate a mechanism with that structure,
@@ -200,7 +200,7 @@ def test_property_3_stage2_completeness(data):
 
 
 @given(n=st.integers(min_value=1, max_value=20))
-@settings(max_examples=100, deadline=None)
+@settings(deadline=None)
 def test_property_4_tolerance_array_sizing(n):
     """
     For any mechanism with N species (N=1..20), verify the emitted atol/rtol

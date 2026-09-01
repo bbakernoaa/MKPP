@@ -39,6 +39,12 @@
 #}
 #pragma once
 #include <Kokkos_Core.hpp>
+{% if simd_backend == "kokkos_batched" %}
+#ifndef MKPP_HAS_KOKKOS_KERNELS
+#error "MKPP headers compiled with --simd-backend kokkos_batched require KokkosKernels. Please reconfigure CMake with -DMKPP_ENABLE_KOKKOS_KERNELS=ON."
+#endif
+#include <KokkosBatched_Vector.hpp>
+{% endif %}
 // Generated solver for {{ mechanism_name }}
 {% if partition_metadata and partition_metadata.get is defined and partition_metadata.get("sza_sorted") %}
 // SZA Workload Sorted: true
@@ -46,7 +52,7 @@
 {% if has_continuous_rxns %}
 // Hysteresis/Spline Continuous Transition: true
 {% endif %}
-namespace mkpp {
+namespace mkpp::generated::{{ mechanism_name }} {
   // Pure Kokkos abstractions (no raw pragmas allowed)
 
   /**
@@ -88,6 +94,25 @@ namespace mkpp {
 #endif
 
 {% endif %}
+  // The expression-dense RHS and Jacobian are compiled in bounded units.
+  // This declaration-only boundary keeps host-model translation units small.
+  namespace detail {
+{% for chunk in compiled_rate_chunks %}
+  void compute_rates_chunk_{{ loop.index0 }}(const double* state, double* rates,
+                                              const double* jvals, double temp, double rh);
+{% endfor %}
+{% for chunk in compiled_jacobian_chunks %}
+  void compute_jacobian_chunk_{{ loop.index0 }}(const double* state, double* jacobian,
+                                                 const double* jvals, double temp, double rh);
+{% endfor %}
+{% for chunk in compiled_lu_chunks %}
+  void factorize_lu_chunk_{{ loop.index0 }}(const double* w, double* lu);
+{% endfor %}
+  void solve_lu(const double* lu, const double* rhs, double* solution);
+  void factorize_plan(const double* w, double* lu);
+  void solve_plan(const double* lu, const double* rhs, double* solution);
+  }  // namespace detail
+
   template<typename DeviceType>
   struct SolverKernels {
 {% include "kernel_functions/compute_rates.j2" %}
@@ -158,7 +183,9 @@ namespace mkpp {
 {% endif %}
 {% include "solver_variants/integrate.j2" %}
 
+#ifdef MKPP_ENABLE_REDUCTION
 {% include "solver_variants/integrate_with_reduction.j2" %}
+#endif
 {% if adjoint_enabled %}
 #ifdef MKPP_ENABLE_ADJOINT
 

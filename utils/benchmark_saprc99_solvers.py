@@ -18,13 +18,10 @@ import sys
 import time
 from pathlib import Path
 
-import yaml
-
 # Add project root to sys.path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
-from mkpp.amore import apply_amore_lumping
 from mkpp.codegen import SOLVER_COEFFICIENTS, generate_headers
 from mkpp.lowering import prepare_unified_jacobian
 from mkpp.parser import load_mechanism
@@ -35,16 +32,12 @@ def run_cmd(cmd, cwd=None):
     return res
 
 
-def benchmark_build_metrics(mech_path, lump_path=None):
+def benchmark_build_metrics(mech_path):
     print("=" * 80)
     print(" 1. BUILD-TIME COMPILATION & SOLVER TABLEAU METRICS (SAPRC-99)")
     print("=" * 80)
 
     mech = load_mechanism(str(mech_path))
-    if lump_path:
-        with open(lump_path) as f:
-            rules = yaml.safe_load(f)
-        mech = apply_amore_lumping(mech, rules)
 
     print(f"Mechanism: {mech.name} | Species: {len(mech.species)} | Reactions: {len(mech.reactions)}")
 
@@ -155,7 +148,6 @@ def run_cpp_solver_benchmark(solvers):
 
 def main():
     mech_path = PROJECT_ROOT / "mechanisms" / "saprc99.yaml"
-    lump_path = PROJECT_ROOT / "mechanisms" / "lumping_rules_saprc99.yaml"
 
     print("\n=========================================================================")
     print("    MKPP FULL MULTI-SOLVER & OPTIMIZATION BENCHMARK SUITE")
@@ -164,11 +156,7 @@ def main():
     # 1. Benchmark full SAPRC-99 build metrics
     solvers = benchmark_build_metrics(mech_path)
 
-    # 2. Benchmark AMORE Lumped SAPRC-99 build metrics
-    print("\n")
-    benchmark_build_metrics(mech_path, lump_path=lump_path)
-
-    # 3. Run C++ Kokkos execution benchmarks across all 5 solvers
+    # 2. Run C++ Kokkos execution benchmarks across all 5 solvers
     run_cpp_solver_benchmark(solvers)
 
     print("\n=========================================================================")

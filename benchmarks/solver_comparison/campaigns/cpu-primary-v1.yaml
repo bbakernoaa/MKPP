@@ -1,0 +1,42 @@
+schema_version: 1
+campaign_id: cpu-primary-v1
+version: 1.0.0
+targets:
+  - manifest: benchmarks/solver_comparison/manifests/chapman-v1.yaml
+    scenarios:
+      - benchmarks/solver_comparison/scenarios/chapman-calibration-v1.yaml
+      - benchmarks/solver_comparison/scenarios/chapman-measurement-v1.yaml
+  - manifest: benchmarks/solver_comparison/manifests/ts1-v1.yaml
+    scenarios:
+      - benchmarks/solver_comparison/scenarios/ts1-calibration-v1.yaml
+      - benchmarks/solver_comparison/scenarios/ts1-measurement-v1.yaml
+resources:
+  primary:
+    backend: cpu
+    physical_cores: 1
+    threads: 1
+    affinity: one_physical_core
+    numa_policy: local
+  scaling:
+    backend: cpu
+    physical_cores: [1, 2, 4]
+    threads_per_solver: [1, 2, 4]
+    separately_labeled: true
+timing_boundaries: [steady_state_solve, lifecycle]
+sampling:
+  pilot_iterations: 3
+  minimum_sample_seconds: 1.0
+  warmups: {minimum: 3, maximum: 10, stable_last_three_relative_range: 0.03}
+  paired_blocks: 15
+  minimum_valid_blocks: 10
+  ordering_seed: 1701
+  bootstrap_seed: 1702
+  bootstrap_resamples: 10000
+output:
+  raw_jsonl: benchmarks/solver_comparison/output/cpu-primary-v1.raw.jsonl
+  reports_directory: benchmarks/solver_comparison/output/cpu-primary-v1/
+publication:
+  require_scientific_eligibility: true
+  preserve_failures: true
+  no_outlier_discard: true
+  separate_timing_boundaries: true

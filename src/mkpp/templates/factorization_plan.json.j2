@@ -1,0 +1,10 @@
+{
+  "mechanism": "{{ factorization_plan.mechanism }}",
+  "species_count": {{ factorization_plan.species_count }},
+  "operation_count": {{ factorization_plan.operation_count }},
+  "fill_in_count": {{ factorization_plan.fill_in_count }},
+  "elimination_order": [{{ factorization_plan.elimination_order | join(', ') }}],
+  "blocks": [
+{% for block in factorization_plan.blocks %}    {"ordinal": {{ block.ordinal }}, "first_operation": {{ block.first_operation }}, "operation_count": {{ block.operation_count }}, "dependencies": [{{ block.dependencies | join(', ') }}]}{{ ',' if not loop.last else '' }}
+{% endfor %}  ]
+}

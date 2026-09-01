@@ -1,0 +1,46 @@
+schema_version: 1
+mechanism_id: ts1
+scope: [micm, mkpp]
+kpp_status: forbidden_not_admitted
+publishable: false
+timing_use: prohibited
+build:
+  type: Debug
+  purpose: native contract and scientific smoke validation only
+scenario:
+  id: ts1-measurement-v1
+  member: 0
+  checkpoint_seconds: 60.0
+  cells: 1
+  steps: 1
+native_identity:
+  micm: {version: 3.13.0, revision: 97ac9e5d8aadd345c242722ee8274d71dfe0f73e, status: success}
+  mkpp: {mechanism_registry: ts1, revision: workspace, status: success}
+name_mapping:
+  micm_checkpoint_names: 210
+  mkpp_checkpoint_names: 210
+  identical_name_sets: true
+accuracy:
+  chemistry_source: shared pinned OpenAtmos TS1 JSON and initial conditions
+  controls:
+    atol: 1.0e-12
+    rtol: 1.0e-8
+    max_steps: 100000
+  checkpoint_parity:
+    seconds: 60.0
+    maximum_absolute_difference: 5.471324504568997e-10
+    largest_absolute_species: O2
+    o3_relative_difference: 2.1967697157411626e-09
+    o2_relative_difference: 7.893438746094965e-10
+    h2_relative_difference: 9.406616770535816e-11
+    h2o_relative_difference: 3.3438070755144235e-10
+  initial_rhs: floating_point_equivalent_for_all_210_canonical_species
+  positivity_passed: true
+  shared_accuracy_passed: true
+eligibility:
+  status: chemistry_verified_timing_withheld
+  speedup_withheld: true
+  reasons:
+    - The pre-fix YAML-derived MKPP evidence is invalid and has been superseded by this shared-source parity smoke.
+    - This Debug smoke is scientific validation only; it contains no controlled-hardware campaign or timing claim.
+    - Independent-reference qualification and campaign measurement remain required before performance reporting.

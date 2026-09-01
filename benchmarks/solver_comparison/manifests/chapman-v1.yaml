@@ -1,0 +1,69 @@
+schema_version: 1
+mechanism_id: chapman
+version: 1.0.0
+canonical_source:
+  - path: mechanisms/openatmos/chapman/mechanism.json
+    revision: openatmos-v1
+    sha256: a9e317ec96b84a14a3c43d9a0dfb9a6da37ac79137d6db45693906916936986c
+canonical_species:
+  - id: O
+    role: active
+    phase: gas
+    unit: molecule cm-3
+    scale: 1.0e+10
+    aliases: [O3P]
+  - id: O2
+    role: fixed
+    phase: gas
+    unit: molecule cm-3
+    scale: 5.1e+18
+    aliases: []
+  - id: O3
+    role: active
+    phase: gas
+    unit: molecule cm-3
+    scale: 1.0e+11
+    aliases: [ozone]
+  - id: M
+    role: fixed
+    phase: gas
+    unit: molecule cm-3
+    scale: 2.46e+19
+    aliases: [third_body]
+chemistry_sha256: a9e317ec96b84a14a3c43d9a0dfb9a6da37ac79137d6db45693906916936986c
+photolysis_inputs:
+  - {id: J1, unit: s-1}
+  - {id: J3, unit: s-1}
+required_solvers: [micm, kpp, mkpp]
+bindings:
+  micm:
+    revision: 97ac9e5d8aadd345c242722ee8274d71dfe0f73e
+    assets:
+      - fixtures/micm-chapman/mechanism.json
+      - tests/integration/e2e_validation/benchmark_mkpp_vs_micm.cpp
+    species_map: {O: O, O2: O2, O3: O3, M: M}
+    photolysis_map: {J1: J1, J3: J3}
+    evidence:
+      - real MICM ChemicalReactionBuilder processes and Solve call
+      - four canonical reactions and named custom-rate parameters
+  kpp:
+    revision: fd1c2cd87fa0c07abea82d568155719c2569405f
+    assets:
+      - benchmarks/solver_comparison/sources/chapman/chapman.spc
+      - benchmarks/solver_comparison/sources/chapman/chapman.eqn
+      - benchmarks/solver_comparison/sources/chapman/chapman.def
+    species_map: {O: O, O2: O2, O3: O3, M: M}
+    photolysis_map: {J1: J1, J3: J3}
+    evidence:
+      - O and O3 are DEFVAR; O2 and M are DEFFIX
+      - KPP inputs retain four labeled reactions and runner-supplied J1/J3
+  mkpp:
+    revision: 068891db5165344070729e94915507e3c2254767
+    assets:
+      - mechanisms/openatmos/chapman/mechanism.json
+    species_map: {O: O, O2: O2, O3: O3, M: M}
+    photolysis_map: {J1: J1, J3: J3}
+    evidence:
+      - four-reaction MKPP Chapman source binding
+      - production host-registry execution required before admission
+admission_status: draft

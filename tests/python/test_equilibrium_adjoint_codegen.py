@@ -239,7 +239,8 @@ class TestEquilibriumAdjointCodegen:
             with open(result["header"]) as f:
                 code = f.read()
 
-        assert "integrate_adj" not in code, "integrate_adj should NOT be present when adjoint=False"
+        assert "#ifdef MKPP_ENABLE_ADJOINT" in code
+        assert "void integrate_adj(" in code
 
     def test_adjoint_transpose_solve_present(self):
         """Verify the adjoint uses transposed LU solve (W^{-T}).

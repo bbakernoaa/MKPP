@@ -9,7 +9,7 @@ import yaml
 from .codegen import generate_headers
 from .lowering import partition_reactions
 from .model import CompilationError
-from .parser import load_mechanism
+from .parser import load_environment, load_mechanism
 from .validation import sanitize_path, validate_mechanism, validate_mpi_safety
 
 # Species that belong to the NH4/NO3/SO4 equilibrium system
@@ -161,13 +161,16 @@ def run_compiler(
     enable_drgep: bool = False,
     drgep_threshold: float = 0.05,
     report: bool = False,
-    lump_path: str | None = None,
     verbose: bool = False,
     dry_run: bool = False,
     no_cache: bool = False,
     solver: str = "ros3",
     adjoint: bool = False,
     migrate_equilibrium_flag: bool = False,
+    simd_backend: str = "native",
+    generate_host_api: bool = False,
+    mechanism_id: str | None = None,
+    emit_reference_backend: bool = False,
 ) -> None:
     """Orchestrate the compilation pipeline."""
 
@@ -189,18 +192,46 @@ def run_compiler(
         if enable_drgep:
             raise CompilationError(
                 stage="validation",
-                message="DRGEP is not supported. Use AMORE lumping via --lump instead.",
+                message="DRGEP is not supported.",
             )
 
         # --- Parsing stage ---
         _verbose_log("parsing", f"Loading mechanism from {mech_path}", verbose)
 
-        with open(env_path) as f:
-            env_config = yaml.safe_load(f) or {}
+        env = load_environment(env_path)
+        env_config = {
+            "temperature": env.temperature,
+            "pressure": env.pressure,
+            "air_density": env.air_density,
+            "relative_humidity": env.relative_humidity,
+            "initial_concentrations": env.initial_concentrations,
+        }
 
         validate_mpi_safety(env_config)
 
         mech = load_mechanism(mech_path)
+        # Artifact identity is intentionally independent from the OpenAtmos
+        # document's descriptive ``name``.  Benchmark and host integrations
+        # can therefore use a stable, valid C++ identifier without copying or
+        # modifying the shared chemistry input.
+        if mechanism_id is not None:
+            if not mechanism_id.isidentifier():
+                raise CompilationError(
+                    stage="validation",
+                    message="--mechanism-id must be a valid C++ identifier",
+                )
+            mech.name = mechanism_id
+        if not hasattr(mech, "metadata") or mech.metadata is None:
+            mech.metadata = {}
+        # Preserve the compile-time test environment for code generation.
+        # Mechanisms without runtime meteorology parameters embed this state in
+        # their Arrhenius/Troe expressions.
+        mech.metadata["temperature"] = str(env.temperature)
+        mech.metadata["air_density"] = str(env.air_density)
+        if env.solver_atol is not None:
+            mech.metadata["atol"] = [env.solver_atol] * len(mech.species)
+        if env.solver_rtol is not None:
+            mech.metadata["rtol"] = [env.solver_rtol] * len(mech.species)
 
         # --- Validation stage ---
         _verbose_log("validation", "Validating mechanism schema and constraints", verbose)
@@ -280,34 +311,16 @@ def run_compiler(
         # --- Code generation stage ---
         _verbose_log("codegen", f"Generating headers to {out_dir}", verbose)
 
-        generate_headers(mech, out_dir=out_dir, suffix="", solver_name=solver_name, adjoint=adjoint)
-
-        if lump_path:
-            from .amore import apply_amore_lumping
-
-            with open(lump_path) as fl:
-                rules = yaml.safe_load(fl)
-
-            mech_lumped = load_mechanism(mech_path)
-            mech_lumped = apply_amore_lumping(mech_lumped, rules)
-
-            blocks_l = partition_reactions(mech_lumped)
-            mech_lumped.partition_metadata = blocks_l.get("metadata")
-            prepare_adjoint_and_tlm(mech_lumped)
-            mech_lumped.sympy_metadata = prepare_unified_jacobian(mech_lumped)
-
-            generate_headers(
-                mech_lumped,
-                out_dir=out_dir,
-                suffix="_lumped",
-                solver_name=solver_name,
-                adjoint=adjoint,
-            )
-
-            if report:
-                from .reporting import write_report
-
-                write_report(mech_lumped, mech_lumped.sympy_metadata, out_dir, suffix="_lumped")
+        generate_headers(
+            mech,
+            out_dir=out_dir,
+            suffix="",
+            solver_name=solver_name,
+            adjoint=adjoint,
+            generate_host_api=generate_host_api,
+            simd_backend=simd_backend,
+            emit_reference_backend=emit_reference_backend,
+        )
 
         if report:
             from .reporting import write_report
@@ -343,14 +356,17 @@ def main(args=None):
     compile_parser.add_argument("mechanism", help="Path to the mechanism YAML/JSON file")
     compile_parser.add_argument("--test-env", required=True, help="Path to the test environment YAML/JSON file")
     compile_parser.add_argument("--out", default="mkpp-generated/", help="Output directory for generated artifacts")
+    compile_parser.add_argument(
+        "--mechanism-id",
+        help="Stable generated-artifact identifier; does not modify the OpenAtmos input",
+    )
     compile_parser.add_argument("--strict", action="store_true", help="Enable strict schema validation")
     compile_parser.add_argument("--emit-manifest", action="store_true", help="Emit metadata manifest alongside headers")
     compile_parser.add_argument("--report", action="store_true", help="Generate full mechanism analysis report and graph")
-    compile_parser.add_argument("--lump", type=str, help="Path to AMORE lumping rules YAML file")
     compile_parser.add_argument(
         "--drgep",
         action="store_true",
-        help="Reject compilation: DRGEP not supported. Use --lump instead.",
+        help="Reject compilation: DRGEP not supported.",
     )
     compile_parser.add_argument(
         "--drgep-threshold",
@@ -383,7 +399,7 @@ def main(args=None):
         "--adjoint",
         action="store_true",
         default=False,
-        help="Emit adjoint/TLM integrators and checkpoint buffer (default: off)",
+        help="Deprecated compatibility option; enable emitted adjoint/TLM APIs with -DMKPP_ENABLE_ADJOINT=ON",
     )
     compile_parser.add_argument(
         "--migrate-equilibrium",
@@ -392,6 +408,19 @@ def main(args=None):
         help="Rewrite mechanism YAML replacing PHASE_CHANGE blocks for NH4/NO3/SO4 "
         "species with an equivalent EQUILIBRIUM declaration (deprecated migration tool)",
     )
+    compile_parser.add_argument(
+        "--simd-backend",
+        choices=["native", "kokkos_batched"],
+        default="native",
+        help="SIMD vector engine backend for Wide<W> (default: native)",
+    )
+    compile_parser.add_argument(
+        "--host-api",
+        action="store_true",
+        default=False,
+        help="Generate C, C++, and Fortran host API headers and C wrapper source",
+    )
+    compile_parser.add_argument("--emit-unrolled-reference", action="store_true")
 
     parsed_args = parser.parse_args(args)
 
@@ -405,13 +434,16 @@ def main(args=None):
             enable_drgep=getattr(parsed_args, "drgep", False),
             drgep_threshold=getattr(parsed_args, "drgep_threshold", 0.05),
             report=getattr(parsed_args, "report", False),
-            lump_path=getattr(parsed_args, "lump", None),
             verbose=getattr(parsed_args, "verbose", False),
             dry_run=getattr(parsed_args, "dry_run", False),
             no_cache=getattr(parsed_args, "no_cache", False),
             solver=parsed_args.solver,
             adjoint=parsed_args.adjoint,
             migrate_equilibrium_flag=parsed_args.migrate_equilibrium,
+            simd_backend=parsed_args.simd_backend,
+            generate_host_api=parsed_args.host_api,
+            mechanism_id=parsed_args.mechanism_id,
+            emit_reference_backend=parsed_args.emit_unrolled_reference,
         )
         sys.exit(0)
 

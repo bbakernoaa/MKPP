@@ -70,6 +70,20 @@
 {% for info in state_hoist_info %}
           const double S_{{ info.reg_idx }} = state(Species::{{ info.name }});  // [{{ info.name }}]
 {% endfor %}
+{% if rate_flux_cse_hoist %}
+
+          // --- CSE Temporaries ---
+{% for cse in rate_flux_cse_hoist %}
+          const double {{ cse.symbol }} = {{ cse.expr }};
+{% endfor %}
+{% endif %}
+{% if rate_flux_exprs_hoist %}
+
+          // --- Reaction Rate Fluxes R_m ---
+{% for r in rate_flux_exprs_hoist %}
+          const double R_{{ r.index }} = {{ r.expr }};
+{% endfor %}
+{% endif %}
 
           // Analytical Jacobian & Iteration Matrix W = inv_g_dt*I - J (sparse)
 {% for entry in jacobian_entries %}
@@ -187,7 +201,9 @@
               double Ynew_i = S_{{ i }} + {{ term_strs | join(" + ") }};
 {% endif %}
               double ymax = Kokkos::fmax(Kokkos::fabs(state({{ state_idx }})), Kokkos::fabs(Ynew_i));
-              double sci = atol[{{ i }}] + rtol[{{ i }}] * ymax;
+              // Tolerances are stored in physical species order, while the
+              // generated scalar registers may use the RCM permutation.
+              double sci = atol[{{ state_idx }}] + rtol[{{ state_idx }}] * ymax;
 {% set e_terms = [] %}
 {% for j in range(tableau.stages) %}
 {% if tableau.E[j] != 0.0 %}

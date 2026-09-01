@@ -24,29 +24,24 @@ MKPP evaluates the chemical mechanism symbolically at build time, computes a spa
 ```mermaid
 flowchart TD
     subgraph Stage 1: Ingestion
-        A[Mechanism Specification YAML\nmechanisms/*.yaml] --> B[Environment Driver YAML\nexample_env.yaml]
+        A[OpenAtmos Mechanism JSON\nmechanisms/openatmos/*/mechanism.json] --> B[Environment Driver YAML\nexample_env.yaml]
     end
 
-    subgraph Stage 2: Reduction & Lumping
-        A --> C[AMORE Structural Lumping\nsrc/mkpp/amore.py]
-        C --> D[Lumped Mechanism AST\nSpecies & Reaction Merging]
-    end
-
-    subgraph Stage 3: Symbolic Lowering
-        A & D --> E[Reaction Flux Lowering\n_evaluate_reaction_fluxes]
+    subgraph Stage 2: Symbolic Lowering
+        A --> E[Reaction Flux Lowering\n_evaluate_reaction_fluxes]
         E --> F[Unified State Vector\nGas + Aerosol + Aqueous]
         F --> G[SymPy Symbolic Calculus\nExact Jacobian J & Adjoint J^T]
         G --> H[Elemental Mass Balance\nProjection Matrix P]
     end
 
-    subgraph Stage 4: Sparsity & LU Plan
+    subgraph Stage 3: Sparsity & LU Plan
         G --> I[Sparsity Optimizer\nSparsityOptimizer.analyze]
         I --> J[RCM Bandwidth Reduction\nSpecies Permutation]
         I --> K[Tarjan SCC Partitioning\nBlock-Diagonal Micro-Blocks]
         J & K --> L[Symbolic Sparse LU Plan\nSymbolicLUPlan]
     end
 
-    subgraph Stage 5: Code Generation
+    subgraph Stage 4: Code Generation
         L & G & H --> M[C++ Header Generator\nsrc/mkpp/codegen.py]
         M --> N[Emitted Kokkos Header\nmkpp-generated/*.hpp]
         N --> O[Multi-Solver Stage Unrolling\nros2, ros3, ros4, rodas3, rodas4]
@@ -54,7 +49,7 @@ flowchart TD
         N --> Q[Adjoint & TLM Kernels\n4D-Var JEDI Data Assimilation]
     end
 
-    subgraph Stage 6: Runtime Execution
+    subgraph Stage 5: Runtime Execution
         N --> R[Host Model Interface\nUFS CATChem / Exaero / MUSICA]
         S[Cloud-J Photolysis] -->|Runtime J-values| R
         T[SZA Workload Sorter] -->|GPU Team Load Balancing| R
@@ -67,24 +62,13 @@ flowchart TD
 ## 3. Stage-by-Stage Technical Walkthrough
 
 ### Stage 1: Mechanism Specification & Input Ingestion
-* **Inputs**: Mechanism declarations (`mechanisms/*.yaml`) and environment configurations.
+* **Inputs**: OpenAtmos mechanism declarations (`mechanisms/openatmos/*/mechanism.json`) and environment configurations.
 * **Mechanism Data**: Chemical species (names, phase modes `gas`/`aerosol`/`aqueous`, roles `variable`/`fixed`, elemental stoichiometry) and reaction rate laws (`ARRHENIUS`, `TROE`/`FALLOFF`, `PHOTOLYSIS`, `EP2`, `EP3`, `HETEROGENEOUS`, `PHASE_CHANGE`, `TUNNELING`, `CUSTOM`).
 * **Parser (`src/mkpp/parser.py`)**: Ingests YAML declarations into typed data structures (`MechanismDefinition`, `SpeciesDefinition`, `ReactionDefinition`).
 
 ---
 
-### Stage 2: AMORE Structural Mechanism Lumping
-* **Module**: `src/mkpp/amore.py` (`apply_amore_lumping`)
-* **Purpose**: Automated Mechanism Reduction (AMORE) collapses explicit organic species into surrogate Lumped VOC classes (e.g. `ISOPRENE` + `MONOTERPENE` $\to$ `LUMPED_VOC`).
-* **Process**:
-  1. Inverts lumping rules for $O(1)$ surrogate lookup.
-  2. Prunes explicit species and injects surrogate species definitions.
-  3. Substitutes species in reaction pathways, scaling product yields by primary elemental carbon ratios.
-  4. Merges identical reaction pathways, recursively combining rate parameters (`_merge_param_values`) across Arrhenius, Photolysis, Troe, EP2, EP3, and Heterogeneous kinetics without parameter corruption.
-
----
-
-### Stage 3: Symbolic Lowering & Unified Jacobian Engine
+### Stage 2: Symbolic Lowering & Unified Jacobian Engine
 * **Module**: `src/mkpp/lowering.py` (`_evaluate_reaction_fluxes`, `prepare_unified_jacobian`)
 * **Unified Multiphase State Vector**: Gas, aerosol, and aqueous species are combined into a single contiguous state vector:
   $$\mathbf{C} = \begin{bmatrix} \mathbf{C}_{\text{gas}} \\ \mathbf{C}_{\text{aerosol}} \\ \mathbf{C}_{\text{aqueous}} \end{bmatrix}$$
@@ -153,11 +137,10 @@ flowchart TD
 | Pipeline Stage | Module / Component | Input Artifact | Output Artifact | Key Computational Benefit |
 | :--- | :--- | :--- | :--- | :--- |
 | **1. Ingestion** | `parser.py` | Mechanism YAML | `MechanismDefinition` | Ingests species, phase modes, rate parameters |
-| **2. Reduction** | `amore.py` | Mechanism AST + Rules | Lumped Mechanism AST | Collapses explicit species & merges non-Arrhenius params |
-| **3. Lowering** | `lowering.py` | Mechanism AST | Unified $J$, $J^T$, Mass Projector $P$ | Eliminates operator splitting; exact analytical calculus |
-| **4. Sparsity & LU** | `lowering.py` | Symbolic Jacobian $J$ | `SymbolicLUPlan` (RCM + Blocks) | 57.8% FLOP reduction; 0 runtime loops |
-| **5. CodeGen** | `codegen.py` | `SymbolicLUPlan` | C++ Kokkos Header (`.hpp`) | Pure scalar registers (0 bytes stack); 5 solver tableaus |
-| **6. Execution** | `mkpp_host` / C++ | Kokkos Header + Grid Views | Updated Chemical State Vector | $5.13\times - 5.55\times$ speedup over Legacy Fortran KPP |
+| **2. Lowering** | `lowering.py` | Mechanism AST | Unified $J$, $J^T$, Mass Projector $P$ | Eliminates operator splitting; exact analytical calculus |
+| **3. Sparsity & LU** | `lowering.py` | Symbolic Jacobian $J$ | `SymbolicLUPlan` (RCM + Blocks) | 57.8% FLOP reduction; 0 runtime loops |
+| **4. CodeGen** | `codegen.py` | `SymbolicLUPlan` | C++ Kokkos Header (`.hpp`) | Pure scalar registers (0 bytes stack); 5 solver tableaus |
+| **5. Execution** | `mkpp_host` / C++ | Kokkos Header + Grid Views | Updated Chemical State Vector | $5.13\times - 5.55\times$ speedup over Legacy Fortran KPP |
 
 ---
 
@@ -166,7 +149,7 @@ flowchart TD
 - [AOT Symbolic LU Architecture Explanation](aot-symbolic-lu-architecture.md)
 - [Unified Jacobian & Reaction Kinetics Explanation](unified-jacobian-and-reaction-kinetics.md)
 - [AOT Solver C++ & CLI API Reference](../reference/aot-solver-api.md)
-- [How-To: Run AOT Solver Benchmarks](../how-to/run-aot-solver-benchmarks.md)
+- [Solver Comparison Benchmarks](../tutorials/benchmark-mkpp-vs-micm.md)
 - [How-To: Compile & Run Adjoint and TLM Solvers](../how-to/compile-adjoint-and-tlm-solvers.md)
 - [AOT Solver Quickstart Tutorial](../tutorials/aot-solver-quickstart.md)
 - [MKPP Documentation Index](../README.md)

@@ -1,0 +1,45 @@
+schema_version: 1
+scenario_id: chapman-calibration-v1
+version: 1.0.0
+mechanism:
+  id: chapman
+  version: 1.0.0
+  sha256: 54186ec6db56ca9d63ce6387f504067912bc40c258a2914031fdc4d7e90b9306
+role: calibration
+initial_state:
+  O: {value: 1.0e+10, unit: molecule cm-3}
+  O2: {value: 5.1e+18, unit: molecule cm-3}
+  O3: {value: 3.0e+10, unit: molecule cm-3}
+  M: {value: 2.46e+19, unit: molecule cm-3}
+environment:
+  temperature: {value: 288.15, unit: K}
+  pressure: {value: 101325.0, unit: Pa}
+forcing:
+  J1:
+    unit: s-1
+    points:
+      - {time_seconds: 0.0, value: 1.0e-12}
+      - {time_seconds: 300.0, value: 1.5e-12}
+      - {time_seconds: 600.0, value: 2.0e-12}
+  J3:
+    unit: s-1
+    points:
+      - {time_seconds: 0.0, value: 1.0e-4}
+      - {time_seconds: 300.0, value: 1.2e-4}
+      - {time_seconds: 600.0, value: 1.4e-4}
+integration:
+  start_seconds: 0.0
+  horizon_seconds: 600.0
+  checkpoints_seconds: [60.0, 300.0, 600.0]
+  forcing_boundaries_seconds: [0.0, 300.0, 600.0]
+workload:
+  cells: [1, 10]
+  ensemble_seed: 1701
+accuracy:
+  rtol: 1.0e-6
+  atol_by_species: {O: 1.0e+2, O2: 1.0e+8, O3: 1.0e+2, M: 1.0e+8}
+  positivity_policy: nonnegative_with_scaled_roundoff
+  conservation_checks: [oxygen_atoms]
+reference:
+  implementation: scipy-radau
+  max_refinements: 3

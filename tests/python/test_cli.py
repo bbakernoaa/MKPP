@@ -147,6 +147,25 @@ def test_cli_drgep_rejects_with_structured_error(tmp_path, capsys, monkeypatch):
     assert "not supported" in error_data["message"].lower()
 
 
+def test_cli_compile_json_files(tmp_path, capsys, monkeypatch):
+    """Test: mkpp compile seamlessly processes .json mechanism and test-env files."""
+    import os
+
+    mech_file = tmp_path / "mech.json"
+    mech_file.write_text('{"description": "JSON test", "species": [{"name": "O3"}], "reactions": []}')
+    env_file = tmp_path / "env.json"
+    env_file.write_text('{"environment": {"temperature": 298.15}, "initial_concentrations": {"O3": 1e-6}}')
+
+    monkeypatch.setattr(os, "getcwd", lambda: "/")
+
+    with pytest.raises(SystemExit) as e:
+        main(["compile", str(mech_file), "--test-env", str(env_file), "--out", str(tmp_path / "out"), "--dry-run"])
+
+    assert e.value.code == 0
+    captured = capsys.readouterr()
+    assert "[dry-run] Validation passed" in captured.err
+
+
 def test_cli_dry_run_no_output_files(tmp_path, capsys, monkeypatch):
     """Test: --dry-run does not produce output files (Req 1.5)."""
     import os

@@ -220,7 +220,6 @@ mkpp compile <mechanism.yaml> --test-env <env.yaml> [options]
 | `--strict` | flag | `false` | Enable strict schema and constraint validation |
 | `--emit-manifest` | flag | `true` | Emit metadata manifest JSON alongside C++ headers |
 | `--report` | flag | `false` | Generate Markdown analysis report and species interaction graph |
-| `--lump` | string | `None` | Path to AMORE structural mechanism lumping rules YAML |
 | `--no-cache` | flag | `false` | Skip cache lookup and recompute symbolic matrices from scratch |
 | `--dry-run` | flag | `false` | Run parsing and validation stages without emitting code |
 | `--verbose` | flag | `false` | Emit progress logs to `stderr` at each compilation pipeline stage |
@@ -320,5 +319,5 @@ Variables and species states in MKPP generated solvers conform to standard Clima
 - [Reaction Kinetics & Unified Jacobian Explanation](../explanation/unified-jacobian-and-reaction-kinetics.md)
 - [How-To: Create Custom Reactions](../how-to/create-custom-reactions.md)
 - [AOT Solver Quickstart Tutorial](../tutorials/aot-solver-quickstart.md)
-- [How-To: Run AOT Solver Benchmarks](../how-to/run-aot-solver-benchmarks.md)
+- [Solver Comparison Benchmarks](../tutorials/benchmark-mkpp-vs-micm.md)
 - [AOT Symbolic LU Architecture Explanation](../explanation/aot-symbolic-lu-architecture.md)

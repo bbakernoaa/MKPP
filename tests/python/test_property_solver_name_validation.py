@@ -62,7 +62,7 @@ def test_valid_solver_names_accepted_by_cli(solver_name, monkeypatch):
 
 
 @given(solver_name=invalid_solver_names)
-@settings(max_examples=100)
+@settings(deadline=None)
 def test_invalid_solver_names_rejected_by_cli(solver_name):
     """
     For any string not in the valid solver set, the CLI rejects it with

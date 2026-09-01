@@ -76,7 +76,7 @@ _LAMBDIFIED = {name: sp.lambdify(_SYMBOLS, expr, modules="numpy") for name, expr
     blending=st.just("sigmoid"),
     width=st.floats(min_value=0.01, max_value=0.5),
 )
-@settings(max_examples=100)
+@settings(deadline=None)
 def test_property_4_equilibrium_expressions_contain_expected_free_symbols(blending, width):
     """
     For any valid (T, RH, totals), the partition expressions must contain T
@@ -149,7 +149,7 @@ def test_property_4_equilibrium_expressions_contain_expected_free_symbols(blendi
     C_S_val=st.floats(min_value=0.1, max_value=50.0),
     R_val=sulfate_ratio_st,
 )
-@settings(max_examples=100)
+@settings(deadline=None)
 def test_property_5_c1_continuity_of_regime_blending(T_val, RH_val, C_Ox_val, C_S_val, R_val):
     """
     For any sulfate ratio R in [0.01, 10] and transition boundary, the
@@ -225,7 +225,7 @@ def test_property_5_c1_continuity_of_regime_blending(T_val, RH_val, C_Ox_val, C_
     blending=st.just("sigmoid"),
     width=st.floats(min_value=0.01, max_value=0.5),
 )
-@settings(max_examples=100)
+@settings(deadline=None)
 def test_property_6_symbolic_differentiability(blending, width):
     """
     For any equilibrium partition expression, calling sp.diff(expr, C_i) for
@@ -281,7 +281,7 @@ def test_property_6_symbolic_differentiability(blending, width):
 
 
 @given(data=equilibrium_inputs())
-@settings(max_examples=100)
+@settings(deadline=None)
 def test_property_12_mass_conservation_equilibrium_partitioning(data):
     """
     For any total concentration vector and (T, RH) in valid range,

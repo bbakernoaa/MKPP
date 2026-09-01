@@ -1,0 +1,24 @@
+{
+  "mechanism": "ts1",
+  "aerosol_representation": "bulk",
+  "simd_backend": "native",
+  "checksum": "fdef26b9c17c6e4d4916a96ca7608345393dd2c8089aaddcf64b71320d9bace8",
+  "artifacts": [
+    {
+      "kind": "header",
+      "file": "ts1.hpp"
+    },
+    {
+      "kind": "adjoint_tlm_record",
+      "differentiable": true
+    }
+  ],
+  "solver_partition": {
+    "sza_sorted": true,
+    "micro_blocks": {
+      "implicit": 496,
+      "explicit": 51
+    },
+    "scc_count": 1
+  }
+}
