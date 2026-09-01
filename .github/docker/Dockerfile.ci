@@ -19,8 +19,31 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# The MKPP package requires Python >= 3.11 (pyproject.toml); ubuntu:22.04
+# ships 3.10, which lacks enum.StrEnum used by mkpp.benchmark.models.
+# Install 3.11 from the deadsnakes PPA and make it the default python3/pip3.
+# This MUST precede the pip layer below so packages land in 3.11's site-packages.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    software-properties-common \
+    && add-apt-repository -y ppa:deadsnakes/ppa \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+    python3.11 \
+    python3.11-dev \
+    python3.11-venv \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -fsSL https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py \
+    && python3.11 /tmp/get-pip.py --root-user-action=ignore \
+    && rm /tmp/get-pip.py \
+    && ln -sf /usr/bin/python3.11 /usr/local/bin/python3 \
+    && ln -sf /usr/bin/python3.11 /usr/local/bin/python
+
 # Install Python packages required for MKPP build and testing
-RUN pip3 install --no-cache-dir \
+# NOTE: jsonschema must be pre-baked here: CTest targets that shell out to
+# pytest (e.g. solver_benchmark_contract_admission_smoke) import
+# mkpp.benchmark.schema, and the "pip install -e ." CI step may target a
+# different interpreter than the configure-time Python3 used by CTest.
+RUN pip3 install --no-cache-dir --root-user-action=ignore \
     setuptools \
     wheel \
     cmake \
@@ -32,6 +55,7 @@ RUN pip3 install --no-cache-dir \
     matplotlib \
     pytest \
     pytest-xdist \
+    jsonschema \
     hypothesis \
     numpy \
     scipy \
