@@ -12,8 +12,8 @@ set(_solver_benchmark_tests
     ${CMAKE_SOURCE_DIR}/tests/python/benchmark/test_cli.py)
 
 # -o addopts= clears the project-wide pytest addopts (which include "-n auto"
-# from pytest-xdist).  This CTest invokes a small explicit file list serially and
-# must not depend on xdist being importable by the configure-time Python3
+# from pytest-xdist).  This CTest invokes a small explicit file list serially
+# and must not depend on xdist being importable by the configure-time Python3
 # interpreter, which can differ from the interpreter pip installs into in CI.
 add_test(NAME solver_benchmark_contract_admission_smoke
          COMMAND ${Python3_EXECUTABLE} -m pytest -q -o addopts=
