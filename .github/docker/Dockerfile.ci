@@ -25,6 +25,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # This MUST precede the pip layer below so packages land in 3.11's site-packages.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     software-properties-common \
+    gnupg \
+    gpg-agent \
+    dirmngr \
     && add-apt-repository -y ppa:deadsnakes/ppa \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -38,14 +41,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && ln -sf /usr/bin/python3.11 /usr/local/bin/python3 \
     && ln -sf /usr/bin/python3.11 /usr/local/bin/python
 
+# Ubuntu's apt setuptools (59.x, in /usr/lib/python3/dist-packages) is visible
+# to deadsnakes 3.11 and pre-dates PEP 660, which breaks
+# `pip install --no-build-isolation -e .` used by CI.  --ignore-installed
+# forces a modern copy into /usr/local that shadows it on sys.path.
+RUN pip3 install --no-cache-dir --root-user-action=ignore --ignore-installed \
+    setuptools \
+    wheel
+
 # Install Python packages required for MKPP build and testing
 # NOTE: jsonschema must be pre-baked here: CTest targets that shell out to
 # pytest (e.g. solver_benchmark_contract_admission_smoke) import
 # mkpp.benchmark.schema, and the "pip install -e ." CI step may target a
 # different interpreter than the configure-time Python3 used by CTest.
 RUN pip3 install --no-cache-dir --root-user-action=ignore \
-    setuptools \
-    wheel \
     cmake \
     ninja \
     pyyaml \
