@@ -10,7 +10,7 @@ jobs:
     name: Callgrind Performance Regression Check
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/bbakernoaa/mkpp-ci-env:latest
+      image: ghcr.io/noaa-emc/mkpp-ci-env:latest
 
     steps:
       - name: Checkout PR Branch
