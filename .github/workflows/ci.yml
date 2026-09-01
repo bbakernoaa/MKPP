@@ -192,11 +192,15 @@ jobs:
       - name: Ensure Executable Permissions
         run: find build/ -type f -exec chmod +x {} +
 
+      - name: Install MKPP Package
+        # Must precede CTest: several CTest targets (e.g.
+        # solver_benchmark_contract_admission_smoke) shell out to pytest, whose
+        # addopts in pyproject.toml include "-n auto" (pytest-xdist).  Installing
+        # the package first ensures pytest-xdist is importable.
+        run: pip3 install --no-build-isolation -e .
+
       - name: Run C++ CTests
         run: ctest --preset default --output-on-failure
-
-      - name: Install MKPP Package
-        run: pip3 install --no-build-isolation -e .
 
       - name: Run Python AOT Tests
         run: pytest tests/python/ -ra -q --strict-markers
