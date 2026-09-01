@@ -18,6 +18,7 @@ dependencies:
   - mkdocs-material # MkDocs Material theme for GitHub Pages documentation
   - mkdocstrings    # Autodoc plugin for Python docstrings
   - mkdocstrings-python
+  - jsonschema
   - pip
   - pip:
     - -e .          # Install the local python package in editable mode (once we scaffold it)
