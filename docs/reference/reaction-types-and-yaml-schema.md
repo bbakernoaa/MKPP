@@ -296,6 +296,12 @@ reactions:
 ### 3.9 `CUSTOM` / `TUNNELING`
 User-defined SymPy math expressions for custom rate laws.
 
+For implemented `CUSTOM` state expressions, full signed fluxes, reusable
+`rate_definitions`, and independent `reaction_orders`, see
+[modal process reaction examples](../how-to/modal-process-reactions.md).
+`TUNNELING` retains its existing specialized lowering; it does not acquire these
+`CUSTOM` expression semantics.
+
 - **Parameters**:
   - `rate_expression` (*string*): Valid SymPy-parseable math string using variables `Temp`, `Press`, `M_density`, `cair`, `S_a`, `v_gas`.
 

@@ -163,6 +163,7 @@ class MechanismDefinition:
     # input (see EquilibriumInput.CloudLiquidWater). When False, the generated
     # code is byte-identical to a mechanism without triggers.
     has_cloud_gated_reaction: bool = False
+    rate_definitions: dict[str, str | float] = field(default_factory=dict)
 
 
 @dataclass

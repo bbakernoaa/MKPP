@@ -1,0 +1,20 @@
+# Illustrative initial state, not an atmospheric calibration/reference case.
+environment:
+  temperature: 298.15
+  pressure: 101325.0
+initial_concentrations:
+  H2SO4: 1.0e6
+  ORGANIC_VAPOR: 1.0e6
+  ACID_aitken: 1.0e5
+  ORGANIC_aitken: 0.0
+  BC_aitken: 0.0
+  N_aitken: 1.0e3
+  ACID_primary_carbon: 1.0e5
+  ORGANIC_primary_carbon: 1.0e5
+  BC_primary_carbon: 1.0e5
+  N_primary_carbon: 1.0e3
+  ACID_accumulation: 1.0e5
+  ORGANIC_accumulation: 1.0e5
+  BC_accumulation: 1.0e5
+  N_accumulation: 1.0e3
+  COAG_VOLUME_RATE: 0.0
