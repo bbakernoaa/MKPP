@@ -91,8 +91,16 @@ def parse_mechanism_micm(
                 message="Species in OpenAtmos v1 mechanism must have a name",
             )
         sp_name = s.get("name")
-        # Default to GAS if not specified in basic MICM
-        phase = PhaseMode.GAS
+        # Keep the declared OpenAtmos phase for host mappings and CF metadata.
+        # Older MICM inputs without a phase retain the gas default.
+        try:
+            phase = PhaseMode(str(s.get("phase", "gas")).lower())
+        except ValueError as exc:
+            raise CompilationError(
+                stage="parsing",
+                message=f"Invalid phase for species '{sp_name}'",
+                species_name=sp_name,
+            ) from exc
         sp_type = str(s.get("type", "")).lower()
         sp_role = str(s.get("role", "")).lower()
         # Only explicit OpenAtmos fixed roles and the conventional third-body
@@ -174,7 +182,7 @@ def parse_mechanism_micm(
                     if sp_name not in species_names:
                         raise CompilationError(
                             stage="parsing",
-                            message=f"EQUILIBRIUM references unknown species '{sp_name}' " f"in element '{element_name}'",
+                            message=f"EQUILIBRIUM references unknown species '{sp_name}' in element '{element_name}'",
                             species_name=sp_name,
                         )
 
@@ -222,6 +230,15 @@ def parse_mechanism_micm(
         for k, v in r.items():
             if k not in ("type", "reactants", "products", "stiff", "continuous_transition"):
                 parameters[k] = v
+        # OpenAtmos documentation also permits nested rate parameters. Normalize
+        # both forms and reject ambiguity instead of silently ignoring one form.
+        nested = parameters.pop("parameters", {})
+        if not isinstance(nested, dict):
+            raise CompilationError(stage="parsing", message="Reaction parameters must be a mapping")
+        for key, value in nested.items():
+            if key in parameters and parameters[key] != value:
+                raise CompilationError(stage="parsing", message=f"Conflicting reaction parameter '{key}'")
+            parameters[key] = value
         if convert_openatmos_activation_energy:
             parameters = micm_signed_parameters(parameters)
 
@@ -259,7 +276,7 @@ def parse_mechanism_micm(
         conflict_name = sorted(overlap)[0]
         raise CompilationError(
             stage="validation",
-            message=f"Species '{conflict_name}' cannot have both " f"PHASE_CHANGE and EQUILIBRIUM declarations",
+            message=f"Species '{conflict_name}' cannot have both PHASE_CHANGE and EQUILIBRIUM declarations",
             species_name=conflict_name,
         )
 
@@ -316,6 +333,7 @@ def parse_mechanism_micm(
         equilibrium_reactions=equilibrium_reactions,
         metadata=data.get("metadata", {}),
         has_cloud_gated_reaction=cloud_gated,
+        rate_definitions=data.get("rate_definitions", {}),
     )
 
 

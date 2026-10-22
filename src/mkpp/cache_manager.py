@@ -59,7 +59,9 @@ class CacheManager:
         lowering_source = Path(__file__).parent / "lowering.py"
         codegen_source = Path(__file__).parent / "codegen.py"
         source_hash = b""
-        for src in (lowering_source, codegen_source):
+        expression_source = Path(__file__).parent / "expressions.py"
+        parser_source = Path(__file__).parent / "parser.py"
+        for src in (lowering_source, codegen_source, expression_source, parser_source):
             if src.exists():
                 source_hash += src.read_bytes()
         hash_input = file_bytes + version.encode() + sympy.__version__.encode() + source_hash

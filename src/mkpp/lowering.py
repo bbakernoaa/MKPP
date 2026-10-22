@@ -1,3 +1,4 @@
+import math
 import multiprocessing
 import warnings
 from typing import TYPE_CHECKING, Any
@@ -5,6 +6,7 @@ from typing import TYPE_CHECKING, Any
 import networkx as nx
 import sympy as sp
 
+from .expressions import expand_rate_definitions, parse_rate_expression
 from .model import MechanismDefinition, ReactionDefinition, SymbolicLUPlan
 
 if TYPE_CHECKING:
@@ -94,7 +96,7 @@ def prepare_adjoint_and_tlm(mech: MechanismDefinition) -> dict[str, bool]:
         for eq_def in mech.equilibrium_reactions:
             if not eq_def.continuous_transition:
                 raise ValueError(
-                    f"Equilibrium system '{eq_def.system}' requires continuous_transition=True " f"for analytical differentiation."
+                    f"Equilibrium system '{eq_def.system}' requires continuous_transition=True for analytical differentiation."
                 )
 
     return {"adjoint_ready": True, "tlm_ready": True}
@@ -180,6 +182,17 @@ def _evaluate_reaction_fluxes(mech: MechanismDefinition) -> dict[str, Any]:
     # a C++ variable reference (never substituted) when a mechanism declares a
     # cloud-gated reaction, exactly like Temp/RH.
     CLW = sp.Symbol("CLW", real=True, nonnegative=True)
+    expression_symbols = expand_rate_definitions(
+        mech.rate_definitions,
+        {
+            **{str(symbol): symbol for symbol in species_symbols.values()},
+            "Temp": Temp,
+            "M_density": M_density,
+            "cair": M_density,
+            "S_a": S_a,
+            "v_gas": v_gas,
+        },
+    )
 
     df_dt_implicit = {s.name: sp.Integer(0) for s in mech.species}
     df_dt_explicit = {s.name: sp.Integer(0) for s in mech.species}
@@ -196,7 +209,12 @@ def _evaluate_reaction_fluxes(mech: MechanismDefinition) -> dict[str, Any]:
         p = r.parameters
         flux = sp.Integer(0)
 
-        if rtype == "PHOTOLYSIS":
+        if rtype == "CUSTOM":
+            if "rate_expression" not in p:
+                raise ValueError(f"FATAL ERROR: CUSTOM reaction {idx} requires rate_expression")
+            flux = parse_rate_expression(p["rate_expression"], expression_symbols)
+
+        elif rtype == "PHOTOLYSIS":
             # OpenAtmos/MUSICA photolysis rates are supplied as named forcing;
             # the optional A field is only a legacy YAML placeholder.
             flux = sp.Symbol(f"J_{photo_idx}", real=True, nonnegative=True)
@@ -336,9 +354,22 @@ def _evaluate_reaction_fluxes(mech: MechanismDefinition) -> dict[str, Any]:
         reactants_dict = r.reactants if isinstance(r.reactants, dict) else {sp_name: 1.0 for sp_name in r.reactants}
         products_dict = r.products if isinstance(r.products, dict) else {sp_name: 1.0 for sp_name in r.products}
 
-        for reactant, stoich in reactants_dict.items():
-            if reactant in species_symbols:
-                flux *= species_symbols[reactant] ** sp.Integer(int(stoich))
+        rate_basis = p.get("rate_basis", "coefficient")
+        if rate_basis not in ("coefficient", "flux") or (rate_basis == "flux" and rtype != "CUSTOM"):
+            raise ValueError(f"FATAL ERROR: invalid rate_basis for reaction {idx}")
+        if rate_basis == "flux":
+            if "reaction_orders" in p:
+                raise ValueError("FATAL ERROR: flux expressions cannot also specify reaction_orders")
+        else:
+            orders = p.get("reaction_orders", reactants_dict)
+            if not isinstance(orders, dict):
+                raise ValueError("FATAL ERROR: reaction_orders must be a mapping")
+            for reactant, order in orders.items():
+                if reactant not in species_symbols:
+                    raise ValueError(f"FATAL ERROR: unknown reaction-order species '{reactant}'")
+                if isinstance(order, bool) or not isinstance(order, int | float) or not math.isfinite(order) or order < 0:
+                    raise ValueError("FATAL ERROR: reaction orders must be finite nonnegative numbers")
+                flux *= species_symbols[reactant] ** sp.Rational(str(order))
 
         # Activation trigger: gate the reaction by a smooth indicator of cloud
         # liquid water. The algebraic sigmoid is C^inf, so the analytically
